@@ -40,11 +40,15 @@ const LoginForm: React.FC = () => {
   // LoginForm state and logic here
   return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8">
+        <div className="max-w-md w-full space-y-9">
+          <h1 className="text-lg md:text-xl font-semibold text-center p-4 bg-indigo-100 rounded-md shadow text-black">
+            Login or Register to Submit<br />
+            an Event to the Livewire!
+          </h1>
           <form className="mt-8 space-y-6" action="#" method="POST" onSubmit={handleLogin}>
             <input type="hidden" name="remember" defaultValue="true" />
             <div className="-space-y-px rounded-md shadow-sm">
-              <div>
+              <div className="pb-4">
                 <label htmlFor="email" className="sr-only">Email address</label>
                 <input
                   id="email"
