@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
 
-const RegistrationForm: React.FC = () => {
+const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthMode}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -107,6 +107,13 @@ const RegistrationForm: React.FC = () => {
             </button>
           </div>
         </form>
+        <button
+          type="button"
+          className="mt-4 group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-transparent hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          onClick={() => setAuthMode('login')}
+        >
+          Back to Login
+        </button>
       </div>
     </div>
   );
