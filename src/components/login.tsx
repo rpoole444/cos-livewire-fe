@@ -41,7 +41,7 @@ const LoginForm: React.FC = () => {
   return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-9">
-          <h1 className="text-lg md:text-xl font-semibold text-center p-4 bg-indigo-100 rounded-md shadow text-black">
+          <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
             Login or Register to Submit<br />
             an Event to the Livewire!
           </h1>
