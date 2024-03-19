@@ -17,7 +17,7 @@ const RegistrationForm: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, firstName, lastName }),
+        body: JSON.stringify({ firstName, lastName, email, password }),
         credentials: 'include',
       });
 
@@ -34,11 +34,16 @@ const RegistrationForm: React.FC = () => {
   };
   // RegistrationForm state and logic here
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex  justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+         <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
+            Register to Submit<br />
+            event to the<br />
+            Groove Guide!
+          </h1>
         <form className="mt-8 space-y-6" onSubmit={handleRegister}>
           <div className="rounded-md shadow-sm -space-y-px">
-            <div>
+            <div className='pb-5'>
               <label htmlFor="first-name" className="sr-only">First name</label>
               <input
                 id="first-name"
@@ -46,13 +51,13 @@ const RegistrationForm: React.FC = () => {
                 type="text"
                 autoComplete="given-name"
                 required
-                className="pb-4 appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="First name"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
               />
             </div>
-            <div>
+            <div className='pb-5'>
               <label htmlFor="last-name" className="sr-only">Last name</label>
               <input
                 id="last-name"
@@ -60,13 +65,13 @@ const RegistrationForm: React.FC = () => {
                 type="text"
                 autoComplete="family-name"
                 required
-                className="pb-4 appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Last name"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
               />
             </div>
-            <div>
+            <div className='pb-5'>
               <label htmlFor="email" className="sr-only">Email address</label>
               <input
                 id="email"
@@ -74,7 +79,7 @@ const RegistrationForm: React.FC = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="pb-4 appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

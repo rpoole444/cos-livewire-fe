@@ -37,7 +37,7 @@ export default function Home() {
           <h1 className="text-2xl font-bold">Today's Events</h1>
           <EventsPage />
         </main>
-        <aside className="w-1/4 bg-white p-4 shadow-lg">
+        <aside className="w-1/4 flex flex-col bg-white p-4 shadow-lg">
           {authMode === 'login' ? (
             <>
               <LoginForm />

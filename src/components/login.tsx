@@ -35,15 +35,17 @@ const LoginForm: React.FC = () => {
 };
 
  if (isLoggedIn) {
-    return <div>Welcome! You are logged in.</div>;
+    return           <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
+Welcome! You are logged in.</h1>;
   }
   // LoginForm state and logic here
   return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className=" flex justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-9">
           <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
-            Login or Register to Submit<br />
-            an Event to the Livewire!
+            Login to Submit an<br />
+            event to the<br />
+            Groove Guide!
           </h1>
           <form className="mt-8 space-y-6" action="#" method="POST" onSubmit={handleLogin}>
             <input type="hidden" name="remember" defaultValue="true" />
