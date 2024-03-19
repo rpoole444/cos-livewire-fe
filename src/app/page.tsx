@@ -47,7 +47,7 @@ export default function Home() {
             </>
           ) : (
             <>
-              <RegistrationForm />
+              <RegistrationForm setAuthMode={switchAuthMode}/>
               <button onClick={() => setAuthMode('login')} className="mt-4 text-blue-500">
                 Already have an account? Login
               </button>
