@@ -1,4 +1,5 @@
 "use client"
+import "../styles/globals.css";
 import React, { useState } from 'react';
 
 const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthMode}) => {

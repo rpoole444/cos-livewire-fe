@@ -1,4 +1,7 @@
 "use client"
+import "../styles/globals.css";
+
+import Link from "next/link";
 import React, { useState } from "react";
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -35,8 +38,16 @@ const LoginForm: React.FC = () => {
 };
 
  if (isLoggedIn) {
-    return           <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
-Welcome! You are logged in.</h1>;
+    return(
+  <>
+    <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
+        Welcome! You are logged in.
+    </h1>
+      <Link href="/eventSubmission" className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        Submit Event
+      </Link>
+  </>
+    )
   }
   // LoginForm state and logic here
   return (

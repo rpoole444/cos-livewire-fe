@@ -1,7 +1,7 @@
 "use client"
-import getEvents from "@/app/api/route";
+import getEvents from "@/api/route";
 import { useState, useEffect } from "react";
-
+import "../styles/globals.css";
 const EventsPage: React.FC = () => {
   const [events, setEvents] = useState([]);
 
