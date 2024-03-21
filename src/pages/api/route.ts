@@ -10,5 +10,15 @@ async function getEvents() {
   console.log("EVENTS DATA: ", data)
   return data
 }
- 
-export default getEvents;
+
+async function submitEvent(eventData:any){
+  const response = await fetch('http://localhost:3000/api/events/submit', { 
+    method: 'POST', 
+    body: JSON.stringify(eventData), 
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' } });
+    
+     return response
+
+}
+export { submitEvent,getEvents };

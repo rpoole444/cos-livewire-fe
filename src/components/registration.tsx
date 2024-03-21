@@ -18,7 +18,12 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ firstName, lastName, email, password }),
+       body: JSON.stringify({
+        first_name: firstName, 
+        last_name: lastName,
+        email: email,
+        password: password,
+      }),
         credentials: 'include',
       });
 
