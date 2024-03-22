@@ -28,13 +28,14 @@ const EventSubmission = () => {
 
   const handleSubmit = async (e:any) => {
     e.preventDefault();
+    // if the data isn't right there should be a visible warning, there is not one currently
      if (!user) {
     // Maybe set an error message state here
     console.error('No user logged in');
     return 
   }
     const formData = {
-      user_id: user?.id,
+      user_id: user,
       title: eventData.title,
       description: eventData.description,
       location: eventData.location,
@@ -44,6 +45,7 @@ const EventSubmission = () => {
       age_restriction: eventData.ageRestriction,
       website_link: eventData.eventLink,
     }
+    console.log(formData)
     try {
     const res = await submitEvent(formData)
 
