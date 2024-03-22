@@ -1,13 +1,23 @@
 "use client"
+import { useAuth } from "../context/AuthContext";
 import "../styles/globals.css";
 
 import Link from "next/link";
 import React, { useState } from "react";
+
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const auth = useAuth();
+ if (!auth) {
+    // Handle the case where auth is null
+    return null;
+  }
+
+  const { login } = auth;
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -21,13 +31,15 @@ const LoginForm: React.FC = () => {
         email,
         password,
       }),
-      //  credentials: 'include',
+       credentials: 'include',
     });
     const data = await response.json();
     if (response.ok) {
       setIsLoggedIn(true);
          // Perform any actions on successful login here
         // For example, redirect to another page or store the user in context/state
+        // Store the user ID here in the state, context, or local storage
+    login(data.user.id); // assuming you have a state setter named setUserId
     } else {
       setErrorMessage(data.message || "Failed to login");
     }

@@ -1,6 +1,7 @@
 import "../styles/globals.css";
 import React, { useState } from "react";
 import { submitEvent } from "./api/route";
+import { useAuth } from "../context/AuthContext";
 
 const EventSubmission = () => {
   const [eventData, setEventData] = useState({
@@ -15,6 +16,7 @@ const EventSubmission = () => {
     ageRestriction: '',
     eventLink: '',
   });
+  const { user } = useAuth();
 
   const handleChange = (e:any) => {
     const { name, value } = e.target;
@@ -26,8 +28,13 @@ const EventSubmission = () => {
 
   const handleSubmit = async (e:any) => {
     e.preventDefault();
-    // Here you would handle the form submission to your API endpoint
+     if (!user) {
+    // Maybe set an error message state here
+    console.error('No user logged in');
+    return 
+  }
     const formData = {
+      user_id: user?.id,
       title: eventData.title,
       description: eventData.description,
       location: eventData.location,
@@ -35,9 +42,8 @@ const EventSubmission = () => {
       genre: eventData.genre,
       ticket_price: eventData.ticketPrice,
       age_restriction: eventData.ageRestriction,
-      event_link: eventData.eventLink,
+      website_link: eventData.eventLink,
     }
-
     try {
     const res = await submitEvent(formData)
 
