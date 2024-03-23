@@ -8,6 +8,8 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+    const [registrationSuccess, setRegistrationSuccess] = useState(false); // New state for tracking registration success
+
 
   const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -31,14 +33,31 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
         const errorData = await res.json();
         throw new Error(errorData.error || 'Failed to register');
       }
+      
+    setRegistrationSuccess(true);
 
-      // Implement what happens after successful registration
-      // e.g., redirect to login page or display success message
+     setTimeout(() => {
+      setAuthMode('login');
+      setRegistrationSuccess(false);
+     }, 3000);
+
     } catch (error) {
       setErrorMessage("There was an error registering");
     }
   };
-  // RegistrationForm state and logic here
+
+  if (registrationSuccess) {
+    return (
+      <div className="min-h-screen flex  justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full space-y-8">
+          <h2 className="text-sm md:text-base lg:text-lg p-2 bg-green-100 text-green-900 font-semibold rounded-md shadow">
+            Registration successful! Redirecting to login...
+          </h2>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen flex  justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
