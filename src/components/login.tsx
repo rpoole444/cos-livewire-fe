@@ -1,7 +1,7 @@
 "use client"
 import { useAuth } from "../context/AuthContext";
 import "../styles/globals.css";
-
+import WelcomeUser from "./welcomeUser";
 import Link from "next/link";
 import React, { useState } from "react";
 
@@ -39,7 +39,7 @@ const LoginForm: React.FC = () => {
          // Perform any actions on successful login here
         // For example, redirect to another page or store the user in context/state
         // Store the user ID here in the state, context, or local storage
-    login(data.user.id); // assuming you have a state setter named setUserId
+    login(data.user); // assuming you have a state setter named setUserId
     } else {
       setErrorMessage(data.message || "Failed to login");
     }
@@ -50,17 +50,8 @@ const LoginForm: React.FC = () => {
 };
 
  if (isLoggedIn) {
-    return(
-  <>
-    <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
-        Welcome! You are logged in.
-    </h1>
-      <Link href="/eventSubmission" className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-        Submit Event
-      </Link>
-  </>
-    )
-  }
+    return <WelcomeUser />
+  } else {
   // LoginForm state and logic here
   return (
       <div className=" flex justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -117,7 +108,7 @@ const LoginForm: React.FC = () => {
           </form>
         </div>
       </div>
-  );
+  )};
 };
 
 export default LoginForm;
