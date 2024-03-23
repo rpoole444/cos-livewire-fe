@@ -1,8 +1,11 @@
 "use client"
 import EventsPage from "@/components/events";
 import React, { useState } from 'react';
-import LoginForm from '@/components/login'; 
+import LoginForm from '@/components/login';
+import WelcomeUser from "@/components/welcomeUser"; 
 import RegistrationForm from '@/components/registration';
+import { useAuth } from "@/context/AuthContext";
+
 
 
 type AuthMode = 'login' | 'register';
@@ -20,10 +23,11 @@ interface HomeProps {
 
 export default function Home() {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const { user, logout} = useAuth()
 
   const switchAuthMode = () => {
     setAuthMode(authMode === 'login' ? 'register' : 'login');
-  };
+};
 
    return (
     <div className="flex min-h-screen flex-col">
@@ -38,19 +42,25 @@ export default function Home() {
           <EventsPage />
         </main>
         <aside className="w-1/4 flex flex-col bg-white p-4 shadow-lg">
-          {authMode === 'login' ? (
-            <>
-              <LoginForm />
-              <button onClick={() => setAuthMode('register')} className="mt-4 text-blue-500">
-                Need an account? Register
-              </button>
-            </>
+          {user ? (
+            <WelcomeUser />
           ) : (
             <>
-              <RegistrationForm setAuthMode={switchAuthMode}/>
-              <button onClick={() => setAuthMode('login')} className="mt-4 text-blue-500">
-                Already have an account? Login
-              </button>
+              {authMode === 'login' ? (
+                <>
+                  <LoginForm />
+                  <button onClick={() => setAuthMode('register')} className="mt-4 text-blue-500">
+                    Need an account? Register
+                  </button>
+                </>
+              ) : (
+                <>
+                  <RegistrationForm setAuthMode={switchAuthMode}/>
+                  <button onClick={() => setAuthMode('login')} className="mt-4 text-blue-500">
+                    Already have an account? Login
+                  </button>
+                </>
+              )}
             </>
           )}
         </aside>
