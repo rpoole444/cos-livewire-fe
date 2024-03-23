@@ -1,7 +1,7 @@
 "use client"
 import { useAuth } from "../context/AuthContext";
 import "../styles/globals.css";
-import WelcomeUser from "./welcomeUser";
+import WelcomeUser from "./WelcomeUser";
 import Link from "next/link";
 import React, { useState } from "react";
 

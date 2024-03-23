@@ -2,7 +2,7 @@
 import EventsPage from "@/components/events";
 import React, { useState } from 'react';
 import LoginForm from '@/components/login';
-import WelcomeUser from "@/components/welcomeUser"; 
+import WelcomeUser from "@/components/WelcomeUser"; 
 import RegistrationForm from '@/components/registration';
 import { useAuth } from "@/context/AuthContext";
 
