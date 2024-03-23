@@ -21,4 +21,12 @@ async function submitEvent(eventData:any){
      return response
 
 }
-export { submitEvent,getEvents };
+
+async function logoutUser(): Promise<void> {
+  try {
+    await fetch('/logout', {method: 'POST'});
+  } catch (err) {
+    console.error(err);
+  }
+}
+export { submitEvent,getEvents, logoutUser };
