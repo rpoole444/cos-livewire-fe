@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserType } from '../types'
 
 interface AuthContextType {
@@ -22,14 +22,23 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserType | null>(null); // Replace 'any' with your user type
+  const [user, setUser] = useState<UserType | null>(null);
 
+  useEffect(() => {
+    // Access localStorage in the useEffect hook to ensure it's only called client-side
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  },[])
   const login = (userData: UserType) => {
     console.log('Logging in user:', userData);
+    localStorage.setItem('user', JSON.stringify(userData)); // Save user data to localStorage
     setUser(userData);
   };
 
   const logout = () => {
+    localStorage.removeItem('user');
     setUser(null);
   };
 

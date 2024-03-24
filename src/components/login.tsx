@@ -24,7 +24,10 @@ const LoginForm: React.FC = () => {
     event.preventDefault();
     try {
    const data = await loginUser(email, password);
-   setIsLoggedIn(true);
+    
+   const loggedInStatus = localStorage.getItem('isLoggedIn') === 'true';
+
+   setIsLoggedIn(loggedInStatus);
    login(data.user)
   } catch (err) {
     setErrorMessage("An Error occurred, Please try again.");
@@ -34,7 +37,7 @@ const LoginForm: React.FC = () => {
  if (isLoggedIn) {
     return <WelcomeUser />
   } else {
-  // LoginForm state and logic here
+ 
   return (
       <div className=" flex justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-9">
