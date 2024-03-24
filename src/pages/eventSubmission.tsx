@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { submitEvent } from "./api/route";
 import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 const EventSubmission = () => {
   const [eventData, setEventData] = useState({
@@ -17,8 +18,10 @@ const EventSubmission = () => {
     ageRestriction: '',
     eventLink: '',
   });
+  const [submissionSuccess, setSubmissionSuccess] = useState(false)
   const { user } = useAuth();
-
+  const router = useRouter()
+  
   const handleChange = (e:any) => {
     const { name, value } = e.target;
     setEventData(prevState => ({
@@ -50,17 +53,34 @@ const EventSubmission = () => {
     console.log(formData)
     try {
     const res = await submitEvent(formData)
-
+    
     if (!res.ok) {
       const errorData = await res.json();
       throw new Error(errorData.error || 'Failed to submit event');
+    } else{
+      setSubmissionSuccess(true)
+  
+      setTimeout(() => {
+        router.push('/')
+        setSubmissionSuccess(false);
+       }, 3000);
+
     }
+
     console.log('Event submitted successfully');
    } catch (error) {
-    console.error("There was an error submitting event:", error);
-    
+    console.error("There was an error submitting event:", error);  
   }
-  };
+};
+
+  if(submissionSuccess) {
+    return(
+     <div className="container mx-auto p-4">
+       <h1 className="text-center text-2xl font-bold mb-6">Submission successful! Redirecting to homepage...</h1>
+      </div>
+    )
+  }
+
   if(user){
     return (
      <div className="container mx-auto p-4">
