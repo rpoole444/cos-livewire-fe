@@ -6,8 +6,6 @@ import WelcomeUser from "@/components/WelcomeUser";
 import RegistrationForm from '@/components/registration';
 import { useAuth } from "@/context/AuthContext";
 
-
-
 type AuthMode = 'login' | 'register';
 
 type Event = {

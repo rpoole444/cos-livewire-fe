@@ -1,6 +1,6 @@
 import "../styles/globals.css";
 import React, { useState } from "react";
-import { submitEvent } from "./api/route";
+import { submitEvent, logoutUser } from "./api/route";
 import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -19,7 +19,7 @@ const EventSubmission = () => {
     eventLink: '',
   });
   const [submissionSuccess, setSubmissionSuccess] = useState(false)
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter()
   
   const handleChange = (e:any) => {
@@ -28,6 +28,16 @@ const EventSubmission = () => {
       ...prevState,
       [name]: value
     }));
+  };
+
+  const handleLogout = async () => {
+    try {  
+      await logoutUser()
+      logout()
+      router.push('/')
+    } catch (err) {
+      console.error(err)
+    }
   };
 
   const handleSubmit = async (e:any) => {
@@ -135,7 +145,10 @@ const EventSubmission = () => {
               Submit
             </button>
             <Link href='/' className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Go Back to Homepage</Link>
-         </div>
+            <button  onClick={handleLogout} className="mt-4 text-blue-500">
+              Logout
+            </button>          
+          </div>
        </form>
      </div>
     )
