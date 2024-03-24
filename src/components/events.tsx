@@ -22,13 +22,15 @@ const EventsPage: React.FC = () => {
  return (
     <div>
       <h1>Events</h1>
-      <ul className="space-y-4">
-        {events.map((event: any) => (
-          <li key={event.id} className="border p-4 rounded shadow">
-            <EventCard event={event}/>
-          </li>
-        ))}
-      </ul>
+      <div className="max-h-screen overflow-y-auto">
+        <ul className="space-y-4">
+          {events.map((event: any) => (
+            <li key={event.id} className="border p-4 rounded shadow">
+              <EventCard event={event}/>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };
