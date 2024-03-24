@@ -2,6 +2,7 @@
 import { getEvents } from "@/pages/api/route";
 import { useState, useEffect } from "react";
 import "../styles/globals.css";
+import EventCard from "./eventCard";
 const EventsPage: React.FC = () => {
   const [events, setEvents] = useState([]);
 
@@ -24,8 +25,7 @@ const EventsPage: React.FC = () => {
       <ul className="space-y-4">
         {events.map((event: any) => (
           <li key={event.id} className="border p-4 rounded shadow">
-            <h2 className="text-lg font-semibold">{event.title}</h2>
-            {/* Add other event details here */}
+            <EventCard event={event}/>
           </li>
         ))}
       </ul>
