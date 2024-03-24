@@ -10,6 +10,31 @@ async function getEvents() {
   console.log("EVENTS DATA: ", data)
   return data
 }
+async function registerUser(firstName: string, lastName: string, email: string, password: string) {
+  try {
+      const res = await fetch('http://localhost:3000/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+       body: JSON.stringify({
+        first_name: firstName, 
+        last_name: lastName,
+        email: email,
+        password: password,
+      }),
+        credentials: 'include',
+      });
+         const data = await res.json(); 
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to register');
+      }
+      return data;
+  } catch (error) {
+    throw (error instanceof Error) ? error : new Error(String(error));
+  }
+}
 
 async function loginUser(email: string, password: string){
   try {
@@ -54,4 +79,5 @@ async function logoutUser(): Promise<void> {
     console.error(err);
   }
 }
-export { submitEvent,getEvents, loginUser, logoutUser };
+
+export { submitEvent, getEvents, registerUser,loginUser, logoutUser };

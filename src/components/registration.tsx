@@ -1,6 +1,7 @@
 "use client"
 import "../styles/globals.css";
 import React, { useState } from 'react';
+import { registerUser } from "@/pages/api/route";
 
 const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthMode}) => {
   const [email, setEmail] = useState('');
@@ -13,34 +14,14 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
 
   const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    try{
+      const data = await registerUser(firstName, lastName, email, password)
+      setRegistrationSuccess(true);
 
-    try {
-      const res = await fetch('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-       body: JSON.stringify({
-        first_name: firstName, 
-        last_name: lastName,
-        email: email,
-        password: password,
-      }),
-        credentials: 'include',
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to register');
-      }
-      
-    setRegistrationSuccess(true);
-
-     setTimeout(() => {
-      setAuthMode('login');
-      setRegistrationSuccess(false);
-     }, 3000);
-
+      setTimeout(() => {
+       setAuthMode('login');
+       setRegistrationSuccess(false);
+      }, 3000);
     } catch (error) {
       setErrorMessage("There was an error registering");
     }
