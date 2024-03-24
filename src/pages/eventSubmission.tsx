@@ -130,9 +130,12 @@ const EventSubmission = () => {
          <div className="text-center">
  
          </div>
-         <button type="submit" className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-           Submit
-         </button>
+         <div className="flex flex-col items-center space-y-4 ">
+            <button type="submit" className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Submit
+            </button>
+            <Link href='/' className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Go Back to Homepage</Link>
+         </div>
        </form>
      </div>
     )
@@ -140,7 +143,7 @@ const EventSubmission = () => {
     return(
       <>
         <h1>Please Sign In or Go Back!</h1>
-        <Link href='/' className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Go Back</Link>
+        <Link href='/' className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Go Back</Link>
       </>
     )
   }
