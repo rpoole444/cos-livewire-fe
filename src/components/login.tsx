@@ -2,6 +2,7 @@
 import { useAuth } from "../context/AuthContext";
 import "../styles/globals.css";
 import WelcomeUser from "./WelcomeUser";
+import { loginUser } from "../pages/api/route"
 import Link from "next/link";
 import React, { useState } from "react";
 
@@ -22,28 +23,9 @@ const LoginForm: React.FC = () => {
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-    const response = await fetch('http://localhost:3000/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email,
-        password,
-      }),
-       credentials: 'include',
-    });
-    const data = await response.json();
-    if (response.ok) {
-      setIsLoggedIn(true);
-         // Perform any actions on successful login here
-        // For example, redirect to another page or store the user in context/state
-        // Store the user ID here in the state, context, or local storage
-    login(data.user); // assuming you have a state setter named setUserId
-    } else {
-      setErrorMessage(data.message || "Failed to login");
-    }
-  
+   const data = await loginUser(email, password);
+   setIsLoggedIn(true);
+   login(data.user)
   } catch (err) {
     setErrorMessage("An Error occurred, Please try again.");
   }

@@ -11,6 +11,31 @@ async function getEvents() {
   return data
 }
 
+async function loginUser(email: string, password: string){
+  try {
+    const response = await fetch('http://localhost:3000/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+       credentials: 'include',
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to login");
+    }
+    return data; // Return the successful response data
+  } catch (error) {
+    // Convert error to a string if necessary and re-throw it to be handled by the caller
+    throw (error instanceof Error) ? error : new Error(String(error));
+  }
+    
+}
+
 async function submitEvent(eventData:any){
   const response = await fetch('http://localhost:3000/api/events/submit', { 
     method: 'POST', 
@@ -29,4 +54,4 @@ async function logoutUser(): Promise<void> {
     console.error(err);
   }
 }
-export { submitEvent,getEvents, logoutUser };
+export { submitEvent,getEvents, loginUser, logoutUser };
