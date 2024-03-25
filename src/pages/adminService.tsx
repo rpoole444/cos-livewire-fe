@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { logoutUser } from './api/route';
 import Link from "next/link";
 import { useRouter } from "next/router";
-import EventsPage from '@/components/events';
+import EventReview from '@/components/EventReview';
 
 const adminService = () => {
   const router = useRouter();
@@ -23,7 +23,7 @@ const adminService = () => {
   return (
     <div className="flex flex-col items-center space-y-4 ">
       <h1>Admin Page</h1>
-      <EventsPage />
+      <EventReview />
       <Link href='/' className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Go Back to Homepage</Link>
       <button  onClick={handleLogout} className="mt-4 text-blue-500">
         Logout
