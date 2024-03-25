@@ -86,7 +86,7 @@ async function logoutUser(): Promise<void> {
 }
 
 async function getEventsForReview(): Promise<void> {
-  const res = await fetch('http://localhost:3000/api/review')
+  const res = await fetch('http://localhost:3000/api/events/review')
   if(!res.ok){
     throw new Error('Failed to fetch data')
   }
