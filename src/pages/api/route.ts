@@ -1,4 +1,6 @@
-
+interface EventStatusUpdatePayload {
+  isApproved: boolean;
+}
 async function getEvents() {
   const res = await fetch('http://localhost:3000/api/events')
   // The return value is *not* serialized
@@ -8,7 +10,10 @@ async function getEvents() {
   }
   const data = await res.json();
   console.log("EVENTS DATA: ", data)
-  return data
+  const sortedEvents = data.sort((a :any, b :any) => {
+    return new Date(b.date).getTime() - new Date(a.date).getTime()
+  })
+  return sortedEvents
 }
 async function registerUser(firstName: string, lastName: string, email: string, password: string) {
   try {
@@ -80,4 +85,50 @@ async function logoutUser(): Promise<void> {
   }
 }
 
-export { submitEvent, getEvents, registerUser,loginUser, logoutUser };
+async function getEventsForReview(): Promise<void> {
+  const res = await fetch('http://localhost:3000/api/review')
+  if(!res.ok){
+    throw new Error('Failed to fetch data')
+  }
+  const data = await res.json();
+  return data
+}
+
+async function updateEventStatus(eventId: number, isApproved: boolean): Promise<void> {
+  try {
+    // Construct the payload
+    const payload: EventStatusUpdatePayload = {
+      isApproved,
+    };
+
+    // Send the PUT request to the backend
+    const response = await fetch(`http://localhost:3000/api/events/review/${eventId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    // Check if the response is ok
+    if (!response.ok) {
+      // If the response is not ok, throw an error with the response status
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    // You can handle the successful response here if needed
+    const data = await response.json();
+    console.log(data.message); // Logging the success message from the response
+  } catch (error) {
+    // Handle any errors that occurred during the request
+    console.error('There was an error updating the event status', error);
+  }
+}
+export { 
+  submitEvent, 
+  getEvents, 
+  registerUser,
+  loginUser, 
+  logoutUser, 
+  getEventsForReview,
+   updateEventStatus };
