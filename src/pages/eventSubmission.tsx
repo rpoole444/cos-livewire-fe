@@ -5,8 +5,21 @@ import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
+interface Event {
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  time: string;
+  eventType: string;
+  genre: string;
+  ticketPrice: string;
+  ageRestriction: string;
+  eventLink: string;
+}
+
 const EventSubmission = () => {
-  const [eventData, setEventData] = useState({
+  const [eventData, setEventData] = useState<Event>({
     title: '',
     description: '',
     location: '',
