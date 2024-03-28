@@ -3,6 +3,7 @@ import { getEventsForReview, updateEventStatus } from "@/pages/api/route";
 import { useState, useEffect } from "react";
 import "../styles/globals.css";
 import AdminEventCard from "./AdminEventCard"; // This is a new component you'll create
+import { useRouter } from "next/router";
 
 export interface Event {
   id:number;
@@ -18,13 +19,10 @@ export interface Event {
   eventLink: string;
 }
 
-interface Events {
-  events: Event[];
-}
 const EventReview: React.FC = () => {
  
   const [events, setEvents] = useState<Event[]>([]);
-
+  const router = useRouter();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -38,21 +36,26 @@ const EventReview: React.FC = () => {
     fetchData();
   }, []);
 
+
+  useEffect(() => {
+
+  },[]);
   const handleApprove = async (eventId: number): Promise<void> =>  {
     // Send PUT request to approve the event
     await updateEventStatus(eventId, true);
     // Fetch the events again to reflect the changes or directly update the state
+    setEvents(events.filter(activity => activity.id != eventId));
   };
 
   const handleDeny = async (eventId: number): Promise<void> => {
     // Send PUT request to deny the event
     await updateEventStatus(eventId, false);
     // Fetch the events again to reflect the changes or directly update the state
+    setEvents(events.filter(activity => activity.id != eventId));
   };
 
   const handleEdit = (event: Event) => {
-    // Implement functionality to edit the event
-    // This can be a modal form or redirect to an edit page with the event data
+    router.push(`/edit/${event.id}`);
   };
   console.log(events)
   return (
