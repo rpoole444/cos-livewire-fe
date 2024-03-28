@@ -10,12 +10,11 @@ const adminService = () => {
   const router = useRouter();
   const { user, logout } = useAuth();
 
-
-  const handleLogout = async () => {
+const handleLogout = async () => {
     try {  
-      await logoutUser()
-      logout()
-      router.push('/')
+      // await logoutUser()
+        logout()
+        router.push('/')
     } catch (err) {
       console.error(err)
     }

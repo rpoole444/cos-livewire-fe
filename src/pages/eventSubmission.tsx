@@ -45,9 +45,9 @@ const EventSubmission = () => {
 
   const handleLogout = async () => {
     try {  
-      await logoutUser()
-      logout()
-      router.push('/')
+      // await logoutUser()
+        logout()
+        router.push('/')
     } catch (err) {
       console.error(err)
     }
@@ -99,11 +99,13 @@ const EventSubmission = () => {
   if(submissionSuccess) {
     return(
      <div className="container mx-auto p-4">
-       <h1 className="text-center text-2xl font-bold mb-6">Submission successful! Redirecting to homepage...</h1>
+       <h1 className="text-center text-2xl font-bold mb-6">
+        Submission successful! Redirecting to homepage...
+        </h1>
       </div>
     )
   }
-
+console.log("submission userstate: ", user)
   if(user){
     return (
      <div className="container mx-auto p-4">
