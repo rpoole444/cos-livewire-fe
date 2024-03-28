@@ -3,14 +3,14 @@ import { UserType } from '../types'
 
 interface AuthContextType {
   user: UserType | null;
-  login: (userData: any) => void; // Be specific with userData type if possible
+  login: (email:string, password:string) => Promise<void>; // Be specific with userData type if possible
   logout: () => void;
 }
 
 // Provide a default context object that matches the AuthContextType shape
 const defaultContext: AuthContextType = {
   user: null,
-  login: () => {}, // These are just stub functions that do nothing
+  login: async (email: string, password: string) => { /* This is now an async stub that does nothing but matches the type */ },
   logout: () => {},
 };
 
@@ -24,24 +24,65 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserType | null>(null);
 
-  useEffect(() => {
-    // Access localStorage in the useEffect hook to ensure it's only called client-side
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+ useEffect(() => {
+    // Function to check user's current authentication status
+    const checkAuthStatus = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/session', { credentials: 'include' });
+        const data = await response.json();
+        if (data.isLoggedIn) {
+          setUser(data.user); // Set the user if the session check returns logged in
+        }
+      } catch (error) {
+        console.error('Error fetching auth status:', error);
+      }
+    };
+
+    // Call the function on component mount
+    checkAuthStatus();
+  }, []);
+
+
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUser(data.user); // Set the user upon successful login
+      } else {
+        throw new Error(data.message || 'Failed to login');
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
     }
-  },[])
-  const login = (userData: UserType) => {
-    console.log('Logging in user:', userData);
-    localStorage.setItem('user', JSON.stringify(userData)); // Save user data to localStorage
-    setUser(userData);
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      console.log("Response received:", response);
+
+      if (response.ok) {
+        setUser(null); // Clear the user upon successful logout
+        console.log("logout successful:", response);
+
+      } else {
+        throw new Error('Failed to logout');
+      }
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
+  // Provide the login and logout functions to the context
   return (
     <AuthContext.Provider value={{ user, login, logout }}>
       {children}
