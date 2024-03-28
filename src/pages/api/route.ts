@@ -124,7 +124,17 @@ async function updateEventStatus(eventId: number, isApproved: boolean): Promise<
     console.error('There was an error updating the event status', error);
   }
 }
+
+async function fetchAllUsers(): Promise<void> {
+  const res = await fetch('http://localhost:3000/api/auth/users')
+  if(!res.ok){
+    throw new Error('Failed to fetch data')
+  }
+  const data = await res.json();
+  return data
+}
 export { 
+  fetchAllUsers,
   submitEvent, 
   getEvents, 
   registerUser,
