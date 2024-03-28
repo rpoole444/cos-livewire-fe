@@ -58,6 +58,7 @@ async function loginUser(email: string, password: string){
     if (!response.ok) {
       throw new Error(data.message || "Failed to login");
     }
+    console.log("login successful:", data)
     return data; // Return the successful response data
   } catch (error) {
     // Convert error to a string if necessary and re-throw it to be handled by the caller
@@ -78,10 +79,22 @@ async function submitEvent(eventData:any){
 }
 
 async function logoutUser(): Promise<void> {
-  try {
-    await fetch('/logout', {method: 'POST'});
-  } catch (err) {
-    console.error(err);
+  try{
+ const response = await fetch('http://localhost:3000/api/auth/logout', {
+    method: 'POST',
+    credentials: 'include',
+  });
+    console.log("Response received:", response);
+
+  if (!response.ok) {
+    // If the HTTP status code does not indicate success,
+    // throw an error to be caught by the calling function.
+    throw new Error('Logout failed');
+  }
+  console.log("logout successful:", response);
+} catch (error) {
+    console.error('Logout failed with error:', error);
+    throw error; // Re-throw the error to be caught by the calling function
   }
 }
 
