@@ -4,24 +4,11 @@ import { useState, useEffect } from "react";
 import "../styles/globals.css";
 import AdminEventCard from "./AdminEventCard"; // This is a new component you'll create
 import { useRouter } from "next/router";
-
-export interface Event {
-  id:number;
-  title: string;
-  description: string;
-  location: string;
-  date: string;
-  time: string;
-  eventType: string;
-  genre: string;
-  ticketPrice: string;
-  ageRestriction: string;
-  eventLink: string;
-}
+import { Event, Events } from "../interfaces/interfaces";
 
 const EventReview: React.FC = () => {
  
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<Events>([]);
   const router = useRouter();
   useEffect(() => {
     const fetchData = async () => {
