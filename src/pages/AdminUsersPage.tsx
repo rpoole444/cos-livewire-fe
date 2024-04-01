@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { fetchAllUsers } from './api/route';
+import { User, Users } from '../interfaces/interfaces';
 
 const AdminUsersPage = () => {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<Users>([]);
 
   useEffect(() => {
     // Fetch users
@@ -18,14 +19,20 @@ const AdminUsersPage = () => {
 
   const handleSetAdmin = async (userId:number) => {
     // Call API to set user as admin
-    await fetch(`/api/users/setAdmin/${userId}`, {
-      method: 'PUT',
+    const response = await fetch(`/api/users/setAdmin/${userId}`, {
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ isAdmin: true }),
+      credentials: 'include',
     });
-
+    if(response.ok) {
+        // Update the local state to reflect the change
+        setUsers(users.map(user => user.id === userId ? {...user, is_admin: true} : user));
+      } else {
+        // Handle the error, e.g., by showing a message to the user
+      }
     // Optionally, refresh the list of users or directly update the state
   };
 

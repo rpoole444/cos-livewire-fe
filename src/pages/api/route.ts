@@ -121,6 +121,7 @@ async function updateEventStatus(eventId: number, isApproved: boolean): Promise<
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+      credentials: 'include',
     });
 
     // Check if the response is ok
@@ -154,4 +155,4 @@ export {
   loginUser, 
   logoutUser, 
   getEventsForReview,
-   updateEventStatus };
+  updateEventStatus };
