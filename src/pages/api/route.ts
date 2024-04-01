@@ -140,11 +140,15 @@ async function updateEventStatus(eventId: number, isApproved: boolean): Promise<
 }
 
 async function fetchAllUsers(): Promise<void> {
-  const res = await fetch('http://localhost:3000/api/auth/users')
+  const res = await fetch('http://localhost:3000/api/auth/users', {
+      credentials: 'include', // Make sure to include credentials if this endpoint requires authentication
+    });
   if(!res.ok){
-    throw new Error('Failed to fetch data')
+    const errorBody = await res.json(); // Try to parse the response body as JSON
+      throw new Error(errorBody.message || 'Failed to fetch data');
   }
   const data = await res.json();
+  console.log(data)
   return data
 }
 export { 
