@@ -37,18 +37,36 @@ const AdminUsersPage = () => {
   };
 
   return (
-    <div>
-      <h1>Manage Users</h1>
-      <ul>
+  <div className="flex justify-center items-center h-screen black">
+    <div className="w-full max-w-2xl mx-auto bg-gray p-8 border border-gray-300 rounded-lg shadow-lg">
+      <h1 className="text-2xl font-bold text-center mb-4">Manage Users</h1>
+      <ul className="space-y-3">
         {users?.map(user => (
-          <li key={user.id}>
-            {user.email} - Admin Status: {user.is_admin ? 'Yes' : 'No'}
-            <button onClick={() => handleSetAdmin(user.id)}>Make Admin</button>
+          <li 
+            key={user.id} 
+            className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200"
+          >
+            <div>
+              <p className="font-semibold text-black">{user.first_name} {user.last_name}</p>
+              <p className="text-sm text-gray-600">{user.email}</p>
+            </div>
+            <div>
+              <span className={`px-3 py-1 text-xs rounded-full ${user.is_admin ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}`}>
+                {user.is_admin ? 'Admin' : 'User'}
+              </span>
+            </div>
+            <button 
+              onClick={() => handleSetAdmin(user.id)}
+              className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+            >
+              Make Admin
+            </button>
           </li>
         ))}
       </ul>
     </div>
-  );
+  </div>
+);
 };
 
 export default AdminUsersPage;
