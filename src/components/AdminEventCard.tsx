@@ -1,5 +1,5 @@
 import React from "react";
-import { Event } from './EventReview'
+import { Event } from '../interfaces/interfaces';
 interface AdminEventCardProps {
   event: Event;
   onApprove: () => void;
