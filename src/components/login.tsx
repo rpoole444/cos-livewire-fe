@@ -4,40 +4,38 @@ import "../styles/globals.css";
 import WelcomeUser from "./WelcomeUser";
 import { loginUser } from "../pages/api/route"
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const auth = useAuth();
- if (!auth) {
-    // Handle the case where auth is null
-    return null;
-  }
+  const { user, login } = useAuth();
+  const router = useRouter();
 
-  const { user, login } = auth;
+  useEffect(():any => {
+    if (user) {
+      return <WelcomeUser /> 
+    }
+  }, [user, router]);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setErrorMessage('');
+
     try {
-   const data = await loginUser(email, password);
-    
-   const loggedInStatus = localStorage.getItem('isLoggedIn') === 'true';
+      await login(email, password);
+    } catch (error) {
+      setErrorMessage("An error occurred, please try again.");
+      console.error(error);
+    }
+  };
 
-   setIsLoggedIn(loggedInStatus);
-   login(email,password);
-  } catch (err) {
-    setErrorMessage("An Error occurred, Please try again.");
+  if (user) {
+    return <WelcomeUser /> 
   }
-};
-
- if (isLoggedIn) {
-    return <WelcomeUser />
-  } else {
- console.log("user login:", user)
   return (
       <div className=" flex justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-9">
@@ -93,7 +91,8 @@ const LoginForm: React.FC = () => {
           </form>
         </div>
       </div>
-  )};
+  )
 };
+
 
 export default LoginForm;
