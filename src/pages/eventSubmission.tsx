@@ -4,7 +4,7 @@ import { submitEvent, logoutUser } from "./api/route";
 import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import cheyenneMountain from "../../public/cheyenne mountain.jpeg"
+// import cheyenneMountain from "../../public/cheyenne mountain.jpeg"
 
 interface Event {
   title: string;
@@ -67,10 +67,14 @@ const EventSubmission = () => {
   let ticketPriceValue = eventData.ticketPrice;
   if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
     ticketPriceValue = '0';
-  } else {
-    ticketPriceValue = ticketPriceValue.replace(/\D/g, '');
-  }
+  } 
+  ticketPriceValue = ticketPriceValue.replace(/\D/g, '');
+if (ticketPriceValue === '') {
+  ticketPriceValue = '0';
+}
+// Finally, convert ticketPriceValue to a number
 
+ticketPriceValue = Number(ticketPriceValue);
   const formData = {
     user_id: user.id,
     title: eventData.title,
@@ -120,7 +124,7 @@ console.log("submission userstate: ", user)
       <div 
         className="text-center mb-8"
         style={{
-          backgroundImage: `url(${cheyenneMountain})`,
+          // backgroundImage: `url(${cheyenneMountain})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
