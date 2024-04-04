@@ -4,6 +4,7 @@ import { submitEvent, logoutUser } from "./api/route";
 import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import cheyenneMountain from "../../public/cheyenne mountain.jpeg"
 
 interface Event {
   title: string;
@@ -53,48 +54,55 @@ const EventSubmission = () => {
     }
   };
 
-  const handleSubmit = async (e:any) => {
-    e.preventDefault();
-    // if the data isn't right there should be a visible warning, there is not one currently
-    console.log("user here: ", user)
-     if (!user) {
-    // Maybe set an error message state here
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  // Check if the user is logged in
+  if (!user) {
     console.error('No user logged in');
-    return 
+    // Here you would typically update a piece of state to show an error message to the user
+    return;
   }
-    const formData = {
-      user_id: user.id,
-      title: eventData.title,
-      description: eventData.description,
-      location: eventData.location,
-      date: eventData.date,
-      genre: eventData.genre,
-      ticket_price: eventData.ticketPrice,
-      age_restriction: eventData.ageRestriction,
-      website_link: eventData.eventLink,
-    }
-    console.log(formData)
-    try {
-    const res = await submitEvent(formData)
-    
+
+  let ticketPriceValue = eventData.ticketPrice;
+  if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
+    ticketPriceValue = '0';
+  } else {
+    ticketPriceValue = ticketPriceValue.replace(/\D/g, '');
+  }
+
+  const formData = {
+    user_id: user.id,
+    title: eventData.title,
+    description: eventData.description,
+    location: eventData.location,
+    date: eventData.date,
+    genre: eventData.genre,
+    ticket_price: ticketPriceValue,
+    age_restriction: eventData.ageRestriction,
+    website_link: eventData.eventLink.startsWith('http') ? eventData.eventLink : `http://${eventData.eventLink}`,
+  };
+
+  try {
+    const res = await submitEvent(formData);
     if (!res.ok) {
       const errorData = await res.json();
       throw new Error(errorData.error || 'Failed to submit event');
-    } else{
-      setSubmissionSuccess(true)
-  
-      setTimeout(() => {
-        router.push('/')
-        setSubmissionSuccess(false);
-       }, 3000);
-
     }
+    
+    // Successful submission logic
+    setSubmissionSuccess(true);
+    setTimeout(() => {
+      router.push('/');
+      setSubmissionSuccess(false);
+    }, 3000);
 
-    console.log('Event submitted successfully');
-   } catch (error) {
-    console.error("There was an error submitting event:", error);  
+  } catch (error) {
+    console.error("There was an error submitting the event:", error);
+    // Update your component's state here to reflect the error
   }
 };
+
 
   if(submissionSuccess) {
     return(
@@ -109,48 +117,108 @@ console.log("submission userstate: ", user)
   if(user){
     return (
      <div className="container mx-auto p-4">
-       <h1 className="text-center text-2xl font-bold mb-6">Submit Your Event</h1>
-       <p className="text-center">Please fill out the form below with your event details.<br />Make sure to include all required fields so we can add your event to our online calendar and help you promote your music!</p>
+      <div 
+        className="text-center mb-8"
+        style={{
+          backgroundImage: `url(${cheyenneMountain})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+        >
+        <h1 className="text-2xl font-bold">{user.first_name}, Let's get your event out there!!</h1>
+        <p className="text-md mt-2">
+          Fill out our Submission Form!
+        </p>
+      </div>
+      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+      <p className="text-gray-700 text-base mb-4">
+        Please fill out the form below with your event details.
+        Make sure to include all required fields so we can add your event to our online calendar and help you promote your event!!
+      </p>
+      <p className="text-gray-600 text-sm mb-4">
+        Please use appropriate language for your event and be mindful of your spelling and grammar.
+        We will review and scan for both grammatical errors as well as appropriate language before approval and posting to the public-facing calendar.
+      </p>
        <form onSubmit={handleSubmit} className="mt-4 w-full max-w-lg mx-auto">
          <div className="mb-4">
-           <label htmlFor="title" className="block text-md font-medium text-white">Event Title</label>
+           <label htmlFor="title" className="block text-md font-medium text-black">Event Title</label>
            <input type="text" id="title" name="title" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
          </div>
          <div className="mb-4">
-           <label htmlFor="description" className="block text-md font-medium text-white">Event Description</label>
+           <label htmlFor="description" className="block text-md font-medium text-black">Event Description</label>
            <textarea id="description" name="description" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"></textarea>
          </div>
          <div className="mb-4">
-           <label htmlFor="location" className="block text-md font-medium text-white">Event Location</label>
+           <label htmlFor="location" className="block text-md font-medium text-black">Event Location</label>
            <input type="text" id="location" name="location" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
          </div>
          <div className="mb-4">
-           <label htmlFor="date" className="block text-md font-medium text-white">Event Date</label>
+           <label htmlFor="date" className="block text-md font-medium text-black">Event Date</label>
            <input type="date" id="date" name="date" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
          </div>
          {/* <div className="mb-4">
-           <label htmlFor="time" className="block text-md font-medium text-white">Event Time</label>
+           <label htmlFor="time" className="block text-md font-medium text-black">Event Time</label>
            <input type="time" id="time" name="time" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
          </div>
          <div className="mb-4">
-           <label htmlFor="eventType" className="block text-md font-medium text-white">Event Type</label>
+           <label htmlFor="eventType" className="block text-md font-medium text-black">Event Type</label>
            <input type="text" id="eventType" name="eventType" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
          </div> */}
          <div className="mb-4">
-           <label htmlFor="genre" className="block text-md font-medium text-white">Event Genre</label>
-           <input type="text" id="genre" name="genre" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
+           <label htmlFor="genre" className="block text-md font-medium text-black">Event Genre</label>
+          <select id="genre" name="genre" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black">
+            <option value="">Select Genre</option>
+            <option value="Jazz">Jazz</option>
+            <option value="Indie">Indie</option>
+            <option value="Rock">Rock</option>
+            <option value="Alternative">Alternative</option>
+            <option value="Country">Country</option>
+            <option value="Hip-Hop">Hip-Hop</option>
+            <option value="Pop">Pop</option>
+            <option value="R&B">R&B</option>
+            <option value="Rap">Rap</option>
+            <option value="Reggae">Reggae</option>
+            <option value="Soul">Soul</option>
+            <option value="Techno">Techno</option>
+            <option value="World">World</option>
+            <option value="Other">Other</option>
+          </select>
          </div>
          <div className="mb-4">
-           <label htmlFor="ticketPrice" className="block text-md font-medium text-white">Ticket Price / Door Charge</label>
-           <input type="text" id="ticketPrice" name="ticketPrice" onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
-         </div>
+           <label htmlFor="ticketPrice" className="block text-md font-medium text-black">Ticket Price / Door Charge</label>
+          <select id="ticketPrice" name="ticketPrice" onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black">
+            <option value="Free">Free</option>
+            <option value="Donation">Donation</option>
+            {Array.from(Array(20).keys()).map(i => (
+              <option key={i} value={(i+1)*5}>${(i+1)*5}</option>
+            ))}
+          </select>
+          </div>
+          <div className="mb-4">
+            <div className="flex space-x-4 items-center">
+              {["All Ages", "16+", "18+", "21+", "25+"].map(age => (
+                <label key={age} className="flex items-center space-x-2">
+                  <input 
+                    type="radio" 
+                    name="ageRestriction" 
+                    value={age} 
+                    onChange={handleChange} 
+                    className="w-6 h-6" // Adjust the size as needed
+                  />
+                  <span className="text-lg text-black">{age}</span> {/* Adjust font-size using text-base, text-lg etc. */}
+                </label>
+              ))}
+            </div>
+          </div>
          <div className="mb-4">
-           <label htmlFor="ageRestriction" className="block text-md font-medium text-white">Age Restriction</label>
-           <input type="text" id="ageRestriction" name="ageRestriction" onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
-         </div>
-         <div className="mb-4">
-           <label htmlFor="eventLink" className="block text-md font-medium text-white">Website / Event Link</label>
-           <input type="url" id="eventLink" name="eventLink" onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
+           <label htmlFor="eventLink" className="block text-md font-medium text-black">Website / Event Link</label>
+           <input 
+          //  type="url" 
+           id="eventLink"
+           name="eventLink" 
+           onChange={handleChange} 
+           className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"
+           />
          </div>
          <div className="text-center">
  
@@ -166,6 +234,7 @@ console.log("submission userstate: ", user)
           </div>
        </form>
      </div>
+    </div>
     )
   } else{
     return(
