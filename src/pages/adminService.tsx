@@ -21,7 +21,11 @@ const handleLogout = async () => {
   };
   return (
     <div className="flex flex-col items-center space-y-4 ">
-      <h1>Admin Page</h1>
+      <h1>Welcome to The Event Review Page! {user?.first_name} is an Admin for Alpine Groove Guide!</h1>
+      <p className="text-sm text-gray-600"> 
+      Be sure to look through all of the details of each event! We are scanning for both grammatical errors
+      as well as innappropriate language. 
+      </p>
       <EventReview />
       <Link href='/' className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
         Go Back to Homepage

@@ -7,9 +7,9 @@ import { useRouter } from "next/router";
 import { Event, Events } from "../interfaces/interfaces";
 
 const EventReview: React.FC = () => {
- 
   const [events, setEvents] = useState<Events>([]);
   const router = useRouter();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -24,9 +24,6 @@ const EventReview: React.FC = () => {
   }, []);
 
 
-  useEffect(() => {
-
-  },[]);
   const handleApprove = async (eventId: number): Promise<void> =>  {
     // Send PUT request to approve the event
     await updateEventStatus(eventId, true);
@@ -45,6 +42,8 @@ const EventReview: React.FC = () => {
     router.push(`/edit/${event.id}`);
   };
   console.log(events)
+  if(events.length > 0) {
+
   return (
     <div>
       <div className="max-h-screen overflow-y-auto">
@@ -63,6 +62,13 @@ const EventReview: React.FC = () => {
       </div>
     </div>
   );
+  } else{
+    return (
+      <div>
+        <p className="text-white text-lg">No events to review, but keep and eye out!!</p>
+      </div>
+    );
+  }
 };
 
 export default EventReview;
