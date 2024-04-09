@@ -1,5 +1,6 @@
 "use client"
 import { getEvents } from "@/pages/api/route";
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import "../styles/globals.css";
 import EventCard from "./EventCard";
@@ -27,7 +28,9 @@ const EventsPage: React.FC = () => {
           <ul className="space-y-4">
             {events.map((event: any) => (
               <li key={event.id} className="border p-4 rounded shadow">
+              <Link key={event.id} href={`/eventRouter/${event.id}`} passHref>
                 <EventCard event={event}/>
+              </Link>
               </li>
               ))}
           </ul>
