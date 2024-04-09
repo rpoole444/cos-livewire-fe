@@ -11,7 +11,13 @@ const EventsPage: React.FC = () => {
     const fetchData = async () => {
       try {
         const eventsData = await getEvents();
-        const approvedEvents = eventsData.filter((activity:any) => activity.is_approved)
+        const approvedEvents = eventsData
+          .filter((activity:any) => activity.is_approved)
+          .sort((a:any, b:any) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return dateA.getTime() - dateB.getTime();
+          })
         setEvents(approvedEvents);
       } catch (error) {
         console.error('Failed to load events', error);
