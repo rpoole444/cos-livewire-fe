@@ -15,6 +15,19 @@ async function getEvents() {
   })
   return sortedEvents
 }
+
+const fetchEventDetails = async (eventId:number) => {
+
+      const res = await fetch(`http://localhost:3000/api/events/${eventId}`);
+     
+      if (!res.ok) {
+    throw new Error('Failed to fetch data')
+  }
+      const data = await res.json();
+      console.log("EVENT DATA: ", data)
+      return data
+    };
+
 async function registerUser(firstName: string, lastName: string, email: string, password: string) {
   try {
       const res = await fetch('http://localhost:3000/api/auth/register', {
@@ -159,4 +172,6 @@ export {
   loginUser, 
   logoutUser, 
   getEventsForReview,
-  updateEventStatus };
+  updateEventStatus,
+  fetchEventDetails
+};
