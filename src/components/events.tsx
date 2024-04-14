@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import "../styles/globals.css";
 import EventCard from "./EventCard";
-const EventsPage: React.FC = () => {
+const Events: React.FC = () => {
   const [events, setEvents] = useState([]);
 
    useEffect(() => {
@@ -48,4 +48,4 @@ const EventsPage: React.FC = () => {
   );
 };
 
-export default EventsPage;
+export default Events;

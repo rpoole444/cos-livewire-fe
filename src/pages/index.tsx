@@ -1,10 +1,10 @@
 "use client"
-import EventsPage from "@/components/events";
 import React, { useState } from 'react';
 import LoginForm from '@/components/login';
 import WelcomeUser from "@/components/WelcomeUser"; 
 import RegistrationForm from '@/components/registration';
 import { useAuth } from "@/context/AuthContext";
+import Events from "@/components/Events";
 
 type AuthMode = 'login' | 'register';
 
@@ -37,7 +37,7 @@ export default function Home() {
       <div className="flex flex-1 flex-row">
         <main className="w-3/4 p-24 overflow-auto min-h-screen">
           <h1 className="text-2xl font-bold">Today's Events</h1>
-          <EventsPage />
+          <Events />
         </main>
         <aside className="w-1/4 flex flex-col bg-white p-4 shadow-lg">
           {user ? (
