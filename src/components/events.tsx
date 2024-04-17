@@ -1,31 +1,13 @@
-"use client"
-import { getEvents } from "@/pages/api/route";
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import "../styles/globals.css";
 import EventCard from "./EventCard";
-const Events: React.FC = () => {
-  const [events, setEvents] = useState([]);
+import { Event } from "@/interfaces/interfaces";
 
-   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const eventsData = await getEvents();
-        const approvedEvents = eventsData
-          .filter((activity:any) => activity.is_approved)
-          .sort((a:any, b:any) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            return dateA.getTime() - dateB.getTime();
-          })
-        setEvents(approvedEvents);
-      } catch (error) {
-        console.error('Failed to load events', error);
-      }
-    };
+interface EventsProps {
+  events: Event[];
+}
+const Events: React.FC<EventsProps> = ({ events }) => {
 
-    fetchData();
-  }, []);
 
  return (
     <div>
@@ -41,7 +23,7 @@ const Events: React.FC = () => {
               ))}
           </ul>
           ) : (
-            <p>No Events!!</p>
+            <p>No Events Today, Try Tomorrow!!</p>
           )}
       </div>
     </div>

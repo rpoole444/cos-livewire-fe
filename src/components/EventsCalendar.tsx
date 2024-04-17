@@ -1,14 +1,24 @@
-import dayjs from "dayjs";
-import React, { useState } from "react";
+import dayjs, { Dayjs } from "dayjs";
+import React, { useState, useEffect } from "react";
 import { generateDate, months } from "../util/calendar";
 import cn from "../util/cn";
 import { GrFormNext, GrFormPrevious } from "react-icons/gr";
+import { Event } from "@/interfaces/interfaces";
 
-export default function Calendar() {
+interface CalendarProps {
+  currentDate: Dayjs;
+  onDateSelect: (date: Dayjs) => void;
+  events: Event[];
+}
+export default function Calendar({currentDate, onDateSelect, events}: CalendarProps) {
 	const days = ["S", "M", "T", "W", "T", "F", "S"];
-	const currentDate = dayjs();
-	const [today, setToday] = useState(currentDate);
-	const [selectDate, setSelectDate] = useState(currentDate);
+	const [today, setToday] = useState<Dayjs>(currentDate);
+
+
+  useEffect(() => {
+    // Update the local state when the currentDate prop changes
+    setToday(currentDate);
+  }, [currentDate]);
 return (
     <div className="flex flex-col gap-10 justify-center mx-auto py-4">
       <div className="w-full max-w-4xl mx-auto"> {/* Adjust width as needed */}
@@ -19,7 +29,7 @@ return (
           <div className="flex gap-4 items-center">
             <GrFormPrevious
               className="w-6 h-6 cursor-pointer hover:scale-110 transition"
-              onClick={() => setToday(today.subtract(1, 'month'))}
+              onClick={() => onDateSelect(today.subtract(1, 'day'))}
             />
             <h1
               className="cursor-pointer hover:scale-110 transition"
@@ -29,7 +39,7 @@ return (
             </h1>
             <GrFormNext
               className="w-6 h-6 cursor-pointer hover:scale-110 transition"
-              onClick={() => setToday(today.add(1, 'month'))}
+              onClick={() => onDateSelect(today.add(1, 'day'))} 
             />
           </div>
         </div>
@@ -41,27 +51,21 @@ return (
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1">
-          {generateDate(today.month(), today.year()).map(({ date, currentMonth, today }, index) => (
+          {generateDate(today.month(), today.year()).map(({ date, currentMonth }, index) => (
             <div key={index} className="p-2 text-center text-sm">
               <h1
                 className={cn(
                   currentMonth ? 'text-white' : 'text-gray-400',
-                  today ? 'bg-blue-600 text-white' : '',
-                  selectDate.isSame(date, 'date') ? 'bg-blue-100 text-black' : '',
+                  today.isSame(date, 'day') ? 'bg-blue-600 text-white' : '',
+                  currentDate.isSame(date, 'day') ? 'bg-blue-100 text-black' : '',
                   'rounded-full hover:bg-blue-100 hover:text-black transition cursor-pointer select-none'
                 )}
-                onClick={() => setSelectDate(date)}
+                onClick={() => onDateSelect(date)} // Calls the onDateSelect prop with the new date
               >
                 {date.date()}
               </h1>
             </div>
           ))}
-        </div>
-        <div className="mt-4 p-4 bg-white shadow rounded">
-          <h1 className="font-semibold text-black">
-            Schedule for {selectDate.format('dddd, MMMM D, YYYY')}
-          </h1>
-          <p className="text-gray-400">No meetings for today.</p>
         </div>
       </div>
     </div>
