@@ -4,6 +4,7 @@ import { generateDate, months } from "../util/calendar";
 import cn from "../util/cn";
 import { GrFormNext, GrFormPrevious } from "react-icons/gr";
 import { Event } from "@/interfaces/interfaces";
+import Link from "next/link";
 
 interface CalendarProps {
   currentDate: Dayjs;
@@ -13,12 +14,30 @@ interface CalendarProps {
 export default function Calendar({currentDate, onDateSelect, events}: CalendarProps) {
 	const days = ["S", "M", "T", "W", "T", "F", "S"];
 	const [today, setToday] = useState<Dayjs>(currentDate);
+  const [showEventsList, setShowEventsList] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>(events);
 
-
-  useEffect(() => {
-    // Update the local state when the currentDate prop changes
+useEffect(() => {
     setToday(currentDate);
   }, [currentDate]);
+
+  useEffect(() => {
+    const lowercasedSearchTerm = searchTerm.toLowerCase();
+    const filtered = events.filter(event =>
+      event.genre.toLowerCase().includes(lowercasedSearchTerm)
+    );
+    setFilteredEvents(filtered);
+  }, [searchTerm, events]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  useEffect(() => {
+    setToday(currentDate);
+  }, [currentDate]);
+
 return (
     <div className="flex flex-col gap-10 justify-center mx-auto py-4">
       <div className="w-full max-w-4xl mx-auto"> {/* Adjust width as needed */}
@@ -68,6 +87,42 @@ return (
           ))}
         </div>
       </div>
+      <button
+        onClick={() => setShowEventsList(!showEventsList)}
+        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-700 transition"
+      >
+        {showEventsList ? 'Hide All Events' : 'Show All Events'}
+      </button>
+      {showEventsList && (
+        <div className="mt-4">
+          <h2 className="text-xl font-semibold text-white mb-2">Search All Upcoming Events</h2>
+          <input
+            type="text"
+            placeholder="Search by music genre"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full px-4 py-2 border-b text-black mb-4"
+          />
+        <div className="mt-4 max-h-96 overflow-y-auto">
+         
+          {filteredEvents.length > 0 ? (
+            filteredEvents.map(event => (
+              <Link  key={event.id} href={`/eventRouter/${event.id}`}  passHref>
+                <div className="block mb-4 p-2 text-white rounded hover:bg-gray-100 hover:text-black transition">
+                  <div className="font-bold text-lg">{event.title}</div>
+                  <div className="text-sm text-gray-400">Genre: {event.genre}</div>
+                  <div className="text-sm text-gray-400">
+                    Date: {dayjs(event.date).format('MM/DD/YYYY')} | Location: {event.location}
+                  </div>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div className="text-center py-4">No events found</div>
+          )}
+        </div>
+      </div>
+      )}
     </div>
   );
 }
