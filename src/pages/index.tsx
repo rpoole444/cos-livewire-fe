@@ -48,7 +48,7 @@ export default function Home() {
 
           </div>
         </main>
-        <aside className="w-1/4 flex flex-col bg-white p-4 shadow-lg">
+        <aside className="w-1/5 flex flex-col bg-white p-4 shadow-lg">
           {user ? (
             <WelcomeUser />
           ) : (
