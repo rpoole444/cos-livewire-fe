@@ -5,6 +5,7 @@ import WelcomeUser from "@/components/WelcomeUser";
 import RegistrationForm from '@/components/registration';
 import { useAuth } from "@/context/AuthContext";
 import Events from "@/components/Events";
+import EventsCalendar from "@/components/EventsCalendar";
 
 type AuthMode = 'login' | 'register';
 
@@ -34,10 +35,18 @@ export default function Home() {
           Alpine Groove Guide
         </h1>
       </header>
-      <div className="flex flex-1 flex-row">
-        <main className="w-3/4 p-24 overflow-auto min-h-screen">
-          <h1 className="text-2xl font-bold">Today's Events</h1>
-          <Events />
+      <div className="flex flex-1">
+        <main className="flex-grow p-8">
+          <div className="flex flex-col lg:flex-row">
+            <section className="flex-grow">
+              <h1 className="text-2xl font-bold">Today's Events</h1>
+              <Events />
+            </section>
+            <aside className="lg:w-1/3"> {/* This restricts the calendar to 1/3 of the space on large screens */}
+              <EventsCalendar />
+            </aside>
+
+          </div>
         </main>
         <aside className="w-1/4 flex flex-col bg-white p-4 shadow-lg">
           {user ? (
