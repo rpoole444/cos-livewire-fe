@@ -164,6 +164,30 @@ async function fetchAllUsers(): Promise<void> {
   console.log(data)
   return data
 }
+
+async function deleteEvent(eventId: number): Promise<void> {
+  try {
+    const res = await fetch(`http://localhost:3000/api/events/${eventId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', 
+    });
+
+     if(!res.ok){
+    const errorBody = await res.json(); // Try to parse the response body as JSON
+      throw new Error(errorBody.message || 'Failed to fetch data');
+  }
+ if (res.status !== 204) {
+    const data = await res.json();
+    console.log(data);
+  }
+  } catch (error) {
+    // Handle any errors that occurred during the request
+    console.error('There was an error deleting the event', error);
+  }
+}
 export { 
   fetchAllUsers,
   submitEvent, 
@@ -173,5 +197,6 @@ export {
   logoutUser, 
   getEventsForReview,
   updateEventStatus,
-  fetchEventDetails
+  fetchEventDetails,
+  deleteEvent
 };
