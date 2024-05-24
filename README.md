@@ -37,7 +37,8 @@ You may also see any lint errors in the console.
   - Google Chrome or Web Browser of User's Choice
 
 ## Project Spec
-Describe your project specifications or link to project documentation or guidelines.
+
+Alpine Groove Guide is designed to revitalize the local music and events scene in Colorado Springs by providing a platform where community members can engage directly with event listings and eventually participate in community-driven radio broadcasts. This project is an extension of a traditional events calendar, integrating community input and providing a launchpad for a unique, localized radio streaming feature.
 
 ## Abstract 
 
