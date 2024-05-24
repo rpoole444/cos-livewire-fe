@@ -51,7 +51,7 @@ The Alpine Groove Guide provides a dynamic platform for local artists and event 
 - Integrate PostgreSQL for robust data management.
 
 ## Preview 
-When you have screenshots ready, update these placeholders with actual images and links to your app's screens.
+
 ![Main Calendar View](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/47ea10a2-8b03-4ab3-a243-f04d1a898f8e)
 ![Main Calendar View Admin Signed in](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/3ba5bd53-1e1b-46f0-b47f-22508197e6bd)
 ![Individual Event](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/1860b651-19d8-44e0-b0fd-205effac4671)
@@ -70,8 +70,6 @@ When you have screenshots ready, update these placeholders with actual images an
 - Integrating Tailwind CSS for the first time presented a learning curve in understanding its utility-first approach.
 
 ## Authors
-
-Include the names and GitHub profiles of the project contributors, using a similar format as before.
 
 <table>
     <tr>
