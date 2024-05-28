@@ -27,7 +27,9 @@ export default function Calendar({ currentDate, onDateSelect, events }: Calendar
   useEffect(() => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
     const filtered = events.filter(event =>
-      event.genre.toLowerCase().includes(lowercasedSearchTerm)
+      event.genre.toLowerCase().includes(lowercasedSearchTerm) ||
+      event.title.toLowerCase().includes(lowercasedSearchTerm) ||
+      event.location.toLowerCase().includes(lowercasedSearchTerm)
     );
     setFilteredEvents(filtered);
   }, [searchTerm, events]);
@@ -74,6 +76,10 @@ export default function Calendar({ currentDate, onDateSelect, events }: Calendar
     }
     setToday(newDate);
     onDateSelect(newDate);
+  };
+
+  const handleToggleEventsList = () => {
+    setShowEventsList(prevState => !prevState);
   };
 
   return (
@@ -128,35 +134,43 @@ export default function Calendar({ currentDate, onDateSelect, events }: Calendar
           ))}
         </div>
       </div>
-      {showEventsList && (
-        <div className="mt-4">
-          <h2 className="text-xl font-semibold text-white mb-2">Search All Upcoming Events</h2>
-          <input
-            type="text"
-            placeholder="Search by music genre"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            className="w-full px-4 py-2 border-b text-black mb-4"
-          />
-          <div className="mt-4 max-h-96 overflow-y-auto">
-            {filteredEvents.length > 0 ? (
-              filteredEvents.map(event => (
-                <Link key={event.id} href={`/eventRouter/${event.id}`} passHref>
-                  <div className="block mb-4 p-2 text-white rounded hover:bg-gray-100 hover:text-black transition">
-                    <div className="font-bold text-lg">{event.title}</div>
-                    <div className="text-sm text-gray-400">Genre: {event.genre}</div>
-                    <div className="text-sm text-gray-400">
-                      Date: {dayjs(event.date).format('MM/DD/YYYY')} | Location: {event.location}
+      <div className="mt-4">
+        <button
+          onClick={handleToggleEventsList}
+          className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
+        >
+          {showEventsList ? "Close Search" : "SEARCH all events"}
+        </button>
+        {showEventsList && (
+          <div>
+            <h2 className="text-xl font-semibold text-white mb-2">Search All Upcoming Events</h2>
+            <input
+              type="text"
+              placeholder="Search by event title, genre, or location"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              className="w-full px-4 py-2 border-b text-black mb-4"
+            />
+            <div className="mt-4 max-h-96 overflow-y-auto">
+              {filteredEvents.length > 0 ? (
+                filteredEvents.map(event => (
+                  <Link key={event.id} href={`/eventRouter/${event.id}`} passHref>
+                    <div className="block mb-4 p-2 text-white rounded hover:bg-gray-100 hover:text-black transition">
+                      <div className="font-bold text-lg">{event.title}</div>
+                      <div className="text-sm text-gray-400">Genre: {event.genre}</div>
+                      <div className="text-sm text-gray-400">
+                        Date: {dayjs(event.date).format('MM/DD/YYYY')} | Location: {event.location}
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))
-            ) : (
-              <div className="text-center py-4">No events found</div>
-            )}
+                  </Link>
+                ))
+              ) : (
+                <div className="text-center py-4">No events found</div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
