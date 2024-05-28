@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
+import Header from '@/components/Header';
 import LoginForm from '@/components/login';
 import WelcomeUser from "@/components/WelcomeUser"; 
 import RegistrationForm from '@/components/registration';
@@ -13,6 +14,7 @@ import isBetween from 'dayjs/plugin/isBetween';
 
 type AuthMode = 'login' | 'register';
 dayjs.extend(isBetween)
+
 export default function Home() {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [selectedDate, setSelectedDate] = useState(dayjs());
@@ -76,16 +78,12 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="w-full bg-indigo-800 text-white p-6">
-        <h1 className="text-center text-4xl lg:text-5xl font-bold tracking-tight">
-          Alpine Groove Guide
-        </h1>
-      </header>
+    <div className="flex min-h-screen flex-col bg-gray-900 text-white">
+      <Header />
       <div className="flex flex-1">
         <main className="flex-grow p-8">
-          <div className="flex flex-col lg:flex-row">
-            <div className="flex-grow">
+          <div className="flex flex-col lg:flex-row gap-8">
+            <section className="flex-grow">
               <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold">Events</h1>
                 <select
@@ -98,14 +96,18 @@ export default function Home() {
                   <option value="all">All Upcoming Events</option>
                 </select>
               </div>
-              <EventsCalendar currentDate={selectedDate} events={events} onDateSelect={handleDateSelect} />
-              <section className="flex-grow">
+              <div className="grid grid-cols-1 gap-4">
                 <Events events={filteredEvents} />
-              </section>
-            </div>
+              </div>
+            </section>
+            <aside className="lg:w-1/3">
+              <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+                <EventsCalendar currentDate={selectedDate} events={events} onDateSelect={handleDateSelect} />
+              </div>
+            </aside>
           </div>
         </main>
-        <aside className="w-1/5 flex flex-col bg-white p-4 shadow-lg">
+        <aside className="w-1/5 flex flex-col bg-white p-4 shadow-lg text-black">
           {user ? (
             <WelcomeUser />
           ) : (
