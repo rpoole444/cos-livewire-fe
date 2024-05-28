@@ -15,7 +15,7 @@ const LoginForm: React.FC = () => {
   const { user, login } = useAuth();
   const router = useRouter();
 
-  useEffect(():any => {
+  useEffect((): any => {
     if (user) {
       return <WelcomeUser /> 
     }
@@ -27,8 +27,8 @@ const LoginForm: React.FC = () => {
 
     try {
       await login(email, password);
-    } catch (error) {
-      setErrorMessage("An error occurred, please try again.");
+    } catch (error:any) {
+      setErrorMessage(error.response?.data?.message || "An error occurred, please try again.");
       console.error(error);
     }
   };
@@ -58,7 +58,7 @@ const LoginForm: React.FC = () => {
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                   placeholder="Email address"
                   value={email}
-                  onChange={(event: any) => setEmail(event.target.value)}
+                  onChange={(event: any) => setEmail(event.target.value.toLowerCase())}
                 />
               </div>
               <div>
@@ -96,6 +96,5 @@ const LoginForm: React.FC = () => {
       </div>
   )
 };
-
 
 export default LoginForm;

@@ -38,19 +38,20 @@ async function registerUser(firstName: string, lastName: string, email: string, 
        body: JSON.stringify({
         first_name: firstName, 
         last_name: lastName,
-        email: email,
-        password: password,
+        email,
+        password
       }),
         credentials: 'include',
       });
-         const data = await res.json(); 
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || 'Failed to register');
       }
+      const data = await res.json(); 
       return data;
   } catch (error) {
-    throw (error instanceof Error) ? error : new Error(String(error));
+    console.error('Registration error:', error);
+    throw error;
   }
 }
 

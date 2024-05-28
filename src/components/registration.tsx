@@ -3,33 +3,44 @@ import "../styles/globals.css";
 import React, { useState } from 'react';
 import { registerUser } from "@/pages/api/route";
 
-const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthMode}) => {
+const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthMode }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-    const [registrationSuccess, setRegistrationSuccess] = useState(false); // New state for tracking registration success
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
+  const validatePassword = (password:string) => {
+    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
 
   const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    try{
-      const data = await registerUser(firstName, lastName, email, password)
+    setErrorMessage(''); // Clear previous error messages
+
+    if (!validatePassword(password)) {
+      setErrorMessage("Password must be at least 8 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special characters.");
+      return;
+    }
+
+    try {
+      await registerUser(firstName, lastName, email, password);
       setRegistrationSuccess(true);
 
       setTimeout(() => {
-       setAuthMode('login');
-       setRegistrationSuccess(false);
+        setAuthMode('login');
+        setRegistrationSuccess(false);
       }, 3000);
-    } catch (error) {
-      setErrorMessage("There was an error registering");
+    } catch (error:any) {
+      setErrorMessage(error.message || "There was an error registering.");
     }
   };
 
   if (registrationSuccess) {
     return (
-      <div className="min-h-screen flex  justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <h2 className="text-sm md:text-base lg:text-lg p-2 bg-green-100 text-green-900 font-semibold rounded-md shadow">
             Registration successful! Redirecting to login...
@@ -38,15 +49,15 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
       </div>
     );
   }
-  
+
   return (
-    <div className="min-h-screen flex  justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-         <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
-            Register to Submit<br />
-            event to the<br />
-            Groove Guide!
-          </h1>
+        <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
+          Register to Submit<br />
+          an event to the<br />
+          Groove Guide!
+        </h1>
         <form className="mt-8 space-y-6" onSubmit={handleRegister}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div className='pb-5'>
@@ -88,7 +99,7 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.toLowerCase())}
               />
             </div>
             <div>
@@ -104,6 +115,9 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <p className="mt-2 text-sm text-gray-600">
+                Password must be at least 8 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special characters.
+              </p>
             </div>
           </div>
           {errorMessage && <p className="mt-2 text-center text-sm text-red-600">{errorMessage}</p>}
