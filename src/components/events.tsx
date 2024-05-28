@@ -2,6 +2,8 @@ import Link from "next/link";
 import "../styles/globals.css";
 import EventCard from "./EventCard";
 import { Event } from "@/interfaces/interfaces";
+import { AiOutlineCalendar } from "react-icons/ai";
+import Image from "next/image";
 
 interface EventsProps {
   events: Event[];
@@ -22,7 +24,11 @@ const Events: React.FC<EventsProps> = ({ events }) => {
             ))}
           </ul>
         ) : (
-          <p className="text-center text-white">No Events Today, Try Tomorrow!</p>
+          <div className="text-center text-white flex flex-col items-center justify-center py-10">
+            <AiOutlineCalendar size={48} className="mb-4" />
+            <p className="mb-4">No Events Today, Please Search for More Upcoming Events or Login to Submit your Event!</p>
+            <Image src="/trumpet.png" alt="Trumpet Image" width={200} height={200} className="text-white" />
+          </div>
         )}
       </div>
     </div>
