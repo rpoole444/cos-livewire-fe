@@ -94,8 +94,8 @@ export default function Calendar({ currentDate, onDateSelect, events }: Calendar
               className="p-2 border rounded text-black"
             >
               <option value="day">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
+              <option value="week">Week</option>
+              <option value="month">Month</option>
             </select>
             <GrFormNext
               className="w-6 h-6 cursor-pointer hover:scale-110 transition"
