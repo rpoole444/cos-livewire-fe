@@ -15,6 +15,7 @@ interface CalendarProps {
 export default function Calendar({ currentDate, onDateSelect, events }: CalendarProps) {
   const days = ["S", "M", "T", "W", "T", "F", "S"];
   const [today, setToday] = useState<Dayjs>(currentDate);
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
   const [showEventsList, setShowEventsList] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredEvents, setFilteredEvents] = useState<Event[]>(events);
@@ -35,9 +36,49 @@ export default function Calendar({ currentDate, onDateSelect, events }: Calendar
     setSearchTerm(e.target.value);
   };
 
-   return (
+  const handleViewModeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setViewMode(event.target.value as 'day' | 'week' | 'month');
+    let newDate = today;
+    if (event.target.value === 'day') {
+      newDate = dayjs();
+    } else if (event.target.value === 'week') {
+      newDate = dayjs().startOf('week');
+    } else if (event.target.value === 'month') {
+      newDate = dayjs().startOf('month');
+    }
+    setToday(newDate);
+    onDateSelect(newDate);
+  };
+
+  const handleNext = () => {
+    let newDate;
+    if (viewMode === 'day') {
+      newDate = today.add(1, 'day');
+    } else if (viewMode === 'week') {
+      newDate = today.add(1, 'week');
+    } else {
+      newDate = today.add(1, 'month');
+    }
+    setToday(newDate);
+    onDateSelect(newDate);
+  };
+
+  const handlePrevious = () => {
+    let newDate;
+    if (viewMode === 'day') {
+      newDate = today.subtract(1, 'day');
+    } else if (viewMode === 'week') {
+      newDate = today.subtract(1, 'week');
+    } else {
+      newDate = today.subtract(1, 'month');
+    }
+    setToday(newDate);
+    onDateSelect(newDate);
+  };
+
+  return (
     <div className="flex flex-col gap-10 justify-center mx-auto py-4">
-      <div className="w-full max-w-4xl mx-auto"> {/* Adjust width as needed */}
+      <div className="w-full max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-4">
           <h1 className="select-none font-semibold p-5 text-xl">
             {months[today.month()]}, {today.year()}
@@ -45,17 +86,20 @@ export default function Calendar({ currentDate, onDateSelect, events }: Calendar
           <div className="flex gap-4 items-center">
             <GrFormPrevious
               className="w-6 h-6 cursor-pointer hover:scale-110 transition"
-              onClick={() => onDateSelect(today.subtract(1, 'day'))}
+              onClick={handlePrevious}
             />
-            <h1
-              className="cursor-pointer hover:scale-110 transition"
-              onClick={() => setToday(currentDate)}
+            <select
+              value={viewMode}
+              onChange={handleViewModeChange}
+              className="p-2 border rounded text-black"
             >
-              Today
-            </h1>
+              <option value="day">Today</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
             <GrFormNext
               className="w-6 h-6 cursor-pointer hover:scale-110 transition"
-              onClick={() => onDateSelect(today.add(1, 'day'))}
+              onClick={handleNext}
             />
           </div>
         </div>
