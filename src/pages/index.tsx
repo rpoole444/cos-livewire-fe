@@ -9,33 +9,34 @@ import Events from "../components/events";
 import EventsCalendar from "@/components/EventsCalendar";
 import { getEvents } from './api/route';
 import { Event } from '@/interfaces/interfaces';
+import isBetween from 'dayjs/plugin/isBetween';
 
 type AuthMode = 'login' | 'register';
-
+dayjs.extend(isBetween)
 export default function Home() {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [filterMode, setFilterMode] = useState<'day' | 'week' | 'all'>('day');
 
-  const { user, logout} = useAuth()
+  const { user, logout } = useAuth();
 
   const switchAuthMode = () => {
     setAuthMode(authMode === 'login' ? 'register' : 'login');
-};
+  };
 
-useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       try {
-        // Assume `getEvents` is your API call function that returns a list of event objects
         const eventsData = await getEvents();
-       const approvedEvents = eventsData
-          .filter((activity:any) => activity.is_approved)
-          .sort((a:any, b:any) => {
+        const approvedEvents = eventsData
+          .filter((activity: any) => activity.is_approved)
+          .sort((a: any, b: any) => {
             const dateA = new Date(a.date);
             const dateB = new Date(b.date);
             return dateA.getTime() - dateB.getTime();
-          })
+          });
         setEvents(approvedEvents);
       } catch (error) {
         console.error('Failed to load events', error);
@@ -46,26 +47,35 @@ useEffect(() => {
   }, []);
 
   useEffect(() => {
-    // This effect runs whenever `events` or `selectedDate` changes.
     const updateFilteredEvents = () => {
-      const eventsForSelectedDate = events.filter((event) =>
-        dayjs(event.date).isSame(selectedDate, 'day')
-      );
-
-      if (eventsForSelectedDate.length === 0) {
-          setFilteredEvents([]);
-        } else {
-          setFilteredEvents(eventsForSelectedDate);
-        }
+      let filtered :any  = [];
+      if (filterMode === 'day') {
+        filtered = events.filter((event) =>
+          dayjs(event.date).isSame(selectedDate, 'day')
+        );
+      } else if (filterMode === 'week') {
+        const startOfWeek = selectedDate.startOf('week');
+        const endOfWeek = selectedDate.endOf('week');
+        filtered = events.filter((event) =>
+          dayjs(event.date).isBetween(startOfWeek, endOfWeek, null, '[]')
+        );
+      } else if (filterMode === 'all') {
+        filtered = events;
       }
+      setFilteredEvents(filtered);
+    };
     updateFilteredEvents();
-  }, [events, selectedDate]);
+  }, [events, selectedDate, filterMode]);
 
-const handleDateSelect = (newDate:any) => {
-  setSelectedDate(newDate);
- };
+  const handleDateSelect = (newDate: any) => {
+    setSelectedDate(newDate);
+  };
 
-   return (
+  const handleFilterChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilterMode(event.target.value as 'day' | 'week' | 'all');
+  };
+
+  return (
     <div className="flex min-h-screen flex-col">
       <header className="w-full bg-indigo-800 text-white p-6">
         <h1 className="text-center text-4xl lg:text-5xl font-bold tracking-tight">
@@ -75,14 +85,24 @@ const handleDateSelect = (newDate:any) => {
       <div className="flex flex-1">
         <main className="flex-grow p-8">
           <div className="flex flex-col lg:flex-row">
-            <section className="flex-grow">
-              <h1 className="text-2xl font-bold">Today's Events</h1>
-              <Events events={filteredEvents} />
-            </section>
-            <aside className="lg:w-1/3"> {/* This restricts the calendar to 1/3 of the space on large screens */}
-              <EventsCalendar currentDate={selectedDate} events={events} onDateSelect={handleDateSelect}/>
-            </aside>
-
+            <div className="flex-grow">
+              <div className="flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-bold">Events</h1>
+                <select
+                  value={filterMode}
+                  onChange={handleFilterChange}
+                  className="p-2 border rounded text-black"
+                >
+                  <option value="day">Today's Events</option>
+                  <option value="week">This Week's Events</option>
+                  <option value="all">All Upcoming Events</option>
+                </select>
+              </div>
+              <EventsCalendar currentDate={selectedDate} events={events} onDateSelect={handleDateSelect} />
+              <section className="flex-grow">
+                <Events events={filteredEvents} />
+              </section>
+            </div>
           </div>
         </main>
         <aside className="w-1/5 flex flex-col bg-white p-4 shadow-lg">
@@ -99,7 +119,7 @@ const handleDateSelect = (newDate:any) => {
                 </>
               ) : (
                 <>
-                  <RegistrationForm setAuthMode={switchAuthMode}/>
+                  <RegistrationForm setAuthMode={switchAuthMode} />
                   <button onClick={() => setAuthMode('login')} className="mt-4 text-blue-500">
                     Already have an account? Login
                   </button>
@@ -111,4 +131,4 @@ const handleDateSelect = (newDate:any) => {
       </div>
     </div>
   );
-};
+}
