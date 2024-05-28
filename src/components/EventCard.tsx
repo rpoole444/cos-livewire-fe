@@ -1,6 +1,7 @@
-import React from "react"
+import Link from "next/link";
+import React from "react";
 
-const formatDate = (dateString:string) => {
+const formatDate = (dateString: string) => {
   try {
     const options: Intl.DateTimeFormatOptions = { 
       year: 'numeric', 
@@ -18,19 +19,24 @@ const formatDate = (dateString:string) => {
   }
 };
 
-const EventCard = ({ event }:any) => {
- return (
-    <div className="border p-4 rounded shadow">
-      <h2 className="text-lg font-semibold">{event.title}</h2>
-      <p className="text-gray-600">{formatDate(event.date)}</p>
-      <p>{event.description}</p>
-      <p className="text-gray-500">Location: {event.location}</p>
-      {event.age_restriction && <p>Age Restriction: {event.age_restriction}</p>}
-      {event.ticket_price && <p>Ticket Price: ${event.ticket_price}</p>}
+const EventCard = ({ event }: any) => {
+  return (
+    <div className="bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
+      <h2 className="text-2xl font-bold text-white mb-2">{event.title}</h2>
+      <p className="text-gray-400 mb-2">{formatDate(event.date)}</p>
+      <p className="text-gray-300 mb-4">{event.description}</p>
+      <p className="text-gray-500 mb-2">Location: {event.location}</p>
+      {event.age_restriction && <p className="text-gray-500 mb-2">Age Restriction: {event.age_restriction}</p>}
+      {event.ticket_price && <p className="text-gray-500 mb-2">Ticket Price: ${event.ticket_price}</p>}
       {event.website_link && (
-        <a href={event.website_link} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+        <Link
+          href={event.website_link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:text-blue-700 transition-colors duration-200"
+        >
           Event Website
-        </a>
+        </Link>
       )}
     </div>
   );

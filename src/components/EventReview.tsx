@@ -1,14 +1,16 @@
 "use client";
-import { getEventsForReview, updateEventStatus } from "@/pages/api/route";
+import { getEventsForReview, updateEventStatus,deleteEvent } from "@/pages/api/route";
 import { useState, useEffect } from "react";
 import "../styles/globals.css";
 import AdminEventCard from "./AdminEventCard"; // This is a new component you'll create
 import { useRouter } from "next/router";
+import { useAuth } from "../context/AuthContext";
 import { Event, Events } from "../interfaces/interfaces";
 
 const EventReview: React.FC = () => {
   const [events, setEvents] = useState<Events>([]);
   const router = useRouter();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,18 +34,23 @@ const EventReview: React.FC = () => {
   };
 
   const handleDeny = async (eventId: number): Promise<void> => {
-    // Send PUT request to deny the event
-    await updateEventStatus(eventId, false);
-    // Fetch the events again to reflect the changes or directly update the state
-    setEvents(events.filter(activity => activity.id != eventId));
+    if(user){
+    try {
+   
+    await deleteEvent(eventId);
+      setEvents(prevEvents => prevEvents.filter(activity => activity.id !== eventId));
+  } catch (error) {
+    console.error('Error denying the event', error);
+  }
+}
   };
 
   const handleEdit = (event: Event) => {
     router.push(`/edit/${event.id}`);
   };
   console.log(events)
-  if(events.length > 0) {
 
+  if(events.length > 0) {
   return (
     <div>
       <div className="max-h-screen overflow-y-auto">
