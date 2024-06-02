@@ -28,7 +28,7 @@ const fetchEventDetails = async (eventId:number) => {
       return data
     };
 
-async function registerUser(firstName: string, lastName: string, email: string, password: string) {
+async function registerUser(firstName: string, lastName: string, email: string, password: string, description: string, genres: string[]) {
   try {
       const res = await fetch('http://localhost:3000/api/auth/register', {
         method: 'POST',
@@ -39,7 +39,9 @@ async function registerUser(firstName: string, lastName: string, email: string, 
         first_name: firstName, 
         last_name: lastName,
         email,
-        password
+        password,
+        user_description: description,
+        top_music_genres: genres
       }),
         credentials: 'include',
       });
