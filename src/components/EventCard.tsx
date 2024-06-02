@@ -19,13 +19,30 @@ const formatDate = (dateString: string) => {
   }
 };
 
+const getPhotoUrl = (photoReference, apiKey) => {
+  return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoReference}&key=${apiKey}`;
+};
+
 const EventCard = ({ event }: any) => {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY; // Ensure this is set in your environment variables
+
   return (
     <div className="bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300">
       <h2 className="text-2xl font-bold text-white mb-2">{event.title}</h2>
       <p className="text-gray-400 mb-2">{formatDate(event.date)}</p>
       <p className="text-gray-300 mb-4">{event.description}</p>
       <p className="text-gray-500 mb-2">Location: {event.location}</p>
+      <p className="text-gray-500 mb-2">Address: {event.address}</p>
+      {event.first_photo && (
+        <div className="mb-4">
+          <img 
+            src={getPhotoUrl(event.first_photo, apiKey)} 
+            alt="Event Location" 
+            className="mb-2 w-full h-auto rounded"
+          />
+        </div>
+      )}
+      <p className="text-gray-500 mb-2">Website: <a href={event.website} target="_blank" rel="noopener noreferrer">{event.website}</a></p>
       {event.age_restriction && <p className="text-gray-500 mb-2">Age Restriction: {event.age_restriction}</p>}
       {event.ticket_price && <p className="text-gray-500 mb-2">Ticket Price: ${event.ticket_price}</p>}
       {event.website_link && (
