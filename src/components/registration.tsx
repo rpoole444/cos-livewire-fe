@@ -3,17 +3,31 @@ import "../styles/globals.css";
 import React, { useState } from 'react';
 import { registerUser } from "@/pages/api/route";
 
+const genreOptions = ["Jazz", "Rock", "Hip-Hop", "Classical", "Pop", "Electronic"];
+
 const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthMode }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [description, setDescription] = useState('');
+  const [genres, setGenres] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
-  const validatePassword = (password:string) => {
+  const validatePassword = (password: string) => {
     const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return passwordRegex.test(password);
+  };
+
+  const handleGenreChange = (genre: string) => {
+    setGenres(prevGenres =>
+      prevGenres.includes(genre)
+        ? prevGenres.filter(g => g !== genre)
+        : prevGenres.length < 3
+        ? [...prevGenres, genre]
+        : prevGenres
+    );
   };
 
   const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -26,14 +40,14 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
     }
 
     try {
-      await registerUser(firstName, lastName, email, password);
+      await registerUser(firstName, lastName, email, password, description, genres);
       setRegistrationSuccess(true);
 
       setTimeout(() => {
         setAuthMode('login');
         setRegistrationSuccess(false);
       }, 3000);
-    } catch (error:any) {
+    } catch (error: any) {
       setErrorMessage(error.message || "There was an error registering.");
     }
   };
@@ -101,6 +115,37 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
               />
+            </div>
+            <div className='pb-5'>
+              <label htmlFor="description" className="sr-only">Description</label>
+              <textarea
+                id="description"
+                name="description"
+                rows={4}
+                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Describe yourself"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+            <div className='pb-5'>
+              <label htmlFor="genres" className="sr-only">Genres</label>
+              <div className="flex flex-wrap">
+                {genreOptions.map((genre) => (
+                  <div key={genre} className="mr-2 mb-2">
+                    <label className="inline-flex items-center">
+                      <input
+                        type="checkbox"
+                        className="form-checkbox"
+                        value={genre}
+                        checked={genres.includes(genre)}
+                        onChange={() => handleGenreChange(genre)}
+                      />
+                      <span className="ml-2">{genre}</span>
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
             <div>
               <label htmlFor="password" className="sr-only">Password</label>
