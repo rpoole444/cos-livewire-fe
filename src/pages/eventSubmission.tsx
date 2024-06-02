@@ -17,6 +17,7 @@ interface Event {
   ticketPrice: string;
   ageRestriction: string;
   eventLink: string;
+  address: string;
 }
 
 const EventSubmission = () => {
@@ -31,25 +32,36 @@ const EventSubmission = () => {
     ticketPrice: '',
     ageRestriction: '',
     eventLink: '',
+    address: '',
   });
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
   const locationInputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
+  useEffect(() => {
     if (window.google) {
       initializeAutocomplete();
     }
   }, []);
 
   const initializeAutocomplete = () => {
-    const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current);
-    autocomplete.addListener("place_changed", () => {
-      const place = autocomplete.getPlace();
-      console.log("Place details:", place);
-    });
-  };
+  const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current);
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    console.log("Place details:", place);
+
+    // const firstPhotoReference = place.photos && place.photos.length > 0 ? place.photos[0].photo_reference : '';
+
+    setEventData((prevState) => ({
+      ...prevState,
+      location: place.formatted_address,
+      website: place.website || '',
+      // firstPhoto: firstPhotoReference,
+    }));
+  });
+};
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -90,6 +102,7 @@ const EventSubmission = () => {
       title: eventData.title,
       description: eventData.description,
       location: eventData.location,
+      address: eventData.address,
       date: eventData.date,
       genre: eventData.genre,
       ticket_price: Number(ticketPriceValue),
