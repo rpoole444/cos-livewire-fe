@@ -16,9 +16,12 @@ interface Event {
   genre: string;
   ticketPrice: string;
   ageRestriction: string;
-  eventLink: string;
+  website_link: string;
   address: string;
+  venue_name: string; // Add this line
+  website: string; // Add this line
 }
+
 
 const EventSubmission = () => {
   const [eventData, setEventData] = useState<Event>({
@@ -31,8 +34,10 @@ const EventSubmission = () => {
     genre: '',
     ticketPrice: '',
     ageRestriction: '',
-    eventLink: '',
+    website_link: '',
     address: '',
+    venue_name: '', // Add this line
+    website: '', // Ensure the website is set
   });
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const { user, logout } = useAuth();
@@ -51,16 +56,16 @@ const EventSubmission = () => {
     const place = autocomplete.getPlace();
     console.log("Place details:", place);
 
-    // const firstPhotoReference = place.photos && place.photos.length > 0 ? place.photos[0].photo_reference : '';
-
     setEventData((prevState) => ({
       ...prevState,
       location: place.formatted_address,
-      website: place.website || '',
-      // firstPhoto: firstPhotoReference,
+      venue_name: place.name || '', // Add this line to get the venue name
+      website: place.website || '', // Ensure the website is set
+      address: place.formatted_address || '', // Ensure the address is set
     }));
   });
 };
+
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -81,50 +86,53 @@ const EventSubmission = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!user) {
-      console.error('No user logged in');
-      return;
-    }
+  if (!user) {
+    console.error('No user logged in');
+    return;
+  }
 
-    let ticketPriceValue = eventData.ticketPrice;
-    if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
-      ticketPriceValue = '0';
-    }
-    ticketPriceValue = ticketPriceValue.replace(/\D/g, '');
-    if (ticketPriceValue === '') {
-      ticketPriceValue = '0';
-    }
+  let ticketPriceValue = eventData.ticketPrice;
+  if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
+    ticketPriceValue = '0';
+  }
+  ticketPriceValue = ticketPriceValue.replace(/\D/g, '');
+  if (ticketPriceValue === '') {
+    ticketPriceValue = '0';
+  }
 
-    const formData = {
-      user_id: user.id,
-      title: eventData.title,
-      description: eventData.description,
-      location: eventData.location,
-      address: eventData.address,
-      date: eventData.date,
-      genre: eventData.genre,
-      ticket_price: Number(ticketPriceValue),
-      age_restriction: eventData.ageRestriction,
-      website_link: eventData.eventLink.startsWith('http') ? eventData.eventLink : `http://${eventData.eventLink}`,
-    };
-
-    try {
-      const res = await submitEvent(formData);
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to submit event');
-      }
-      setSubmissionSuccess(true);
-      setTimeout(() => {
-        router.push('/');
-        setSubmissionSuccess(false);
-      }, 3000);
-    } catch (error) {
-      console.error("There was an error submitting the event:", error);
-    }
+  const formData = {
+    user_id: user.id,
+    title: eventData.title,
+    description: eventData.description,
+    location: eventData.location,
+    address: eventData.address,
+    date: eventData.date,
+    genre: eventData.genre,
+    ticket_price: Number(ticketPriceValue),
+    age_restriction: eventData.ageRestriction,
+    website_link: eventData.website_link.startsWith('http') ? eventData.website_link : `http://${eventData.website_link}`,
+    venue_name: eventData.venue_name, // Add this line
+    website: eventData.website, // Add this line
   };
+
+  try {
+    const res = await submitEvent(formData);
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Failed to submit event');
+    }
+    setSubmissionSuccess(true);
+    setTimeout(() => {
+      router.push('/');
+      setSubmissionSuccess(false);
+    }, 3000);
+  } catch (error) {
+    console.error("There was an error submitting the event:", error);
+  }
+};
+
 
   if (submissionSuccess) {
     return (
