@@ -218,8 +218,8 @@ const EventSubmission = () => {
             </div>
           </div>
           <div className="mb-4">
-            <label htmlFor="eventLink" className="block text-md font-medium text-black">Website / Event Link</label>
-            <input id="eventLink" name="eventLink" onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
+            <label htmlFor="websit_link" className="block text-md font-medium text-black">Website / Event Link</label>
+            <input id="website_link" name="website_link" onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
           </div>
           <div className="flex flex-col items-center space-y-4">
             <button type="submit" className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Submit</button>

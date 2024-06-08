@@ -108,7 +108,7 @@ console.log(editedEvent)
         disabled={!isEditing}
         className={`p-3 rounded border text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
       />
-      {/* {editedEvent.website_link && (
+      {editedEvent.website_link && (
         <input
           type="text"
           name="website_link"
@@ -117,7 +117,7 @@ console.log(editedEvent)
           disabled={!isEditing}
           className={`p-3 rounded border text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
         />
-      )} */}
+      )}
       <div className="flex space-x-4 mt-4 justify-end">
         {isEditing ? (
           <button
