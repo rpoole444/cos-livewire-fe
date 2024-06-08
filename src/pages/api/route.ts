@@ -155,6 +155,31 @@ async function updateEventStatus(eventId: number, isApproved: boolean): Promise<
   }
 }
 
+const updateEventDetails = async (eventId: number, eventData: any) => {
+  try {
+    const response = await fetch(`http://localhost:3000/api/events/${eventId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(eventData),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update event');
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('Error updating event details:', error);
+    throw error;
+  }
+};
+
+
 async function fetchAllUsers(): Promise<void> {
   const res = await fetch('http://localhost:3000/api/auth/users', {
       credentials: 'include', // Make sure to include credentials if this endpoint requires authentication
@@ -200,6 +225,7 @@ export {
   logoutUser, 
   getEventsForReview,
   updateEventStatus,
+  updateEventDetails,
   fetchEventDetails,
   deleteEvent
 };
