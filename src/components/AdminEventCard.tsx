@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Event } from '../interfaces/interfaces';
 
 interface AdminEventCardProps {
@@ -11,6 +11,18 @@ interface AdminEventCardProps {
 const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDeny, onSave }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEvent, setEditedEvent] = useState(event);
+  const [formattedDate, setFormattedDate] = useState('');
+
+console.log(editedEvent)
+ useEffect(() => {
+    if (event.date) {
+      const date = new Date(event.date);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      setFormattedDate(`${year}-${month}-${day}`);
+    }
+  }, [event.date]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -57,7 +69,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
       <input
         type="date"
         name="date"
-        value={editedEvent.date}
+        value={formattedDate}
         onChange={handleChange}
         disabled={!isEditing}
         className={`p-3 rounded border text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
@@ -96,7 +108,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
         disabled={!isEditing}
         className={`p-3 rounded border text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
       />
-      {editedEvent.website_link && (
+      {/* {editedEvent.website_link && (
         <input
           type="text"
           name="website_link"
@@ -105,7 +117,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
           disabled={!isEditing}
           className={`p-3 rounded border text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
         />
-      )}
+      )} */}
       <div className="flex space-x-4 mt-4 justify-end">
         {isEditing ? (
           <button
