@@ -7,9 +7,12 @@ interface Event {
   time: string;
   eventType: string;
   genre: string;
-  ticketPrice: string;
-  ageRestriction: string;
-  eventLink: string;
+  ticket_price: string;
+  age_restriction: string;
+  website_link: string;
+  address: string;
+  venue_name: string; 
+  website: string;
 }
 
 interface User {
