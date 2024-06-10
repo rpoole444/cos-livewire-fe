@@ -13,7 +13,6 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
   const [editedEvent, setEditedEvent] = useState(event);
   const [formattedDate, setFormattedDate] = useState('');
 
-console.log(editedEvent)
  useEffect(() => {
     if (event.date) {
       const date = new Date(event.date);

@@ -9,7 +9,7 @@ async function getEvents() {
     throw new Error('Failed to fetch data')
   }
   const data = await res.json();
-  console.log("EVENTS DATA: ", data)
+
   const sortedEvents = data.sort((a :any, b :any) => {
     return new Date(b.date).getTime() - new Date(a.date).getTime()
   })
@@ -100,7 +100,6 @@ async function logoutUser(): Promise<void> {
     method: 'POST',
     credentials: 'include',
   });
-    console.log("Response received:", response);
 
   if (!response.ok) {
     // If the HTTP status code does not indicate success,
@@ -189,7 +188,7 @@ async function fetchAllUsers(): Promise<void> {
       throw new Error(errorBody.message || 'Failed to fetch data');
   }
   const data = await res.json();
-  console.log(data)
+ 
   return data
 }
 

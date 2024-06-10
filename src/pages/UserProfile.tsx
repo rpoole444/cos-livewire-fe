@@ -17,7 +17,7 @@ const UserProfile: React.FC = () => {
   const [description, setDescription] = useState(user?.user_description || "");
   const [genres, setGenres] = useState<string[]>([]);
   const [message, setMessage] = useState("");
-console.log("user: ", user)
+
   useEffect(() => {
     if (user?.top_music_genres) {
       let parsedGenres: string[] = [];
@@ -31,7 +31,7 @@ console.log("user: ", user)
       } catch (error) {
         parsedGenres = user.top_music_genres.split(',').map((genre: string) => genre.trim().replace(/"/g, ''));
       }
-      console.log('Parsed Genres:', parsedGenres); // Debugging line
+    
       setGenres(parsedGenres);
     }
   }, [user]);
@@ -51,7 +51,7 @@ console.log("user: ", user)
       } catch (error) {
         parsedGenres = user.top_music_genres.split(',').map((genre: string) => genre.trim().replace(/"/g, ''));
       }
-      console.log('Parsed Genres on edit:', parsedGenres); // Debugging line
+      
       setGenres(parsedGenres);
     }
   }, [isEditing, user]);

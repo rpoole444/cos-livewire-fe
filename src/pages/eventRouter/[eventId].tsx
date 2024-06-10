@@ -21,7 +21,7 @@ const EventDetailPage = () => {
     setAuthMode(prevMode => (prevMode === 'login' ? 'register' : 'login'));
   };
 
-  console.log(eventId);
+
   useEffect(() => {
     const fetchSingleEvent = async () => {
       // Ensure eventId is a string and not an array, then convert to a number
@@ -42,7 +42,7 @@ const EventDetailPage = () => {
   if (!event) {
     return <div>Loading...</div>;
   }
-console.log("event: ", event)
+
   const getDirections = () => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.address)}`;
     window.open(url, '_blank');
