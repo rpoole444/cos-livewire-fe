@@ -53,13 +53,17 @@ The Alpine Groove Guide provides a dynamic platform for local artists and event 
 
 ## Preview 
 
-![Main Calendar View](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/47ea10a2-8b03-4ab3-a243-f04d1a898f8e)
-![Main Calendar View Admin Signed in](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/3ba5bd53-1e1b-46f0-b47f-22508197e6bd)
+![Main Calendar View](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/caab5067-b64c-40ed-a681-d1f1b13f80a6)
+![No Event Calendar View](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/a003b87a-0928-4668-8a36-891e6a6910ba)
+
+![Main Calendar View Admin Signed in](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/131de6b9-a0dd-446a-9bc8-eb7eceef9ec4)
+![Register User](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/a86b0298-3f0e-426a-b1a8-ab1a8c64da6f)
+
 ![Individual Event](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/1860b651-19d8-44e0-b0fd-205effac4671)
 ![Admin Review Interface](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/d4a1cd0e-14a9-46a8-84cf-346b1e70844f)
 ![Admin Interface](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/47cb7f08-2739-41a0-9fcf-cf1118be5c97)
-![Event Submission Form](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/45c4b8ad-5f06-4778-8f3f-5d952594d3c6)
-
+![Event Submission Form](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/ae85e37e-1071-40ad-95d3-069f90c08357)
+![User Profile](https://github.com/rpoole444/cos-livewire-fe/assets/111818942/04d9d4e7-dd3e-40f8-85ff-697344d2cea2)
 
 ## Wins & Challenges
 
