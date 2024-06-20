@@ -83,12 +83,13 @@ async function loginUser(email: string, password: string){
     
 }
 
-async function submitEvent(eventData:any){
+async function submitEvent(formData:any){
   const response = await fetch('http://localhost:3000/api/events/submit', { 
     method: 'POST', 
-    body: JSON.stringify(eventData), 
+    body: formData, 
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' } });
+    // headers: { 'Content-Type': 'application/json' } 
+  });
     
      return response
 

@@ -20,6 +20,7 @@ interface Event {
   address: string;
   venue_name: string; // Add this line
   website: string; // Add this line
+  poster: string | null; // Add this line
 }
 
 
@@ -38,7 +39,9 @@ const EventSubmission = () => {
     address: '',
     venue_name: '', // Add this line
     website: '', // Ensure the website is set
+    poster: '' , // Add this line
   });
+  const [file, setFile] = useState<File | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -66,7 +69,11 @@ const EventSubmission = () => {
   });
 };
 
-
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -85,7 +92,7 @@ const EventSubmission = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
   if (!user) {
@@ -102,23 +109,25 @@ const EventSubmission = () => {
     ticketPriceValue = '0';
   }
 
-  const formData = {
-    user_id: user.id,
-    title: eventData.title,
-    description: eventData.description,
-    location: eventData.location,
-    address: eventData.address,
-    date: eventData.date,
-    genre: eventData.genre,
-    ticket_price: Number(ticketPriceValue),
-    age_restriction: eventData.ageRestriction,
-    website_link: eventData.website_link.startsWith('http') ? eventData.website_link : `http://${eventData.website_link}`,
-    venue_name: eventData.venue_name, // Add this line
-    website: eventData.website, // Add this line
-  };
+  const formData = new FormData();
+  formData.append('user_id', user.id.toString());
+  formData.append('title', eventData.title);
+  formData.append('description', eventData.description);
+  formData.append('location', eventData.location);
+  formData.append('address', eventData.address);
+  formData.append('date', eventData.date);
+  formData.append('genre', eventData.genre);
+  formData.append('ticket_price', ticketPriceValue);
+  formData.append('age_restriction', eventData.ageRestriction);
+  formData.append('website_link', eventData.website_link.startsWith('http') ? eventData.website_link : `http://${eventData.website_link}`);
+  formData.append('venue_name', eventData.venue_name);
+  formData.append('website', eventData.website);
+  if (file) {
+    formData.append('poster', file);
+  }
 
   try {
-    const res = await submitEvent(formData);
+    const res = await submitEvent(formData)
     if (!res.ok) {
       const errorData = await res.json();
       throw new Error(errorData.error || 'Failed to submit event');
@@ -132,6 +141,8 @@ const EventSubmission = () => {
     console.error("There was an error submitting the event:", error);
   }
 };
+
+
 
 
   if (submissionSuccess) {
@@ -218,8 +229,12 @@ const EventSubmission = () => {
             </div>
           </div>
           <div className="mb-4">
-            <label htmlFor="websit_link" className="block text-md font-medium text-black">Website / Event Link</label>
+            <label htmlFor="website_link" className="block text-md font-medium text-black">Website / Event Link</label>
             <input id="website_link" name="website_link" onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="poster" className="block text-md font-medium text-black">Event Poster (JPEG, PNG, PDF)</label>
+            <input type="file" id="poster" name="poster" accept="image/jpeg,image/png,application/pdf" onChange={handleFileChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
           </div>
           <div className="flex flex-col items-center space-y-4">
             <button type="submit" className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Submit</button>
