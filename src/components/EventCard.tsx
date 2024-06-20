@@ -32,7 +32,7 @@ const EventCard = ({ event }: any) => {
       )}
       {event.age_restriction && <p className="text-gray-500 mb-2">Age Restriction: {event.age_restriction}</p>}
       {event.ticket_price && <p className="text-gray-500 mb-2">Ticket Price: ${event.ticket_price}</p>}
-      {event.website_link && (
+      {event.website_link !== "http://" && (
         <Link
           href={event.website_link}
           target="_blank"
@@ -41,6 +41,11 @@ const EventCard = ({ event }: any) => {
         >
           Event Website
         </Link>
+      )}
+      {event.poster ? (
+        <img src={event.poster} alt="Event Poster" className="flex align-center justify-center w-2/3 h-auto mb-4" />
+      ) : (
+        <p className="text-center text-gray-500 mb-4">-</p>
       )}
     </div>
   );
