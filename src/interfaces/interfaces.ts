@@ -13,6 +13,7 @@ interface Event {
   address: string;
   venue_name: string; 
   website: string;
+  poster: string | null;
 }
 
 interface User {
