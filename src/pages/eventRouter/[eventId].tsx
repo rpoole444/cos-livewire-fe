@@ -7,14 +7,14 @@ import LoginForm from '@/components/login';
 import WelcomeUser from "@/components/WelcomeUser"; 
 import RegistrationForm from '@/components/registration';
 import Link from "next/link";
-
+import { Event } from '@/interfaces/interfaces';
 type AuthMode = 'login' | 'register';
 
 const EventDetailPage = () => {
   const { user, logout } = useAuth();
   const router = useRouter();
   const { eventId } = router.query;
-  const [event, setEvent] = useState(null);
+  const [event, setEvent] = useState<Event>();
   const [authMode, setAuthMode] = useState<AuthMode>('login');
 
   const switchAuthMode = () => {
@@ -43,7 +43,7 @@ const EventDetailPage = () => {
     return <div>Loading...</div>;
   }
 
-  const getDirections = () => {
+  const getDirections = ():any => {
     const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.address)}`;
     window.open(url, '_blank');
   };
