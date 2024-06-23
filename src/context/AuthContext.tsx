@@ -1,20 +1,21 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { UserType } from '../types'
+import { UserType } from '../types';
+import { useRouter } from 'next/router';
 
 interface AuthContextType {
   user: UserType | null;
-  login: (email:string, password:string) => Promise<void>; // Be specific with userData type if possible
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (updatedUser: UserType) => void;
 }
 
-// Provide a default context object that matches the AuthContextType shape
 const defaultContext: AuthContextType = {
   user: null,
-  login: async (email: string, password: string) => { /* This is now an async stub that does nothing but matches the type */ },
+  login: async (email: string, password: string) => {},
   logout: () => {},
+  updateUser: (updatedUser: UserType) => {},
 };
 
-// Provide a default value matching the AuthContextType
 const AuthContext = createContext<AuthContextType>(defaultContext);
 
 export function useAuth() {
@@ -24,24 +25,21 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserType | null>(null);
 
- useEffect(() => {
-    // Function to check user's current authentication status
+  useEffect(() => {
     const checkAuthStatus = async () => {
       try {
         const response = await fetch('http://localhost:3000/api/auth/session', { credentials: 'include' });
         const data = await response.json();
         if (data.isLoggedIn) {
-          setUser(data.user); // Set the user if the session check returns logged in
+          setUser(data.user);
         }
       } catch (error) {
         console.error('Error fetching auth status:', error);
       }
     };
 
-    // Call the function on component mount
     checkAuthStatus();
   }, []);
-
 
   const login = async (email: string, password: string) => {
     try {
@@ -53,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       const data = await response.json();
       if (response.ok) {
-        setUser(data.user); // Set the user upon successful login
+        setUser(data.user);
       } else {
         throw new Error(data.message || 'Failed to login');
       }
@@ -68,12 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         credentials: 'include',
       });
-      console.log("Response received:", response);
-
       if (response.ok) {
-        setUser(null); // Clear the user upon successful logout
-        console.log("logout successful:", response);
-
+        setUser(null);
       } else {
         throw new Error('Failed to logout');
       }
@@ -82,9 +76,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Provide the login and logout functions to the context
+  const updateUser = (updatedUser: UserType) => {
+    setUser(updatedUser);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
