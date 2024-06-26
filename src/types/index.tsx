@@ -6,4 +6,5 @@ export interface UserType {
   email: string;
   user_description: string; // or string, depending on your
   top_music_genres: string; // or string, depending on your
+  profile_picture: string; // or string, depending on your
 }
