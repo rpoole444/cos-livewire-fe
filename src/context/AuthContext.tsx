@@ -25,13 +25,17 @@ export function useAuth() {
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserType | null>(null);
 
+
+  
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
         const response = await fetch('http://localhost:3000/api/auth/session', { credentials: 'include' });
         const data = await response.json();
         if (data.isLoggedIn) {
-          setUser(data.user);
+          const profilePictureResponse = await fetch('http://localhost:3000/api/auth/profile-picture', { credentials: 'include' });
+          const profilePictureData = await profilePictureResponse.json();
+          setUser({ ...data.user, profile_picture: profilePictureData.profile_picture_url });
         }
       } catch (error) {
         console.error('Error fetching auth status:', error);
@@ -51,7 +55,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       const data = await response.json();
       if (response.ok) {
-        setUser(data.user);
+        const profilePictureResponse = await fetch('http://localhost:3000/api/auth/profile-picture', { credentials: 'include' });
+        const profilePictureData = await profilePictureResponse.json();
+        const parsedGenres = JSON.parse(data.user.top_music_genres);
+        setUser({ ...data.user,top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [], profile_picture: profilePictureData.profile_picture_url });
       } else {
         throw new Error(data.message || 'Failed to login');
       }
