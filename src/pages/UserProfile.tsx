@@ -29,39 +29,47 @@ const UserProfile: React.FC = () => {
     if (user?.top_music_genres) {
       let parsedGenres: string[] = [];
       try {
-        const cleanedGenres = user.top_music_genres.replace(/[{}]/g, '').replace(/\\/g, '');
-        if (cleanedGenres.startsWith('[')) {
-          parsedGenres = JSON.parse(cleanedGenres.replace(/'/g, '"'));
-        } else {
-          parsedGenres = cleanedGenres.split(',').map((genre: string) => genre.trim().replace(/"/g, ''));
-        }
+        parsedGenres = JSON.parse(user.top_music_genres);
+        setGenres(Array.isArray(parsedGenres) ? parsedGenres : []);
       } catch (error) {
-        parsedGenres = user.top_music_genres.split(',').map((genre: string) => genre.trim().replace(/"/g, ''));
+        setGenres(user.top_music_genres.split(',').map((genre: string) => genre.trim()));
       }
-    
-      setGenres(parsedGenres);
     }
   }, [user]);
 
+  
   useEffect(() => {
     if (!isEditing && user) {
       setEmail(user.email);
       setDescription(user.user_description);
       let parsedGenres: string[] = [];
       try {
-        const cleanedGenres = user.top_music_genres.replace(/[{}]/g, '').replace(/\\/g, '');
-        if (cleanedGenres.startsWith('[')) {
-          parsedGenres = JSON.parse(cleanedGenres.replace(/'/g, '"'));
-        } else {
-          parsedGenres = cleanedGenres.split(',').map((genre: string) => genre.trim().replace(/"/g, ''));
-        }
+        parsedGenres = JSON.parse(user.top_music_genres);
       } catch (error) {
-        parsedGenres = user.top_music_genres.split(',').map((genre: string) => genre.trim().replace(/"/g, ''));
+        // parsedGenres = user.top_music_genres.split(',').map((genre: string) => genre.trim());
       }
-      
       setGenres(parsedGenres);
     }
   }, [isEditing, user]);
+
+  // Fetch profile picture on mount
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/profile-picture', {
+          credentials: 'include',
+        });
+        const data = await response.json();
+        if (data.profile_picture_url) {
+          setProfilePicture(data.profile_picture_url);
+        }
+      } catch (error) {
+        console.error('Error fetching profile picture:', error);
+      }
+    };
+
+    fetchProfilePicture();
+  }, [profilePicture]);
 
   const handleEdit = () => {
     setIsEditing(!isEditing);
@@ -70,7 +78,7 @@ const UserProfile: React.FC = () => {
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
       setGenres(genres.filter((g) => g !== genre));
-    } else if (genres.length < 3) {
+    } else if (genres.length <= 2) {
       setGenres([...genres, genre]);
     }
   };
@@ -102,9 +110,6 @@ const UserProfile: React.FC = () => {
       const response = await fetch('http://localhost:3000/api/auth/update-profile', {
         method: 'PUT',
         credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${user.token}`, // Include the token in the header
-        },
         body: formData,
       });
 
@@ -120,11 +125,11 @@ const UserProfile: React.FC = () => {
         ...user,
         email,
         user_description: description,
-        top_music_genres: genres.join(", "),
-        profile_picture: data.profile_picture_url,
+        top_music_genres: JSON.stringify(genres),
+        profile_picture: data.profile_picture,
       };
       updateUser(updatedUser);
-      setProfilePicture(data.profile_picture_url);
+      setProfilePicture(data.profile_picture);
     } catch (error) {
       console.error(error);
       setMessage("Error updating profile");
@@ -217,8 +222,7 @@ const UserProfile: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-                  <span>{genres.join(", ")}</span>
-                )}
+ <span>{genres.length ? genres.join(", ") : "None"}</span>                )}
               </div>
               {isEditing && (
                 <div className="mb-4">
