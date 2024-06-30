@@ -1,5 +1,5 @@
 import Header from '@/components/Header';
-
+import Image from 'next/image';
 const About = () => {
   return (
     <div className="flex min-h-screen flex-col bg-gray-900 text-white">
@@ -17,7 +17,7 @@ const About = () => {
             I am Reid Poole, a musician and software engineer. I created this platform as a solution for the community so that artists and locals could market their events and find things to do easily!
           </p>
           <div className="flex items-center mt-8">
-            <img src="/reid_poole.jpeg" alt="Reid Poole" className="w-44 h-54 rounded-full mr-4 shadow-lg" />
+            <Image src="/reid_poole.jpeg" alt="Reid Poole" className="w-44 h-54 rounded-full mr-4 shadow-lg" width={400} height={400}/>
             <div>
               <h2 className="text-2xl font-semibold">Reid Poole</h2>
               <p className="text-gray-400">Musician and Software Engineer</p>

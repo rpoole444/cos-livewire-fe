@@ -2,7 +2,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
-
+import Image from "next/image";
 const genresList = [
   "Jazz", "Indie", "Dance", "Electronic", "Rock", "Alternative", "Country", "Hip-Hop", "Pop", 
   "R&B", "Rap", "Reggae", "Soul", "Techno", "World", "Other"
@@ -168,7 +168,7 @@ const UserProfile: React.FC = () => {
           <div className="md:w-1/3 flex justify-center mb-4 md:mb-0">
             {profilePicture && (
               <div className="md:mb-4">
-                <img src={profilePicture} alt="Profile Picture" className="w-48 h-48 rounded-full object-cover"/>
+                <Image src={profilePicture} alt="Profile Picture" className="w-48 h-48 rounded-full object-cover" width={400} height={400}/>
               </div>
             )}
           </div>
