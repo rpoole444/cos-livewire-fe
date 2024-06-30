@@ -1,12 +1,11 @@
 import '../styles/globals.css';
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { logoutUser } from './api/route';
 import Link from "next/link";
 import { useRouter } from "next/router";
 import EventReview from '@/components/EventReview';
 
-const adminService = () => {
+const AdminService: React.FC = () => {
   const router = useRouter();
   const { user, logout } = useAuth();
 
@@ -37,4 +36,4 @@ const handleLogout = async () => {
   )
 }
 
-export default adminService;
+export default AdminService;

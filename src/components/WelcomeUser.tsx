@@ -32,7 +32,7 @@ const WelcomeUser = () => {
             <Link href="/AdminUsersPage" className="mb-4 px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 text-sm text-center">
               Admin Settings
             </Link>
-            <Link href="/adminService" className="mb-4 px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm text-center">
+            <Link href="/AdminService" className="mb-4 px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm text-center">
               Review Events
             </Link>
           </>
