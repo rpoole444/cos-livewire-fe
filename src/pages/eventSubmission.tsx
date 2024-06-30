@@ -222,7 +222,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             <div className="flex space-x-4 items-center">
               {["All Ages", "16+", "18+", "21+", "25+"].map(age => (
                 <label key={age} className="flex items-center space-x-2">
-                  <input type="radio" name="ageRestriction" value={age} onChange={handleChange} className="w-6 h-6"/>
+                  <input type="radio" id={`age-${age}`} name="ageRestriction" value={age} onChange={handleChange} className="w-6 h-6" checked={eventData.ageRestriction === age}/>
                   <span className="text-lg text-black">{age}</span>
                 </label>
               ))}
@@ -230,7 +230,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           </div>
           <div className="mb-4">
             <label htmlFor="website_link" className="block text-md font-medium text-black">Website / Event Link</label>
-            <input id="website_link" name="website_link" onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
+            <input autoComplete="on" type="text" id="website_link" name="website_link" onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
           </div>
           <div className="mb-4">
             <label htmlFor="poster" className="block text-md font-medium text-black">Event Poster (JPEG, PNG, PDF)</label>

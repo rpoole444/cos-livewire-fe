@@ -42,7 +42,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
   return (
     <div className="flex flex-col space-y-4 p-6 border rounded shadow-lg bg-white max-w-3xl mx-auto">
       {event.poster ? (
-        <Image src={event.poster} alt="Event Poster" className="w-2/3 h-auto mb-4" width={400} height={400}/>
+        <Image src={event.poster} alt="Event Poster" className="w-2/3 h-auto mb-4" priority width={400} height={400}/>
       ) : (
         <p className="text-center text-gray-500 mb-4">-</p>
       )}

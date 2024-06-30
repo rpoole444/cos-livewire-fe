@@ -44,7 +44,7 @@ const EventCard = ({ event }: any) => {
       )}
       {event.poster ? (
         <div className="flex justify-center">
-          <Image src={event.poster} alt="Event Poster" width={400} height={400} />
+          <Image src={event.poster} alt="Event Poster" priority width={400} height={400} />
         </div>
       ) : (
         <p className="text-center text-gray-500 mb-4">-</p>

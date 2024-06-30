@@ -1,5 +1,5 @@
 import '../styles/globals.css';
-import React, { useState } from "react";
+import React from "react";
 import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/router";

@@ -87,6 +87,8 @@ export default function Home() {
               <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-bold">Events</h1>
                 <select
+                  name="event-pulldown"
+                  id="event-pulldown"
                   value={filterMode}
                   onChange={handleFilterChange}
                   className="p-2 border rounded text-black"

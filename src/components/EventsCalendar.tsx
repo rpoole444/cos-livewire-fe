@@ -95,6 +95,8 @@ export default function Calendar({ currentDate, onDateSelect, events }: Calendar
               onClick={handlePrevious}
             />
             <select
+              name="calendar-pulldown"
+              id="calendar-pulldown"
               value={viewMode}
               onChange={handleViewModeChange}
               className="p-2 border rounded text-black"

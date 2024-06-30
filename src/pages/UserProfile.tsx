@@ -175,54 +175,62 @@ const UserProfile: React.FC = () => {
           <div className="md:w-2/3 bg-gray-800 p-6 rounded-lg shadow-lg max-w-md mx-auto md:mx-0 md:max-w-full">
             <>
               <div className="mb-4">
-                <label className="block font-semibold">Name:</label>
-                <span>{user.first_name} {user.last_name}</span>
+                <p className="block font-semibold">Name:
+                  <span>{user.first_name} {user.last_name}</span>
+                </p>
               </div>
               <div className="mb-4">
-                <label className="block font-semibold">Email:</label>
                 {isEditing ? (
+                <label className="block font-semibold">Email:
                   <input
+                    id="emailInput"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="border p-2 rounded w-full text-black"
                   />
+                </label>
                 ) : (
                   <span>{email}</span>
                 )}
               </div>
               <div className="mb-4">
-                <label className="block font-semibold">Description:</label>
                 {isEditing ? (
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="border p-2 rounded w-full text-black"
-                  />
+                  <label className="block font-semibold">Description:
+                    <textarea
+                      name="textarea-description"
+                      id="textarea-description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="border p-2 rounded w-full text-black"
+                    />
+                  </label>
                 ) : (
                   <span>{description}</span>
                 )}
               </div>
+              <p className="block font-semibold" >Favorite Genres:</p>
               <div className="mb-4">
-                <label className="block font-semibold">Favorite Genres:</label>
                 {isEditing ? (
                   <div>
                     {genresList.map((genre) => (
                       <div key={genre} className="mb-2">
                         <input
                           type="checkbox"
+                          name='genre-checkbox'
                           id={genre}
                           value={genre}
                           checked={genres.includes(genre)}
                           onChange={() => handleGenreChange(genre)}
                           className="mr-2"
+                          autoComplete="true"
                         />
                         <label htmlFor={genre}>{genre}</label>
                       </div>
                     ))}
                   </div>
                 ) : (
- <span>{genres.length ? genres.join(", ") : "None"}</span>                )}
+              <span>{genres.length ? genres.join(", ") : "None"}</span>                )}
               </div>
               {isEditing && (
                 <div className="mb-4">
