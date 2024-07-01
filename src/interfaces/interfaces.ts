@@ -1,6 +1,6 @@
 // interfaces.ts
 export interface CustomEvent {
-  id: string; // Changed from string to number
+  id: number; // Changed from string to number
   title: string;
   date: string;
   description: string;
@@ -19,7 +19,7 @@ export interface CustomEvent {
 
 // interfaces.ts
 export interface Event extends CustomEvent {
-  id: string; // Ensure this matches CustomEvent
+  id: number; // Ensure this matches CustomEvent
   title: string;
   description: string;
   location: string;
