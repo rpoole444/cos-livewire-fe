@@ -1,7 +1,12 @@
 import Link from "next/link";
 import React from "react";
 import Image from "next/image";
+import { CustomEvent } from '@/interfaces/interfaces'; // Use the correct type
 
+interface EventCardProps {
+  event: CustomEvent
+  handleCardClick: (id: string) => void;
+}
 const formatDate = (dateString: string) => {
   try {
     const options: Intl.DateTimeFormatOptions = { 
@@ -19,9 +24,9 @@ const formatDate = (dateString: string) => {
   }
 };
 
-const EventCard = ({ event }: any) => {
+const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick }: any) => {
   return (
-    <div className="bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 max-w-xl mx-auto">
+    <div onClick={() => handleCardClick(event.id)} className="bg-gray-800 p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 max-w-xl mx-auto">
       <h2 className="text-2xl font-bold text-white mb-2">{event.title}</h2>
       <p className="text-gray-400 mb-2">{formatDate(event.date)}</p>
       <p className="text-gray-300 mb-4">{event.description}</p>
