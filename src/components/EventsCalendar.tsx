@@ -148,6 +148,7 @@ export default function Calendar({ currentDate, onDateSelect, events }: Calendar
             <h2 className="text-xl font-semibold text-white mb-2">Search All Upcoming Events</h2>
             <input
               type="text"
+              id="search-all-events"
               placeholder="Search by event title, genre, or location"
               value={searchTerm}
               onChange={handleSearchChange}
