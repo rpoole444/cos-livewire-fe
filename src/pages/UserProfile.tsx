@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Image from "next/image";
+
 const genresList = [
   "Jazz", "Indie", "Dance", "Electronic", "Rock", "Alternative", "Country", "Hip-Hop", "Pop", 
   "R&B", "Rap", "Reggae", "Soul", "Techno", "World", "Other"
@@ -32,12 +33,11 @@ const UserProfile: React.FC = () => {
         parsedGenres = JSON.parse(user.top_music_genres);
         setGenres(Array.isArray(parsedGenres) ? parsedGenres : []);
       } catch (error) {
-        setGenres(user.top_music_genres.split(',').map((genre: string) => genre.trim()));
+          setGenres(user.top_music_genres.split(',').map((genre: string) => genre.trim()));
       }
     }
   }, [user]);
 
-  
   useEffect(() => {
     if (!isEditing && user) {
       setEmail(user.email);
@@ -78,7 +78,7 @@ const UserProfile: React.FC = () => {
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
       setGenres(genres.filter((g) => g !== genre));
-    } else if (genres.length <= 2) {
+    } else if (genres.length <= 3) {
       setGenres([...genres, genre]);
     }
   };

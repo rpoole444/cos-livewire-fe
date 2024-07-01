@@ -25,6 +25,22 @@ interface User {
   is_admin: boolean;
   is_logged_in: boolean;
 }
+// interfaces.ts
+export interface CustomEvent {
+  id: string;
+  title: string;
+  date: string;
+  description: string;
+  venue_name?: string;
+  address: string;
+  website?: string;
+  age_restriction?: string;
+  ticket_price?: number;
+  website_link?: string;
+  poster?: string;
+}
+
+
 export type Users = User[];
 export type Events = Event[];
 

@@ -45,27 +45,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuthStatus();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        const profilePictureResponse = await fetch('http://localhost:3000/api/auth/profile-picture', { credentials: 'include' });
-        const profilePictureData = await profilePictureResponse.json();
-        const parsedGenres = JSON.parse(data.user.top_music_genres);
-        setUser({ ...data.user,top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [], profile_picture: profilePictureData.profile_picture_url });
-      } else {
-        throw new Error(data.message || 'Failed to login');
+const login = async (email: string, password: string) => {
+  try {
+    const response = await fetch('http://localhost:3000/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password }),
+    });
+
+    // Handle non-OK responses
+    if (!response.ok) {
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        throw new Error('Failed to login');
       }
-    } catch (error) {
-      throw error;
+      throw new Error(errorData.message || 'Failed to login');
     }
-  };
+
+    // Parse the response JSON
+    let data;
+    try {
+      data = await response.json();
+    } catch (err) {
+      throw new Error('Failed to parse response JSON');
+    }
+
+    // Fetch profile picture if login is successful
+    const profilePictureResponse = await fetch('http://localhost:3000/api/auth/profile-picture', { credentials: 'include' });
+    const profilePictureData = await profilePictureResponse.json();
+    // if(data.user.top_music_genres) {
+    const parsedGenres = JSON.parse(data.user.top_music_genres);
+    // }
+    setUser({
+      ...data.user,
+      top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [],
+      profile_picture: profilePictureData.profile_picture_url
+    });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
+};
+
 
   const logout = async () => {
     try {
