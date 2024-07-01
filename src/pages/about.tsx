@@ -8,7 +8,7 @@ const About = () => {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-6">About Us</h1>
           <p className="text-lg mb-6">
-            Welcome to the Alpine Groove Guide! This is a community calendar aimed at Colorado Springs and Denver's music scene. We encourage users to register, login, and start creating events!
+            Welcome to the Alpine Groove Guide! This is a community calendar aimed at Colorado Springs and Denver&apos;s music scene. We encourage users to register, login, and start creating events!
           </p>
           <p className="text-lg mb-6">
             Submitted events are reviewed for acceptance, decline, or edits. Upon acceptance, they are posted to the site. This ensures that our calendar remains a reliable source of information for the community.

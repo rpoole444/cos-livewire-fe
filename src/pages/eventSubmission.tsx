@@ -163,7 +163,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         onLoad={() => initializeAutocomplete()}
       />
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold">{user.first_name}, Let's get your event out there!!</h1>
+        <h1 className="text-2xl font-bold">{user.first_name}, Let&apos;s get your event out there!!</h1>
         <p className="text-md mt-2">Fill out our Submission Form!</p>
       </div>
       <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">

@@ -93,8 +93,8 @@ export default function Home() {
                   onChange={handleFilterChange}
                   className="p-2 border rounded text-black"
                 >
-                  <option value="day">Today's Events</option>
-                  <option value="week">This Week's Events</option>
+                  <option value="day">Today&apos;s Events</option>
+                  <option value="week">This Week&apos;s Events</option>
                   <option value="all">All Upcoming Events</option>
                 </select>
               </div>
