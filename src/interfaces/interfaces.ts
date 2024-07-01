@@ -1,5 +1,25 @@
-interface Event {
-  id:number;
+// interfaces.ts
+export interface CustomEvent {
+  id: string; // Changed from string to number
+  title: string;
+  date: string;
+  description: string;
+  location: string;
+  time: string;
+  venue_name: string;
+  address: string;
+  website: string;
+  genre: string;
+  age_restriction: string;
+  ticket_price: string;
+  website_link: string;
+  poster: string | null;
+  eventType: string;
+}
+
+// interfaces.ts
+export interface Event extends CustomEvent {
+  id: string; // Ensure this matches CustomEvent
   title: string;
   description: string;
   location: string;
@@ -25,24 +45,8 @@ interface User {
   is_admin: boolean;
   is_logged_in: boolean;
 }
-// interfaces.ts
-export interface CustomEvent {
-  id: string;
-  title: string;
-  date: string;
-  description: string;
-  venue_name?: string;
-  address: string;
-  website?: string;
-  age_restriction?: string;
-  ticket_price?: number;
-  website_link?: string;
-  poster?: string;
-}
-
 
 export type Users = User[];
 export type Events = Event[];
 
-
-export type { User, Event } 
+export type { User };

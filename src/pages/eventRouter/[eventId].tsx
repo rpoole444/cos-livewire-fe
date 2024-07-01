@@ -9,6 +9,7 @@ import RegistrationForm from '@/components/registration';
 import Link from "next/link";
 import { Event } from '@/interfaces/interfaces';
 type AuthMode = 'login' | 'register';
+import { CustomEvent } from '@/interfaces/interfaces';
 
 const EventDetailPage = () => {
   const { user, logout } = useAuth();
@@ -24,12 +25,9 @@ const EventDetailPage = () => {
 
   useEffect(() => {
     const fetchSingleEvent = async () => {
-      // Ensure eventId is a string and not an array, then convert to a number
-      const id = Array.isArray(eventId) ? eventId[0] : eventId;
-      const numericId = id ? parseInt(id, 10) : null;
-
-      if (numericId) {
-        const data: any = await fetchEventDetails(numericId);
+      const id = Number(Array.isArray(eventId) ? eventId[0] : eventId);
+      if (id) {
+        const data = await fetchEventDetails(id);
         setEvent(data);
       }
     };
@@ -48,7 +46,6 @@ const EventDetailPage = () => {
     window.open(url, '_blank');
   };
 
-  // You can use the EventCard component or create a new one specifically for this page
   return (
     <div className="flex min-h-screen flex-col">
       <header className="w-full bg-indigo-800 text-white p-6">
