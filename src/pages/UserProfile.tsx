@@ -30,10 +30,10 @@ const UserProfile: React.FC = () => {
     if (user?.top_music_genres) {
       let parsedGenres: string[] = [];
       try {
-        parsedGenres = JSON.parse(user.top_music_genres);
+        parsedGenres = Array.isArray(user.top_music_genres) ? user.top_music_genres : JSON.parse(user.top_music_genres);
         setGenres(Array.isArray(parsedGenres) ? parsedGenres : []);
       } catch (error) {
-          setGenres(user.top_music_genres.split(',').map((genre: string) => genre.trim()));
+        // parsedGenres = user.top_music_genres.split(',').map((genre: string) => genre.trim());
       }
     }
   }, [user]);
@@ -44,9 +44,9 @@ const UserProfile: React.FC = () => {
       setDescription(user.user_description);
       let parsedGenres: string[] = [];
       try {
-        parsedGenres = JSON.parse(user.top_music_genres);
+        parsedGenres = Array.isArray(user.top_music_genres) ? user.top_music_genres : JSON.parse(user.top_music_genres);
       } catch (error) {
-        // parsedGenres = user.top_music_genres.split(',').map((genre: string) => genre.trim());
+        parsedGenres = Array.isArray(user.top_music_genres) ? user.top_music_genres : JSON.parse(user.top_music_genres);
       }
       setGenres(parsedGenres);
     }
@@ -230,7 +230,7 @@ const UserProfile: React.FC = () => {
                     ))}
                   </div>
                 ) : (
-              <span>{genres.length ? genres.join(", ") : "None"}</span>                )}
+              <span>{Array.isArray(genres) ? genres.join(", ") : "None"}</span>                )}
               </div>
               {isEditing && (
                 <div className="mb-4">
