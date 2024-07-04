@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Event } from '@/interfaces/interfaces';
+import { Event, User } from '@/interfaces/interfaces';
 import FaveEventCard from './FaveEventCard';
+import { UserType } from '@/types';
 
 interface UpcomingShowsProps {
+  user: UserType
   userGenres: String;
   events: Event[];
 }
 
-const UpcomingShows: React.FC<UpcomingShowsProps> = ({ userGenres, events }) => {
+const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events }) => {
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
 
   useEffect(() => {
@@ -20,8 +22,8 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ userGenres, events }) => 
   }, [userGenres, events]);
 
   return (
-    <div className="bg-white p-4 mt-5 rounded-lg shadow-lg max-h-100 overflow-y-auto">
-      <h2 className="text-xl font-bold mb-4">Upcoming Music You Might Be Interested In...</h2>
+    <div className="bg-white p-4 mt-5 rounded-lg shadow-lg max-h-100 overflow-y-auto justify-center">
+      <h2 className="text-xl font-bold mb-4">{user.first_name} {user.last_name}'s Music Recomendations'</h2>
       {filteredEvents.length > 0 ? (
         filteredEvents.map(event => (
           <FaveEventCard

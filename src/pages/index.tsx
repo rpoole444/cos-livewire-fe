@@ -114,7 +114,7 @@ export default function Home() {
           {user ? (
             <>
               <WelcomeUser />
-              <UpcomingShows userGenres={user.top_music_genres} events={events} />
+              <UpcomingShows user={user} userGenres={user.top_music_genres} events={events} />
             </>
           ) : (
             <>
