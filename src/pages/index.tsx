@@ -1,4 +1,3 @@
-"use client"
 import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import Header from '@/components/Header';
@@ -79,14 +78,14 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-900 text-white">
+    <div className="flex flex-col min-h-screen bg-gray-900 text-white">
       <Header />
-      <div className="flex flex-1">
-        <main className="flex-grow p-8">
-          <div className="flex flex-col lg:flex-row gap-8">
+      <div className="flex flex-1 flex-col md:flex-row">
+        <main className="flex-grow p-4 md:p-8">
+          <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
             <section className="flex-grow">
               <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-bold">Events</h1>
+                <h1 className="text-xl md:text-2xl font-bold">Events</h1>
                 <select
                   name="event-pulldown"
                   id="event-pulldown"
@@ -94,8 +93,8 @@ export default function Home() {
                   onChange={handleFilterChange}
                   className="p-2 border rounded text-black"
                 >
-                  <option value="day">Today&apos;s Events</option>
-                  <option value="week">This Week&apos;s Events</option>
+                  <option value="day">Today's Events</option>
+                  <option value="week">This Week's Events</option>
                   <option value="all">All Upcoming Events</option>
                 </select>
               </div>
@@ -110,7 +109,7 @@ export default function Home() {
             </aside>
           </div>
         </main>
-        <aside className="w-1/5 flex flex-col bg-white p-4 shadow-lg text-black">
+        <aside className="w-full md:w-1/5 flex flex-col bg-white p-4 shadow-lg text-black">
           {user ? (
             <>
               <WelcomeUser />
