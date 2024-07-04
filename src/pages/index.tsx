@@ -11,6 +11,7 @@ import EventsCalendar from "@/components/EventsCalendar";
 import { getEvents } from './api/route';
 import { Event } from '@/interfaces/interfaces';
 import isBetween from 'dayjs/plugin/isBetween';
+import UpcomingShows from '@/components/UpcomingShows';
 
 type AuthMode = 'login' | 'register';
 dayjs.extend(isBetween)
@@ -111,7 +112,10 @@ export default function Home() {
         </main>
         <aside className="w-1/5 flex flex-col bg-white p-4 shadow-lg text-black">
           {user ? (
-            <WelcomeUser />
+            <>
+              <WelcomeUser />
+              <UpcomingShows userGenres={user.top_music_genres} events={events} />
+            </>
           ) : (
             <>
               {authMode === 'login' ? (

@@ -75,14 +75,24 @@ const login = async (email: string, password: string) => {
 
     // Fetch profile picture if login is successful
     const profilePictureResponse = await fetch('http://localhost:3000/api/auth/profile-picture', { credentials: 'include' });
-    const profilePictureData = await profilePictureResponse.json();
-    // if(data.user.top_music_genres) {
-    const parsedGenres = JSON.parse(data.user.top_music_genres);
-    // }
+    let profilePictureData : any = {};
+    if (profilePictureResponse.ok) {
+      profilePictureData = await profilePictureResponse.json();
+    }
+
+    let parsedGenres = [];
+    if (data.user.top_music_genres) {
+      try {
+        parsedGenres = JSON.parse(data.user.top_music_genres);
+      } catch (error) {
+        console.error("Error parsing genres:", error);
+      }
+    }
+
     setUser({
       ...data.user,
       top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [],
-      profile_picture: profilePictureData.profile_picture_url
+      profile_picture: profilePictureData.profile_picture_url || null
     });
 
   } catch (error) {
@@ -90,6 +100,7 @@ const login = async (email: string, password: string) => {
     throw error;
   }
 };
+
 
 
   const logout = async () => {

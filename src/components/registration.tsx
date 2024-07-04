@@ -31,27 +31,27 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
     );
   };
 
-  const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setErrorMessage(''); // Clear previous error messages
+const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  setErrorMessage(''); // Clear previous error messages
 
-    if (!validatePassword(password)) {
-      setErrorMessage("Password must be at least 8 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special characters.");
-      return;
-    }
+  if (!validatePassword(password)) {
+    setErrorMessage("Password must be at least 8 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special characters.");
+    return;
+  }
 
-    try {
-      await registerUser(firstName, lastName, email, password, description, genres);
-      setRegistrationSuccess(true);
+  try {
+    await registerUser(firstName, lastName, email, password, description, genres); 
+    setRegistrationSuccess(true);
 
-      setTimeout(() => {
-        setAuthMode('login');
-        setRegistrationSuccess(false);
-      }, 3000);
-    } catch (error: any) {
-      setErrorMessage(error.message || "There was an error registering.");
-    }
-  };
+    setTimeout(() => {
+      setAuthMode('login');
+      setRegistrationSuccess(false);
+    }, 3000);
+  } catch (error: any) {
+    setErrorMessage(error.message || "There was an error registering.");
+  }
+};
 
   if (registrationSuccess) {
     return (

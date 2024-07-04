@@ -26,17 +26,18 @@ const UserProfile: React.FC = () => {
     }
   }, [user, router]);
 
-  useEffect(() => {
-    if (user?.top_music_genres) {
+useEffect(() => {
+  if (user?.top_music_genres) {
       let parsedGenres: string[] = [];
-      try {
+    try {
         parsedGenres = Array.isArray(user.top_music_genres) ? user.top_music_genres : JSON.parse(user.top_music_genres);
-        setGenres(Array.isArray(parsedGenres) ? parsedGenres : []);
-      } catch (error) {
-        // parsedGenres = user.top_music_genres.split(',').map((genre: string) => genre.trim());
-      }
+      setGenres(Array.isArray(parsedGenres) ? parsedGenres : []);
+    } catch (error) {
+      console.error("Error parsing genres", error);
+      setGenres([]); // Set to an empty array in case of parsing error
     }
-  }, [user]);
+  }
+}, [user]);
 
   useEffect(() => {
     if (!isEditing && user) {
@@ -46,9 +47,8 @@ const UserProfile: React.FC = () => {
       try {
         parsedGenres = Array.isArray(user.top_music_genres) ? user.top_music_genres : JSON.parse(user.top_music_genres);
       } catch (error) {
-        parsedGenres = Array.isArray(user.top_music_genres) ? user.top_music_genres : JSON.parse(user.top_music_genres);
+        // parsedGenres = Array.isArray(user.top_music_genres) ? user.top_music_genres : JSON.parse(user.top_music_genres);
       }
-      setGenres(parsedGenres);
     }
   }, [isEditing, user]);
 
@@ -78,7 +78,7 @@ const UserProfile: React.FC = () => {
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
       setGenres(genres.filter((g) => g !== genre));
-    } else if (genres.length <= 3) {
+    } else if (genres.length < 3) {
       setGenres([...genres, genre]);
     }
   };
