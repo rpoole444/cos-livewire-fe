@@ -5,7 +5,8 @@ export interface CustomEvent {
   date: string;
   description: string;
   location: string;
-  time: string;
+  start_time: string; 
+  end_time: string;
   venue_name: string;
   address: string;
   website: string;
@@ -24,7 +25,8 @@ export interface Event extends CustomEvent {
   description: string;
   location: string;
   date: string;
-  time: string;
+  start_time: string; 
+  end_time: string;
   eventType: string;
   genre: string;
   ticket_price: string;
