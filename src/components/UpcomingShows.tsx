@@ -33,7 +33,8 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
             genre={event.genre}
             venueName={event.venue_name}
             date={event.date}
-            time={event.time}
+            startTime={event.start_time}
+            endTime={event.end_time}
           />
         ))
       ) : (

@@ -7,10 +7,11 @@ interface EventCardProps {
   genre: string;
   venueName: string;
   date: string;
-  time: string;
+  startTime: string;
+  endTime: string;
 }
 
-const FaveEventCard: React.FC<EventCardProps> = ({ id, title, genre, venueName, date, time }) => {
+const FaveEventCard: React.FC<EventCardProps> = ({ id, title, genre, venueName, date, startTime, endTime }) => {
   const router = useRouter();
 
   const handleClick = () => {
@@ -24,7 +25,9 @@ const FaveEventCard: React.FC<EventCardProps> = ({ id, title, genre, venueName, 
       </h3>
       <p className="text-sm text-gray-600">{genre}</p>
       <p className="text-sm text-gray-600">{venueName}</p>
-      <p className="text-sm text-gray-600">{new Date(date).toLocaleDateString()} {time}</p>
+      <p className="text-sm text-gray-600">{new Date(date).toLocaleDateString()} {startTime}</p>
+      <p className="text-sm text-gray-600">{startTime}</p>
+      <p className="text-sm text-gray-600">{endTime}</p>    
     </div>
   );
 };
