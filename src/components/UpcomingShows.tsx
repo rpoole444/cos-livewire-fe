@@ -20,6 +20,19 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
       setFilteredEvents(filtered);
     }
   }, [userGenres, events]);
+const formatTime = (timeString: string) => {
+  try {
+    const options: Intl.DateTimeFormatOptions = {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    };
+    return new Date(`1970-01-01T${timeString}Z`).toLocaleTimeString('en-US', options);
+  } catch (error) {
+    console.error('Error formatting time:', error);
+    return timeString;
+  }
+};
 
   return (
     <div className="bg-white p-4 mt-5 rounded-lg shadow-lg max-h-100 overflow-y-auto justify-center">
@@ -30,11 +43,13 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
             key={event.id}
             id={event.id}
             title={event.title}
+            location={event.location}
             genre={event.genre}
             venueName={event.venue_name}
             date={event.date}
             startTime={event.start_time}
             endTime={event.end_time}
+            formatTime={formatTime}
           />
         ))
       ) : (

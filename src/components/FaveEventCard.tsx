@@ -9,9 +9,11 @@ interface EventCardProps {
   date: string;
   startTime: string;
   endTime: string;
+  location: string; 
+  formatTime: (timeString: string) => string;  // Add this line
 }
 
-const FaveEventCard: React.FC<EventCardProps> = ({ id, title, genre, venueName, date, startTime, endTime }) => {
+const FaveEventCard: React.FC<EventCardProps> = ({ id, title, genre, venueName, date, startTime, endTime, location, formatTime }) => {
   const router = useRouter();
 
   const handleClick = () => {
@@ -25,9 +27,10 @@ const FaveEventCard: React.FC<EventCardProps> = ({ id, title, genre, venueName, 
       </h3>
       <p className="text-sm text-gray-600">{genre}</p>
       <p className="text-sm text-gray-600">{venueName}</p>
-      <p className="text-sm text-gray-600">{new Date(date).toLocaleDateString()} {startTime}</p>
-      <p className="text-sm text-gray-600">{startTime}</p>
-      <p className="text-sm text-gray-600">{endTime}</p>    
+      <p className="text-sm text-gray-600">{location}</p>
+      <p className="text-sm text-gray-600">Date: {new Date(date).toLocaleDateString()}</p>
+      <p className="text-sm text-gray-600">Start Time: {formatTime(startTime)}</p>
+      <p className="text-sm text-gray-600">End Time:{formatTime(endTime)}</p>    
     </div>
   );
 };
