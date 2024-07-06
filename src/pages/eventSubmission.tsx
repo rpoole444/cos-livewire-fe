@@ -11,7 +11,8 @@ interface Event {
   description: string;
   location: string;
   date: string;
-  time: string;
+  start_time: string; 
+  end_time: string;
   eventType: string;
   genre: string;
   ticketPrice: string;
@@ -30,16 +31,17 @@ const EventSubmission = () => {
     description: '',
     location: '',
     date: '',
-    time: '',
+    start_time: '',
+    end_time: '',
     eventType: '',
     genre: '',
     ticketPrice: '',
     ageRestriction: '',
     website_link: '',
     address: '',
-    venue_name: '', // Add this line
-    website: '', // Ensure the website is set
-    poster: '' , // Add this line
+    venue_name: '', 
+    website: '', 
+    poster: '' , 
   });
   const [file, setFile] = useState<File | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
@@ -116,6 +118,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   formData.append('location', eventData.location);
   formData.append('address', eventData.address);
   formData.append('date', eventData.date);
+  formData.append('start_time', eventData.start_time);
+  formData.append('end_time', eventData.end_time);
   formData.append('genre', eventData.genre);
   formData.append('ticket_price', ticketPriceValue);
   formData.append('age_restriction', eventData.ageRestriction);
@@ -187,6 +191,14 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           <div className="mb-4">
             <label htmlFor="date" className="block text-md font-medium text-black">Event Date</label>
             <input type="date" id="date" name="date" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="start_time" className="block text-md font-medium text-black">Start Time</label>
+            <input type="time" id="start_time" name="start_time" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
+          </div>
+          <div className="mb-4">
+            <label htmlFor="end_time" className="block text-md font-medium text-black">End Time</label>
+            <input type="time" id="end_time" name="end_time" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
           </div>
           <div className="mb-4">
             <label htmlFor="genre" className="block text-md font-medium text-black">Event Genre</label>
