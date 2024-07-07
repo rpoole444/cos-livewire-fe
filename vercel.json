@@ -1,0 +1,23 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://alpine-groove-guide.vercel.app"
+        },
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
+        }
+      ]
+    }
+  ]
+}
