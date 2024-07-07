@@ -56,7 +56,7 @@ useEffect(() => {
   useEffect(() => {
     const fetchProfilePicture = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/auth/profile-picture', {
+        const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', {
           credentials: 'include',
         });
         const data = await response.json();
@@ -107,7 +107,7 @@ useEffect(() => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/auth/update-profile', {
+      const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/update-profile', {
         method: 'PUT',
         credentials: 'include',
         body: formData,
@@ -138,7 +138,7 @@ useEffect(() => {
 
   const handleResetPassword = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/auth/forgot-password', {
+      const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

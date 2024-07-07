@@ -19,7 +19,7 @@ const ResetPassword: React.FC = () => {
   const encodedToken = encodeURIComponent(token);
 
     try {
-    const response = await fetch(`http://localhost:3000/api/auth/reset-password/${encodedToken}`, {
+    const response = await fetch(`https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/reset-password/${encodedToken}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

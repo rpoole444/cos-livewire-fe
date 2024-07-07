@@ -35,7 +35,7 @@ const AdminUsersPage = () => {
  const handleToggleAdminStatus = async (userId: number, currentStatus: boolean) => {
   // Call API to toggle user admin status
   const newStatus = !currentStatus; // If current status is true, set to false, and vice versa
-  const response = await fetch(`http://localhost:3000/api/auth/setAdmin/${userId}`, {
+  const response = await fetch(`https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/setAdmin/${userId}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',

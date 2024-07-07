@@ -2,7 +2,7 @@ interface EventStatusUpdatePayload {
   isApproved: boolean;
 }
 async function getEvents() {
-  const res = await fetch('http://localhost:3000/api/events')
+  const res = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/events')
   // The return value is *not* serialized
   // You can return Date, Map, Set, etc.
   if (!res.ok) {
@@ -18,7 +18,7 @@ async function getEvents() {
 
 const fetchEventDetails = async (eventId:number) => {
 
-      const res = await fetch(`http://localhost:3000/api/events/${eventId}`);
+      const res = await fetch(`https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/events/${eventId}`);
      
       if (!res.ok) {
     throw new Error('Failed to fetch data')
@@ -30,7 +30,7 @@ const fetchEventDetails = async (eventId:number) => {
 
 async function registerUser(firstName: string, lastName: string, email: string, password: string, description: string, genres: string[]) {
   try {
-      const res = await fetch('http://localhost:3000/api/auth/register', {
+      const res = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ async function registerUser(firstName: string, lastName: string, email: string, 
 
 async function loginUser(email: string, password: string){
   try {
-    const response = await fetch('http://localhost:3000/api/auth/login', {
+    const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ async function loginUser(email: string, password: string){
 }
 
 async function submitEvent(formData:any){
-  const response = await fetch('http://localhost:3000/api/events/submit', { 
+  const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/events/submit', { 
     method: 'POST', 
     body: formData, 
     credentials: 'include',
@@ -97,7 +97,7 @@ async function submitEvent(formData:any){
 
 async function logoutUser(): Promise<void> {
   try{
- const response = await fetch('http://localhost:3000/api/auth/logout', {
+ const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/logout', {
     method: 'POST',
     credentials: 'include',
   });
@@ -115,7 +115,7 @@ async function logoutUser(): Promise<void> {
 }
 
 async function getEventsForReview(): Promise<void> {
-  const res = await fetch('http://localhost:3000/api/events/review')
+  const res = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/events/review')
   if(!res.ok){
     throw new Error('Failed to fetch data')
   }
@@ -131,7 +131,7 @@ async function updateEventStatus(eventId: number, isApproved: boolean): Promise<
     };
 
     // Send the PUT request to the backend
-    const response = await fetch(`http://localhost:3000/api/events/review/${eventId}`, {
+    const response = await fetch(`https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/events/review/${eventId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ async function updateEventStatus(eventId: number, isApproved: boolean): Promise<
 
 const updateEventDetails = async (eventId: number, eventData: any) => {
   try {
-    const response = await fetch(`http://localhost:3000/api/events/${eventId}`, {
+    const response = await fetch(`https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/events/${eventId}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -181,7 +181,7 @@ const updateEventDetails = async (eventId: number, eventData: any) => {
 
 
 async function fetchAllUsers(): Promise<void> {
-  const res = await fetch('http://localhost:3000/api/auth/users', {
+  const res = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/users', {
       credentials: 'include', // Make sure to include credentials if this endpoint requires authentication
     });
   if(!res.ok){
@@ -195,7 +195,7 @@ async function fetchAllUsers(): Promise<void> {
 
 async function deleteEvent(eventId: number): Promise<void> {
   try {
-    const res = await fetch(`http://localhost:3000/api/events/${eventId}`, {
+    const res = await fetch(`https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/events/${eventId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

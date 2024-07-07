@@ -9,7 +9,7 @@ const EditEventPage = () => {
   useEffect(() => {
     const fetchEvent = async () => {
       if (!id) return;
-      const response = await fetch(`http://localhost:3000/api/events/${id}`); // Adjust URL as necessary
+      const response = await fetch(`https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/events/${id}`); // Adjust URL as necessary
       const eventData = await response.json();
       setEvent(eventData);
     };

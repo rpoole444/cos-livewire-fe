@@ -30,10 +30,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/auth/session', { credentials: 'include' });
+        const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/session', { credentials: 'include' });
         const data = await response.json();
         if (data.isLoggedIn) {
-          const profilePictureResponse = await fetch('http://localhost:3000/api/auth/profile-picture', { credentials: 'include' });
+          const profilePictureResponse = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', { credentials: 'include' });
           const profilePictureData = await profilePictureResponse.json();
           setUser({ ...data.user, profile_picture: profilePictureData.profile_picture_url });
         }
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 const login = async (email: string, password: string) => {
   try {
-    const response = await fetch('http://localhost:3000/api/auth/login', {
+    const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -74,7 +74,7 @@ const login = async (email: string, password: string) => {
     }
 
     // Fetch profile picture if login is successful
-    const profilePictureResponse = await fetch('http://localhost:3000/api/auth/profile-picture', { credentials: 'include' });
+    const profilePictureResponse = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', { credentials: 'include' });
     let profilePictureData : any = {};
     if (profilePictureResponse.ok) {
       profilePictureData = await profilePictureResponse.json();
@@ -105,7 +105,7 @@ const login = async (email: string, password: string) => {
 
   const logout = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/auth/logout', {
+      const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
       });
