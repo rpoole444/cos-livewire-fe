@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuthStatus();
   }, []);
 
-const login = async (email: string, password: string) => {
+const login = async (email:string, password:string) => {
   try {
     const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/login', {
       method: 'POST',
@@ -53,6 +53,9 @@ const login = async (email: string, password: string) => {
       credentials: 'include',
       body: JSON.stringify({ email, password }),
     });
+
+    console.log('Login response:', response);
+
     if (!response.ok) {
       let errorData;
       try {
@@ -62,35 +65,49 @@ const login = async (email: string, password: string) => {
       }
       throw new Error(errorData.message || 'Failed to login');
     }
+
     let data;
     try {
       data = await response.json();
     } catch (err) {
       throw new Error('Failed to parse response JSON');
     }
-    const profilePictureResponse = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', { credentials: 'include' });
-    let profilePictureData : any = {};
+
+    console.log('Login data:', data);
+
+    const profilePictureResponse = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', {
+      credentials: 'include',
+    });
+
+    console.log('Profile picture response:', profilePictureResponse);
+
+    let profilePictureData = {};
     if (profilePictureResponse.ok) {
       profilePictureData = await profilePictureResponse.json();
     }
+
+    console.log('Profile picture data:', profilePictureData);
+
     let parsedGenres = [];
     if (data.user.top_music_genres) {
       try {
         parsedGenres = JSON.parse(data.user.top_music_genres);
       } catch (error) {
-        console.error("Error parsing genres:", error);
+        console.error('Error parsing genres:', error);
       }
     }
+
     setUser({
       ...data.user,
       top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [],
-      profile_picture: profilePictureData.profile_picture_url || null
+      profile_picture: profilePictureData.profile_picture_url || null,
     });
   } catch (error) {
     console.error('Login error:', error);
     throw error;
   }
 };
+
 
 
 
