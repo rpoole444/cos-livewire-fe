@@ -44,7 +44,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     checkAuthStatus();
   }, []);
+const fetchWithAuth = async (url:string, options:any) => {
+  const response = await fetch(url, {
+    ...options,
+    credentials: 'include', // Ensure cookies are included in the request
+  });
 
+  if (!response.ok) {
+    throw new Error('Failed to fetch');
+  }
+
+  return response.json();
+};
 const login = async (email: string, password: string) => {
   try {
     const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/login', {
@@ -68,7 +79,7 @@ const login = async (email: string, password: string) => {
     } catch (err) {
       throw new Error('Failed to parse response JSON');
     }
-    const profilePictureResponse = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', { credentials: 'include' });
+    const profilePictureResponse = await fetchWithAuth('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', { credentials: 'include' });
     let profilePictureData : any = {};
     if (profilePictureResponse.ok) {
       profilePictureData = await profilePictureResponse.json();
