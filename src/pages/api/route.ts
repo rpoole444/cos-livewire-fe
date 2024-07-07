@@ -178,10 +178,21 @@ const updateEventDetails = async (eventId: number, eventData: any) => {
     throw error;
   }
 };
+const fetchWithAuth = async (url:string, options:any) => {
+  const response = await fetch(url, {
+    ...options,
+    credentials: 'include', // Ensure cookies are included in the request
+  });
 
+  if (!response.ok) {
+    throw new Error('Failed to fetch');
+  }
+
+  return response.json();
+};
 
 async function fetchAllUsers(): Promise<void> {
-  const res = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/users', {
+  const res = await fetchWithAuth('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/users', {
       credentials: 'include', // Make sure to include credentials if this endpoint requires authentication
     });
   if(!res.ok){
