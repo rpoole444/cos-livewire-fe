@@ -52,11 +52,23 @@ useEffect(() => {
     }
   }, [isEditing, user]);
 
+const fetchWithAuth = async (url:string, options:any) => {
+  const response = await fetch(url, {
+    ...options,
+    credentials: 'include', // Ensure cookies are included in the request
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch');
+  }
+
+  return response.json();
+};
   // Fetch profile picture on mount
   useEffect(() => {
     const fetchProfilePicture = async () => {
   try {
-    const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', {
+    const response = await fetchWithAuth('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', {
       credentials: 'include',
     });
     const data = await response.json();
