@@ -8,6 +8,9 @@ interface AuthContextType {
   logout: () => void;
   updateUser: (updatedUser: UserType) => void;
 }
+interface ProfilePictureResponse {
+  profile_picture_url: string;
+}
 
 const defaultContext: AuthContextType = {
   user: null,
@@ -45,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuthStatus();
   }, []);
 
-const login = async (email:string, password:string) => {
+const login = async (email: string, password: string) => {
   try {
     const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/login', {
       method: 'POST',
@@ -53,8 +56,6 @@ const login = async (email:string, password:string) => {
       credentials: 'include',
       body: JSON.stringify({ email, password }),
     });
-
-    console.log('Login response:', response);
 
     if (!response.ok) {
       let errorData;
@@ -81,7 +82,9 @@ const login = async (email:string, password:string) => {
 
     console.log('Profile picture response:', profilePictureResponse);
 
-    let profilePictureData = {};
+    let profilePictureData = {
+      profile_picture_url: null,
+    };
     if (profilePictureResponse.ok) {
       profilePictureData = await profilePictureResponse.json();
     }
@@ -107,6 +110,7 @@ const login = async (email:string, password:string) => {
     throw error;
   }
 };
+
 
 
 
