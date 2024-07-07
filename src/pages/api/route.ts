@@ -84,7 +84,7 @@ async function loginUser(email: string, password: string){
 }
 
 async function submitEvent(formData:any){
-  const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/events/submit', { 
+  const response = await fetchWithAuth('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/events/submit', { 
     method: 'POST', 
     body: formData, 
     credentials: 'include',
