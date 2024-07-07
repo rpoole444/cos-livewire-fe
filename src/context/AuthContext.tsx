@@ -53,8 +53,6 @@ const login = async (email: string, password: string) => {
       credentials: 'include',
       body: JSON.stringify({ email, password }),
     });
-
-    // Handle non-OK responses
     if (!response.ok) {
       let errorData;
       try {
@@ -64,22 +62,17 @@ const login = async (email: string, password: string) => {
       }
       throw new Error(errorData.message || 'Failed to login');
     }
-
-    // Parse the response JSON
     let data;
     try {
       data = await response.json();
     } catch (err) {
       throw new Error('Failed to parse response JSON');
     }
-
-    // Fetch profile picture if login is successful
     const profilePictureResponse = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', { credentials: 'include' });
     let profilePictureData : any = {};
     if (profilePictureResponse.ok) {
       profilePictureData = await profilePictureResponse.json();
     }
-
     let parsedGenres = [];
     if (data.user.top_music_genres) {
       try {
@@ -88,13 +81,11 @@ const login = async (email: string, password: string) => {
         console.error("Error parsing genres:", error);
       }
     }
-
     setUser({
       ...data.user,
       top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [],
       profile_picture: profilePictureData.profile_picture_url || null
     });
-
   } catch (error) {
     console.error('Login error:', error);
     throw error;

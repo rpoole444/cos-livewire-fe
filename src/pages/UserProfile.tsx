@@ -55,18 +55,18 @@ useEffect(() => {
   // Fetch profile picture on mount
   useEffect(() => {
     const fetchProfilePicture = async () => {
-      try {
-        const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', {
-          credentials: 'include',
-        });
-        const data = await response.json();
-        if (data.profile_picture_url) {
-          setProfilePicture(data.profile_picture_url);
-        }
-      } catch (error) {
-        console.error('Error fetching profile picture:', error);
-      }
-    };
+  try {
+    const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', {
+      credentials: 'include',
+    });
+    const data = await response.json();
+    if (data.profile_picture_url) {
+      setProfilePicture(data.profile_picture_url);
+    }
+  } catch (error) {
+    console.error('Error fetching profile picture:', error);
+  }
+};
 
     fetchProfilePicture();
   }, [profilePicture]);
@@ -89,52 +89,52 @@ useEffect(() => {
     }
   };
 
-  const handleSave = async () => {
-    if (!user) {
-      setMessage("User is not authenticated");
-      return;
+const handleSave = async () => {
+  if (!user) {
+    setMessage("User is not authenticated");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('first_name', user?.first_name || "");
+  formData.append('last_name', user?.last_name || "");
+  formData.append('email', email);
+  formData.append('user_description', description);
+  formData.append('top_music_genres', JSON.stringify(genres));
+
+  if (file) {
+    formData.append('profile_picture', file);
+  }
+
+  try {
+    const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/update-profile', {
+      method: 'PUT',
+      credentials: 'include', // Ensure credentials are included
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update profile");
     }
 
-    const formData = new FormData();
-    formData.append('first_name', user?.first_name || "");
-    formData.append('last_name', user?.last_name || "");
-    formData.append('email', email);
-    formData.append('user_description', description);
-    formData.append('top_music_genres', JSON.stringify(genres));
+    const data = await response.json();
+    setMessage(data.message);
+    setIsEditing(false);
 
-    if (file) {
-      formData.append('profile_picture', file);
-    }
-
-    try {
-      const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/update-profile', {
-        method: 'PUT',
-        credentials: 'include',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update profile");
-      }
-
-      const data = await response.json();
-      setMessage(data.message);
-      setIsEditing(false);
-
-      const updatedUser = {
-        ...user,
-        email,
-        user_description: description,
-        top_music_genres: JSON.stringify(genres),
-        profile_picture: data.profile_picture,
-      };
-      updateUser(updatedUser);
-      setProfilePicture(data.profile_picture);
-    } catch (error) {
-      console.error(error);
-      setMessage("Error updating profile");
-    }
-  };
+    const updatedUser = {
+      ...user,
+      email,
+      user_description: description,
+      top_music_genres: JSON.stringify(genres),
+      profile_picture: data.profile_picture,
+    };
+    updateUser(updatedUser);
+    setProfilePicture(data.profile_picture);
+  } catch (error) {
+    console.error(error);
+    setMessage("Error updating profile");
+  }
+};
 
   const handleResetPassword = async () => {
     try {
