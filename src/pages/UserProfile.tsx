@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Image from "next/image";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const genresList = [
   "Jazz", "Indie", "Dance", "Electronic", "Rock", "Alternative", "Country", "Hip-Hop", "Pop", 
@@ -68,7 +69,7 @@ const fetchWithAuth = async (url:string, options:any) => {
   useEffect(() => {
     const fetchProfilePicture = async () => {
   try {
-    const response = await fetchWithAuth('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', {
+    const response = await fetchWithAuth(`${API_BASE_URL}/api/auth/profile-picture`, {
       credentials: 'include',
     });
     const data = await response.json();
@@ -119,7 +120,7 @@ const handleSave = async () => {
   }
 
   try {
-    const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/update-profile', {
+    const response = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
       method: 'PUT',
       credentials: 'include', // Ensure credentials are included
       body: formData,
@@ -150,7 +151,7 @@ const handleSave = async () => {
 
   const handleResetPassword = async () => {
     try {
-      const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/forgot-password', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

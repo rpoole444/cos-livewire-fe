@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 
 const ForgotPassword: React.FC = () => {
@@ -21,7 +22,7 @@ const ForgotPassword: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-    const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/forgot-password', {
+    const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const ResetPassword: React.FC = () => {
   const router = useRouter();
@@ -19,7 +20,7 @@ const ResetPassword: React.FC = () => {
   const encodedToken = encodeURIComponent(token);
 
     try {
-    const response = await fetch(`https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/reset-password/${encodedToken}`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/reset-password/${encodedToken}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

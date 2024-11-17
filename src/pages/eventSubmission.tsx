@@ -101,7 +101,8 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     console.error('No user logged in');
     return;
   }
-
+  console.log('Submitting event as user:', user);
+  
   let ticketPriceValue = eventData.ticketPrice;
   if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
     ticketPriceValue = '0';

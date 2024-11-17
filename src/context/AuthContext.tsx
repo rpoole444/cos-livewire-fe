@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserType } from '../types';
 import { useRouter } from 'next/router';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 
 interface AuthContextType {
   user: UserType | null;
@@ -33,10 +35,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/session', { credentials: 'include' });
+        const response = await fetch(`${API_BASE_URL}/api/auth/session`, { credentials: 'include' });
         const data = await response.json();
         if (data.isLoggedIn) {
-          const profilePictureResponse = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', { credentials: 'include' });
+          const profilePictureResponse = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, { credentials: 'include' });
           const profilePictureData = await profilePictureResponse.json();
           setUser({ ...data.user, profile_picture: profilePictureData.profile_picture_url });
         }
@@ -50,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 const login = async (email: string, password: string) => {
   try {
-    const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/login', {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -76,7 +78,7 @@ const login = async (email: string, password: string) => {
 
     console.log('Login data:', data);
 
-    const profilePictureResponse = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/profile-picture', {
+    const profilePictureResponse = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
       credentials: 'include',
     });
 
@@ -117,7 +119,7 @@ const login = async (email: string, password: string) => {
 
   const logout = async () => {
     try {
-      const response = await fetch('https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/logout', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       });
