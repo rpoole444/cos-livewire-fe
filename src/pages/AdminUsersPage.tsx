@@ -4,6 +4,7 @@ import { fetchAllUsers } from './api/route';
 import { User, Users } from '../interfaces/interfaces';
 import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 
 
@@ -35,7 +36,7 @@ const AdminUsersPage = () => {
  const handleToggleAdminStatus = async (userId: number, currentStatus: boolean) => {
   // Call API to toggle user admin status
   const newStatus = !currentStatus; // If current status is true, set to false, and vice versa
-  const response = await fetch(`https://alpine-groove-guide-be-e5150870a33a.herokuapp.com/api/auth/setAdmin/${userId}`, {
+  const response = await fetch(`${API_BASE_URL}/api/auth/setAdmin/${userId}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
