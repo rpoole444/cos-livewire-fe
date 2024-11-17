@@ -12,6 +12,7 @@ const AdminUsersPage = () => {
   const [users, setUsers] = useState<Users>([]);
   const router = useRouter();
   const { user, logout } = useAuth();
+  const currentUser = user
   useEffect(() => {
     // Fetch users
     const fetchUsers = async (): Promise<void> => {
@@ -78,6 +79,7 @@ const AdminUsersPage = () => {
                     className={`ml-4 px-4 py-2 text-xs font-bold rounded focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                       user.is_admin ? 'bg-red-500 hover:bg-red-600 focus:ring-red-300' : 'bg-green-500 hover:bg-green-600 focus:ring-green-300'
                     }`}
+                    disabled={typeof currentUser?.id === 'number' && currentUser.id === user.id && user.is_admin} // Type-safe comparison
                   >
                     {user.is_admin ? 'Revoke Admin' : 'Make Admin'}
                   </button>
