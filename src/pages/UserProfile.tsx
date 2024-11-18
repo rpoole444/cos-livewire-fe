@@ -54,6 +54,7 @@ useEffect(() => {
   }, [isEditing, user]);
 
 const fetchWithAuth = async (url:string, options:any) => {
+  try {
   const response = await fetch(url, {
     ...options,
     credentials: 'include', // Ensure cookies are included in the request
@@ -63,7 +64,12 @@ const fetchWithAuth = async (url:string, options:any) => {
     throw new Error('Failed to fetch');
   }
 
-  return response.json();
+  return response;
+    } catch (error) {
+    console.error('Error in fetchWithAuth:', error);
+    throw error; // Ensure the error is re-thrown for proper handling
+  }
+
 };
   // Fetch profile picture on mount
   useEffect(() => {
