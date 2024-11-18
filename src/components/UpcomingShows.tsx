@@ -14,9 +14,13 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
 
   useEffect(() => {
     if (userGenres && events) {
-      const filtered = events.filter(event =>
-        userGenres.includes(event.genre)
-      );
+      const currentDate = new Date(); // Current date
+      currentDate.setHours(0, 0, 0, 0);
+      const filtered = events.filter(event =>{
+        const eventDate = new Date(event.date); // Parse event date
+        eventDate.setHours(0, 0, 0, 0);
+        return userGenres.includes(event.genre) && eventDate >= currentDate; // Only future events
+    });
       setFilteredEvents(filtered);
     }
   }, [userGenres, events]);
@@ -36,7 +40,7 @@ const formatTime = (timeString: string) => {
 
   return (
     <div className="bg-white p-4 mt-5 rounded-lg shadow-lg max-h-100 overflow-y-auto justify-center">
-      <h2 className="text-xl font-bold mb-4">{user.first_name} {user.last_name}&apos;s Music Recomendations</h2>
+      <h2 className="text-xl font-bold mb-4">{user.first_name} {user.last_name}&apos;s Upcoming Music Recomendations</h2>
       {filteredEvents.length > 0 ? (
         filteredEvents.map(event => (
           <FaveEventCard
