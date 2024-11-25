@@ -67,7 +67,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick }: any) =>
       )}
       {event.poster ? (
         <div className="flex justify-center">
-          <Image src={event.poster} alt="Event Poster" priority width={400} height={400} />
+          <Image src={event.poster} alt="Event Poster" priority width={400} height={400} style={{ width: 'auto', height: 'auto' }} />
         </div>
       ) : (
         <p className="text-center text-gray-500 mb-4">-</p>

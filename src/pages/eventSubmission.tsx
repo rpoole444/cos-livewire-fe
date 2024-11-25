@@ -102,7 +102,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     return;
   }
   console.log('Submitting event as user:', user);
-  
+
   let ticketPriceValue = eventData.ticketPrice;
   if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
     ticketPriceValue = '0';
@@ -164,7 +164,9 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     <div className="container mx-auto p-4">
       <Script
         src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
-        strategy="afterInteractive"
+        strategy="lazyOnload"
+        async
+        defer
         onLoad={() => initializeAutocomplete()}
       />
       <div className="text-center mb-8">
