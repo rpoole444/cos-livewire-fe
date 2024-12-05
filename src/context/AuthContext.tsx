@@ -32,23 +32,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 
   
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/session`, { credentials: 'include' });
-        const data = await response.json();
-        if (data.isLoggedIn) {
-          const profilePictureResponse = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, { credentials: 'include' });
-          const profilePictureData = await profilePictureResponse.json();
-          setUser({ ...data.user, profile_picture: profilePictureData.profile_picture_url });
-        }
-      } catch (error) {
-        console.error('Error fetching auth status:', error);
-      }
-    };
+ useEffect(() => {
+  const checkAuthStatus = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
+        credentials: 'include',
+      });
+      const data = await response.json();
 
-    checkAuthStatus();
-  }, []);
+      if (data.isLoggedIn) {
+        // Fetch the profile picture
+        const profilePictureResponse = await fetch(
+          `${API_BASE_URL}/api/auth/profile-picture`,
+          { credentials: 'include' }
+        );
+        const profilePictureData = await profilePictureResponse.json();
+
+        // Parse genres if necessary
+        let parsedGenres = [];
+        if (data.user.top_music_genres) {
+          try {
+            parsedGenres = JSON.parse(data.user.top_music_genres);
+          } catch (error) {
+            console.error('Error parsing genres:', error);
+          }
+        }
+
+        // Set user state with all data at once
+        setUser({
+          ...data.user,
+          top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [],
+          profile_picture: profilePictureData.profile_picture_url || null,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching auth status:', error);
+    }
+  };
+
+  checkAuthStatus();
+}, []);
+
 
 const login = async (email: string, password: string) => {
   try {
