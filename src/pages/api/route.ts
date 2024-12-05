@@ -4,7 +4,9 @@ interface EventStatusUpdatePayload {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 async function getEvents() {
-  const res = await fetch(`${API_BASE_URL}/api/events`)
+const res = await fetch(`${API_BASE_URL}/api/events`, {
+    credentials: 'include', // Include credentials
+  });
   // The return value is *not* serialized
   // You can return Date, Map, Set, etc.
   if (!res.ok) {
@@ -20,7 +22,9 @@ async function getEvents() {
 
 const fetchEventDetails = async (eventId:number) => {
 
-      const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`);
+      const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+    credentials: 'include', // Include credentials
+  });
      
       if (!res.ok) {
     throw new Error('Failed to fetch data')
@@ -117,7 +121,9 @@ async function logoutUser(): Promise<void> {
 }
 
 async function getEventsForReview(): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/api/events/review`)
+  const res = await fetch(`${API_BASE_URL}/api/events/review`, {
+    credentials: 'include', // Include credentials
+  });
   if(!res.ok){
     throw new Error('Failed to fetch data')
   }
