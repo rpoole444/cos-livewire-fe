@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import EventReview from '@/components/EventReview';
 
-const adminService: React.FC = () => {
+const AdminService: React.FC = () => {
   const router = useRouter();
   const { user, logout } = useAuth();
 
@@ -36,4 +36,4 @@ const handleLogout = async () => {
   )
 }
 
-export default adminService;
+export default AdminService;
