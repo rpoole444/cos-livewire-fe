@@ -76,4 +76,4 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick }: any) =>
   );
 };
 
-export default EventCard
+export default EventCard;
