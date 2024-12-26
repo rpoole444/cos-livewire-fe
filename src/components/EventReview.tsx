@@ -16,7 +16,7 @@ const EventReview: React.FC = () => {
     const fetchData = async () => {
       try {
         const eventsData: any = await getEventsForReview(); // Make sure this function fetches events awaiting approval
-        console.log("events for Review: " + eventsData)
+        console.table(eventsData)
         setEvents(eventsData);
       } catch (error) {
         console.error('Failed to load events for review', error);
