@@ -59,7 +59,6 @@ const EventSubmission = () => {
   const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current);
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
-    console.log("Place details:", place);
 
     setEventData((prevState) => ({
       ...prevState,
@@ -101,7 +100,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     console.error('No user logged in');
     return;
   }
-  console.log('Submitting event as user:', user);
 
   let ticketPriceValue = eventData.ticketPrice;
   if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {

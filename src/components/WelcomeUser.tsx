@@ -16,7 +16,6 @@ const WelcomeUser = () => {
       console.error(err);
     }
   };
-console.log("user is admin?", user?.is_admin)
   return (
     <>
       <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">

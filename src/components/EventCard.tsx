@@ -23,7 +23,7 @@ const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
 
-
+    console.log("unformatted date: " + dateString)
     console.log("newly formatted date: " + formattedDate);
     console.log("CurrentFormatDate: ",new Date(dateString).toLocaleDateString('en-US', options));
 
