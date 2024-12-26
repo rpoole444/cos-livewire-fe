@@ -231,4 +231,4 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
   );
 };
 
-export default AdminEventCard;
+export default AdminEventCard
