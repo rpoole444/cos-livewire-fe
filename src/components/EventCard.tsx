@@ -15,22 +15,23 @@ const formatDate = (dateString: string) => {
       year: 'numeric', 
       month: 'long', 
       day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit', 
-      timeZoneName: 'short',
       timeZone: 'America/Denver'  
     };
     const date = new Date(dateString);
-    const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+    const formattedDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Denver' })).toLocaleDateString('en-US',{
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
 
     console.log("unformatted date: " + dateString)
     console.log("newly formatted date: " + formattedDate);
     console.log("CurrentFormatDate: ",new Date(dateString).toLocaleDateString('en-US', options));
 
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    return formattedDate;
   } catch (error) {
     console.error('Error formatting date:', error);
-    return new Date(dateString).toISOString().slice(0, 19).replace('T', ' ');
+    return "";
   }
 };
 
