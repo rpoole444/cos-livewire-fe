@@ -20,7 +20,11 @@ const formatDate = (dateString: string) => {
       timeZoneName: 'short',
       timeZone: 'America/Denver'  
     };
-    console.log("unformatted date: " + dateString);
+    const date = new Date(dateString);
+    const formattedDate = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+
+
+    console.log("newly formatted date: " + formattedDate);
     console.log("CurrentFormatDate: ",new Date(dateString).toLocaleDateString('en-US', options));
 
     return new Date(dateString).toLocaleDateString('en-US', options);
