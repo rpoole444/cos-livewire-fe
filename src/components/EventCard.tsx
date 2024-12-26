@@ -19,6 +19,8 @@ const formatDate = (dateString: string) => {
       minute: '2-digit', 
       timeZoneName: 'short' 
     };
+        console.log("CurrentFormatDate: ",new Date(dateString).toLocaleDateString('en-US', options));
+
     return new Date(dateString).toLocaleDateString('en-US', options);
   } catch (error) {
     console.error('Error formatting date:', error);
