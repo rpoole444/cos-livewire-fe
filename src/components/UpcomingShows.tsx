@@ -31,7 +31,7 @@ const formatTime = (timeString: string) => {
       minute: '2-digit',
       hour12: true
     };
-    return new Date(`1970-01-01T${timeString}Z`).toLocaleTimeString('en-US', options);
+    return new Date(`1970-01-01T${timeString}`).toLocaleTimeString('en-US', options);
   } catch (error) {
     console.error('Error formatting time:', error);
     return timeString;
