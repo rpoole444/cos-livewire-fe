@@ -3,7 +3,7 @@ import "../styles/globals.css";
 import React, { useState } from 'react';
 import { registerUser } from "@/pages/api/route";
 
-const genreOptions = ["Jazz", "Indie", "Dance", "Electronic","Rock", "Alternative", "Country", "Hip-Hop", "Pop", 
+const genreOptions = ["Jazz", "Blues", "Funk", "Indie", "Dance", "Electronic","Rock", "Alternative", "Country", "Hip-Hop", "Pop", 
   "R&B", "Rap", "Reggae", "Soul", "Techno", "World", "Other"];
 
 const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthMode }) => {

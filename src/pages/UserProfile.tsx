@@ -5,8 +5,7 @@ import Header from "@/components/Header";
 import Image from "next/image";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-const genresList = [
-  "Jazz", "Indie", "Dance", "Electronic", "Rock", "Alternative", "Country", "Hip-Hop", "Pop", 
+const genresList = ["Jazz", "Blues", "Funk", "Indie", "Dance", "Electronic", "Rock", "Alternative", "Country", "Hip-Hop", "Pop", 
   "R&B", "Rap", "Reggae", "Soul", "Techno", "World", "Other"
 ];
 
