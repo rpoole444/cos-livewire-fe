@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-
+import { parseMSTDate } from '@/util/dateHelper';
 interface EventCardProps {
   id: number;
   title: string;
@@ -28,7 +28,7 @@ const FaveEventCard: React.FC<EventCardProps> = ({ id, title, genre, venueName, 
       <p className="text-sm text-gray-600">{genre}</p>
       <p className="text-sm text-gray-600">{venueName}</p>
       <p className="text-sm text-gray-600">{location}</p>
-      <p className="text-sm text-gray-600">Date: {new Date(date).toLocaleDateString()}</p>
+      <p className="text-sm text-gray-600">Date: {parseMSTDate(date).toLocaleDateString()}</p>
       <p className="text-sm text-gray-600">Start Time: {formatTime(startTime)}</p>
       <p className="text-sm text-gray-600">End Time:{formatTime(endTime)}</p>    
     </div>
