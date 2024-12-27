@@ -15,7 +15,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
   const [formattedDate, setFormattedDate] = useState('');
   const [formattedStartTime, setFormattedStartTime] = useState('');
   const [formattedEndTime, setFormattedEndTime] = useState('');
-
+  console.log("event Info: ", event)
   useEffect(() => {
    
     if (event.date) {
