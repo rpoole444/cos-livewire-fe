@@ -57,6 +57,17 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
 
   return (
     <div className="flex flex-col space-y-4 p-6 border rounded shadow-lg bg-white max-w-3xl mx-auto mt-6">
+      {event.user && (
+        <div>
+          <label className="block text-md font-medium text-black mb-1">
+            Submitted by:
+          </label>
+          <p className="text-black">
+            {event.user.first_name} {event.user.last_name} <br/>
+            Email: {event.user.email}
+          </p>
+        </div>
+      )}
       <div>
         <label className="block text-md font-medium text-black mb-1" htmlFor="title">Title:</label>
         <input

@@ -36,6 +36,11 @@ export interface Event extends CustomEvent {
   venue_name: string; 
   website: string;
   poster: string | null;
+  user?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
 }
 
 interface User {
