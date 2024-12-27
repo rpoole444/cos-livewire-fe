@@ -206,8 +206,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             <select id="genre" name="genre" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black">
               <option value="">Select Genre</option>
               <option value="Jazz">Jazz</option>
+              <option value="Blues">Blues</option>
               <option value="Funk">Funk</option>
               <option value="Indie">Indie</option>
+              <option value="Dance">Dance</option>
+              <option value="Electronic">Electronic</option>
               <option value="Rock">Rock</option>
               <option value="Alternative">Alternative</option>
               <option value="Country">Country</option>
