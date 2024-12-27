@@ -17,7 +17,15 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
   const [formattedEndTime, setFormattedEndTime] = useState('');
 
   useEffect(() => {
+    // if (event.date) {
+    //   const date = new Date(event.date);
+    //   const year = date.getFullYear();
+    //   const month = String(date.getMonth() + 1).padStart(2, '0');
+    //   const day = String(date.getDate()).padStart(2, '0');
+    //   setFormattedDate(`${year}-${month}-${day}`);
+    // }
     if (event.date) {
+      console.log("event-date :" + event.date);
      const options: Intl.DateTimeFormatOptions = {
       year: 'numeric',
       month: 'long',
@@ -26,13 +34,11 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
     };
     const date = new Date(event.date);
 
-
     const  localizedDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Denver' })).toLocaleDateString('en-US',{
         year: 'numeric',
         month: 'long',
         day: 'numeric',
     });
-    console.log(localizedDate);
      setFormattedDate(localizedDate)
 
     }
