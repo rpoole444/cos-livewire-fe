@@ -5,7 +5,7 @@ import cn from "../util/cn";
 import { GrFormNext, GrFormPrevious } from "react-icons/gr";
 import { Event } from "@/interfaces/interfaces";
 import Link from "next/link";
-
+import { parseLocalDayjs } from "@/util/dateHelper";
 interface CalendarProps {
   currentDate: Dayjs;
   onDateSelect: (date: Dayjs) => void;
@@ -162,7 +162,7 @@ export default function Calendar({ currentDate, onDateSelect, events }: Calendar
                       <div className="font-bold text-lg">{event.title}</div>
                       <div className="text-sm text-gray-400">Genre: {event.genre}</div>
                       <div className="text-sm text-gray-400">
-                        Date: {dayjs(event.date).format('MM/DD/YYYY')} | Location: {event.location}
+                        Date: {parseLocalDayjs(event.date).format('MM/DD/YYYY')} | Location: {event.location}
                       </div>
                     </div>
                   </Link>

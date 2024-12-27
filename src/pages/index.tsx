@@ -11,7 +11,7 @@ import { getEvents } from './api/route';
 import { Event } from '@/interfaces/interfaces';
 import isBetween from 'dayjs/plugin/isBetween';
 import UpcomingShows from '@/components/UpcomingShows';
-import { parseMSTDate } from '@/util/dateHelper';
+import { parseMSTDate, parseLocalDayjs } from '@/util/dateHelper';
 
 type AuthMode = 'login' | 'register';
 dayjs.extend(isBetween)
@@ -54,13 +54,13 @@ export default function Home() {
       let filtered :any  = [];
       if (filterMode === 'day') {
         filtered = events.filter((event) =>
-          dayjs(event.date).isSame(selectedDate, 'day')
+          parseLocalDayjs(event.date).isSame(selectedDate, 'day')
         );
       } else if (filterMode === 'week') {
         const startOfWeek = selectedDate.startOf('week');
         const endOfWeek = selectedDate.endOf('week');
         filtered = events.filter((event) =>
-          dayjs(event.date).isBetween(startOfWeek, endOfWeek, null, '[]')
+          parseLocalDayjs(event.date).isBetween(startOfWeek, endOfWeek, null, '[]')
         );
       } else if (filterMode === 'all') {
         filtered = events;
