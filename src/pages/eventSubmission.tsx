@@ -190,7 +190,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             <input type="text" id="location" name="location" ref={locationInputRef} required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
           </div>
           <div className="mb-4">
-            <label htmlFor="date" className="block text-md font-medium text-black">Event Date</label>
+            <label htmlFor="date" className="block text-md font-medium text-black">Event Date - MST only</label>
             <input type="date" id="date" name="date" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
           </div>
           <div className="mb-4">
@@ -206,6 +206,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             <select id="genre" name="genre" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black">
               <option value="">Select Genre</option>
               <option value="Jazz">Jazz</option>
+              <option value="Funk">Funk</option>
               <option value="Indie">Indie</option>
               <option value="Rock">Rock</option>
               <option value="Alternative">Alternative</option>
