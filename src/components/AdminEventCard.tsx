@@ -39,6 +39,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
         month: 'long',
         day: 'numeric',
     });
+    console.log("localizedDate" + localizedDate);
      setFormattedDate(localizedDate)
 
     }
