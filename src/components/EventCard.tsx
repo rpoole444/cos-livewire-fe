@@ -11,24 +11,22 @@ interface EventCardProps {
 
 const formatDate = (dateString: string) => {
   try {
-    const options: Intl.DateTimeFormatOptions = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric', 
-      timeZone: 'America/Denver'  
-    };
-    const date = new Date(dateString);
-    const formattedDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Denver' })).toLocaleDateString('en-US',{
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-
+    const [yyyy, mm, dd] = dateString.split('T')[0].split('-');
+    const localDate = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
     console.log("unformatted date: " + dateString)
-    console.log("newly formatted date: " + formattedDate);
-    console.log("CurrentFormatDate: ",new Date(dateString).toLocaleDateString('en-US', options));
-
-    return formattedDate;
+    console.log("newly formatted date: " + localDate);
+    console.log("Returned Date: ",localDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/Denver'
+  }));
+    return localDate.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/Denver'
+  });
   } catch (error) {
     console.error('Error formatting date:', error);
     return "";
