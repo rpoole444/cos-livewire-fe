@@ -1,3 +1,5 @@
+import { parseMSTDate } from "@/util/dateHelper";
+
 interface EventStatusUpdatePayload {
   isApproved: boolean;
 }
@@ -15,7 +17,7 @@ const res = await fetch(`${API_BASE_URL}/api/events`, {
   const data = await res.json();
 
   const sortedEvents = data.sort((a :any, b :any) => {
-    return new Date(b.date).getTime() - new Date(a.date).getTime()
+    return parseMSTDate(b.date).getTime() - parseMSTDate(a.date).getTime()
   })
   return sortedEvents
 }

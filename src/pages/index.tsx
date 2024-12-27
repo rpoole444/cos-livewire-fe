@@ -11,6 +11,7 @@ import { getEvents } from './api/route';
 import { Event } from '@/interfaces/interfaces';
 import isBetween from 'dayjs/plugin/isBetween';
 import UpcomingShows from '@/components/UpcomingShows';
+import { parseMSTDate } from '@/util/dateHelper';
 
 type AuthMode = 'login' | 'register';
 dayjs.extend(isBetween)
@@ -35,8 +36,8 @@ export default function Home() {
         const approvedEvents = eventsData
           .filter((activity: any) => activity.is_approved)
           .sort((a: any, b: any) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
+            const dateA = parseMSTDate(a.date);
+            const dateB = parseMSTDate(b.date);
             return dateA.getTime() - dateB.getTime();
           });
         setEvents(approvedEvents);

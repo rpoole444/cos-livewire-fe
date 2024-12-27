@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Event, User } from '@/interfaces/interfaces';
 import FaveEventCard from './FaveEventCard';
 import { UserType } from '@/types';
+import { parseMSTDate }from '../util/dateHelper';
 
 interface UpcomingShowsProps {
   user: UserType
@@ -17,8 +18,8 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
       const currentDate = new Date(); // Current date
       currentDate.setHours(0, 0, 0, 0);
       const filtered = events.filter(event =>{
-        const eventDate = new Date(event.date); // Parse event date
-        eventDate.setHours(0, 0, 0, 0);
+        const eventDate = parseMSTDate(event.date); // Parse event date
+        eventDate.setHours(0, 0, 0, 0); 
         return userGenres.includes(event.genre) && eventDate >= currentDate; // Only future events
     });
       setFilteredEvents(filtered);
