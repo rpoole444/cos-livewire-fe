@@ -26,21 +26,11 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
     // }
     if (event.date) {
       console.log("event-date :" + event.date);
-     const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      timeZone: 'America/Denver'
-    };
-    const date = new Date(event.date);
-
-    const  localizedDate = new Date(date.toLocaleString('en-US', { timeZone: 'America/Denver' })).toLocaleDateString('en-US',{
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-    console.log("localizedDate" + localizedDate);
-     setFormattedDate(localizedDate)
+      const dateStr = event.date.split('T')[0]
+      const [year, month, day] = dateStr.split('-')
+      const formattedDate = `${month}/${day}/${year}`;
+      console.log(formattedDate);
+     setFormattedDate(formattedDate)
 
     }
 
