@@ -28,9 +28,10 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
       console.log("event-date :" + event.date);
       const dateStr = event.date.split('T')[0]
       const [year, month, day] = dateStr.split('-')
-      const formattedDate = `${month}-${day}-${year}`;
+      const formattedDate = `${month}/${day}/${year}`;
       console.log(formattedDate);
-     setFormattedDate(formattedDate)
+      console.log(dateStr);
+     setFormattedDate(dateStr)
 
     }
 
