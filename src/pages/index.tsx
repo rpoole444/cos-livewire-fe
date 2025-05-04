@@ -63,7 +63,9 @@ export default function Home() {
           parseLocalDayjs(event.date).isBetween(startOfWeek, endOfWeek, null, '[]')
         );
       } else if (filterMode === 'all') {
-        filtered = events;
+        const now = dayjs().startOf('day');
+        filtered = events.filter(event => parseLocalDayjs(event.date).isSame(now, 'day') || parseLocalDayjs(event.date).isAfter(now));
+
       }
       setFilteredEvents(filtered);
     };
