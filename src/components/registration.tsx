@@ -55,7 +55,7 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
 
   if (registrationSuccess) {
     return (
-      <div className="min-h-screen flex justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <h2 className="text-sm md:text-base lg:text-lg p-2 bg-green-100 text-green-900 font-semibold rounded-md shadow">
             Registration successful! Redirecting to login...
@@ -66,9 +66,9 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
   }
 
   return (
-    <div className="min-h-screen flex justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
+        <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-black font-semibold rounded-md shadow">
           Register to Submit<br />
           an event to the<br />
           Groove Guide!
@@ -83,7 +83,7 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
                 type="text"
                 autoComplete="given-name"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold"
                 placeholder="First name"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
@@ -97,7 +97,7 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
                 type="text"
                 autoComplete="family-name"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold"
                 placeholder="Last name"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
@@ -111,7 +111,7 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
@@ -123,7 +123,7 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
                 id="description"
                 name="description"
                 rows={4}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold transition duration-150"
                 placeholder="Describe yourself"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -134,10 +134,10 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
               <div className="flex flex-wrap">
                 {genreOptions.map((genre) => (
                   <div key={genre} className="mr-2 mb-2">
-                    <label className="inline-flex items-center">
+                    <label className="flex items-center space-x-2 text-sm hover:text-gold transition duration-150">
                       <input
                         type="checkbox"
-                        className="form-checkbox"
+                        className="h-5 w-5 text-gold focus:ring-gold accent-gold cursor-pointer"
                         value={genre}
                         checked={genres.includes(genre)}
                         onChange={() => handleGenreChange(genre)}
@@ -156,7 +156,7 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -168,14 +168,14 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
           </div>
           {errorMessage && <p className="mt-2 text-center text-sm text-red-600">{errorMessage}</p>}
           <div>
-            <button type="submit" className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <button type="submit" className="bg-gold text-black px-4 py-2 rounded-md hover:bg-yellow-400 font-semibold hover:bg-yellow-400 transition duration-200 ease-in-out">
               Register
             </button>
           </div>
         </form>
         <button
           type="button"
-          className="mt-4 group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-indigo-600 bg-transparent hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="mt-4 w-full flex justify-center py-2 px-4 text-sm font-medium rounded-md text-black border border-gold hover:bg-gold hover:text-black transition duration-200 ease-in-out"
           onClick={() => setAuthMode('login')}
         >
           Back to Login
