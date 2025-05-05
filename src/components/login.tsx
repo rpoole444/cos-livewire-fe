@@ -6,8 +6,9 @@ import { loginUser } from "../pages/api/route";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import { RiH2 } from "react-icons/ri";
 
-const LoginForm: React.FC = () => {
+const LoginForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthMode }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -41,17 +42,17 @@ const LoginForm: React.FC = () => {
     return <WelcomeUser /> 
   }
   return (
-    <div className="flex justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-9">
-        <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
+        <h2 className="text-center text-lg font-semibold text-black">
           Login to Submit an<br />
           event to the<br />
           Groove Guide!
-        </h1>
+        </h2>
         <form className="mt-8 space-y-6" action="#" method="POST" onSubmit={handleLogin}>
           <input type="hidden" name="remember" defaultValue="true" />
-          <div className="-space-y-px rounded-md shadow-sm">
-            <div className="pb-4">
+          <div className="rounded-md shadow-sm space-y-4">
+            <div>
               <label htmlFor="email" className="sr-only">Email address</label>
               <input
                 id="email"
@@ -59,7 +60,7 @@ const LoginForm: React.FC = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold transition duration-150"
                 placeholder="Email address"
                 value={email}
                 onChange={(event: any) => setEmail(event.target.value)}
@@ -73,7 +74,7 @@ const LoginForm: React.FC = () => {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold transition duration-150"
                 placeholder="Password"
                 value={password}
                 onChange={(e: any) => setPassword(e.target.value)}
@@ -82,17 +83,26 @@ const LoginForm: React.FC = () => {
           </div>
 
           {errorMessage && (
-            <div className="text-red-500 text-center">
+            <div className="mt-2 text-center text-sm text-red-600">
               {errorMessage}
             </div>
           )}
           <div>
-            <button type="submit" className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-              Sign in
+            <button type="submit" className="bg-gold text-black px-4 py-2 rounded-md hover:bg-yellow-400 font-semibold w-full transition duration-200 ease-in-out">
+              Login
             </button>
-            <Link href="/forgot-password" className="mt-8 text-blue-500 ">
+            <Link href="/forgot-password" className="block text-center mt-4 text-sm text-black hover:underline transition duration-150 ease-in-out">
               Forget your password? Click Here!
             </Link>
+            <p className="mt-4 text-center text-sm text-black">
+              Need an account?{" "}
+              <span
+                onClick={() => setAuthMode('register')}
+                className="text-gold font-semibold cursor-pointer hover:underline"
+              >
+                Register
+              </span>
+            </p>
           </div>
         </form>
       </div>

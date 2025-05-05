@@ -120,19 +120,9 @@ export default function Home() {
           ) : (
             <>
               {authMode === 'login' ? (
-                <>
-                  <LoginForm />
-                  <button onClick={() => setAuthMode('register')} className="mt-4 text-black font-semibold">
-                    Need an account? Register
-                  </button>
-                </>
+                <LoginForm setAuthMode={switchAuthMode} />
               ) : (
-                <>
-                  <RegistrationForm setAuthMode={switchAuthMode} />
-                  <button onClick={() => setAuthMode('login')} className="mt-4 text-black font-semibold">
-                    Already have an account? Login
-                  </button>
-                </>
+                <RegistrationForm setAuthMode={switchAuthMode} />
               )}
             </>
           )}

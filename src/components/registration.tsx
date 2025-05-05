@@ -68,7 +68,7 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
   return (
     <div className="min-h-screen flex justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-black font-semibold rounded-md shadow">
+        <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-gold bg-opacity-20 text-black font-semibold rounded-md shadow">
           Register to Submit<br />
           an event to the<br />
           Groove Guide!
@@ -172,14 +172,16 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
               Register
             </button>
           </div>
+          <p className="mt-4 text-center text-sm text-black">
+          Already have an account?{" "}
+          <span
+            onClick={() => setAuthMode('login')}
+            className="text-gold font-semibold cursor-pointer hover:underline"
+          >
+            Login
+          </span>
+        </p>
         </form>
-        <button
-          type="button"
-          className="mt-4 w-full flex justify-center py-2 px-4 text-sm font-medium rounded-md text-black border border-gold hover:bg-gold hover:text-black transition duration-200 ease-in-out"
-          onClick={() => setAuthMode('login')}
-        >
-          Back to Login
-        </button>
       </div>
     </div>
   );
