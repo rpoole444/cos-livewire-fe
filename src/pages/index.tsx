@@ -82,7 +82,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
       <Header />
-      <div className="flex flex-1 flex-col md:flex-row">
+      <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
         <main className="flex-grow p-4 md:p-8">
           <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
             <section className="flex-grow">
@@ -111,7 +111,7 @@ export default function Home() {
             </aside>
           </div>
         </main>
-        <aside className="w-full md:w-1/5 flex flex-col bg-white p-4 shadow-lg text-black rounded-lg">
+        <aside className="w-full md:max-w-md lg:w-1/3 bg-white p-6 shadow-xl text-black rounded-lg transition-all duration-300 ease-in-out max-h-screen overflow-auto">
           {user ? (
             <>
               <WelcomeUser />
