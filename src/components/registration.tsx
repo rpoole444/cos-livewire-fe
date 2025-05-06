@@ -9,6 +9,7 @@ const genreOptions = ["Jazz", "Blues", "Funk", "Indie", "Dance", "Electronic","R
 const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthMode }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [description, setDescription] = useState('');
@@ -148,23 +149,31 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
                 ))}
               </div>
             </div>
-            <div>
-              <label htmlFor="password" className="sr-only">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <p className="mt-2 text-sm text-gray-600">
-                Password must be at least 8 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special characters.
-              </p>
-            </div>
+            <div className="pb-5">
+  <label htmlFor="password" className="sr-only">Password</label>
+  <input
+    id="password"
+    name="password"
+    type={showPassword ? "text" : "password"}
+    autoComplete="current-password"
+    required
+    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold"
+    placeholder="Password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+  />
+  <button
+    type="button"
+    onClick={() => setShowPassword(prev => !prev)}
+    className="text-sm text-blue-600 mt-1 hover:underline"
+  >
+    {showPassword ? "Hide Password" : "Show Password"}
+  </button>
+  <p className="mt-2 text-sm text-gray-600">
+    Password must be at least 8 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special characters.
+  </p>
+</div>
+
           </div>
           {errorMessage && <p className="mt-2 text-center text-sm text-red-600">{errorMessage}</p>}
           <div>
