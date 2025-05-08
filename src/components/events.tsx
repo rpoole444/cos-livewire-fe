@@ -12,7 +12,7 @@ interface EventsProps {
 const Events: React.FC<EventsProps> = ({ events }) => {
   const router = useRouter();
 
-  const handleCardClick = (id: string) => {
+  const handleCardClick = (id: number) => {
     router.push(`/eventRouter/${id}`);
   };
 
