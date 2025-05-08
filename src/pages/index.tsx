@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import Header from '@/components/Header';
 import LoginForm from '@/components/login';
+import HeroSection from '@/components/HeroSection';
 import WelcomeUser from "@/components/WelcomeUser"; 
 import RegistrationForm from '@/components/registration';
 import { useAuth } from "@/context/AuthContext";
@@ -82,6 +83,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
       <Header />
+      <HeroSection />
       <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
         <main className="flex-grow p-4 md:p-8">
           <div className="flex flex-col lg:flex-row gap-4 md:gap-8">

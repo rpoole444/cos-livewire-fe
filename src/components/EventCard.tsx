@@ -8,7 +8,6 @@ interface EventCardProps {
   handleCardClick?: (id: number) => void;
 }
 
-// ✅ CLEANED: Removed console.logs and simplified
 const formatDate = (dateString: string) => {
   try {
     const [yyyy, mm, dd] = dateString.split('T')[0].split('-');
@@ -25,7 +24,6 @@ const formatDate = (dateString: string) => {
   }
 };
 
-// ✅ FIXED: added missing backticks in Date constructor string
 const formatTime = (timeString: string) => {
   try {
     return new Date(`1970-01-01T${timeString}`).toLocaleTimeString('en-US', {
@@ -45,11 +43,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick }) => {
       onClick={() => handleCardClick?.(event.id)}
       className="bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-xl transition duration-300 max-w-xl mx-auto cursor-pointer"
     >
-      {/* ✅ NEW: Consistent spacing and layout */}
       <h2 className="text-2xl font-bold text-gold mb-2">{event.title}</h2>
 
       <div className="text-sm text-gray-300 space-y-2">
-        {/* ✅ NEW: Bold labels and vertical spacing */}
         <p><span className="font-semibold text-white">Date:</span> {formatDate(event.date)}</p>
         {event.start_time && (
           <p><span className="font-semibold text-white">Start Time:</span> {formatTime(event.start_time)}</p>
@@ -69,12 +65,10 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick }) => {
         <p><span className="font-semibold text-white">Address:</span> {event.address}</p>
       </div>
 
-      {/* ✅ MOVED + STYLED: Description now below metadata */}
       {event.description && (
         <p className="text-gray-400 text-sm mt-4">{event.description}</p>
       )}
 
-      {/* ✅ STYLED LINKS: Underline and hover effects */}
       <div className="mt-4 space-y-2">
         {event.website && (
           <Link
@@ -98,7 +92,6 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick }) => {
         )}
       </div>
 
-      {/* ✅ POSTER: Responsive styling */}
       {event.poster ? (
         <div className="mt-6 flex justify-center">
           <Image
