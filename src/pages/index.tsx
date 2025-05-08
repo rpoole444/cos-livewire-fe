@@ -104,14 +104,14 @@ export default function Home() {
                 <Events events={filteredEvents} />
               </div>
             </section>
-            <aside className="lg:w-1/3">
+            <aside className="w-full lg:w-[35%] bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out">
               <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
                 <EventsCalendar currentDate={selectedDate} events={events} onDateSelect={handleDateSelect} />
               </div>
             </aside>
           </div>
         </main>
-        <aside className="w-full md:max-w-md lg:w-1/3 bg-white p-6 shadow-xl text-black rounded-lg transition-all duration-300 ease-in-out max-h-screen overflow-auto">
+        <aside className="w-full md:w-[40%] lg:w-[30%] xl:w-1/4 max-w-md bg-white p-6 shadow-xl text-black rounded-lg transition-all duration-300 ease-in-out overflow-auto">
           {user ? (
             <>
               <WelcomeUser />
