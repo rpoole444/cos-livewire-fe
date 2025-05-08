@@ -19,7 +19,7 @@ const HeroSection = ({ user, setAuthMode }: { user: any, setAuthMode: (mode: str
             Browse Events
           </button>
         </Link>
-        <Link href={user ? "/eventSubmission" : "/login?redirect=/eventSubmission"}>
+        <Link href={user ? "/eventSubmission" : "/LoginPage?redirect=/eventSubmission"}>
           <button className="border border-gold text-gold font-semibold py-3 px-6 rounded-md hover:bg-gold hover:text-black transition duration-200 ease-in-out">
             Submit Your Show
           </button>
