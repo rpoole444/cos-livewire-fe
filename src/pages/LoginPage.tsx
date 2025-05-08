@@ -29,7 +29,11 @@ const LoginPage = () => {
         <p className="text-gray-300">Log in to submit events and explore your dashboard.</p>
       </div>
       <div className="bg-white text-black max-w-md w-full p-8 rounded-xl shadow-2xl">
-        <LoginForm setAuthMode={() => {}} />
+        <LoginForm
+          setAuthMode={(mode) => {
+            if (mode === 'register') router.push('/register');
+          }}
+        />
       </div>
     </section>
   </div>
