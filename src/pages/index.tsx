@@ -87,7 +87,7 @@ export default function Home() {
       <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
         <main className="flex-grow p-4 md:p-8">
           <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
-            <section className="flex-grow">
+            <section id="events" className="flex-grow scroll-mt-20">
               <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl md:text-3xl font-bold">Events</h1>
                 <select

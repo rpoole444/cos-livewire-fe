@@ -4,8 +4,8 @@ import Link from 'next/link';
 
 const HeroSection = () => {
   return (
-    <section className="bg-black text-white py-16 px-4 md:px-12 lg:px-24 text-center relative overflow-hidden">
-      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gold mb-6">
+    <section className="bg-black text-white min-h-[80vh] py-16 px-4 md:px-12 lg:px-24 text-center flex flex-col justify-center items-center">
+      <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gold mb-6 transition duration-500 ease-in-out transform hover:-translate-y-1">
         Discover & Share Live Music in Colorado Springs
       </h1>
       <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-10">
