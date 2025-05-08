@@ -14,7 +14,7 @@ import UpcomingShows from '@/components/UpcomingShows';
 import { parseMSTDate, parseLocalDayjs } from '@/util/dateHelper';
 
 type AuthMode = 'login' | 'register';
-dayjs.extend(isBetween)
+dayjs.extend(isBetween);
 
 export default function Home() {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
@@ -51,7 +51,7 @@ export default function Home() {
 
   useEffect(() => {
     const updateFilteredEvents = () => {
-      let filtered :any  = [];
+      let filtered: any = [];
       if (filterMode === 'day') {
         filtered = events.filter((event) =>
           parseLocalDayjs(event.date).isSame(selectedDate, 'day')
@@ -65,7 +65,6 @@ export default function Home() {
       } else if (filterMode === 'all') {
         const now = dayjs().startOf('day');
         filtered = events.filter(event => parseLocalDayjs(event.date).isSame(now, 'day') || parseLocalDayjs(event.date).isAfter(now));
-
       }
       setFilteredEvents(filtered);
     };
@@ -81,20 +80,20 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 text-white">
+    <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
       <Header />
-      <div className="flex flex-1 flex-col md:flex-row">
+      <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
         <main className="flex-grow p-4 md:p-8">
           <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
             <section className="flex-grow">
               <div className="flex justify-between items-center mb-4">
-                <h1 className="text-xl md:text-2xl font-bold">Events</h1>
+                <h1 className="text-2xl md:text-3xl font-bold">Events</h1>
                 <select
                   name="event-pulldown"
                   id="event-pulldown"
                   value={filterMode}
                   onChange={handleFilterChange}
-                  className="p-2 border rounded text-black"
+                  className="p-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-gold"
                 >
                   <option value="day">Today&apos;s Events</option>
                   <option value="week">This Week&apos;s Events</option>
@@ -112,7 +111,7 @@ export default function Home() {
             </aside>
           </div>
         </main>
-        <aside className="w-full md:w-1/5 flex flex-col bg-white p-4 shadow-lg text-black">
+        <aside className="w-full md:max-w-md lg:w-1/3 bg-white p-6 shadow-xl text-black rounded-lg transition-all duration-300 ease-in-out max-h-screen overflow-auto">
           {user ? (
             <>
               <WelcomeUser />
@@ -121,19 +120,9 @@ export default function Home() {
           ) : (
             <>
               {authMode === 'login' ? (
-                <>
-                  <LoginForm />
-                  <button onClick={() => setAuthMode('register')} className="mt-4 text-blue-500">
-                    Need an account? Register
-                  </button>
-                </>
+                <LoginForm setAuthMode={switchAuthMode} />
               ) : (
-                <>
-                  <RegistrationForm setAuthMode={switchAuthMode} />
-                  <button onClick={() => setAuthMode('login')} className="mt-4 text-blue-500">
-                    Already have an account? Login
-                  </button>
-                </>
+                <RegistrationForm setAuthMode={switchAuthMode} />
               )}
             </>
           )}

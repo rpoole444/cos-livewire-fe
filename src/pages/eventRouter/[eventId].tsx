@@ -75,7 +75,7 @@ const EventDetailPage = () => {
             <>
               {authMode === 'login' ? (
                 <div>
-                  <LoginForm />
+                  <LoginForm setAuthMode={switchAuthMode} />
                   <button onClick={switchAuthMode} className="mt-4 text-indigo-600 hover:text-indigo-800 transition duration-300 ease-in-out">
                     Need an account? Register
                   </button>
