@@ -19,19 +19,9 @@ const HeroSection = ({ user, setAuthMode }: { user: any, setAuthMode: (mode: str
             Browse Events
           </button>
         </Link>
-        <Link href="/eventSubmission">
-          <button
-              onClick={() => {
-                if (user) {
-                  window.location.href = "/eventSubmission";
-                } else {
-                  setAuthMode("login");
-                  document.getElementById("auth-section")?.scrollIntoView({ behavior: "smooth" });
-                }
-              }}
-              className="border border-gold text-gold font-semibold py-3 px-6 rounded-md hover:bg-gold hover:text-black transition duration-200 ease-in-out"
-            >
-            Submit Your Show (Login Required)
+        <Link href={user ? "/eventSubmission" : "/login?redirect=/eventSubmission"}>
+          <button className="border border-gold text-gold font-semibold py-3 px-6 rounded-md hover:bg-gold hover:text-black transition duration-200 ease-in-out">
+            Submit Your Show
           </button>
         </Link>
       </div>
