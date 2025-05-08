@@ -83,7 +83,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
       <Header />
-      <HeroSection />
+      <HeroSection user={user} setAuthMode={switchAuthMode} />
       <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
         <main className="flex-grow p-4 md:p-8">
           <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
@@ -113,7 +113,7 @@ export default function Home() {
             </aside>
           </div>
         </main>
-        <aside className="w-full md:w-[40%] lg:w-[30%] xl:w-1/4 max-w-md bg-white p-6 shadow-xl text-black rounded-lg transition-all duration-300 ease-in-out overflow-auto">
+        <aside id="auth-section" className="w-full md:w-[40%] lg:w-[30%] xl:w-1/4 max-w-md bg-white p-6 shadow-xl text-black rounded-lg transition-all duration-300 ease-in-out overflow-auto">
           {user ? (
             <>
               <WelcomeUser />

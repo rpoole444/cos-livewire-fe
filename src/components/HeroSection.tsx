@@ -2,9 +2,9 @@
 import React from 'react';
 import Link from 'next/link';
 
-const HeroSection = () => {
+const HeroSection = ({ user, setAuthMode }: { user: any, setAuthMode: (mode: string) => void }) => {
   return (
-    <section className="bg-black text-white min-h-[80vh] py-16 px-4 md:px-12 lg:px-24 text-center flex flex-col justify-center items-center">
+    <section className="bg-black text-white min-h-[90vh] py-24 px-6 md:px-16 lg:px-32 text-center flex flex-col justify-center items-center">
       <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gold mb-6 transition duration-500 ease-in-out transform hover:-translate-y-1">
         Discover & Share Live Music in Colorado Springs
       </h1>
@@ -20,8 +20,18 @@ const HeroSection = () => {
           </button>
         </Link>
         <Link href="/eventSubmission">
-          <button className="border border-gold text-gold font-semibold py-3 px-6 rounded-md hover:bg-gold hover:text-black transition duration-200 ease-in-out">
-            Submit Your Show
+          <button
+              onClick={() => {
+                if (user) {
+                  window.location.href = "/eventSubmission";
+                } else {
+                  setAuthMode("login");
+                  document.getElementById("auth-section")?.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+              className="border border-gold text-gold font-semibold py-3 px-6 rounded-md hover:bg-gold hover:text-black transition duration-200 ease-in-out"
+            >
+            Submit Your Show (Login Required)
           </button>
         </Link>
       </div>
