@@ -122,7 +122,15 @@ export default function Home() {
           {user ? (
             <>
               <WelcomeUser />
-              <UpcomingShows user={user} userGenres={user.top_music_genres} events={events} />
+              <UpcomingShows
+                user={user}
+                userGenres={
+                  Array.isArray(user.top_music_genres)
+                    ? user.top_music_genres
+                    : JSON.parse(user.top_music_genres || '[]')
+                }
+                events={events}
+              />
             </>
           ) : (
             <>
