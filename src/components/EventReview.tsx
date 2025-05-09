@@ -2,21 +2,18 @@
 import { getEventsForReview, updateEventStatus, updateEventDetails, deleteEvent } from "@/pages/api/route";
 import { useState, useEffect } from "react";
 import "../styles/globals.css";
-import AdminEventCard from "./AdminEventCard"; // This is a new component you'll create
-import { useRouter } from "next/router";
+import AdminEventCard from "./AdminEventCard";
 import { useAuth } from "../context/AuthContext";
 import { Event, Events } from "../interfaces/interfaces";
 
 const EventReview: React.FC = () => {
   const [events, setEvents] = useState<Events>([]);
-  const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const eventsData: any = await getEventsForReview(); // Make sure this function fetches events awaiting approval
-        console.table(eventsData)
+        const eventsData = await getEventsForReview();
         setEvents(eventsData);
       } catch (error) {
         console.error('Failed to load events for review', error);
@@ -26,62 +23,55 @@ const EventReview: React.FC = () => {
     fetchData();
   }, []);
 
-  const handleApprove = async (eventId: number): Promise<void> => {
-    // Send PUT request to approve the event
-    await updateEventStatus(eventId, true);
-    // Fetch the events again to reflect the changes or directly update the state
-    setEvents(events.filter(activity => activity.id !== eventId));
-  };
-
-  const handleDeny = async (eventId: number): Promise<void> => {
-    if (user) {
-      try {
-        await deleteEvent(eventId);
-        setEvents(prevEvents => prevEvents.filter(activity => activity.id !== eventId));
-      } catch (error) {
-        console.error('Error denying the event', error);
-      }
+  const handleApprove = async (eventId: number) => {
+    try {
+      await updateEventStatus(eventId, true);
+      setEvents(events.filter(event => event.id !== eventId));
+    } catch (err) {
+      console.error("Error approving event:", err);
     }
   };
 
-  const handleSave = async (updatedEvent: Event): Promise<void> => {
+  const handleDeny = async (eventId: number) => {
+    try {
+      await deleteEvent(eventId);
+      setEvents(events.filter(event => event.id !== eventId));
+    } catch (err) {
+      console.error("Error denying event:", err);
+    }
+  };
+
+  const handleSave = async (updatedEvent: Event) => {
     try {
       await updateEventDetails(updatedEvent.id, updatedEvent);
-      // Update the local state to reflect the changes
-      setEvents(prevEvents =>
-        prevEvents.map(event => (event.id === updatedEvent.id ? updatedEvent : event))
-      );
-    } catch (error) {
-      console.error('Failed to save event', error);
+      setEvents(prev => prev.map(event => (event.id === updatedEvent.id ? updatedEvent : event)));
+    } catch (err) {
+      console.error("Error saving event changes:", err);
     }
   };
 
-  if (events.length > 0) {
-    return (
-      <div>
-        <div className="max-h-screen overflow-y-auto">
-          <ul className="space-y-4">
-            {events.map((event: any) => (
-              <li key={event.id} className="border p-4 rounded shadow">
-                <AdminEventCard
-                  event={event}
-                  onApprove={() => handleApprove(event.id)}
-                  onDeny={() => handleDeny(event.id)}
-                  onSave={handleSave}
-                />
-              </li>
-            ))}
-          </ul>
+  return (
+    <div className="mt-8">
+      {events.length > 0 ? (
+        <ul className="space-y-6">
+          {events.map((event) => (
+            <li key={event.id} className="bg-white rounded-md shadow-md p-6">
+              <AdminEventCard
+                event={event}
+                onApprove={() => handleApprove(event.id)}
+                onDeny={() => handleDeny(event.id)}
+                onSave={handleSave}
+              />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className="text-center text-gray-300 py-10">
+          <p className="text-lg">✅ All clear — no pending events right now.</p>
         </div>
-      </div>
-    );
-  } else {
-    return (
-      <div>
-        <p className="text-white text-lg">No events to review, but keep an eye out!!</p>
-      </div>
-    );
-  }
+      )}
+    </div>
+  );
 };
 
 export default EventReview;

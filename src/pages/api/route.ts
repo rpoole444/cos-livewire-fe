@@ -1,4 +1,5 @@
 import { parseMSTDate } from "@/util/dateHelper";
+import { Events } from "@/interfaces/interfaces"; // Make sure this import exists
 
 interface EventStatusUpdatePayload {
   isApproved: boolean;
@@ -122,7 +123,7 @@ async function logoutUser(): Promise<void> {
   }
 }
 
-async function getEventsForReview(): Promise<void> {
+async function getEventsForReview(): Promise<Events> {
   const res = await fetch(`${API_BASE_URL}/api/events/review`, {
     credentials: 'include', // Include credentials
   });
