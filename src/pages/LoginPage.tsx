@@ -9,11 +9,15 @@ const LoginPage = () => {
   const router = useRouter();
   const redirect = router.query.redirect as string;
 
-  useEffect(() => {
-    if (user && redirect) {
+useEffect(() => {
+  if (user) {
+    if (redirect) {
       router.push(redirect);
+    } else {
+      router.push('/#events'); // fallback to homepage event section
     }
-  }, [user, redirect]);
+  }
+}, [user, redirect]);
 
   return (
   <div className="min-h-screen bg-gray-900 text-white">
