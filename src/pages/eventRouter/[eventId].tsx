@@ -4,94 +4,94 @@ import EventCard from '../../components/EventCard';
 import { fetchEventDetails } from '../api/route';
 import { useAuth } from "../../context/AuthContext";
 import LoginForm from '@/components/login';
-import WelcomeUser from "@/components/WelcomeUser"; 
+import WelcomeUser from "@/components/WelcomeUser";
 import RegistrationForm from '@/components/registration';
 import Link from "next/link";
 import { Event } from '@/interfaces/interfaces';
+import Header from '@/components/Header';
 type AuthMode = 'login' | 'register';
-import { CustomEvent } from '@/interfaces/interfaces';
 
 const EventDetailPage = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const { eventId } = router.query;
-  const [event, setEvent] = useState<Event>();
+  const [event, setEvent] = useState<Event | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
 
   const switchAuthMode = () => {
-    setAuthMode(prevMode => (prevMode === 'login' ? 'register' : 'login'));
+    setAuthMode((prev) => (prev === 'login' ? 'register' : 'login'));
   };
-
 
   useEffect(() => {
     const fetchSingleEvent = async () => {
       const id = Number(Array.isArray(eventId) ? eventId[0] : eventId);
       if (id) {
-        const data = await fetchEventDetails(id);
-        setEvent(data);
+        try {
+          const data = await fetchEventDetails(id);
+          setEvent(data);
+        } catch (error) {
+          console.error('Failed to fetch event details:', error);
+        }
       }
     };
-
-    if (eventId) {
-      fetchSingleEvent();
-    }
+    if (eventId) fetchSingleEvent();
   }, [eventId]);
 
-  if (!event) {
-    return <div>Loading...</div>;
-  }
-
-  const getDirections = ():any => {
+  const getDirections = () => {
+    if (!event?.address) return;
     const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.address)}`;
     window.open(url, '_blank');
   };
 
+  if (!event) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
+        <p className="text-lg">Loading event details...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="w-full bg-indigo-800 text-white p-6">
-        <h1 className="text-center text-4xl lg:text-5xl font-bold tracking-tight">
-          Alpine Groove Guide
-        </h1>
-      </header>
-      <div className="container mx-auto my-8 p-4 flex flex-col lg:flex-row gap-4">
-        <div className="flex-1">
+    <div className="min-h-screen bg-gray-900 text-white font-sans">
+      <Header />
+      <main className="container mx-auto p-6 lg:flex gap-8">
+        <section className="flex-1">
           <EventCard event={event} />
-          <button 
-            onClick={getDirections}
-            className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mt-4"
-          >
-            Get Directions
-          </button>
-          <Link href="/" passHref>
-            <button className="ml-4 mt-4 text-indigo-600 hover:text-indigo-800 transition duration-300 ease-in-out">
-              Back to All Events
+          <div className="mt-6 flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={getDirections}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded transition"
+            >
+              Get Directions
             </button>
-          </Link>
-        </div>
-        <aside className="w-full lg:w-1/4 bg-white p-4 shadow-lg rounded">
+            <Link href="/" passHref>
+              <button className="text-indigo-400 hover:text-indigo-600 font-medium underline transition">
+                Back to All Events
+              </button>
+            </Link>
+          </div>
+        </section>
+
+        <aside className="w-full lg:w-1/3 bg-white text-black p-6 rounded-lg shadow-lg mt-10 lg:mt-0">
           {user ? (
             <WelcomeUser />
+          ) : authMode === 'login' ? (
+            <>
+              <LoginForm setAuthMode={switchAuthMode} />
+              <button onClick={switchAuthMode} className="mt-4 text-indigo-600 hover:text-indigo-800 transition">
+                Need an account? Register
+              </button>
+            </>
           ) : (
             <>
-              {authMode === 'login' ? (
-                <div>
-                  <LoginForm setAuthMode={switchAuthMode} />
-                  <button onClick={switchAuthMode} className="mt-4 text-indigo-600 hover:text-indigo-800 transition duration-300 ease-in-out">
-                    Need an account? Register
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  <RegistrationForm setAuthMode={switchAuthMode} />
-                  <button onClick={switchAuthMode} className="mt-4 text-indigo-600 hover:text-indigo-800 transition duration-300 ease-in-out">
-                    Already have an account? Login
-                  </button>
-                </div>
-              )}
+              <RegistrationForm setAuthMode={switchAuthMode} />
+              <button onClick={switchAuthMode} className="mt-4 text-indigo-600 hover:text-indigo-800 transition">
+                Already have an account? Login
+              </button>
             </>
           )}
         </aside>
-      </div>
+      </main>
     </div>
   );
 };
