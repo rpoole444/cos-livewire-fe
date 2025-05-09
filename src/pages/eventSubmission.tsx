@@ -55,6 +55,12 @@ const EventSubmission = () => {
     }
   }, []);
 
+  useEffect(() => {
+  if (!user) {
+    router.push('/LoginPage?redirect=/eventSubmission');
+  }
+}, [user]);
+
   const initializeAutocomplete = () => {
   const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current);
   autocomplete.addListener("place_changed", () => {
@@ -145,8 +151,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   }
 };
 
-
-
+if (!user) return null;
 
   if (submissionSuccess) {
     return (
