@@ -48,7 +48,7 @@ const About = () => {
               Want to promote your event? Just register and submit your show. Got feedback or ideas? I’d love to hear from you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/registration" className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded text-center">
+              <Link href="/RegistrationPage" className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded text-center">
                 Create an Account
               </Link>
               <Link href="/eventSubmission" className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded text-center">
@@ -67,13 +67,13 @@ const About = () => {
           <div className="mt-10 border-t border-gray-700 pt-6 text-sm text-gray-400">
             <p>Follow Alpine Groove Guide:</p>
             <div className="flex gap-4 mt-2">
-              <a href="https://www.instagram.com/yourhandle" target="_blank" rel="noopener noreferrer" className="hover:underline">
+              <a href="https://www.instagram.com/reid_poole_music/" target="_blank" rel="noopener noreferrer" className="hover:underline">
                 Instagram
               </a>
-              <a href="https://www.facebook.com/yourhandle" target="_blank" rel="noopener noreferrer" className="hover:underline">
+              <a href="https://www.facebook.com/reidpoole" target="_blank" rel="noopener noreferrer" className="hover:underline">
                 Facebook
               </a>
-              <a href="https://www.linkedin.com/in/yourprofile" target="_blank" rel="noopener noreferrer" className="hover:underline">
+              <a href="https://www.linkedin.com/in/reid-poole/" target="_blank" rel="noopener noreferrer" className="hover:underline">
                 LinkedIn
               </a>
             </div>
