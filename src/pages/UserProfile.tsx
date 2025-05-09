@@ -3,10 +3,13 @@ import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Image from "next/image";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-const genresList = ["Jazz", "Blues", "Funk", "Indie", "Dance", "Electronic", "Rock", "Alternative", "Country", "Hip-Hop", "Pop", 
-  "R&B", "Rap", "Reggae", "Soul", "Techno", "World", "Other"];
+const genresList = [
+  "Jazz", "Blues", "Funk", "Indie", "Dance", "Electronic", "Rock", "Alternative",
+  "Country", "Hip-Hop", "Pop", "R&B", "Rap", "Reggae", "Soul", "Techno", "World", "Other"
+];
 
 const UserProfile: React.FC = () => {
   const { user, updateUser } = useAuth();
@@ -20,77 +23,44 @@ const UserProfile: React.FC = () => {
   const [profilePicture, setProfilePicture] = useState<string>(user?.profile_picture || "");
 
   useEffect(() => {
-    if (!user) {
-      router.push("/"); // Redirect to login if not authenticated
-    }
-  }, [user, router]);
-
-useEffect(() => {
-  if (user?.top_music_genres) {
-      let parsedGenres: string[] = [];
-    try {
-        parsedGenres = Array.isArray(user.top_music_genres) ? user.top_music_genres : JSON.parse(user.top_music_genres);
-      setGenres(Array.isArray(parsedGenres) ? parsedGenres : []);
-    } catch (error) {
-      console.error("Error parsing genres", error);
-      setGenres([]); // Set to an empty array in case of parsing error
-    }
-  }
-}, [user]);
+    if (!user) router.push("/");
+  }, [user]);
 
   useEffect(() => {
-    if (!isEditing && user) {
-      setEmail(user.email);
-      setDescription(user.user_description);
-      let parsedGenres: string[] = [];
+    if (user?.top_music_genres) {
       try {
-        parsedGenres = Array.isArray(user.top_music_genres) ? user.top_music_genres : JSON.parse(user.top_music_genres);
-      } catch (error) {
-        // parsedGenres = Array.isArray(user.top_music_genres) ? user.top_music_genres : JSON.parse(user.top_music_genres);
+        const parsed = Array.isArray(user.top_music_genres)
+          ? user.top_music_genres
+          : JSON.parse(user.top_music_genres);
+        setGenres(parsed || []);
+      } catch (err) {
+        console.error("Genre parse error", err);
+        setGenres([]);
       }
     }
-  }, [isEditing, user]);
+  }, [user]);
 
-const fetchWithAuth = async (url:string, options:any) => {
-  try {
-  const response = await fetch(url, {
-    ...options,
-    credentials: 'include', // Ensure cookies are included in the request
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch');
-  }
-
-  return response;
-    } catch (error) {
-    console.error('Error in fetchWithAuth:', error);
-    throw error; // Ensure the error is re-thrown for proper handling
-  }
-
-};
-  // Fetch profile picture on mount
-  useEffect(() => {
-    const fetchProfilePicture = async () => {
-  try {
-    const response = await fetchWithAuth(`${API_BASE_URL}/api/auth/profile-picture`, {
-      credentials: 'include',
+  const fetchWithAuth = async (url: string, options?: any) => {
+    const res = await fetch(url, {
+      ...options,
+      credentials: "include",
     });
-    const data = await response.json();
-    if (data.profile_picture_url) {
-      setProfilePicture(data.profile_picture_url);
-    }
-  } catch (error) {
-    console.error('Error fetching profile picture:', error);
-  }
-};
-
-    fetchProfilePicture();
-  }, [profilePicture]);
-
-  const handleEdit = () => {
-    setIsEditing(!isEditing);
+    if (!res.ok) throw new Error("Request failed");
+    return res;
   };
+
+  useEffect(() => {
+    const fetchPicture = async () => {
+      try {
+        const res = await fetchWithAuth(`${API_BASE_URL}/api/auth/profile-picture`);
+        const data = await res.json();
+        if (data.profile_picture_url) setProfilePicture(data.profile_picture_url);
+      } catch (err) {
+        console.error("Image fetch error", err);
+      }
+    };
+    fetchPicture();
+  }, []);
 
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
@@ -100,202 +70,169 @@ const fetchWithAuth = async (url:string, options:any) => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
+  const handleSave = async () => {
+    if (!user) return;
+
+    const formData = new FormData();
+    formData.append("first_name", user.first_name);
+    formData.append("last_name", user.last_name);
+    formData.append("email", email);
+    formData.append("user_description", description);
+    formData.append("top_music_genres", JSON.stringify(genres));
+    if (file) formData.append("profile_picture", file);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
+        method: "PUT",
+        body: formData,
+        credentials: "include",
+      });
+      const data = await res.json();
+      setProfilePicture(data.profile_picture);
+      updateUser({ ...user, email, user_description: description, top_music_genres: genres, profile_picture: data.profile_picture });
+      setMessage("Profile updated successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      console.error(err);
+      setMessage("Error updating profile.");
     }
   };
 
-const handleSave = async () => {
-  if (!user) {
-    setMessage("User is not authenticated");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('first_name', user?.first_name || "");
-  formData.append('last_name', user?.last_name || "");
-  formData.append('email', email);
-  formData.append('user_description', description);
-  formData.append('top_music_genres', JSON.stringify(genres));
-
-  if (file) {
-    formData.append('profile_picture', file);
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/update-profile`, {
-      method: 'PUT',
-      credentials: 'include', // Ensure credentials are included
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to update profile");
-    }
-
-    const data = await response.json();
-    setMessage(data.message);
-    setIsEditing(false);
-
-    const updatedUser = {
-      ...user,
-      email,
-      user_description: description,
-      top_music_genres: JSON.stringify(genres),
-      profile_picture: data.profile_picture,
-    };
-    updateUser(updatedUser);
-    setProfilePicture(data.profile_picture);
-  } catch (error) {
-    console.error(error);
-    setMessage("Error updating profile");
-  }
-};
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) setFile(e.target.files[0]);
+  };
 
   const handleResetPassword = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include credentials (cookies) with the request
+      const res = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
+        credentials: "include",
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to send reset password email");
-      }
-
-      const data = await response.json();
+      const data = await res.json();
       setMessage(data.message);
-    } catch (error) {
-      console.error(error);
-      setMessage("Error sending reset password email");
+    } catch (err) {
+      setMessage("Failed to send reset email.");
     }
   };
 
   return user ? (
-    <div className="flex min-h-screen flex-col bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-900 text-white">
       <Header />
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">User Profile</h1>
-        <div className="flex flex-col md:flex-row">
-          <div className="md:w-1/3 flex justify-center mb-4 md:mb-0">
+      <div className="max-w-5xl mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-6">🎤 Profile: {user.first_name} {user.last_name}</h1>
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Profile Picture */}
+          <div className="md:w-1/3 flex justify-center">
             {profilePicture && (
-              <div className="md:mb-4">
-                <Image src={profilePicture} alt="Profile Picture" className="w-48 h-48 rounded-full object-cover" width={400} height={400}/>
-              </div>
+              <Image
+                src={profilePicture}
+                alt="Profile Picture"
+                width={200}
+                height={200}
+                className="rounded-full object-cover"
+              />
             )}
           </div>
-          <div className="md:w-2/3 bg-gray-800 p-6 rounded-lg shadow-lg max-w-md mx-auto md:mx-0 md:max-w-full">
-            <>
-              <div className="mb-4">
-                <p className="block font-semibold">Name:
-                  <span>{user.first_name} {user.last_name}</span>
-                </p>
-              </div>
-              <div className="mb-4">
-                {isEditing ? (
-                <label className="block font-semibold">Email:
+
+          {/* User Info Form */}
+          <div className="md:w-2/3 bg-gray-800 p-6 rounded-lg shadow-md">
+            {isEditing ? (
+              <>
+                <label className="block mb-4">
+                  📧 Email:
                   <input
-                    id="emailInput"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="border p-2 rounded w-full text-black"
+                    className="w-full p-2 mt-1 rounded text-black"
                   />
                 </label>
-                ) : (
-                  <span>{email}</span>
-                )}
-              </div>
-              <div className="mb-4">
-                {isEditing ? (
-                  <label className="block font-semibold">Description:
-                    <textarea
-                      name="textarea-description"
-                      id="textarea-description"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="border p-2 rounded w-full text-black"
-                    />
-                  </label>
-                ) : (
-                  <span>{description}</span>
-                )}
-              </div>
-              <p className="block font-semibold" >Favorite Genres:</p>
-              <div className="mb-4">
-                {isEditing ? (
-                  <div>
-                    {genresList.map((genre) => (
-                      <div key={genre} className="mb-2">
-                        <input
-                          type="checkbox"
-                          name='genre-checkbox'
-                          id={genre}
-                          value={genre}
-                          checked={genres.includes(genre)}
-                          onChange={() => handleGenreChange(genre)}
-                          className="mr-2"
-                          autoComplete="true"
-                        />
-                        <label htmlFor={genre}>{genre}</label>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-              <span>{Array.isArray(genres) ? genres.join(", ") : "None"}</span>                )}
-              </div>
-              {isEditing && (
-                <div className="mb-4">
-                  <label htmlFor="profilePicture" className="block font-semibold">Profile Picture:</label>
+
+                <label className="block mb-4">
+                  📝 Bio / About:
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="w-full p-2 mt-1 rounded text-black"
+                  />
+                </label>
+
+                <label className="block mb-4 font-semibold">🎶 Favorite Genres (pick up to 3):</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                  {genresList.map((genre) => (
+                    <label key={genre} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        value={genre}
+                        checked={genres.includes(genre)}
+                        onChange={() => handleGenreChange(genre)}
+                        className="mr-2"
+                      />
+                      {genre}
+                    </label>
+                  ))}
+                </div>
+
+                <label className="block mb-4">
+                  📷 Upload New Picture:
                   <input
                     type="file"
-                    id="profilePicture"
-                    name="profilePicture"
-                    accept="image/jpeg,image/png"
+                    accept="image/*"
                     onChange={handleFileChange}
-                    className="border p-2 rounded w-full text-black"
+                    className="block w-full mt-1 text-sm text-gray-300"
                   />
-                </div>
-              )}
+                </label>
+              </>
+            ) : (
+              <>
+                <p className="mb-3"><strong>Email:</strong> {email}</p>
+                <p className="mb-3"><strong>About:</strong> {description || "No description"}</p>
+                <p className="mb-3"><strong>Genres:</strong> {genres.length > 0 ? genres.join(", ") : "None selected"}</p>
+              </>
+            )}
+
+            {/* Buttons */}
+            <div className="flex flex-col gap-2 mt-4">
               <button
-                onClick={handleEdit}
-                className="px-4 py-2 bg-blue-500 text-white font-medium rounded-md hover:bg-blue-600 mb-4 w-full"
+                onClick={() => setIsEditing(!isEditing)}
+                className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold"
               >
                 {isEditing ? "Cancel" : "Edit Profile"}
               </button>
+
               {isEditing && (
                 <button
                   onClick={handleSave}
-                  className="px-4 py-2 bg-green-500 text-white font-medium rounded-md hover:bg-green-600 mb-4 w-full"
+                  className="bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold"
                 >
                   Save Changes
                 </button>
               )}
-              <button
-                onClick={() => router.push("/")}
-                className="px-4 py-2 bg-gray-500 text-white font-medium rounded-md hover:bg-gray-600 mt-4 w-full"
-              >
-                Back to Home
-              </button>
+
               <button
                 onClick={handleResetPassword}
-                className="px-4 py-2 bg-yellow-500 text-white font-medium rounded-md hover:bg-yellow-600 mt-4 w-full"
+                className="bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded font-semibold"
               >
                 Reset Password
               </button>
-              {message && <div className="mt-4 text-center text-red-500">{message}</div>}
-            </>
+
+              <button
+                onClick={() => router.push("/")}
+                className="bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold"
+              >
+                Back to Home
+              </button>
+
+              {message && <div className="text-center text-sm text-red-400 mt-2">{message}</div>}
+            </div>
           </div>
         </div>
       </div>
     </div>
   ) : (
-    <p>Loading...</p>
+    <div className="text-center text-white mt-20">Loading profile...</div>
   );
 };
 
