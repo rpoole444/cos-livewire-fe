@@ -31,7 +31,7 @@ const LoginPage = () => {
       <div className="bg-white text-black max-w-md w-full p-8 rounded-xl shadow-2xl">
         <LoginForm
           setAuthMode={(mode) => {
-            if (mode === 'register') router.push('/register');
+            if (mode === 'register') router.push('/RegisterPage');
           }}
         />
       </div>
