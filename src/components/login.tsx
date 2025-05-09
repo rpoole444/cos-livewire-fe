@@ -1,14 +1,20 @@
-"use client"
+"use client";
+
 import { useAuth } from "../context/AuthContext";
 import "../styles/globals.css";
-import WelcomeUser from "./WelcomeUser";
-import { loginUser } from "../pages/api/route";
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { RiH2 } from "react-icons/ri";
 
-const LoginForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthMode }) => {
+interface LoginFormProps {
+  setAuthMode?: (mode: string) => void;
+  onSuccessRedirect?: string;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({
+  setAuthMode,
+  onSuccessRedirect = "/#events",
+}) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -17,20 +23,15 @@ const LoginForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthM
   const { user, login } = useAuth();
   const router = useRouter();
 
-  useEffect((): any => {
-    if (user) {
-      return <WelcomeUser /> 
-    }
-  }, [user, router]);
-
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage('');
 
     try {
       await login(email.toLowerCase(), password);
+      router.push(onSuccessRedirect);
     } catch (error: any) {
-      if (error.response && error.response.data && error.response.data.message) {
+      if (error?.response?.data?.message) {
         setErrorMessage(error.response.data.message);
       } else {
         setErrorMessage("An error occurred, please try again.");
@@ -39,19 +40,13 @@ const LoginForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthM
     }
   };
 
-  if (user) {
-    return <WelcomeUser /> 
-  }
   return (
     <div className="min-h-screen flex justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-9">
         <h2 className="text-center text-lg font-semibold text-black">
-          Login to Submit an<br />
-          event to the<br />
-          Groove Guide!
+          Login to Submit an<br />event to the<br />Groove Guide!
         </h2>
-        <form className="mt-8 space-y-6" action="#" method="POST" onSubmit={handleLogin}>
-          <input type="hidden" name="remember" defaultValue="true" />
+        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email" className="sr-only">Email address</label>
@@ -64,7 +59,7 @@ const LoginForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthM
                 className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold transition duration-150"
                 placeholder="Email address"
                 value={email}
-                onChange={(event: any) => setEmail(event.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="relative">
@@ -75,14 +70,14 @@ const LoginForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthM
                 type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 required
-                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold transition duration-150 pr-10"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold pr-10"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
-                onClick={() => setShowPassword(prev => !prev)}
+                onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 text-sm text-blue-600 hover:underline focus:outline-none"
               >
                 {showPassword ? "Hide" : "Show"}
@@ -95,27 +90,38 @@ const LoginForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthM
               {errorMessage}
             </div>
           )}
+
           <div>
-            <button type="submit" className="bg-gold text-black px-4 py-2 rounded-md hover:bg-yellow-400 font-semibold w-full transition duration-200 ease-in-out">
+            <button
+              type="submit"
+              className="bg-gold text-black px-4 py-2 rounded-md hover:bg-yellow-400 font-semibold w-full transition duration-200 ease-in-out"
+            >
               Login
             </button>
-            <Link href="/forgot-password" className="block text-center mt-4 text-sm text-black hover:underline transition duration-150 ease-in-out">
+
+            <Link
+              href="/forgot-password"
+              className="block text-center mt-4 text-sm text-black hover:underline transition"
+            >
               Forget your password? Click Here!
             </Link>
-            <p className="mt-4 text-center text-sm text-black">
-              Need an account?{" "}
-              <span
-                onClick={() => setAuthMode('register')}
-                className="text-gold font-semibold cursor-pointer hover:underline"
-              >
-                Register
-              </span>
-            </p>
+
+            {setAuthMode && (
+              <p className="mt-4 text-center text-sm text-black">
+                Need an account?{" "}
+                <span
+                  onClick={() => setAuthMode("register")}
+                  className="text-gold font-semibold cursor-pointer hover:underline"
+                >
+                  Register
+                </span>
+              </p>
+            )}
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 };
 
 export default LoginForm;
