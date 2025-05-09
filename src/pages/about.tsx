@@ -48,7 +48,7 @@ const About = () => {
               Want to promote your event? Just register and submit your show. Got feedback or ideas? I’d love to hear from you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/RegistrationPage" className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded text-center">
+              <Link href="/RegisterPage" className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded text-center">
                 Create an Account
               </Link>
               <Link href="/eventSubmission" className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded text-center">
@@ -56,6 +56,7 @@ const About = () => {
               </Link>
               <a
                 href="mailto:poole.reid@gmail.com"
+                target="_blank"
                 className="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded text-center"
               >
                 Contact Me
