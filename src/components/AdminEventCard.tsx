@@ -15,61 +15,60 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
   const [formattedDate, setFormattedDate] = useState('');
   const [formattedStartTime, setFormattedStartTime] = useState('');
   const [formattedEndTime, setFormattedEndTime] = useState('');
-  console.log("event Info: ", event)
+
   useEffect(() => {
-   
     if (event.date) {
-      console.log("event-date :" + event.date);
-      const dateStr = event.date.split('T')[0]
-      const [year, month, day] = dateStr.split('-')
-      const formattedDate = `${month}/${day}/${year}`;
-      console.log(formattedDate);
-      console.log(dateStr);
-     setFormattedDate(dateStr)
-
+      const dateStr = event.date.split('T')[0];
+      setFormattedDate(dateStr);
     }
-
-    if (event.start_time) {
-      setFormattedStartTime(event.start_time);
-    }
-
-    if (event.end_time) {
-      setFormattedEndTime(event.end_time);
-    }
-  }, [event.date, event.start_time, event.end_time]);
+    if (event.start_time) setFormattedStartTime(event.start_time);
+    if (event.end_time) setFormattedEndTime(event.end_time);
+  }, [event]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setEditedEvent({
-      ...editedEvent,
+    setEditedEvent(prev => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
-
+  const handleEditClick = () => setIsEditing(true);
   const handleSaveClick = () => {
     onSave(editedEvent);
     setIsEditing(false);
   };
 
   return (
-    <div className="flex flex-col space-y-4 p-6 border rounded shadow-lg bg-white max-w-3xl mx-auto mt-6">
+    <div className="flex flex-col space-y-6 p-6 border border-gray-200 rounded-lg shadow-md bg-white">
+      {/* Submitter Info */}
       {event.user && (
         <div>
-          <label className="block text-md font-medium text-black mb-1">
-            Submitted by:
-          </label>
-          <p className="text-black">
-            {event.user.first_name} {event.user.last_name} <br/>
-            Email: {event.user.email}
-          </p>
+          <p className="text-sm text-gray-600">Submitted by:</p>
+          <p className="text-black font-medium">{event.user.first_name} {event.user.last_name}</p>
+          <p className="text-gray-500 text-sm">{event.user.email}</p>
         </div>
       )}
+
+      {/* Poster */}
+      {event.poster ? (
+        <div className="w-full">
+          <p className="text-sm font-medium text-gray-700 mb-1">Poster Image</p>
+          <Image
+            src={event.poster}
+            alt="Event Poster"
+            width={400}
+            height={400}
+            className="rounded-md mx-auto"
+          />
+        </div>
+      ) : (
+        <p className="text-center text-gray-400">No poster uploaded.</p>
+      )}
+
+      {/* Title */}
       <div>
-        <label className="block text-md font-medium text-black mb-1" htmlFor="title">Title:</label>
+        <label htmlFor="title" className="text-sm font-medium text-gray-700">Title</label>
         <input
           type="text"
           id="title"
@@ -77,30 +76,27 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
           value={editedEvent.title}
           onChange={handleChange}
           disabled={!isEditing}
-          className={`p-3 rounded border w-full text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+          className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
         />
       </div>
+
+      {/* Description */}
       <div>
-        <label className="block text-md font-medium text-black mb-1" htmlFor="description">Description:</label>
+        <label htmlFor="description" className="text-sm font-medium text-gray-700">Description</label>
         <textarea
           id="description"
           name="description"
           value={editedEvent.description}
           onChange={handleChange}
           disabled={!isEditing}
-          className={`p-3 rounded border w-full text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+          className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+          rows={4}
         />
       </div>
-      {event.poster ? (
-        <>
-          <h2 className="block text-md font-medium text-black mb-1">Poster Image:</h2>
-          <Image src={event.poster} alt="Event Poster" priority width={400} height={400} className="mx-auto mb-4" />
-        </>
-      ) : (
-        <p className="text-center text-gray-500 mb-4">No Poster Available</p>
-      )}
+
+      {/* Location */}
       <div>
-        <label className="block text-md font-medium text-black mb-1" htmlFor="location">Location:</label>
+        <label htmlFor="location" className="text-sm font-medium text-gray-700">Location</label>
         <input
           type="text"
           id="location"
@@ -108,24 +104,26 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
           value={editedEvent.location}
           onChange={handleChange}
           disabled={!isEditing}
-          className={`p-3 rounded border w-full text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+          className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
         />
       </div>
-      <div>
-        <label className="block text-md font-medium text-black mb-1" htmlFor="date">Date:</label>
-        <input
-          type="date"
-          id="date"
-          name="date"
-          value={formattedDate}
-          onChange={handleChange}
-          disabled={!isEditing}
-          className={`p-3 rounded border w-full text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
-        />
-      </div>
-      <div className="flex space-x-4">
-        <div className="flex-1">
-          <label className="block text-md font-medium text-black mb-1" htmlFor="start_time">Start Time:</label>
+
+      {/* Date & Time */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label htmlFor="date" className="text-sm font-medium text-gray-700">Date</label>
+          <input
+            type="date"
+            id="date"
+            name="date"
+            value={formattedDate}
+            onChange={handleChange}
+            disabled={!isEditing}
+            className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+          />
+        </div>
+        <div>
+          <label htmlFor="start_time" className="text-sm font-medium text-gray-700">Start Time</label>
           <input
             type="time"
             id="start_time"
@@ -133,11 +131,11 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
             value={formattedStartTime}
             onChange={handleChange}
             disabled={!isEditing}
-            className={`p-3 rounded border w-full text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+            className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
           />
         </div>
-        <div className="flex-1">
-          <label className="block text-md font-medium text-black mb-1" htmlFor="end_time">End Time:</label>
+        <div>
+          <label htmlFor="end_time" className="text-sm font-medium text-gray-700">End Time</label>
           <input
             type="time"
             id="end_time"
@@ -145,13 +143,15 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
             value={formattedEndTime}
             onChange={handleChange}
             disabled={!isEditing}
-            className={`p-3 rounded border w-full text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+            className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
           />
         </div>
       </div>
+
+      {/* Optional Fields */}
       {editedEvent.venue_name && (
         <div>
-          <label className="block text-md font-medium text-black mb-1" htmlFor="venue_name">Venue Name:</label>
+          <label htmlFor="venue_name" className="text-sm font-medium text-gray-700">Venue Name</label>
           <input
             type="text"
             id="venue_name"
@@ -159,12 +159,13 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
             value={editedEvent.venue_name}
             onChange={handleChange}
             disabled={!isEditing}
-            className={`p-3 rounded border w-full text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+            className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
           />
         </div>
       )}
+
       <div>
-        <label className="block text-md font-medium text-black mb-1" htmlFor="genre">Genre:</label>
+        <label htmlFor="genre" className="text-sm font-medium text-gray-700">Genre</label>
         <input
           type="text"
           id="genre"
@@ -172,11 +173,12 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
           value={editedEvent.genre}
           onChange={handleChange}
           disabled={!isEditing}
-          className={`p-3 rounded border w-full text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+          className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
         />
       </div>
+
       <div>
-        <label className="block text-md font-medium text-black mb-1" htmlFor="ticket_price">Ticket Price:</label>
+        <label htmlFor="ticket_price" className="text-sm font-medium text-gray-700">Ticket Price</label>
         <input
           type="number"
           id="ticket_price"
@@ -184,11 +186,12 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
           value={editedEvent.ticket_price}
           onChange={handleChange}
           disabled={!isEditing}
-          className={`p-3 rounded border w-full text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+          className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
         />
       </div>
+
       <div>
-        <label className="block text-md font-medium text-black mb-1" htmlFor="age_restriction">Age Restriction:</label>
+        <label htmlFor="age_restriction" className="text-sm font-medium text-gray-700">Age Restriction</label>
         <input
           type="text"
           id="age_restriction"
@@ -196,12 +199,13 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
           value={editedEvent.age_restriction}
           onChange={handleChange}
           disabled={!isEditing}
-          className={`p-3 rounded border w-full text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+          className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
         />
       </div>
+
       {editedEvent.website_link && (
         <div>
-          <label className="block text-md font-medium text-black mb-1" htmlFor="website_link">Website Link:</label>
+          <label htmlFor="website_link" className="text-sm font-medium text-gray-700">Website Link</label>
           <input
             type="text"
             id="website_link"
@@ -209,35 +213,37 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
             value={editedEvent.website_link}
             onChange={handleChange}
             disabled={!isEditing}
-            className={`p-3 rounded border w-full text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+            className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
           />
         </div>
       )}
-      <div className="flex space-x-4 mt-4 justify-end">
+
+      {/* Actions */}
+      <div className="flex flex-wrap justify-end gap-3 mt-6">
         {isEditing ? (
           <button
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
             onClick={handleSaveClick}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
           >
             Save
           </button>
         ) : (
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             onClick={handleEditClick}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
           >
             Edit
           </button>
         )}
         <button
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
           onClick={onApprove}
+          className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md"
         >
           Approve
         </button>
         <button
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
           onClick={onDeny}
+          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
         >
           Deny
         </button>
@@ -246,4 +252,4 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
   );
 };
 
-export default AdminEventCard
+export default AdminEventCard;
