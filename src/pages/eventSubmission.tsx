@@ -19,9 +19,9 @@ interface Event {
   ageRestriction: string;
   website_link: string;
   address: string;
-  venue_name: string; // Add this line
-  website: string; // Add this line
-  poster: string | null; // Add this line
+  venue_name: string; 
+  website: string;
+  poster: string | null; 
 }
 
 
@@ -83,10 +83,26 @@ const initializeAutocomplete = () => {
 
 
 const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFile(e.target.files[0]);
+  if (e.target.files && e.target.files.length > 0) {
+    const selectedFile = e.target.files[0];
+    const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    const maxSizeMB = 5;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    if (!validTypes.includes(selectedFile.type)) {
+      alert("Invalid file type. Only JPG, PNG, or PDF files are allowed.");
+      return;
     }
-  };
+
+    if (selectedFile.size > maxSizeBytes) {
+      alert(`File size exceeds ${maxSizeMB}MB limit. Please choose a smaller file.`);
+      return;
+    }
+
+    setFile(selectedFile);
+  }
+};
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -157,7 +173,36 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   }
 };
 
-if (!user) return null;
+if (!user) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-700">
+      <div className="text-center">
+        <svg
+          className="animate-spin h-8 w-8 mx-auto text-indigo-600 mb-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          ></circle>
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v8z"
+          ></path>
+        </svg>
+        <p className="text-lg font-medium">Checking authentication...</p>
+      </div>
+    </div>
+  );
+}
+
 
   if (submissionSuccess) {
     return (
@@ -187,58 +232,132 @@ if (!user) return null;
           Please fill out the form below with your event details.
           Make sure to include all required fields so we can add your event to our online calendar and help you promote your event!!
         </p>
-        <form onSubmit={handleSubmit} className="mt-4 w-full max-w-lg mx-auto">
-          <div className="mb-4">
-            <label htmlFor="title" className="block text-md font-medium text-black">Event Title</label>
-            <input type="text" id="title" name="title" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
+        <form onSubmit={handleSubmit} className="mt-6 w-full max-w-2xl mx-auto space-y-6">
+          {/* 📝 Event Info */}
+          <div>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">📝 Event Info</h2>
+
+            <div className="mb-4">
+              <label htmlFor="title" className="block text-sm font-semibold text-gray-800">Event Title</label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                required
+                placeholder="e.g. The Funk Summit"
+                onChange={handleChange}
+                className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="description" className="block text-sm font-semibold text-gray-800">Event Description</label>
+              <textarea
+                id="description"
+                name="description"
+                rows={5}
+                required
+                placeholder="Tell us about the show, lineup, vibe, etc."
+                onChange={handleChange}
+                className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+              ></textarea>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="location" className="block text-sm font-semibold text-gray-800">Event Location</label>
+              <input
+                type="text"
+                id="location"
+                name="location"
+                ref={locationInputRef}
+                required
+                placeholder="Search venue or address..."
+                onChange={handleChange}
+                className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="date" className="block text-sm font-semibold text-gray-800">Event Date</label>
+                <input
+                  type="date"
+                  id="date"
+                  name="date"
+                  required
+                  onChange={handleChange}
+                  className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+                />
+                <p className="text-xs text-gray-500 mt-1">All dates are MST (Mountain Standard Time)</p>
+              </div>
+
+              <div>
+                <label htmlFor="start_time" className="block text-sm font-semibold text-gray-800">Start Time</label>
+                <input
+                  type="time"
+                  id="start_time"
+                  name="start_time"
+                  required
+                  onChange={handleChange}
+                  className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="end_time" className="block text-sm font-semibold text-gray-800">End Time</label>
+                <input
+                  type="time"
+                  id="end_time"
+                  name="end_time"
+                  required
+                  onChange={handleChange}
+                  className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+                />
+              </div>
+            </div>
           </div>
-          <div className="mb-4">
-            <label htmlFor="description" className="block text-md font-medium text-black">Event Description</label>
-            <textarea id="description" name="description" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"></textarea>
-          </div>
-          <div className="mb-4">
-            <label htmlFor="location" className="block text-md font-medium text-black">Event Location</label>
-            <input type="text" id="location" name="location" ref={locationInputRef} required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
-          </div>
-          <div className="mb-4">
-            <label htmlFor="date" className="block text-md font-medium text-black">Event Date - MST only</label>
-            <input type="date" id="date" name="date" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
-          </div>
-          <div className="mb-4">
-            <label htmlFor="start_time" className="block text-md font-medium text-black">Start Time</label>
-            <input type="time" id="start_time" name="start_time" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
-          </div>
-          <div className="mb-4">
-            <label htmlFor="end_time" className="block text-md font-medium text-black">End Time</label>
-            <input type="time" id="end_time" name="end_time" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
-          </div>
-          <div className="mb-4">
-            <label htmlFor="genre" className="block text-md font-medium text-black">Event Genre</label>
-            <select id="genre" name="genre" required onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black">
+
+          {/* 🎶 Genre */}
+          <div>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">🎶 Genre</h2>
+            <label htmlFor="genre" className="block text-sm font-semibold text-gray-800">Event Genre</label>
+            <select
+              id="genre"
+              name="genre"
+              required
+              onChange={handleChange}
+              className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+            >
               <option value="">Select Genre</option>
               <option value="Jazz">Jazz</option>
-              <option value="Blues">Blues</option>
               <option value="Funk">Funk</option>
-              <option value="Indie">Indie</option>
-              <option value="Dance">Dance</option>
-              <option value="Electronic">Electronic</option>
               <option value="Rock">Rock</option>
-              <option value="Alternative">Alternative</option>
-              <option value="Country">Country</option>
+              <option value="Soul">Soul</option>
+              <option value="Electronic">Electronic</option>
+              <option value="Indie">Indie</option>
               <option value="Hip-Hop">Hip-Hop</option>
               <option value="Pop">Pop</option>
+              <option value="Blues">Blues</option>
+              <option value="Alternative">Alternative</option>
+              <option value="Country">Country</option>
               <option value="R&B">R&B</option>
-              <option value="Rap">Rap</option>
               <option value="Reggae">Reggae</option>
-              <option value="Soul">Soul</option>
               <option value="Techno">Techno</option>
+              <option value="Dance">Dance</option>
               <option value="World">World</option>
               <option value="Other">Other</option>
             </select>
           </div>
-          <div className="mb-4">
-            <label htmlFor="ticketPrice" className="block text-md font-medium text-black">Ticket Price / Door Charge</label>
-            <select id="ticketPrice" name="ticketPrice" onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black">
+                    {/* 💵 Ticket Price */}
+          <div>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">💵 Ticket Info</h2>
+            <label htmlFor="ticketPrice" className="block text-sm font-semibold text-gray-800">Ticket Price / Door Charge</label>
+            <select
+              id="ticketPrice"
+              name="ticketPrice"
+              onChange={handleChange}
+              className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+            >
               <option value="Free">Free</option>
               <option value="Donation">Donation</option>
               {Array.from(Array(20).keys()).map(i => (
@@ -246,30 +365,80 @@ if (!user) return null;
               ))}
             </select>
           </div>
-          <div className="mb-4">
-            <div className="flex space-x-4 items-center">
-              {["All Ages", "16+", "18+", "21+", "25+"].map(age => (
-                <label key={age} className="flex items-center space-x-2">
-                  <input type="radio" id={`age-${age}`} name="ageRestriction" value={age} onChange={handleChange} className="w-6 h-6" checked={eventData.ageRestriction === age}/>
-                  <span className="text-lg text-black">{age}</span>
-                </label>
-              ))}
-            </div>
+
+          {/* 🔞 Age Restriction */}
+        <fieldset className="mt-10">
+          <legend className="text-xl font-bold text-gray-800 mb-4">🔞 Age Restriction</legend>
+          <div className="flex flex-wrap gap-4">
+            {["All Ages", "16+", "18+", "21+", "25+"].map(age => (
+              <label key={age} className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  id={`age-${age}`}
+                  name="ageRestriction"
+                  value={age}
+                  onChange={handleChange}
+                  checked={eventData.ageRestriction === age}
+                  className="w-5 h-5 text-indigo-600"
+                />
+                <span className="text-sm text-gray-800">{age}</span>
+              </label>
+            ))}
           </div>
-          <div className="mb-4">
-            <label htmlFor="website_link" className="block text-md font-medium text-black">Website / Event Link</label>
-            <input autoComplete="on" type="text" id="website_link" name="website_link" onChange={handleChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
+        </fieldset>
+
+
+          {/* 🔗 Website / Link */}
+          <div className="mt-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">🔗 Event Link</h2>
+            <label htmlFor="website_link" className="block text-sm font-semibold text-gray-800">Event Website or Ticket Link</label>
+            <input
+              type="text"
+              id="website_link"
+              name="website_link"
+              onChange={handleChange}
+              placeholder="https://example.com"
+              className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+            />
           </div>
-          <div className="mb-4">
-            <label htmlFor="poster" className="block text-md font-medium text-black">Event Poster (JPEG, PNG, PDF)</label>
-            <input type="file" id="poster" name="poster" accept="image/jpeg,image/png,application/pdf" onChange={handleFileChange} className="mt-1 p-2 w-full border-2 border-gray-300 rounded-md text-black"/>
+
+          {/* 📸 Poster Upload */}
+          <div className="mt-8">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">📸 Upload Poster</h2>
+            <label htmlFor="poster" className="block text-sm font-semibold text-gray-800">Poster File (JPEG, PNG, or PDF)</label>
+            <input
+              type="file"
+              id="poster"
+              name="poster"
+              accept="image/jpeg,image/png,application/pdf"
+              onChange={handleFileChange}
+              className="mt-1 p-2 w-full border border-gray-300 rounded-md text-black"
+            />
           </div>
-          <div className="flex flex-col items-center space-y-4">
-            <button type="submit" className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Submit</button>
-            <Link href='/' className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Go Back to Homepage</Link>
-            <button onClick={handleLogout} className="mt-4 text-blue-500">Logout</button>
+
+          {/* ✅ Submit Buttons */}
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-10">
+            <button
+              type="submit"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition duration-200"
+            >
+              Submit Event
+            </button>
+
+            <Link href="/" className="text-indigo-600 hover:text-indigo-800 font-medium underline">
+              Back to Homepage
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="text-red-500 hover:underline mt-2 sm:mt-0"
+            >
+              Logout
+            </button>
           </div>
         </form>
+
       </div>
     </div>
   ) : (
