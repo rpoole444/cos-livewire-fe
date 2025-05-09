@@ -108,7 +108,12 @@ export default function Home() {
             </section>
             <aside className="w-full lg:w-[35%] bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out">
               <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-                <EventsCalendar currentDate={selectedDate} events={events} onDateSelect={handleDateSelect} />
+                <EventsCalendar
+                  currentDate={selectedDate}
+                  events={events}
+                  onDateSelect={handleDateSelect}
+                  filterMode={filterMode}
+                />             
               </div>
             </aside>
           </div>
