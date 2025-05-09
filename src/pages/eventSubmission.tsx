@@ -61,20 +61,26 @@ const EventSubmission = () => {
   }
 }, [user]);
 
-  const initializeAutocomplete = () => {
-  const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current);
-  autocomplete.addListener("place_changed", () => {
-    const place = autocomplete.getPlace();
-
-    setEventData((prevState) => ({
-      ...prevState,
-      location: place.formatted_address,
-      venue_name: place.name || '', // Add this line to get the venue name
-      website: place.website || '', // Ensure the website is set
-      address: place.formatted_address || '', // Ensure the address is set
-    }));
-  });
+const initializeAutocomplete = () => {
+  if (
+    typeof window !== 'undefined' &&
+    window.google?.maps?.places?.Autocomplete &&
+    locationInputRef.current instanceof HTMLInputElement
+  ) {
+    const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current);
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      setEventData((prevState) => ({
+        ...prevState,
+        location: place.formatted_address || '',
+        venue_name: place.name || '',
+        website: place.website || '',
+        address: place.formatted_address || '',
+      }));
+    });
+  }
 };
+
 
 const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
