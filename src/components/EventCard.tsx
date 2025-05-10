@@ -6,7 +6,9 @@ import { Event } from "@/interfaces/interfaces";
 interface EventCardProps {
   event: Event;
   handleCardClick?: (id: number) => void;
+  handleDelete?: (id: number) => void; 
 }
+
 
 const formatDate = (dateString: string) => {
   try {
@@ -37,7 +39,7 @@ const formatTime = (timeString: string) => {
   }
 };
 
-const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick, handleDelete }) => {
   return (
     <div
       onClick={() => handleCardClick?.(event.id)}
@@ -104,6 +106,19 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick }) => {
         </div>
       ) : (
         <p className="text-center text-gray-500 mt-6">No poster available</p>
+      )}
+      {handleDelete && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent card click
+            if (confirm("Are you sure you want to delete this event?")) {
+              handleDelete(event.id);
+            }
+          }}
+          className="mt-4 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded transition"
+        >
+          Delete Event
+        </button>
       )}
     </div>
   );

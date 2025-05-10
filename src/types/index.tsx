@@ -1,10 +1,12 @@
-
 export interface UserType {
-  id: NumberConstructor; // or number, depending on your ID system
-  first_name: string; // or string, depending on your
-  last_name: string; // or string, depending on your
+  id: number;
+  first_name: string;
+  last_name: string;
   email: string;
-  user_description: string; // or string, depending on your
-  top_music_genres: string[]; // or string, depending on your
-  profile_picture: string; // or string, depending on your
+  password?: string;
+  is_admin: boolean;
+  is_logged_in?: boolean;
+  top_music_genres: string[]; // array after parsing
+  user_description?: string;
+  profile_picture?: string;
 }
