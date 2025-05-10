@@ -22,6 +22,8 @@ interface Event {
   venue_name: string; 
   website: string;
   poster: string | null; 
+  recurrence: string;
+  repeatCount: number;
 }
 
 
@@ -42,6 +44,8 @@ const EventSubmission = () => {
     venue_name: '', 
     website: '', 
     poster: '' , 
+    recurrence:'',
+    repeatCount: 1,
   });
   const [file, setFile] = useState<File | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
@@ -121,6 +125,22 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     }
   };
 
+  const generateRecurringDates = (startDate: string, frequency: string, count = 4): string[] => {
+  const result: string[] = [];
+  let current = new Date(startDate);
+
+  for (let i = 0; i < count; i++) {
+    result.push(current.toISOString().split("T")[0]);
+    if (frequency === 'weekly') {
+      current.setDate(current.getDate() + 7);
+    } else if (frequency === 'monthly') {
+      current.setMonth(current.getMonth() + 1);
+    }
+  }
+  return result;
+};
+
+
 const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
 
@@ -129,49 +149,62 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     return;
   }
 
-  let ticketPriceValue = eventData.ticketPrice;
-  if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
-    ticketPriceValue = '0';
-  }
-  ticketPriceValue = ticketPriceValue.replace(/\D/g, '');
-  if (ticketPriceValue === '') {
-    ticketPriceValue = '0';
-  }
-
-  const formData = new FormData();
-  formData.append('user_id', user.id.toString());
-  formData.append('title', eventData.title);
-  formData.append('description', eventData.description);
-  formData.append('location', eventData.location);
-  formData.append('address', eventData.address);
-  formData.append('date', eventData.date);
-  formData.append('start_time', eventData.start_time);
-  formData.append('end_time', eventData.end_time);
-  formData.append('genre', eventData.genre);
-  formData.append('ticket_price', ticketPriceValue);
-  formData.append('age_restriction', eventData.ageRestriction);
-  formData.append('website_link', eventData.website_link.startsWith('http') ? eventData.website_link : `http://${eventData.website_link}`);
-  formData.append('venue_name', eventData.venue_name);
-  formData.append('website', eventData.website);
-  if (file) {
-    formData.append('poster', file);
-  }
-
   try {
-    const res = await submitEvent(formData)
+    let ticketPriceValue = eventData.ticketPrice;
+    if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
+      ticketPriceValue = '0';
+    }
+    ticketPriceValue = ticketPriceValue.replace(/\D/g, '');
+    if (ticketPriceValue === '') {
+      ticketPriceValue = '0';
+    }
+
+    const count = Math.min(eventData.repeatCount || 1, 4); // Limit to 4
+    const recurrenceDates = eventData.recurrence
+      ? generateRecurringDates(eventData.date, eventData.recurrence, count)
+      : [eventData.date];
+
+    const formData = new FormData();
+    formData.append('user_id', user.id.toString());
+    formData.append('title', eventData.title);
+    formData.append('description', eventData.description);
+    formData.append('location', eventData.location);
+    formData.append('address', eventData.address);
+    formData.append('start_time', eventData.start_time);
+    formData.append('end_time', eventData.end_time);
+    formData.append('genre', eventData.genre);
+    formData.append('ticket_price', ticketPriceValue);
+    formData.append('age_restriction', eventData.ageRestriction);
+    formData.append(
+      'website_link',
+      eventData.website_link.startsWith('http')
+        ? eventData.website_link
+        : `http://${eventData.website_link}`
+    );
+    formData.append('venue_name', eventData.venue_name);
+    formData.append('website', eventData.website);
+    formData.append('recurrenceDates', JSON.stringify(recurrenceDates)); // ✅ new key
+    if (file) {
+      formData.append('poster', file);
+    }
+
+    const res = await submitEvent(formData);
     if (!res.ok) {
       const errorData = await res.json();
       throw new Error(errorData.error || 'Failed to submit event');
     }
+
     setSubmissionSuccess(true);
     setTimeout(() => {
       router.push('/');
       setSubmissionSuccess(false);
     }, 3000);
   } catch (error) {
-    console.error("There was an error submitting the event:", error);
+    console.error('There was an error submitting the event:', error);
   }
 };
+
+
 
 if (!user) {
   return (
@@ -290,6 +323,46 @@ if (!user) {
                 />
                 <p className="text-xs text-gray-500 mt-1">All dates are MST (Mountain Standard Time)</p>
               </div>
+
+              <div className="mb-4">
+                <label htmlFor="recurrence" className="block text-sm font-semibold text-gray-800">Repeat Event</label>
+                <select
+                  id="recurrence"
+                  name="recurrence"
+                  onChange={handleChange}
+                  className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+                >
+                  <option value="">One-time Event</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+                {eventData.recurrence && (
+                  <div className="mb-4">
+                    <label htmlFor="repeatCount" className="block text-sm font-semibold text-gray-800">
+                      How many times should it repeat? (Max 4)
+                    </label>
+                    <select
+                      id="repeatCount"
+                      name="repeatCount"
+                      value={eventData.repeatCount || 1}
+                      onChange={(e) =>
+                        setEventData((prev) => ({
+                          ...prev,
+                          repeatCount: Math.min(4, parseInt(e.target.value, 10)),
+                        }))
+                      }
+                      className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+                    >
+                      {[1, 2, 3, 4].map((n) => (
+                        <option key={n} value={n}>
+                          {n} {n === 1 ? 'time' : 'times'}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
 
               <div>
                 <label htmlFor="start_time" className="block text-sm font-semibold text-gray-800">Start Time</label>

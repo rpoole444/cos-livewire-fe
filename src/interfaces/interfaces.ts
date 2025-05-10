@@ -36,6 +36,8 @@ export interface Event extends CustomEvent {
   venue_name: string; 
   website: string;
   poster: string | null;
+  recurrence?: string,
+  repeatCount: number,
   user?: {
     first_name: string;
     last_name: string;
