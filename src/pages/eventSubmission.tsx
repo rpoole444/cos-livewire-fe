@@ -125,20 +125,53 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     }
   };
 
-  const generateRecurringDates = (startDate: string, frequency: string, count = 4): string[] => {
-  const result: string[] = [];
-  let current = new Date(startDate);
+ const getNthWeekdayOfMonth = (year: number, month: number, weekday: number, nth: number): Date | null => {
+  const firstOfMonth = new Date(year, month, 1);
+  let count = 0;
 
-  for (let i = 0; i < count; i++) {
-    result.push(current.toISOString().split("T")[0]);
-    if (frequency === 'weekly') {
-      current.setDate(current.getDate() + 7);
-    } else if (frequency === 'monthly') {
-      current.setMonth(current.getMonth() + 1);
+  for (let day = 1; day <= 31; day++) {
+    const date = new Date(year, month, day);
+    if (date.getMonth() !== month) break;
+    if (date.getDay() === weekday) {
+      count++;
+      if (count === nth) return date;
     }
   }
+  return null;
+};
+
+const getWeekdayOccurrence = (date: Date): number => {
+  const day = date.getDate();
+  return Math.floor((day - 1) / 7) + 1;
+};
+
+const generateRecurringDates = (startDateStr: string, frequency: string, count = 4): string[] => {
+  const result: string[] = [];
+  const startDate = new Date(startDateStr);
+
+  if (frequency === 'weekly') {
+    for (let i = 0; i < count; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i * 7);
+      result.push(date.toISOString().split("T")[0]);
+    }
+  } else if (frequency === 'monthly') {
+    const weekday = startDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const nth = getWeekdayOccurrence(startDate);
+
+    for (let i = 0; i < count; i++) {
+      const year = startDate.getFullYear();
+      const month = startDate.getMonth() + i;
+      const recurringDate = getNthWeekdayOfMonth(year, month, weekday, nth);
+      if (recurringDate) {
+        result.push(recurringDate.toISOString().split("T")[0]);
+      }
+    }
+  }
+
   return result;
 };
+
 
 
 const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
