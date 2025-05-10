@@ -16,6 +16,8 @@ export interface CustomEvent {
   website_link: string;
   poster: string | null;
   eventType: string;
+  recurrence?: string,
+  repeatCount?: number,
 }
 
 // interfaces.ts
@@ -37,7 +39,7 @@ export interface Event extends CustomEvent {
   website: string;
   poster: string | null;
   recurrence?: string,
-  repeatCount: number,
+  repeatCount?: number,
   user?: {
     first_name: string;
     last_name: string;
