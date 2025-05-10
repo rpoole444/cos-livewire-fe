@@ -1,10 +1,20 @@
 /**
  * @type {import('next').NextConfig}
  */
-const nextConfig = {
+// next.config.js
+module.exports = {
   images: {
-    domains: ['alpinegg-posters-dev.s3.us-east-2.amazonaws.com', 'alpinegg-posters.s3.us-east-2.amazonaws.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'alpinegg-posters-dev.s3.us-east-2.amazonaws.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'alpinegg-posters.s3.us-east-2.amazonaws.com',
+        pathname: '/**',
+      },
+    ],
   },
-}
-
-export default nextConfig;
+};
