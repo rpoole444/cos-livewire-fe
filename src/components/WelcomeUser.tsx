@@ -1,4 +1,3 @@
-// components/WelcomeUser.tsx
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/router";
@@ -16,34 +15,53 @@ const WelcomeUser = () => {
       console.error(err);
     }
   };
+
   return (
-    <>
-      <h1 className="text-center text-sm md:text-base lg:text-lg p-2 bg-blue-100 text-blue-900 font-semibold rounded-md shadow">
-        Welcome, {user?.first_name}! You are logged in.
-      </h1>
-      <br />
-      <div className="flex flex-col items-center">
-        <Link href="/eventSubmission" className="mb-4 px-4 py-2 bg-indigo-600 text-white font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-sm text-center">
-          Submit Event
+    <div className="space-y-6">
+      <div className="bg-blue-100 text-blue-900 text-sm font-semibold px-4 py-2 rounded shadow text-center">
+        Welcome, {user?.first_name}! You’re logged in.
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <Link
+          href="/eventSubmission"
+          className="w-full text-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md transition"
+        >
+          📅 Submit Event
         </Link>
+
         {user?.is_admin && (
           <>
-            <Link href="/AdminUsersPage" className="mb-4 px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 text-sm text-center">
-              Admin Settings
+            <Link
+              href="/AdminUsersPage"
+              className="w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition"
+            >
+              ⚙️ Admin Settings
             </Link>
-            <Link href="/adminService" className="mb-4 px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-sm text-center">
-              Review Events
+            <Link
+              href="/adminService"
+              className="w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition"
+            >
+              ✅ Review Events
             </Link>
           </>
         )}
-        <Link href="/UserProfile" className="mb-4 px-4 py-2 bg-yellow-500 text-white font-medium rounded-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 text-sm text-center">
-          User Profile
+
+        <Link
+          href="/UserProfile"
+          className="w-full text-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-md transition"
+        >
+          👤 User Profile
         </Link>
-        <button onClick={handleLogout} className="text-blue-500">
-          Logout
+
+        <button
+          onClick={handleLogout}
+          className="w-full text-center px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md transition"
+        >
+          🚪 Logout
         </button>
       </div>
-    </>
+    </div>
   );
 };
 
