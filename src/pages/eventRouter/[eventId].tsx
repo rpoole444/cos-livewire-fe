@@ -111,6 +111,40 @@ const EventDetailPage = ({ event, events }: Props) => {
               >
                 📤 Share This Event
               </button>
+              <div className="flex gap-4 mt-4">
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                    `https://app.alpinegrooveguide.com/eventRouter/${event.id}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
+                >
+                  Share on Facebook
+                </a>
+
+                <a
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                    `https://app.alpinegrooveguide.com/eventRouter/${event.id}`
+                  )}&text=${encodeURIComponent(event.title)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded text-sm"
+                >
+                  Share on X
+                </a>
+
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://app.alpinegrooveguide.com/eventRouter/${event.id}`);
+                    alert('Link copied to clipboard!');
+                  }}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm"
+                >
+                  Copy Link
+                </button>
+</div>
+
             </div>
           </section>
 
