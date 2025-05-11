@@ -106,8 +106,13 @@ export default function Home() {
                 <Events events={filteredEvents} />
               </div>
             </section>
-            <aside className="w-full lg:w-[35%] bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out">
+            <aside className="order-1 lg:order-2 w-full lg:w-[35%] bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out">
               <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+                {filterMode === 'all' && (
+                  <p className="text-yellow-300 text-sm mb-2">
+                    📌 The calendar is disabled in "All Upcoming Events" mode. Select a specific day or week to use it.
+                  </p>
+                )}
                 <EventsCalendar
                   currentDate={selectedDate}
                   events={events}
@@ -116,6 +121,7 @@ export default function Home() {
                 />             
               </div>
             </aside>
+
           </div>
         </main>
         <aside id="auth-section" className="w-full md:w-[40%] lg:w-[30%] xl:w-1/4 max-w-md bg-white p-6 shadow-xl text-black rounded-lg transition-all duration-300 ease-in-out overflow-auto">
