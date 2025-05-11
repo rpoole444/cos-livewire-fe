@@ -106,7 +106,14 @@ return (
   <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
     <Header />
     <HeroSection user={user} setAuthMode={switchAuthMode} />
-
+    <div className="text-center py-6 px-4 md:px-0">
+      <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gold drop-shadow-md">
+        Welcome to Alpine Groove Guide
+      </h2>
+      <p className="text-gray-300 mt-2 max-w-xl mx-auto text-base md:text-lg">
+        Discover the best live music happening across Colorado Springs and beyond.
+      </p>
+    </div>
     <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
       <main className="container mx-auto px-4 md:px-8 py-6">
         <div className="flex flex-col gap-6">
