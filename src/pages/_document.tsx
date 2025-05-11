@@ -4,7 +4,7 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        <link rel="icon" type="image/png" sizes="192x192" href="/alpine_groove_guide_favicon.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/alpine_groove_guide_192x192.png" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
           rel="stylesheet"
