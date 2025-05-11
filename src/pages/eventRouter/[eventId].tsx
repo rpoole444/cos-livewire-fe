@@ -77,6 +77,12 @@ const EventDetailPage = ({ event, events }: Props) => {
 
       <div className="min-h-screen bg-gray-900 text-white font-sans">
         <Header />
+        <div className="px-6 pt-2">
+          <Link href="/" passHref>
+            <span className="text-sm text-yellow-300 hover:underline">← Back to All Events</span>
+          </Link>
+        </div>
+
         <main className="container mx-auto p-6 lg:flex gap-8">
           <section className="flex-1">
             <EventCard event={event} />
@@ -87,13 +93,6 @@ const EventDetailPage = ({ event, events }: Props) => {
               >
                 <FaLocationArrow /> Get Directions
               </button>
-
-              <Link href="/" passHref>
-                <button className="text-yellow-300 hover:text-yellow-400 font-semibold underline transition">
-                  Back to All Events
-                </button>
-              </Link>
-
               <button
                 onClick={() => {
                   if (navigator.share) {
