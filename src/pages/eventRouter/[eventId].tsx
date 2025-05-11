@@ -87,7 +87,7 @@ const EventDetailPage = () => {
           content={
             event.poster?.startsWith('http')
               ? event.poster
-              : 'https://alpinegrooveguide.com/default.jpg'
+              : 'https://alpinegrooveguide.com/alpine_groove_guide_icon.png'
           }
         />
         <meta
@@ -108,7 +108,7 @@ const EventDetailPage = () => {
           content={
             event.poster?.startsWith('http')
               ? event.poster
-              : 'https://alpinegrooveguide.com/default.jpg'
+              : 'https://alpinegrooveguide.com/alpine_groove_guide_icon.png'
           }
         />
 
