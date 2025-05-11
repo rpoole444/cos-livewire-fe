@@ -459,9 +459,7 @@ if (!user) {
             </select>
           </div>
                     {/* 💵 Ticket Price */}
-          <div>
-            <h2 className="text-xl font-bold text-gray-800 mb-4">💵 Ticket Info</h2>
-            <label htmlFor="ticketPrice" className="block text-sm font-semibold text-gray-800">
+          <label htmlFor="ticketPrice" className="block text-sm font-semibold text-gray-800">
               Ticket Price / Door Charge
             </label>
             <select
@@ -474,23 +472,25 @@ if (!user) {
               <option value="">Select a price</option>
               <option value="Free">Free</option>
               <option value="Donation">Donation</option>
-              {Array.from(Array(20).keys()).map((i) => (
-                <option key={i} value={`$${(i + 1) * 5}`}>${(i + 1) * 5}</option>
+              <option value="Other">Other (Enter custom amount)</option>
+              {Array.from(Array(20).keys()).map(i => (
+                <option key={i} value={`${(i + 1) * 5}`}>${(i + 1) * 5}</option>
               ))}
-              <option value="custom">Custom</option>
             </select>
 
-            {eventData.ticketPrice === "custom" && (
+            {eventData.ticketPrice === 'Other' && (
               <input
-                type="text"
+                type="number"
                 name="customTicketPrice"
-                placeholder="e.g. $7 in advance / $10 at the door"
-                value={eventData.customTicketPrice}
+                placeholder="Enter custom amount (e.g. 7.00)"
+                value={eventData.customTicketPrice || ''}
                 onChange={handleChange}
-                className="mt-3 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+                min="0"
+                step="0.01"
+                className="mt-2 p-3 w-full border border-gray-300 rounded-md text-black text-base"
               />
             )}
-          </div>
+
 
           {/* 🔞 Age Restriction */}
         <fieldset className="mt-10">
