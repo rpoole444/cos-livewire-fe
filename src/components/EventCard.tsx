@@ -1,5 +1,5 @@
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { Event } from "@/interfaces/interfaces";
 
@@ -8,7 +8,6 @@ interface EventCardProps {
   handleCardClick?: (id: number) => void;
   handleDelete?: (id: number) => void; 
 }
-
 
 const formatDate = (dateString: string) => {
   try {
@@ -40,6 +39,11 @@ const formatTime = (timeString: string) => {
 };
 
 const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick, handleDelete }) => {
+  const [showFullDescription, setShowFullDescription] = useState(false);
+  const toggleDescription = () => setShowFullDescription(!showFullDescription);
+
+  const descriptionTooLong = event.description && event.description.length > 200;
+
   return (
     <div
       onClick={() => handleCardClick?.(event.id)}
@@ -55,6 +59,9 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick, handleDel
         {event.end_time && (
           <p><span className="font-semibold text-white">End Time:</span> {formatTime(event.end_time)}</p>
         )}
+        {event.genre && (
+          <p><span className="font-semibold text-white">Genre:</span> {event.genre}</p>
+        )}
         {event.age_restriction && (
           <p><span className="font-semibold text-white">Age Restriction:</span> {event.age_restriction}</p>
         )}
@@ -68,37 +75,52 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick, handleDel
       </div>
 
       {event.description && (
-        <p className="text-gray-400 text-sm mt-4">{event.description}</p>
+        <div className="text-gray-400 text-sm mt-4">
+          {descriptionTooLong && !showFullDescription
+            ? `${event.description.slice(0, 200)}...`
+            : event.description}
+          {descriptionTooLong && (
+            <button
+              className="text-blue-400 hover:text-blue-200 ml-2 underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleDescription();
+              }}
+            >
+              {showFullDescription ? "See less" : "See more"}
+            </button>
+          )}
+        </div>
       )}
 
-     <div className="mt-4 flex flex-col space-y-2 text-sm">
-      {event.website && (
-        <div>
-          <span className="font-semibold text-white">Venue Website:</span>{' '}
-          <Link
-            href={event.website}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-200 underline break-words"
-          >
-            Click here
-          </Link>
-        </div>
-      )}
-      {event.website_link && event.website_link !== "http://" && (
-        <div>
-          <span className="font-semibold text-white">Event / Artist Website or Ticket Link:</span>{' '}
-          <Link
-            href={event.website_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-200 underline break-words"
-          >
-            Click here
-          </Link>
-        </div>
-      )}
-    </div>
+      <div className="mt-4 flex flex-col space-y-2 text-sm">
+        {event.website && (
+          <div>
+            <span className="font-semibold text-white">Venue Website:</span>{' '}
+            <Link
+              href={event.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-200 underline break-words"
+            >
+              Click here
+            </Link>
+          </div>
+        )}
+        {event.website_link && event.website_link !== "http://" && (
+          <div>
+            <span className="font-semibold text-white">Event / Artist Website or Ticket Link:</span>{' '}
+            <Link
+              href={event.website_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-200 underline break-words"
+            >
+              Click here
+            </Link>
+          </div>
+        )}
+      </div>
 
       {event.poster ? (
         <div className="mt-6 flex justify-center">
@@ -113,10 +135,11 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick, handleDel
       ) : (
         <p className="text-center text-gray-500 mt-6">No poster available</p>
       )}
+
       {handleDelete && (
         <button
           onClick={(e) => {
-            e.stopPropagation(); // Prevent card click
+            e.stopPropagation();
             if (confirm("Are you sure you want to delete this event?")) {
               handleDelete(event.id);
             }
@@ -131,3 +154,4 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick, handleDel
 };
 
 export default EventCard;
+
