@@ -10,6 +10,9 @@ import RegistrationForm from '@/components/registration';
 import Link from "next/link";
 import { Event } from '@/interfaces/interfaces';
 import Header from '@/components/Header';
+import Head from 'next/head';
+
+
 type AuthMode = 'login' | 'register';
 
 const EventDetailPage = () => {
@@ -71,58 +74,105 @@ const EventDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-sans">
-      <Header />
-      <main className="container mx-auto p-6 lg:flex gap-8">
-        <section className="flex-1">
-          <EventCard event={event} />
-          <div className="mt-6 flex flex-col sm:flex-row gap-4">
-            <button
-              onClick={getDirections}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded transition"
-            >
-              Get Directions
-            </button>
-            <Link href="/" passHref>
-              <button className="text-indigo-400 hover:text-indigo-600 font-medium underline transition">
-                Back to All Events
-              </button>
-            </Link>
-          </div>
-        </section>
+    <>
+      <Head>
+        <title>{event.title} | Alpine Groove Guide</title>
+        <meta property="og:title" content={event.title} />
+        <meta
+          property="og:description"
+          content={event.description?.slice(0, 150) || 'Discover live music across Colorado with Alpine Groove Guide.'}
+        />
+        <meta
+          property="og:image"
+          content={
+            event.poster?.startsWith('http')
+              ? event.poster
+              : 'https://alpinegrooveguide.com/default.jpg'
+          }
+        />
+        <meta
+          property="og:url"
+          content={`https://alpinegrooveguide.com/eventRouter/${event.id}`}
+        />
+        <meta property="og:type" content="website" />
 
-        <aside className="w-full lg:w-1/3 bg-white text-black p-6 rounded-lg shadow-lg mt-10 lg:mt-0">
-          {user ? (
-            <>
-            <WelcomeUser />
-            <UpcomingShows
-              user={user}
-              userGenres={
-                Array.isArray(user.top_music_genres)
-                  ? user.top_music_genres
-                  : JSON.parse(user.top_music_genres || '[]')
-              }
-              events={events}
-            />
-          </>
-          ) : authMode === 'login' ? (
-            <>
-              <LoginForm setAuthMode={switchAuthMode} />
-              <button onClick={switchAuthMode} className="mt-4 text-indigo-600 hover:text-indigo-800 transition">
-                Need an account? Register
+        {/* Twitter tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={event.title} />
+        <meta
+          name="twitter:description"
+          content={event.description?.slice(0, 150) || 'Discover live music across Colorado with Alpine Groove Guide.'}
+        />
+        <meta
+          name="twitter:image"
+          content={
+            event.poster?.startsWith('http')
+              ? event.poster
+              : 'https://alpinegrooveguide.com/default.jpg'
+          }
+        />
+
+        {/* Optional: canonical link */}
+        <link
+          rel="canonical"
+          href={`https://alpinegrooveguide.com/eventRouter/${event.id}`}
+        />
+      </Head>
+
+      <div className="min-h-screen bg-gray-900 text-white font-sans">
+        <Header />
+        <main className="container mx-auto p-6 lg:flex gap-8">
+          <section className="flex-1">
+            <EventCard event={event} />
+            <div className="mt-6 flex flex-col sm:flex-row gap-4">
+              <button
+                onClick={getDirections}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded transition"
+              >
+                Get Directions
               </button>
+              <Link href="/" passHref>
+                <button className="text-indigo-400 hover:text-indigo-600 font-medium underline transition">
+                  Back to All Events
+                </button>
+              </Link>
+            </div>
+          </section>
+
+          <aside className="w-full lg:w-1/3 bg-white text-black p-6 rounded-lg shadow-lg mt-10 lg:mt-0">
+            {user ? (
+              <>
+              <WelcomeUser />
+              <UpcomingShows
+                user={user}
+                userGenres={
+                  Array.isArray(user.top_music_genres)
+                    ? user.top_music_genres
+                    : JSON.parse(user.top_music_genres || '[]')
+                }
+                events={events}
+              />
             </>
-          ) : (
-            <>
-              <RegistrationForm setAuthMode={switchAuthMode} />
-              <button onClick={switchAuthMode} className="mt-4 text-indigo-600 hover:text-indigo-800 transition">
-                Already have an account? Login
-              </button>
-            </>
-          )}
-        </aside>
-      </main>
-    </div>
+            ) : authMode === 'login' ? (
+              <>
+                <LoginForm setAuthMode={switchAuthMode} />
+                <button onClick={switchAuthMode} className="mt-4 text-indigo-600 hover:text-indigo-800 transition">
+                  Need an account? Register
+                </button>
+              </>
+            ) : (
+              <>
+                <RegistrationForm setAuthMode={switchAuthMode} />
+                <button onClick={switchAuthMode} className="mt-4 text-indigo-600 hover:text-indigo-800 transition">
+                  Already have an account? Login
+                </button>
+              </>
+            )}
+          </aside>
+        </main>
+      </div>
+    </>
+
   );
 };
 
