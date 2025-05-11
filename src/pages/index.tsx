@@ -13,6 +13,7 @@ import { Event } from '@/interfaces/interfaces';
 import isBetween from 'dayjs/plugin/isBetween';
 import UpcomingShows from '@/components/UpcomingShows';
 import { parseMSTDate, parseLocalDayjs } from '@/util/dateHelper';
+import Fuse from 'fuse.js';
 
 type AuthMode = 'login' | 'register';
 dayjs.extend(isBetween);
@@ -23,6 +24,7 @@ export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [filterMode, setFilterMode] = useState<'day' | 'week' | 'all'>('day');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { user, logout } = useAuth();
 
@@ -51,26 +53,45 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const updateFilteredEvents = () => {
-      let filtered: any = [];
-      if (filterMode === 'day') {
-        filtered = events.filter((event) =>
-          parseLocalDayjs(event.date).isSame(selectedDate, 'day')
-        );
-      } else if (filterMode === 'week') {
-        const startOfWeek = selectedDate.startOf('week');
-        const endOfWeek = selectedDate.endOf('week');
-        filtered = events.filter((event) =>
-          parseLocalDayjs(event.date).isBetween(startOfWeek, endOfWeek, null, '[]')
-        );
-      } else if (filterMode === 'all') {
-        const now = dayjs().startOf('day');
-        filtered = events.filter(event => parseLocalDayjs(event.date).isSame(now, 'day') || parseLocalDayjs(event.date).isAfter(now));
-      }
+  const updateFilteredEvents = () => {
+    let filtered: Event[] = [];
+
+    if (filterMode === 'day') {
+      filtered = events.filter((event) =>
+        parseLocalDayjs(event.date).isSame(selectedDate, 'day')
+      );
+    } else if (filterMode === 'week') {
+      const startOfWeek = selectedDate.startOf('week');
+      const endOfWeek = selectedDate.endOf('week');
+      filtered = events.filter((event) =>
+        parseLocalDayjs(event.date).isBetween(startOfWeek, endOfWeek, null, '[]')
+      );
+    } else if (filterMode === 'all') {
+      const now = dayjs().startOf('day');
+      filtered = events.filter(event =>
+        parseLocalDayjs(event.date).isSame(now, 'day') ||
+        parseLocalDayjs(event.date).isAfter(now)
+      );
+    }
+
+    if (searchQuery.trim() !== '') {
+      const fuse = new Fuse(filtered, {
+        keys: ['title', 'genre', 'venue_name', 'description'],
+        threshold: 0.3, // Adjust for strictness
+      });
+
+      const results = fuse.search(searchQuery);
+      const matchedEvents = results.map(result => result.item);
+
+      setFilteredEvents(matchedEvents);
+    } else {
       setFilteredEvents(filtered);
-    };
-    updateFilteredEvents();
-  }, [events, selectedDate, filterMode]);
+    }
+  };
+
+  updateFilteredEvents();
+}, [events, selectedDate, filterMode, searchQuery]);
+
 
   const handleDateSelect = (newDate: any) => {
     setSelectedDate(newDate);
@@ -109,24 +130,40 @@ return (
           </aside>
 
           {/* Events list */}
-          <section id="events" className="flex-grow scroll-mt-20">
-            <div className="flex justify-between items-center mb-4">
-              <h1 className="text-2xl md:text-3xl font-bold">Events</h1>
-              <select
-                name="event-pulldown"
-                id="event-pulldown"
-                value={filterMode}
-                onChange={handleFilterChange}
-                className="p-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-gold"
-              >
-                <option value="day">Today&apos;s Events</option>
-                <option value="week">This Week&apos;s Events</option>
-                <option value="all">All Upcoming Events</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              <Events events={filteredEvents} />
-            </div>
+            <section id="events" className="flex-grow scroll-mt-20">
+              <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                <h1 className="text-2xl md:text-3xl font-bold">Events</h1>
+                <select
+                  name="event-pulldown"
+                  id="event-pulldown"
+                  value={filterMode}
+                  onChange={handleFilterChange}
+                  className="p-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-gold"
+                >
+                  <option value="day">Today&apos;s Events</option>
+                  <option value="week">This Week&apos;s Events</option>
+                  <option value="all">All Upcoming Events</option>
+                </select>
+              </div>
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Search by title, genre, artist, or venue..."
+                  className="w-full p-2 border border-gray-300 rounded-md text-black"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            {filteredEvents.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                <Events events={filteredEvents} />
+              </div>
+            ) : (
+              <p className="text-center text-gray-400 mt-4">
+                😔 No events match your search. Try a different keyword or filter.
+              </p>
+            )}
+
           </section>
         </div>
       </main>
