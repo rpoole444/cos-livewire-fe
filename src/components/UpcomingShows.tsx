@@ -55,14 +55,13 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
               key={event.id}
               id={event.id}
               title={event.title}
-              location={event.location}
               genre={event.genre}
               venueName={event.venue_name}
               date={event.date}
               startTime={event.start_time}
-              endTime={event.end_time}
               formatTime={formatTime}
             />
+
           ))}
           {!showAll && filteredEvents.length > MAX_RECOMMENDATIONS && (
             <div className="text-center mt-4">
