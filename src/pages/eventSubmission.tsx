@@ -517,7 +517,7 @@ if (!user) {
           {/* 🔗 Website / Link */}
           <div className="mt-8">
             <h2 className="text-xl font-bold text-gray-800 mb-4">🔗 Event Link</h2>
-            <label htmlFor="website_link" className="block text-sm font-semibold text-gray-800">Event Website or Ticket Link</label>
+            <label htmlFor="website_link" className="block text-sm font-semibold text-gray-800">Event / Artist Website or Ticket Link</label>
             <input
               type="text"
               id="website_link"

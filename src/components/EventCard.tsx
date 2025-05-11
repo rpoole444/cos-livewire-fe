@@ -71,28 +71,36 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick, handleDel
         <p className="text-gray-400 text-sm mt-4">{event.description}</p>
       )}
 
-      <div className="mt-4 space-y-2">
+      <div className="mt-4 flex flex-col space-y-2 text-sm">
         {event.website && (
-          <Link
-            href={event.website}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-200 underline text-sm"
-          >
-            Artist Website
-          </Link>
+          <div>
+            <span className="font-semibold text-white">Venue Website:</span>{' '}
+            <Link
+              href={event.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-200 underline break-words"
+            >
+              {event.website}
+            </Link>
+          </div>
         )}
         {event.website_link && event.website_link !== "http://" && (
-          <Link
-            href={event.website_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-200 underline text-sm"
-          >
-            Event Website
-          </Link>
+          <div>
+            <span className="font-semibold text-white">Event / Artist Website or Ticket Link</span>{' '}
+            <Link
+              href={event.website_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-400 hover:text-blue-200 underline break-words"
+            >
+              {event.website_link}
+            </Link>
+          </div>
         )}
       </div>
+
+
 
       {event.poster ? (
         <div className="mt-6 flex justify-center">
