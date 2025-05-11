@@ -93,7 +93,7 @@ return (
             <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
               {filterMode === 'all' && (
                 <p className="text-yellow-300 text-sm mb-2 border border-yellow-300 p-2 rounded bg-yellow-100/10">
-                  📌 The calendar is disabled in "All Upcoming Events" mode. Select a specific day or week to use it.
+                  📌 The calendar is disabled in &quot;All Upcoming Events&quot; mode. Select a specific day or week to use it.
                 </p>
               )}
               <EventsCalendar
