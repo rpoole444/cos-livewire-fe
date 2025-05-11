@@ -1,10 +1,11 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import EventCard from '../../components/EventCard';
-import { fetchEventDetails } from '../api/route';
+import { fetchEventDetails, getEvents } from '../api/route';
 import { useAuth } from "../../context/AuthContext";
 import LoginForm from '@/components/login';
 import WelcomeUser from "@/components/WelcomeUser";
+import UpcomingShows from '@/components/UpcomingShows';
 import RegistrationForm from '@/components/registration';
 import Link from "next/link";
 import { Event } from '@/interfaces/interfaces';
@@ -16,6 +17,8 @@ const EventDetailPage = () => {
   const router = useRouter();
   const { eventId } = router.query;
   const [event, setEvent] = useState<Event | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+
   const [authMode, setAuthMode] = useState<AuthMode>('login');
 
   const switchAuthMode = () => {
@@ -23,19 +26,35 @@ const EventDetailPage = () => {
   };
 
   useEffect(() => {
-    const fetchSingleEvent = async () => {
-      const id = Number(Array.isArray(eventId) ? eventId[0] : eventId);
-      if (id) {
-        try {
-          const data = await fetchEventDetails(id);
-          setEvent(data);
-        } catch (error) {
-          console.error('Failed to fetch event details:', error);
-        }
+  const fetchSingleEvent = async () => {
+    const id = Number(Array.isArray(eventId) ? eventId[0] : eventId);
+    if (id) {
+      try {
+        const data = await fetchEventDetails(id);
+        setEvent(data);
+      } catch (error) {
+        console.error('Failed to fetch event details:', error);
       }
-    };
-    if (eventId) fetchSingleEvent();
-  }, [eventId]);
+    }
+  };
+
+  const fetchAllEvents = async () => {
+  try {
+    const allEvents: Event[] = await getEvents(); 
+    const approved = allEvents.filter((e: Event) => e.is_approved);
+    setEvents(approved);
+  } catch (err) {
+    console.error('Error fetching all events:', err);
+  }
+};
+
+
+  if (eventId) {
+    fetchSingleEvent();
+    fetchAllEvents();
+  }
+}, [eventId]);
+
 
   const getDirections = () => {
     if (!event?.address) return;
@@ -74,7 +93,18 @@ const EventDetailPage = () => {
 
         <aside className="w-full lg:w-1/3 bg-white text-black p-6 rounded-lg shadow-lg mt-10 lg:mt-0">
           {user ? (
+            <>
             <WelcomeUser />
+            <UpcomingShows
+              user={user}
+              userGenres={
+                Array.isArray(user.top_music_genres)
+                  ? user.top_music_genres
+                  : JSON.parse(user.top_music_genres || '[]')
+              }
+              events={events}
+            />
+          </>
           ) : authMode === 'login' ? (
             <>
               <LoginForm setAuthMode={switchAuthMode} />

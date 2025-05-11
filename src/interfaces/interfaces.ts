@@ -19,6 +19,7 @@ export interface CustomEvent {
   eventType: string;
   recurrence?: string,
   repeatCount?: number,
+  is_approved: boolean
 }
 
 // interfaces.ts
@@ -42,6 +43,7 @@ export interface Event extends CustomEvent {
   poster: string | null;
   recurrence?: string,
   repeatCount?: number,
+  is_approved: boolean
   user?: {
     first_name: string;
     last_name: string;
