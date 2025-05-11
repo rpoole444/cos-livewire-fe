@@ -16,6 +16,7 @@ interface Event {
   eventType: string;
   genre: string;
   ticketPrice: string;
+  customTicketPrice?: string;
   ageRestriction: string;
   website_link: string;
   address: string;
@@ -46,6 +47,7 @@ const EventSubmission = () => {
     poster: '' , 
     recurrence:'',
     repeatCount: 1,
+    customTicketPrice: '',
   });
   const [file, setFile] = useState<File | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
@@ -184,13 +186,16 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
   try {
     let ticketPriceValue = eventData.ticketPrice;
-    if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
-      ticketPriceValue = '0';
-    }
-    ticketPriceValue = ticketPriceValue.replace(/\D/g, '');
-    if (ticketPriceValue === '') {
-      ticketPriceValue = '0';
-    }
+
+// Use custom ticket price if "Other" is selected
+if (ticketPriceValue === 'Other' && eventData.customTicketPrice?.trim()) {
+  ticketPriceValue = eventData.customTicketPrice.trim();
+} else if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
+  ticketPriceValue = ticketPriceValue;
+} else {
+  ticketPriceValue = `$${ticketPriceValue}`;
+}
+
 
     const count = Math.min(eventData.repeatCount || 1, 4); // Limit to 4
     const recurrenceDates = eventData.recurrence
@@ -415,7 +420,6 @@ if (!user) {
                   type="time"
                   id="end_time"
                   name="end_time"
-                  required
                   onChange={handleChange}
                   className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
                 />
@@ -457,19 +461,35 @@ if (!user) {
                     {/* 💵 Ticket Price */}
           <div>
             <h2 className="text-xl font-bold text-gray-800 mb-4">💵 Ticket Info</h2>
-            <label htmlFor="ticketPrice" className="block text-sm font-semibold text-gray-800">Ticket Price / Door Charge</label>
+            <label htmlFor="ticketPrice" className="block text-sm font-semibold text-gray-800">
+              Ticket Price / Door Charge
+            </label>
             <select
               id="ticketPrice"
               name="ticketPrice"
+              value={eventData.ticketPrice}
               onChange={handleChange}
               className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
             >
+              <option value="">Select a price</option>
               <option value="Free">Free</option>
               <option value="Donation">Donation</option>
-              {Array.from(Array(20).keys()).map(i => (
-                <option key={i} value={(i + 1) * 5}>${(i + 1) * 5}</option>
+              {Array.from(Array(20).keys()).map((i) => (
+                <option key={i} value={`$${(i + 1) * 5}`}>${(i + 1) * 5}</option>
               ))}
+              <option value="custom">Custom</option>
             </select>
+
+            {eventData.ticketPrice === "custom" && (
+              <input
+                type="text"
+                name="customTicketPrice"
+                placeholder="e.g. $7 in advance / $10 at the door"
+                value={eventData.customTicketPrice}
+                onChange={handleChange}
+                className="mt-3 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+              />
+            )}
           </div>
 
           {/* 🔞 Age Restriction */}

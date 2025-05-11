@@ -13,6 +13,7 @@ export interface CustomEvent {
   genre: string;
   age_restriction: string;
   ticket_price: string;
+  customTicketPrice?: string;
   website_link: string;
   poster: string | null;
   eventType: string;
@@ -32,6 +33,7 @@ export interface Event extends CustomEvent {
   eventType: string;
   genre: string;
   ticket_price: string;
+  customTicketPrice?: string;
   age_restriction: string;
   website_link: string;
   address: string;
