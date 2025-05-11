@@ -25,7 +25,7 @@ const UserProfile: React.FC = () => {
 
   useEffect(() => {
     if (!user) router.push("/");
-  }, [user]);
+  }, [user, router]);
 
   useEffect(() => {
     if (user?.top_music_genres) {
