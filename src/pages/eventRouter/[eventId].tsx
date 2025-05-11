@@ -85,11 +85,32 @@ const EventDetailPage = ({ event, events }: Props) => {
               >
                 Get Directions
               </button>
+
               <Link href="/">
                 <button className="text-indigo-400 hover:text-indigo-600 font-medium underline transition">
                   Back to All Events
                 </button>
               </Link>
+              <button
+                onClick={() => {
+                  const shareData = {
+                    title: event.title,
+                    text: `Check out this show: ${event.title}`,
+                    url: `https://app.alpinegrooveguide.com/eventRouter/${event.id}`,
+                  };
+
+                  if (navigator.share) {
+                    navigator.share(shareData).catch(console.error);
+                  } else {
+                    navigator.clipboard.writeText(shareData.url).then(() => {
+                      alert('Link copied to clipboard!');
+                    });
+                  }
+                }}
+                className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium py-2 px-4 rounded transition"
+              >
+                📤 Share This Event
+              </button>
             </div>
           </section>
 
