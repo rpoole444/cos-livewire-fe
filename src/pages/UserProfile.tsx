@@ -131,7 +131,7 @@ const UserProfile: React.FC = () => {
                 alt="Profile Picture"
                 width={200}
                 height={200}
-                className="rounded-full object-cover"
+                className="rounded-full w-[200px] h-[200px] object-cover"
               />
             )}
           </div>
