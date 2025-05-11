@@ -109,10 +109,9 @@ return (
 
     <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
       <main className="flex-grow p-4 md:p-8">
-        <div className="flex flex-col-reverse lg:flex-row gap-4 md:gap-8">
+        <div className="flex flex-col gap-4 md:gap-8">
           {/* Calendar comes first on mobile */}
-          <aside className="order-1 lg:order-2 w-full lg:w-[35%] bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out">
-            <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+          <aside className="w-full bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out">
               {filterMode === 'all' && (
                 <p className="text-yellow-300 text-sm mb-2 border border-yellow-300 p-2 rounded bg-yellow-100/10">
                   📌 The calendar is disabled in &quot;All Upcoming Events&quot; mode. To access the calendar, please select &quot;Today&apos;s Events&quot; or &quot;This Week’s Events&quot; from the dropdown.
@@ -126,8 +125,6 @@ return (
                   filterMode={filterMode}
                 />
               </div>
-
-            </div>
           </aside>
 
           {/* Events list */}
