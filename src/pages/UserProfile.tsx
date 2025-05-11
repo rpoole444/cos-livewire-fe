@@ -16,6 +16,7 @@ const UserProfile: React.FC = () => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [email, setEmail] = useState(user?.email || "");
+  const [displayName, setDisplayName] = useState(user?.display_name || "");
   const [description, setDescription] = useState(user?.user_description || "");
   const [genres, setGenres] = useState<string[]>([]);
   const [message, setMessage] = useState("");
@@ -76,6 +77,7 @@ const UserProfile: React.FC = () => {
     const formData = new FormData();
     formData.append("first_name", user.first_name);
     formData.append("last_name", user.last_name);
+    formData.append("display_name", displayName);
     formData.append("email", email);
     formData.append("user_description", description);
     formData.append("top_music_genres", JSON.stringify(genres));
@@ -89,7 +91,7 @@ const UserProfile: React.FC = () => {
       });
       const data = await res.json();
       setProfilePicture(data.profile_picture);
-      updateUser({ ...user, email, user_description: description, top_music_genres: genres, profile_picture: data.profile_picture });
+      updateUser({ ...user, email, user_description: description,  display_name: displayName, top_music_genres: genres, profile_picture: data.profile_picture });
       setMessage("Profile updated successfully!");
       setIsEditing(false);
     } catch (err) {
@@ -149,6 +151,17 @@ const UserProfile: React.FC = () => {
                     className="w-full p-2 mt-1 rounded text-black"
                   />
                 </label>
+                
+                <label className="block mb-4">
+                  Display Name (e.g., your artist or band name):
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="w-full p-2 mt-1 rounded text-black"
+                  />
+                </label>
+
 
                 <label className="block mb-4">
                   📝 Bio / About:
@@ -188,6 +201,7 @@ const UserProfile: React.FC = () => {
             ) : (
               <>
                 <p className="mb-3"><strong>Email:</strong> {email}</p>
+                <p className="mb-3"><strong>Display Name:</strong> {displayName || "N/A"}</p>
                 <p className="mb-3"><strong>About:</strong> {description || "No description"}</p>
                 <p className="mb-3"><strong>Genres:</strong> {genres.length > 0 ? genres.join(", ") : "None selected"}</p>
               </>
