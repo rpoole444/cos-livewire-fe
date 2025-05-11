@@ -108,16 +108,17 @@ return (
     <HeroSection user={user} setAuthMode={switchAuthMode} />
 
     <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
-      <main className="flex-grow p-4 md:p-8">
-        <div className="flex flex-col gap-4 md:gap-8">
+      <main className="container mx-auto px-4 md:px-8 py-6">
+        <div className="flex flex-col gap-6">
           {/* Calendar comes first on mobile */}
-          <aside className="w-full bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out">
+          <aside className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-700 transition-all duration-300 ease-in-out">
               {filterMode === 'all' && (
-                <p className="text-yellow-300 text-sm mb-2 border border-yellow-300 p-2 rounded bg-yellow-100/10">
-                  📌 The calendar is disabled in &quot;All Upcoming Events&quot; mode. To access the calendar, please select &quot;Today&apos;s Events&quot; or &quot;This Week’s Events&quot; from the dropdown.
-                </p>
+            <div className="mb-4 text-yellow-300 text-sm border border-yellow-400/50 bg-yellow-100/10 rounded-lg p-3">
+              📌 The calendar is disabled in <strong>All Upcoming Events</strong> mode.<br />
+              To use the calendar, please switch to <em>Today’s Events</em> or <em>This Week’s Events</em>.
+            </div>
               )}
-              <div className={filterMode === 'all' ? 'pointer-events-none opacity-50' : ''}>
+              <div className={filterMode === 'all' ? 'pointer-events-none opacity-40' : ''}>
                 <EventsCalendar
                   currentDate={selectedDate}
                   events={events}
@@ -129,42 +130,48 @@ return (
 
           {/* Events list */}
             <section id="events" className="flex-grow scroll-mt-20">
-              <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-                <h1 className="text-2xl md:text-3xl font-bold">Events</h1>
-                <select
-                  name="event-pulldown"
-                  id="event-pulldown"
-                  value={filterMode}
-                  onChange={handleFilterChange}
-                  className="p-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-gold"
-                >
-                  <option value="day">Today&apos;s Events</option>
-                  <option value="week">This Week&apos;s Events</option>
-                  <option value="all">All Upcoming Events</option>
-                </select>
-              </div>
-              <div className="mb-4">
-                <input
-                  type="text"
-                  placeholder="Search by title, genre, artist, or venue..."
-                  className="w-full p-2 border border-gray-300 rounded-md text-black"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
+            {/* Header with Filter Dropdown */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3">
+              <h1 className="text-3xl font-bold text-white tracking-tight">Events</h1>
+              <select
+                name="event-pulldown"
+                id="event-pulldown"
+                value={filterMode}
+                onChange={handleFilterChange}
+                className="p-2 border border-gray-600 rounded-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-gold transition"
+              >
+                <option value="day">Today&apos;s Events</option>
+                <option value="week">This Week&apos;s Events</option>
+                <option value="all">All Upcoming Events</option>
+              </select>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Search by title, genre, artist, or venue..."
+                className="w-full p-3 border border-gray-600 rounded-md text-black bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold transition"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Events List or Empty State */}
             {filteredEvents.length > 0 ? (
               <Events events={filteredEvents} />
             ) : (
-              <div className="text-center mt-10 flex flex-col items-center gap-4">
+              <div className="text-center mt-12 flex flex-col items-center gap-6">
                 <Image
                   src="/alpine_groove_guide_icon.png"
                   alt="Alpine Groove Logo"
-                  width={200}
-                  height={200}
+                  width={180}
+                  height={180}
                   className="opacity-80 animate-pulse"
                 />
                 <p className="text-gray-400 text-lg font-medium">
-                  🥺 No events to display. Try adjusting your search or date filter!
+                  🥺 No events to display.<br className="hidden sm:inline" />
+                  Try adjusting your search or filter!
                 </p>
               </div>
             )}
