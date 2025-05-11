@@ -80,75 +80,84 @@ export default function Home() {
     setFilterMode(event.target.value as 'day' | 'week' | 'all');
   };
 
-  return (
-    <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
-      <Header />
-      <HeroSection user={user} setAuthMode={switchAuthMode} />
-      <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
-        <main className="flex-grow p-4 md:p-8">
-          <div className="flex flex-col lg:flex-row gap-4 md:gap-8">
-            <section id="events" className="flex-grow scroll-mt-20">
-              <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl md:text-3xl font-bold">Events</h1>
-                <select
-                  name="event-pulldown"
-                  id="event-pulldown"
-                  value={filterMode}
-                  onChange={handleFilterChange}
-                  className="p-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-gold"
-                >
-                  <option value="day">Today&apos;s Events</option>
-                  <option value="week">This Week&apos;s Events</option>
-                  <option value="all">All Upcoming Events</option>
-                </select>
-              </div>
-              <div className="grid grid-cols-1 gap-4">
-                <Events events={filteredEvents} />
-              </div>
-            </section>
-            <aside className="order-1 lg:order-2 w-full lg:w-[35%] bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out">
-              <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-                {filterMode === 'all' && (
-                  <p className="text-yellow-300 text-sm mb-2">
-                    📌 The calendar is disabled in &quot;All Upcoming Events&quot; mode. Select a specific day or week to use it.
-                  </p>
-                )}
-                <EventsCalendar
-                  currentDate={selectedDate}
-                  events={events}
-                  onDateSelect={handleDateSelect}
-                  filterMode={filterMode}
-                />             
-              </div>
-            </aside>
+return (
+  <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
+    <Header />
+    <HeroSection user={user} setAuthMode={switchAuthMode} />
 
-          </div>
-        </main>
-        <aside id="auth-section" className="w-full md:w-[40%] lg:w-[30%] xl:w-1/4 max-w-md bg-white p-6 shadow-xl text-black rounded-lg transition-all duration-300 ease-in-out overflow-auto">
-          {user ? (
-            <>
-              <WelcomeUser />
-              <UpcomingShows
-                user={user}
-                userGenres={
-                  Array.isArray(user.top_music_genres)
-                    ? user.top_music_genres
-                    : JSON.parse(user.top_music_genres || '[]')
-                }
-                events={events}
-              />
-            </>
-          ) : (
-            <>
-              {authMode === 'login' ? (
-                <LoginForm setAuthMode={switchAuthMode} />
-              ) : (
-                <RegistrationForm setAuthMode={switchAuthMode} />
+    <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
+      <main className="flex-grow p-4 md:p-8">
+        <div className="flex flex-col-reverse lg:flex-row gap-4 md:gap-8">
+          {/* Calendar comes first on mobile */}
+          <aside className="order-1 lg:order-2 w-full lg:w-[35%] bg-gray-800 p-4 rounded-lg shadow-lg transition-all duration-300 ease-in-out">
+            <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              {filterMode === 'all' && (
+                <p className="text-yellow-300 text-sm mb-2 border border-yellow-300 p-2 rounded bg-yellow-100/10">
+                  📌 The calendar is disabled in "All Upcoming Events" mode. Select a specific day or week to use it.
+                </p>
               )}
-            </>
-          )}
-        </aside>
-      </div>
+              <EventsCalendar
+                currentDate={selectedDate}
+                events={events}
+                onDateSelect={handleDateSelect}
+                filterMode={filterMode}
+              />
+            </div>
+          </aside>
+
+          {/* Events list */}
+          <section id="events" className="flex-grow scroll-mt-20">
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl md:text-3xl font-bold">Events</h1>
+              <select
+                name="event-pulldown"
+                id="event-pulldown"
+                value={filterMode}
+                onChange={handleFilterChange}
+                className="p-2 border border-gray-300 rounded-md text-black focus:outline-none focus:ring-2 focus:ring-gold"
+              >
+                <option value="day">Today&apos;s Events</option>
+                <option value="week">This Week&apos;s Events</option>
+                <option value="all">All Upcoming Events</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <Events events={filteredEvents} />
+            </div>
+          </section>
+        </div>
+      </main>
+
+      {/* Auth + Upcoming */}
+      <aside
+        id="auth-section"
+        className="w-full md:w-[40%] lg:w-[30%] xl:w-1/4 max-w-md bg-white p-6 shadow-xl text-black rounded-lg transition-all duration-300 ease-in-out overflow-auto"
+      >
+        {user ? (
+          <>
+            <WelcomeUser />
+            <UpcomingShows
+              user={user}
+              userGenres={
+                Array.isArray(user.top_music_genres)
+                  ? user.top_music_genres
+                  : JSON.parse(user.top_music_genres || '[]')
+              }
+              events={events}
+            />
+          </>
+        ) : (
+          <>
+            {authMode === 'login' ? (
+              <LoginForm setAuthMode={switchAuthMode} />
+            ) : (
+              <RegistrationForm setAuthMode={switchAuthMode} />
+            )}
+          </>
+        )}
+      </aside>
     </div>
-  );
+  </div>
+);
+
 }
