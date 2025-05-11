@@ -93,7 +93,7 @@ return (
             <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
               {filterMode === 'all' && (
                 <p className="text-yellow-300 text-sm mb-2 border border-yellow-300 p-2 rounded bg-yellow-100/10">
-                  📌 The calendar is disabled in &quot;All Upcoming Events&quot; mode. Select a specific day or week to use it.
+                  📌 The calendar is disabled in &quot;All Upcoming Events&quot; mode. To access the calendar, please select &quot;Today&apos;s Events&quot; or &quot;This Week’s Events&quot; from the dropdown.
                 </p>
               )}
               <div className={filterMode === 'all' ? 'pointer-events-none opacity-50' : ''}>
