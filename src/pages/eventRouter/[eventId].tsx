@@ -82,7 +82,6 @@ const EventDetailPage = ({ event, events }: Props) => {
             <span className="text-sm text-yellow-300 hover:underline">← Back to All Events</span>
           </Link>
         </div>
-
         <main className="container mx-auto p-6 lg:flex gap-8">
           <section className="flex-1">
             <EventCard event={event} />

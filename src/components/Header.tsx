@@ -11,13 +11,15 @@ const Header = () => {
   return (
     <header className="w-full bg-black text-white px-4 sm:px-8 py-4 shadow-lg flex justify-between items-center">
       <div className="flex items-center">
-        <Image
-          src="/alpine_groove_guide_icon.png"
-          alt="Alpine Groove Guide Icon"
-          width={60}
-          height={60}
-          className="rounded"
-        />
+       <Link href="/" className="flex items-center">
+          <Image
+            src="/alpine_groove_guide_icon.png"
+            alt="Alpine Groove Guide Icon"
+            width={60}
+            height={60}
+            className="rounded"
+          />
+       </Link>
         <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight ml-4 text-gold">
           Alpine Groove Guide
         </h1>
