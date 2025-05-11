@@ -162,18 +162,15 @@ return (
                 <Image
                   src="/alpine_groove_guide_icon.png"
                   alt="Alpine Groove Logo"
-                  width={96} // 24 * 4
+                  width={96}
                   height={96}
-                  className="opacity-80 animate-bounce"
+                  className="opacity-80 animate-pulse"
                 />
                 <p className="text-gray-400 text-lg font-medium">
                   🥺 No events to display. Try adjusting your search or date filter!
                 </p>
               </div>
-
             )}
-
-
           </section>
         </div>
       </main>
