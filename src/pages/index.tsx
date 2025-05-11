@@ -14,6 +14,7 @@ import isBetween from 'dayjs/plugin/isBetween';
 import UpcomingShows from '@/components/UpcomingShows';
 import { parseMSTDate, parseLocalDayjs } from '@/util/dateHelper';
 import Fuse from 'fuse.js';
+import Image from 'next/image';
 
 type AuthMode = 'login' | 'register';
 dayjs.extend(isBetween);
@@ -155,14 +156,23 @@ return (
                 />
               </div>
             {filteredEvents.length > 0 ? (
-              <div className="grid grid-cols-1 gap-4">
-                <Events events={filteredEvents} />
-              </div>
+              <Events events={filteredEvents} />
             ) : (
-              <p className="text-center text-gray-400 mt-4">
-                😔 No events match your search. Try a different keyword or filter.
-              </p>
+              <div className="text-center mt-10 flex flex-col items-center gap-4">
+                <Image
+                  src="/alpine_groove_guide_icon.png"
+                  alt="Alpine Groove Logo"
+                  width={96} // 24 * 4
+                  height={96}
+                  className="opacity-80 animate-bounce"
+                />
+                <p className="text-gray-400 text-lg font-medium">
+                  🥺 No events to display. Try adjusting your search or date filter!
+                </p>
+              </div>
+
             )}
+
 
           </section>
         </div>
