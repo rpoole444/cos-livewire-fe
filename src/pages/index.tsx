@@ -22,7 +22,7 @@ export default function Home() {
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [filterMode, setFilterMode] = useState<'day' | 'week' | 'all'>('all');
+  const [filterMode, setFilterMode] = useState<'day' | 'week' | 'all'>('day');
 
   const { user, logout } = useAuth();
 
