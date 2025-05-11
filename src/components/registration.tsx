@@ -106,7 +106,7 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
               />
             </div>
             <div className='pb-5'>
-              <label htmlFor="display-name" className="sr-only">Display Name</label>
+              <label htmlFor="display-name" className="sr-only">Artist, Band, or Venue Name</label>
               <input
                 id="display-name"
                 name="display-name"

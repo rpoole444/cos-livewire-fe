@@ -201,7 +201,7 @@ const UserProfile: React.FC = () => {
             ) : (
               <>
                 <p className="mb-3"><strong>Email:</strong> {email}</p>
-                <p className="mb-3"><strong>Display Name:</strong> {displayName || "N/A"}</p>
+                <p className="mb-3"><strong>Artist, Band, or Venue Name:</strong> {displayName || "N/A"}</p>
                 <p className="mb-3"><strong>About:</strong> {description || "No description"}</p>
                 <p className="mb-3"><strong>Genres:</strong> {genres.length > 0 ? genres.join(", ") : "None selected"}</p>
               </>
