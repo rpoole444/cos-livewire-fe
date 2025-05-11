@@ -1,77 +1,35 @@
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
-import EventCard from '../../components/EventCard';
-import { fetchEventDetails, getEvents } from '../api/route';
-import { useAuth } from "../../context/AuthContext";
-import LoginForm from '@/components/login';
-import WelcomeUser from "@/components/WelcomeUser";
-import UpcomingShows from '@/components/UpcomingShows';
-import RegistrationForm from '@/components/registration';
-import Link from "next/link";
-import { Event } from '@/interfaces/interfaces';
-import Header from '@/components/Header';
+import { GetServerSideProps } from 'next';
 import Head from 'next/head';
+import Link from 'next/link';
+import { useState } from 'react';
+import { fetchEventDetails, getEvents } from '../api/route';
+import Header from '@/components/Header';
+import EventCard from '@/components/EventCard';
+import WelcomeUser from '@/components/WelcomeUser';
+import UpcomingShows from '@/components/UpcomingShows';
+import LoginForm from '@/components/login';
+import RegistrationForm from '@/components/registration';
+import { Event } from '@/interfaces/interfaces';
+import { useAuth } from '@/context/AuthContext';
 
+interface Props {
+  event: Event;
+  events: Event[];
+}
 
-type AuthMode = 'login' | 'register';
-
-const EventDetailPage = () => {
+const EventDetailPage = ({ event, events }: Props) => {
   const { user } = useAuth();
-  const router = useRouter();
-  const { eventId } = router.query;
-  const [event, setEvent] = useState<Event | null>(null);
-  const [events, setEvents] = useState<Event[]>([]);
-
-  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   const switchAuthMode = () => {
     setAuthMode((prev) => (prev === 'login' ? 'register' : 'login'));
   };
-
-  useEffect(() => {
-  const fetchSingleEvent = async () => {
-    const id = Number(Array.isArray(eventId) ? eventId[0] : eventId);
-    if (id) {
-      try {
-        const data = await fetchEventDetails(id);
-        setEvent(data);
-      } catch (error) {
-        console.error('Failed to fetch event details:', error);
-      }
-    }
-  };
-
-  const fetchAllEvents = async () => {
-  try {
-    const allEvents: Event[] = await getEvents(); 
-    const approved = allEvents.filter((e: Event) => e.is_approved);
-    setEvents(approved);
-  } catch (err) {
-    console.error('Error fetching all events:', err);
-  }
-};
-
-
-  if (eventId) {
-    fetchSingleEvent();
-    fetchAllEvents();
-  }
-}, [eventId]);
-
 
   const getDirections = () => {
     if (!event?.address) return;
     const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.address)}`;
     window.open(url, '_blank');
   };
-
-  if (!event) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-        <p className="text-lg">Loading event details...</p>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -87,16 +45,14 @@ const EventDetailPage = () => {
           content={
             event.poster?.startsWith('http')
               ? event.poster
-              : 'https://alpinegrooveguide.com/alpine_groove_guide_icon.png'
+              : 'https://app.alpinegrooveguide.com/alpine_groove_guide_icon.png'
           }
         />
         <meta
           property="og:url"
-          content={`https://alpinegrooveguide.com/eventRouter/${event.id}`}
+          content={`https://app.alpinegrooveguide.com/eventRouter/${event.id}`}
         />
         <meta property="og:type" content="website" />
-
-        {/* Twitter tags */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={event.title} />
         <meta
@@ -108,14 +64,12 @@ const EventDetailPage = () => {
           content={
             event.poster?.startsWith('http')
               ? event.poster
-              : 'https://alpinegrooveguide.com/alpine_groove_guide_icon.png'
+              : 'https://app.alpinegrooveguide.com/alpine_groove_guide_icon.png'
           }
         />
-
-        {/* Optional: canonical link */}
         <link
           rel="canonical"
-          href={`https://alpinegrooveguide.com/eventRouter/${event.id}`}
+          href={`https://app.alpinegrooveguide.com/eventRouter/${event.id}`}
         />
       </Head>
 
@@ -131,7 +85,7 @@ const EventDetailPage = () => {
               >
                 Get Directions
               </button>
-              <Link href="/" passHref>
+              <Link href="/">
                 <button className="text-indigo-400 hover:text-indigo-600 font-medium underline transition">
                   Back to All Events
                 </button>
@@ -142,17 +96,17 @@ const EventDetailPage = () => {
           <aside className="w-full lg:w-1/3 bg-white text-black p-6 rounded-lg shadow-lg mt-10 lg:mt-0">
             {user ? (
               <>
-              <WelcomeUser />
-              <UpcomingShows
-                user={user}
-                userGenres={
-                  Array.isArray(user.top_music_genres)
-                    ? user.top_music_genres
-                    : JSON.parse(user.top_music_genres || '[]')
-                }
-                events={events}
-              />
-            </>
+                <WelcomeUser />
+                <UpcomingShows
+                  user={user}
+                  userGenres={
+                    Array.isArray(user.top_music_genres)
+                      ? user.top_music_genres
+                      : JSON.parse(user.top_music_genres || '[]')
+                  }
+                  events={events}
+                />
+              </>
             ) : authMode === 'login' ? (
               <>
                 <LoginForm setAuthMode={switchAuthMode} />
@@ -172,8 +126,32 @@ const EventDetailPage = () => {
         </main>
       </div>
     </>
-
   );
+};
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const id = Number(context.params?.eventId);
+
+  try {
+    const [event, events] = await Promise.all([
+      fetchEventDetails(id),
+      getEvents().then((all: Event[]) =>
+        all.filter((e: Event) => e.is_approved)
+      ),
+    ]);
+
+    return {
+      props: {
+        event,
+        events,
+      },
+    };
+  } catch (err) {
+    console.error('Error in getServerSideProps:', err);
+    return {
+      notFound: true,
+    };
+  }
 };
 
 export default EventDetailPage;
