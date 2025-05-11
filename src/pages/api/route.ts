@@ -37,7 +37,7 @@ const fetchEventDetails = async (eventId:number) => {
       return data
     };
 
-async function registerUser(firstName: string, lastName: string, email: string, password: string, description: string, genres: string[]) {
+async function registerUser(firstName: string, lastName: string, displayName: string, email: string, password: string, description: string, genres: string[]) {
   try {
       const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
@@ -47,6 +47,7 @@ async function registerUser(firstName: string, lastName: string, email: string, 
        body: JSON.stringify({
         first_name: firstName, 
         last_name: lastName,
+        display_name: displayName,
         email,
         password,
         user_description: description,

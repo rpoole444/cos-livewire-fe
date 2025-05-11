@@ -12,6 +12,7 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
   const [showPassword, setShowPassword] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [description, setDescription] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
@@ -42,7 +43,7 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
   }
 
   try {
-    await registerUser(firstName, lastName, email, password, description, genres); 
+  await registerUser(firstName, lastName, displayName, email, password, description, genres);
     setRegistrationSuccess(true);
 
     setTimeout(() => {
@@ -104,6 +105,22 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
                 onChange={(e) => setLastName(e.target.value)}
               />
             </div>
+            <div className='pb-5'>
+              <label htmlFor="display-name" className="sr-only">Display Name</label>
+              <input
+                id="display-name"
+                name="display-name"
+                type="text"
+                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold"
+                placeholder="Display name (e.g. The Martini Shot)"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+              />
+              <p className="text-sm text-gray-600 mt-1 italic">
+                This is your public-facing name. You can use your band or stage name here.
+              </p>
+            </div>
+
             <div className='pb-5'>
               <label htmlFor="email" className="sr-only">Email address</label>
               <input
