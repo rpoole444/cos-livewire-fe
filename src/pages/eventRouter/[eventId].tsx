@@ -11,6 +11,8 @@ import LoginForm from '@/components/login';
 import RegistrationForm from '@/components/registration';
 import { Event } from '@/interfaces/interfaces';
 import { useAuth } from '@/context/AuthContext';
+import { FaFacebookF, FaTwitter, FaLink, FaLocationArrow, FaShareAlt } from 'react-icons/fa';
+
 
 interface Props {
   event: Event;
@@ -78,73 +80,66 @@ const EventDetailPage = ({ event, events }: Props) => {
         <main className="container mx-auto p-6 lg:flex gap-8">
           <section className="flex-1">
             <EventCard event={event} />
-            <div className="mt-6 flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-wrap gap-3 mt-6 items-center">
               <button
                 onClick={getDirections}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded transition"
+                className="bg-indigo-600 hover:bg-indigo-700 text-yellow-300 font-semibold px-4 py-2 rounded-md shadow transition transform hover:scale-105 flex items-center gap-2"
               >
-                Get Directions
+                <FaLocationArrow /> Get Directions
               </button>
 
-              <Link href="/">
-                <button className="text-indigo-400 hover:text-indigo-600 font-medium underline transition">
+              <Link href="/" passHref>
+                <button className="text-yellow-300 hover:text-yellow-400 font-semibold underline transition">
                   Back to All Events
                 </button>
               </Link>
+
               <button
                 onClick={() => {
-                  const shareData = {
-                    title: event.title,
-                    text: `Check out this show: ${event.title}`,
-                    url: `https://app.alpinegrooveguide.com/eventRouter/${event.id}`,
-                  };
-
                   if (navigator.share) {
-                    navigator.share(shareData).catch(console.error);
-                  } else {
-                    navigator.clipboard.writeText(shareData.url).then(() => {
-                      alert('Link copied to clipboard!');
+                    navigator.share({
+                      title: event.title,
+                      text: event.description?.slice(0, 100),
+                      url: `https://app.alpinegrooveguide.com/eventRouter/${event.id}`,
                     });
                   }
                 }}
-                className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium py-2 px-4 rounded transition"
+                className="bg-yellow-500 hover:bg-yellow-600 text-black font-semibold px-4 py-2 rounded-md shadow transition transform hover:scale-105 flex items-center gap-2"
               >
-                📤 Share This Event
+                <FaShareAlt /> Share This Event
               </button>
-              <div className="flex gap-4 mt-4">
-                <a
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                    `https://app.alpinegrooveguide.com/eventRouter/${event.id}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm"
-                >
-                  Share on Facebook
-                </a>
 
-                <a
-                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                    `https://app.alpinegrooveguide.com/eventRouter/${event.id}`
-                  )}&text=${encodeURIComponent(event.title)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded text-sm"
-                >
-                  Share on X
-                </a>
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                  `https://app.alpinegrooveguide.com/eventRouter/${event.id}`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md shadow transition transform hover:scale-105 flex items-center gap-2"
+              >
+                <FaFacebookF /> Facebook
+              </a>
 
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(`https://app.alpinegrooveguide.com/eventRouter/${event.id}`);
-                    alert('Link copied to clipboard!');
-                  }}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm"
-                >
-                  Copy Link
-                </button>
-</div>
+              <a
+                href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                  `https://app.alpinegrooveguide.com/eventRouter/${event.id}`
+                )}&text=${encodeURIComponent(event.title)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-sky-500 hover:bg-sky-600 text-white font-semibold px-4 py-2 rounded-md shadow transition transform hover:scale-105 flex items-center gap-2"
+              >
+                <FaTwitter /> X
+              </a>
 
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://app.alpinegrooveguide.com/eventRouter/${event.id}`);
+                  alert('Link copied to clipboard!');
+                }}
+                className="bg-gray-700 hover:bg-gray-800 text-white font-semibold px-4 py-2 rounded-md shadow transition transform hover:scale-105 flex items-center gap-2"
+              >
+                <FaLink /> Copy Link
+              </button>
             </div>
           </section>
 
