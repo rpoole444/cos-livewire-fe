@@ -96,12 +96,15 @@ return (
                   📌 The calendar is disabled in &quot;All Upcoming Events&quot; mode. Select a specific day or week to use it.
                 </p>
               )}
-              <EventsCalendar
-                currentDate={selectedDate}
-                events={events}
-                onDateSelect={handleDateSelect}
-                filterMode={filterMode}
-              />
+              <div className={filterMode === 'all' ? 'pointer-events-none opacity-50' : ''}>
+                <EventsCalendar
+                  currentDate={selectedDate}
+                  events={events}
+                  onDateSelect={handleDateSelect}
+                  filterMode={filterMode}
+                />
+              </div>
+
             </div>
           </aside>
 
