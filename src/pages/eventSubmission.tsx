@@ -65,7 +65,7 @@ const EventSubmission = () => {
   if (!user) {
     router.push('/LoginPage?redirect=/eventSubmission');
   }
-}, [user]);
+}, [user, router]);
 
 const initializeAutocomplete = () => {
   if (

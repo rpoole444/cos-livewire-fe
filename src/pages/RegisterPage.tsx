@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import RegistrationForm from '@/components/registration';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 
 const RegisterPage = () => {
   const { user } = useAuth();
@@ -13,14 +14,14 @@ const RegisterPage = () => {
     if (user) {
       router.push(redirect || '/');
     }
-  }, [user, redirect]);
+  }, [user, redirect, router]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
       <section className="flex flex-col items-center justify-center px-4 py-20">
         <div className="text-center mb-8">
-          <img
+          <Image
             src="/alpine_groove_guide_icon.png"
             alt="Alpine Groove Guide Logo"
             className="mx-auto mb-4 w-20"

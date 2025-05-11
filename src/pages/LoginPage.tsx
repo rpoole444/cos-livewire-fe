@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import LoginForm from '@/components/login';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 
 const LoginPage = () => {
   const { user } = useAuth();
@@ -13,14 +14,14 @@ const LoginPage = () => {
     if (user) {
       router.push(redirect || '/#events'); // Go to event section if no redirect
     }
-  }, [user, redirect]);
+  }, [user, redirect, router]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
       <section className="flex flex-col items-center justify-center px-4 py-20">
         <div className="text-center mb-8">
-          <img
+          <Image
             src="/alpine_groove_guide_icon.png"
             alt="Alpine Groove Guide Logo"
             className="mx-auto mb-4 w-20"
