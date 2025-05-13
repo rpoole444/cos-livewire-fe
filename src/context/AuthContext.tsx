@@ -83,29 +83,33 @@ const login = async (email: string, password: string) => {
       body: JSON.stringify({ email, password }),
     });
 
+    const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Login failed with status ${response.status}`);
+      throw new Error(data.message || `Login failed with status ${response.status}`);
     }
 
-    const data = await response.json();
     const profileRes = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
       credentials: 'include',
     });
 
-    const profileData = profileRes.ok ? await profileRes.json() : { profile_picture_url: null };
+    const profileData = profileRes.ok
+      ? await profileRes.json()
+      : { profile_picture_url: null };
 
-    const genres = (() => {
-      try {
-        return JSON.parse(data.user.top_music_genres);
-      } catch {
-        return [];
-      }
-    })();
+    const genres = Array.isArray(data.user.top_music_genres)
+      ? data.user.top_music_genres
+      : (() => {
+          try {
+            return JSON.parse(data.user.top_music_genres);
+          } catch {
+            return [];
+          }
+        })();
 
     setUser({
       ...data.user,
-      top_music_genres: Array.isArray(genres) ? genres : [],
+      top_music_genres: genres,
       profile_picture: profileData.profile_picture_url,
     });
 
@@ -114,6 +118,7 @@ const login = async (email: string, password: string) => {
     throw error;
   }
 };
+
 
 
   const logout = async () => {
