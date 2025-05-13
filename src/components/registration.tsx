@@ -17,11 +17,17 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
   const [genres, setGenres] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState('');
 
-  const validatePassword = (password: string) => {
-    const passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-  };
+const validatePassword = (password: string): string => {
+  if (password.length < 8) return "Password must be at least 8 characters long.";
+  if (!/[a-z]/.test(password)) return "Include at least one lowercase letter.";
+  if (!/[A-Z]/.test(password)) return "Include at least one uppercase letter.";
+  if (!/\d/.test(password)) return "Include at least one number.";
+  if (!/[@$!%*?&]/.test(password)) return "Include at least one special character.";
+  return "Strong"; // No error
+};
+
 
   const handleGenreChange = (genre: string) => {
     setGenres(prevGenres =>
@@ -37,10 +43,12 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
   event.preventDefault();
   setErrorMessage(''); // Clear previous error messages
 
-  if (!validatePassword(password)) {
-    setErrorMessage("Password must be at least 8 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special characters.");
-    return;
-  }
+  const passwordError = validatePassword(password);
+if (passwordError) {
+  setErrorMessage(passwordError);
+  return;
+}
+
 
   try {
   await registerUser(firstName, lastName, displayName, email, password, description, genres);
@@ -167,29 +175,38 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
               </div>
             </div>
             <div className="pb-5">
-  <label htmlFor="password" className="sr-only">Password</label>
-  <input
-    id="password"
-    name="password"
-    type={showPassword ? "text" : "password"}
-    autoComplete="current-password"
-    required
-    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold"
-    placeholder="Password"
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-  />
-  <button
-    type="button"
-    onClick={() => setShowPassword(prev => !prev)}
-    className="text-sm text-blue-600 mt-1 hover:underline"
-  >
-    {showPassword ? "Hide Password" : "Show Password"}
-  </button>
-  <p className="mt-2 text-sm text-gray-600">
-    Password must be at least 8 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special characters.
-  </p>
-</div>
+            <label htmlFor="password" className="sr-only">Password</label>
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => {
+                const value = e.target.value;
+                setPassword(value);
+                const error = validatePassword(value);
+                setPasswordStrength(error === "Strong" ? "" : error);
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(prev => !prev)}
+              className="text-sm text-blue-600 mt-1 hover:underline"
+            >
+              {showPassword ? "Hide Password" : "Show Password"}
+            </button>
+            <p className="mt-2 text-sm text-gray-600">
+              Password must be at least 8 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special characters.
+            </p>
+            {passwordStrength && (
+              <p className={`mt-1 text-sm ${passwordStrength === "Strong" ? "text-green-600" : "text-red-600"}`}>
+                {passwordStrength}
+              </p>
+            )}
 
           </div>
           {errorMessage && <p className="mt-2 text-center text-sm text-red-600">{errorMessage}</p>}
@@ -207,6 +224,7 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
             Login
           </span>
         </p>
+        </div>
         </form>
       </div>
     </div>
