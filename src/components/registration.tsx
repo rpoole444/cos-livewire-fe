@@ -19,14 +19,16 @@ const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ s
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('');
 
-const validatePassword = (password: string): string => {
-  if (password.length < 8) return "Password must be at least 8 characters long.";
-  if (!/[a-z]/.test(password)) return "Include at least one lowercase letter.";
-  if (!/[A-Z]/.test(password)) return "Include at least one uppercase letter.";
-  if (!/\d/.test(password)) return "Include at least one number.";
-if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return "Include at least one special character.";
-  return "Strong"; // No error
+const validatePassword = (pw: string): string => {
+  if (pw.length < 8)                return "Password must be at least 8 characters.";
+  if (!/[a-z]/.test(pw))            return "Include at least one lowercase letter.";
+  if (!/[A-Z]/.test(pw))            return "Include at least one uppercase letter.";
+  if (!/\d/.test(pw))               return "Include at least one number.";
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(pw))
+                                   return "Include at least one special character.";
+  return "";                        // <‑‑ an **empty string** means success
 };
+
 
 
   const handleGenreChange = (genre: string) => {
@@ -43,25 +45,26 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
   event.preventDefault();
   setErrorMessage(''); // Clear previous error messages
 
-  const passwordError = validatePassword(password);
-if (passwordError) {
-  setErrorMessage(passwordError);
-  return;
-}
+      const passwordError = validatePassword(password);
+    if (passwordError) {
+      setErrorMessage(passwordError);
+      return;
+    }
 
 
-  try {
-  await registerUser(firstName, lastName, displayName, email, password, description, genres);
-    setRegistrationSuccess(true);
+      try {
+      await registerUser(firstName, lastName, displayName, email, password, description, genres);
+        setRegistrationSuccess(true);
 
-    setTimeout(() => {
-      setAuthMode('login');
-      setRegistrationSuccess(false);
-    }, 3000);
-  } catch (error: any) {
-    setErrorMessage(error.message || "There was an error registering.");
-  }
-};
+        setTimeout(() => {
+          setAuthMode('login');
+          setRegistrationSuccess(false);
+        }, 3000);
+      } catch (error: any) {
+        setErrorMessage(error.message || "There was an error registering.");
+      }
+      setPasswordStrength("");
+    };
 
   if (registrationSuccess) {
     return (
@@ -188,8 +191,9 @@ if (passwordError) {
               onChange={(e) => {
                 const value = e.target.value;
                 setPassword(value);
-                const error = validatePassword(value);
-                setPasswordStrength(error === "Strong" ? "" : error);
+
+                const validationMsg = validatePassword(value);       // "" if OK
+                setPasswordStrength(validationMsg || "Strong");
               }}
             />
             <button
@@ -203,9 +207,14 @@ if (passwordError) {
               Password must be at least 8 characters long and include a mix of uppercase letters, lowercase letters, numbers, and special characters.
             </p>
             {passwordStrength && (
-              <p className={`mt-1 text-sm ${passwordStrength === "Strong" ? "text-green-600" : "text-red-600"}`}>
+              <p
+                className={`mt-1 text-sm ${
+                  passwordStrength === "Strong" ? "text-green-600" : "text-red-600"
+                }`}
+              >
                 {passwordStrength}
               </p>
+
             )}
 
           </div>
