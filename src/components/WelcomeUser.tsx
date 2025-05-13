@@ -18,7 +18,7 @@ const WelcomeUser = () => {
   return (
     <div className="space-y-6">
       <div className="bg-blue-100 text-blue-900 text-sm font-semibold px-4 py-2 rounded shadow text-center">
-        Welcome, {user?.display_name}! You’re logged in.
+        Welcome, {user?.displayName}! You’re logged in.
       </div>
 
       <div className="flex flex-col gap-3">

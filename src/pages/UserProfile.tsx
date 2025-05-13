@@ -16,7 +16,7 @@ const UserProfile: React.FC = () => {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [email, setEmail] = useState(user?.email || "");
-  const [displayName, setDisplayName] = useState(user?.display_name || "");
+  const [displayName, setDisplayName] = useState(user?.displayName || "");
   const [description, setDescription] = useState(user?.user_description || "");
   const [genres, setGenres] = useState<string[]>([]);
   const [message, setMessage] = useState("");
@@ -91,7 +91,7 @@ const UserProfile: React.FC = () => {
       });
       const data = await res.json();
       setProfilePicture(data.profile_picture);
-      updateUser({ ...user, email, user_description: description,  display_name: displayName, top_music_genres: genres, profile_picture: data.profile_picture });
+      updateUser({ ...user, email, user_description: description,  displayName: displayName, top_music_genres: genres, profile_picture: data.profile_picture });
       setMessage("Profile updated successfully!");
       setIsEditing(false);
     } catch (err) {

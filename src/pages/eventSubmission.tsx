@@ -315,7 +315,7 @@ if (!user) {
                 id="title"
                 name="title"
                 required
-                placeholder={`e.g. ${user?.display_name ?? ''} Live at the Funk Summit`}
+                placeholder={`e.g. ${user?.displayName ?? ''} Live at the Funk Summit`}
                 onChange={handleChange}
                 className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
               />
