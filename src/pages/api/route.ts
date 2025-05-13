@@ -47,7 +47,7 @@ async function registerUser(firstName: string, lastName: string, displayName: st
        body: JSON.stringify({
         first_name: firstName, 
         last_name: lastName,
-        display_name: displayName,
+        displayName,
         email,
         password,
         user_description: description,

@@ -77,7 +77,7 @@ const UserProfile: React.FC = () => {
     const formData = new FormData();
     formData.append("first_name", user.first_name);
     formData.append("last_name", user.last_name);
-    formData.append("display_name", displayName);
+    formData.append("displayName", displayName);
     formData.append("email", email);
     formData.append("user_description", description);
     formData.append("top_music_genres", JSON.stringify(genres));
