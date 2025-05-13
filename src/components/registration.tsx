@@ -24,7 +24,7 @@ const validatePassword = (password: string): string => {
   if (!/[a-z]/.test(password)) return "Include at least one lowercase letter.";
   if (!/[A-Z]/.test(password)) return "Include at least one uppercase letter.";
   if (!/\d/.test(password)) return "Include at least one number.";
-  if (!/[@$!%*?&]/.test(password)) return "Include at least one special character.";
+  if (!/[@$!%*?&]/.test(password)) return "Include at least one special character in this set [@$!%*?&].";
   return "Strong"; // No error
 };
 
