@@ -24,21 +24,26 @@ const LoginForm: React.FC<LoginFormProps> = ({
   const router = useRouter();
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setErrorMessage('');
+  event.preventDefault();
+  setErrorMessage('');
 
-    try {
-      await login(email.toLowerCase(), password);
-      router.push(onSuccessRedirect);
-    } catch (error: any) {
-      if (error?.response?.data?.message) {
-        setErrorMessage(error.response.data.message);
-      } else {
-        setErrorMessage("An error occurred, please try again.");
-      }
-      console.error(error);
-    }
-  };
+  if (!email || !password) {
+    setErrorMessage("Please enter both email and password.");
+    return;
+  }
+
+  try {
+    await login(email.toLowerCase(), password);
+    router.push(onSuccessRedirect);
+  } catch (error: any) {
+    const msg =
+      (error?.message?.includes("401") || error?.message?.includes("Unauthorized"))
+        ? "Invalid email or password."
+        : error?.message || "Something went wrong. Please try again.";
+    setErrorMessage(msg);
+    console.error("Login error:", error);
+  }
+};
 
   return (
     <div className="min-h-screen flex justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">

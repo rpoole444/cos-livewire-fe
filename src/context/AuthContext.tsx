@@ -84,61 +84,36 @@ const login = async (email: string, password: string) => {
     });
 
     if (!response.ok) {
-      let errorData;
-      try {
-        errorData = await response.json();
-      } catch {
-        throw new Error('Failed to login');
-      }
-      throw new Error(errorData.message || 'Failed to login');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Login failed with status ${response.status}`);
     }
 
-    let data;
-    try {
-      data = await response.json();
-    } catch (err) {
-      throw new Error('Failed to parse response JSON');
-    }
-
-    console.log('Login data:', data);
-
-    const profilePictureResponse = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
+    const data = await response.json();
+    const profileRes = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
       credentials: 'include',
     });
 
-    console.log('Profile picture response:', profilePictureResponse);
+    const profileData = profileRes.ok ? await profileRes.json() : { profile_picture_url: null };
 
-    let profilePictureData = {
-      profile_picture_url: null,
-    };
-    if (profilePictureResponse.ok) {
-      profilePictureData = await profilePictureResponse.json();
-    }
-
-    console.log('Profile picture data:', profilePictureData);
-
-    let parsedGenres = [];
-    if (data.user.top_music_genres) {
+    const genres = (() => {
       try {
-        parsedGenres = JSON.parse(data.user.top_music_genres);
-      } catch (error) {
-        console.error('Error parsing genres:', error);
+        return JSON.parse(data.user.top_music_genres);
+      } catch {
+        return [];
       }
-    }
+    })();
 
     setUser({
       ...data.user,
-      top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [],
-      profile_picture: profilePictureData.profile_picture_url || null,
+      top_music_genres: Array.isArray(genres) ? genres : [],
+      profile_picture: profileData.profile_picture_url,
     });
+
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     throw error;
   }
 };
-
-
-
 
 
   const logout = async () => {
