@@ -55,7 +55,7 @@ const AdminUsersPage = () => {
   const handleDeleteUser = async (userId: number) => {
     if (!confirm('Are you sure you want to delete this user?')) return;
 
-    const res = await fetch(`${API_BASE_URL}/api/auth/users/${userId}`, {
+    const res = await fetch(`${API_BASE_URL}/api/auth/user/${userId}`, {
       method: 'DELETE',
       credentials: 'include',
     });
