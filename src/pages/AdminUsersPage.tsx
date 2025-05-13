@@ -53,19 +53,30 @@ const AdminUsersPage = () => {
   };
 
   const handleDeleteUser = async (userId: number) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+  if (!confirm('Are you sure you want to delete this user?')) return;
 
-    const res = await fetch(`${API_BASE_URL}/api/auth/user/${userId}`, {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/users/${userId}`, {
       method: 'DELETE',
       credentials: 'include',
     });
 
-    if (res.ok) {
-      setUsers(users.filter(user => user.id !== userId));
-    } else {
-      alert('Failed to delete user.');
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => null);
+      const message = errorData?.message || `Failed to delete user (status ${res.status})`;
+      alert(message);
+      return;
     }
-  };
+
+    const data = await res.json();
+    console.log(data.message); // "User deleted successfully"
+    setUsers(users.filter(user => user.id !== userId));
+  } catch (err) {
+    console.error("Delete user failed:", err);
+    alert("Something went wrong deleting the user.");
+  }
+};
+
 
   const handleLogout = () => {
     logout();
