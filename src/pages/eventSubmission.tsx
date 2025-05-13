@@ -420,6 +420,7 @@ if (!user) {
                   type="time"
                   id="end_time"
                   name="end_time"
+                  required
                   onChange={handleChange}
                   className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
                 />
