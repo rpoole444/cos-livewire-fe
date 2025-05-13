@@ -64,6 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [],
           profile_picture: profilePictureData.profile_picture_url || null,
         });
+        console.log("setUser payload:", {
+          ...data.user,
+          displayName: data.user.displayName ?? data.user.display_name
+        });
       }
     } catch (error) {
       console.error('Error fetching auth status:', error);
@@ -109,9 +113,15 @@ const login = async (email: string, password: string) => {
 
     setUser({
       ...data.user,
+      displayName: data.user.displayName,
       top_music_genres: genres,
       profile_picture: profileData.profile_picture_url,
     });
+
+console.log("setUser payload:", {
+  ...data.user,
+  displayName: data.user.displayName ?? data.user.display_name
+});
 
   } catch (error) {
     console.error("Login error:", error);
