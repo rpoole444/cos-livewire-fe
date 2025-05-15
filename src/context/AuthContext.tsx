@@ -61,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Set user state with all data at once
         setUser({
           ...data.user,
+          displayName: data.user.displayName ?? data.user.display_name ?? '', 
           top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [],
           profile_picture: profilePictureData.profile_picture_url || null,
         });
@@ -113,7 +114,7 @@ const login = async (email: string, password: string) => {
 
     setUser({
       ...data.user,
-      displayName: data.user.displayName,
+      displayName: data.user.displayName ?? data.user.display_name ?? '', 
       top_music_genres: genres,
       profile_picture: profileData.profile_picture_url,
     });
