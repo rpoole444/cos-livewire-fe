@@ -54,6 +54,7 @@ const EventSubmission = () => {
   const { user, logout } = useAuth();
   const router = useRouter();
   const locationInputRef = useRef<HTMLInputElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     if (window.google) {
@@ -185,6 +186,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   }
 
   try {
+     setIsSubmitting(true); 
     let ticketPriceValue = eventData.ticketPrice;
 
 // Use custom ticket price if "Other" is selected
@@ -239,6 +241,8 @@ if (ticketPriceValue === 'Other' && eventData.customTicketPrice?.trim()) {
     }, 3000);
   } catch (error) {
     console.error('There was an error submitting the event:', error);
+  } finally {
+    setIsSubmitting(false);         
   }
 };
 
@@ -298,11 +302,22 @@ if (!user) {
         <h1 className="text-2xl font-bold">{user.first_name}, Let&apos;s get your event out there!!</h1>
         <p className="text-md mt-2">Fill out our Submission Form!</p>
       </div>
-      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 relative">
         <p className="text-gray-700 text-base mb-4">
           Please fill out the form below with your event details.
           Make sure to include all required fields so we can add your event to our online calendar and help you promote your event!!
         </p>
+        {isSubmitting && (
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center rounded-md z-10">
+            <svg className="animate-spin h-10 w-10 text-indigo-600"
+                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10"
+                      stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="mt-6 w-full max-w-2xl mx-auto space-y-6">
           {/* 📝 Event Info */}
           <div>
@@ -545,24 +560,49 @@ if (!user) {
 
           {/* ✅ Submit Buttons */}
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-10">
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition duration-200"
-            >
-              Submit Event
-            </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`relative bg-indigo-600 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition
+                        ${isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-indigo-700'}`}
+          >
+            {isSubmitting ? (
+              <>
+                <svg
+                  className="animate-spin h-5 w-5 mr-2 inline-block"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10"
+                          stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+                Submitting…
+              </>
+            ) : (
+              'Submit Event'
+            )}
+          </button>
 
-            <Link href="/" className="text-indigo-600 hover:text-indigo-800 font-medium underline">
+
+            <Link
+              href="/"
+              className={`text-indigo-600 font-medium underline
+                          ${isSubmitting ? 'pointer-events-none opacity-40' : 'hover:text-indigo-800'}`}
+            >
               Back to Homepage
             </Link>
 
             <button
               type="button"
               onClick={handleLogout}
-              className="text-red-500 hover:underline mt-2 sm:mt-0"
+              disabled={isSubmitting}
+              className={`text-red-500 hover:underline mt-2 sm:mt-0
+                          ${isSubmitting && 'opacity-40 cursor-not-allowed'}`}
             >
               Logout
             </button>
+
           </div>
         </form>
 
