@@ -23,19 +23,27 @@ const res = await fetch(`${API_BASE_URL}/api/events`, {
   return sortedEvents
 }
 
-const fetchEventDetails = async (eventId:number) => {
+const fetchEventDetails = async (eventId: number) => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+      credentials: 'include',
+    });
 
-      const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
-    credentials: 'include', // Include credentials
-  });
-     
-      if (!res.ok) {
-    throw new Error('Failed to fetch data')
+    if (!res.ok) {
+      console.error('Fetch failed with status:', res.status);
+      return null;
+    }
+
+    const data = await res.json();
+    console.log('EVENT DATA:', data);
+
+    return data;
+  } catch (err) {
+    console.error('Error fetching event details:', err);
+    return null;
   }
-      const data = await res.json();
-      console.log("EVENT DATA: ", data)
-      return data
-    };
+};
+
 
 async function registerUser(firstName: string, lastName: string, displayName: string, email: string, password: string, description: string, genres: string[]) {
   try {

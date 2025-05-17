@@ -181,25 +181,25 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const id = Number(context.params?.eventId);
 
   try {
-    const [event, events] = await Promise.all([
-      fetchEventDetails(id),
-      getEvents().then((all: Event[]) =>
-        all.filter((e: Event) => e.is_approved)
-      ),
-    ]);
+    const event = await fetchEventDetails(id);
+    const allEvents = await getEvents();
+
+    if (!event || !event.id) {
+      console.warn('No event found or invalid response');
+      return { notFound: true };
+    }
 
     return {
       props: {
         event,
-        events,
+        events: allEvents.filter((e:Event) => e.is_approved),
       },
     };
   } catch (err) {
-    console.error('Error in getServerSideProps:', err);
-    return {
-      notFound: true,
-    };
+    console.error('getServerSideProps failed:', err);
+    return { notFound: true };
   }
 };
+
 
 export default EventDetailPage;
