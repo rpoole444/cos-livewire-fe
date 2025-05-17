@@ -85,43 +85,47 @@ export function useHomeState(): HomeState {
   });
 
   // Persist state changes to localStorage and the URL
-  useEffect(() => {
-    if (!isBrowser || !router.isReady) return;
-  
-    // Skip replace on dynamic route like /eventRouter/[eventId]
-    if (router.pathname.includes('[eventId]') || router.asPath.includes('/eventRouter/')) return;
-  
-    const formattedDate = selectedDate.format('YYYY-MM-DD');
-  
-    // Save to localStorage
-    safeSet('agg_date', formattedDate);
-    safeSet('agg_view', filterMode);
-    safeSet('agg_search', searchQuery);
-    safeSet('agg_last_reset', dayjs().toISOString());
-  
-    // Only update the router if query values actually changed
-    const current = router.query;
-    const needsUpdate =
-      current.date !== formattedDate ||
-      current.view !== filterMode ||
-      current.q !== searchQuery;
-  
-    if (needsUpdate) {
-      router.replace(
-        {
-          pathname: router.pathname,
-          query: {
-            ...router.query,
-            date: formattedDate,
-            view: filterMode,
-            q: searchQuery || undefined,
-          },
+  // Persist state changes to localStorage and the URL
+useEffect(() => {
+  if (!isBrowser || !router.isReady) return;
+
+  // ⛔ pages where we must NOT touch the URL
+  const isEventDetail = router.pathname.includes('[eventId]') || router.asPath.includes('/eventRouter/');
+  const isEditPage    = router.pathname.includes('[editId]')  || router.asPath.includes('/events/edit/');
+
+  if (isEventDetail || isEditPage) return;   // 👈 added isEditPage
+
+  const formattedDate = selectedDate.format('YYYY-MM-DD');
+
+  // save to localStorage
+  safeSet('agg_date',  formattedDate);
+  safeSet('agg_view',  filterMode);
+  safeSet('agg_search', searchQuery);
+  safeSet('agg_last_reset', dayjs().toISOString());
+
+  // only update the URL if something actually changed
+  const needsUpdate =
+    router.query.date !== formattedDate ||
+    router.query.view !== filterMode   ||
+    router.query.q    !== searchQuery;
+
+  if (needsUpdate) {
+    router.replace(
+      {
+        pathname: router.pathname,
+        query: {
+          ...router.query,
+          date: formattedDate,
+          view: filterMode,
+          q: searchQuery || undefined,
         },
-        undefined,
-        { shallow: true }
-      );
-    }
-  }, [selectedDate, filterMode, searchQuery, router]);
+      },
+      undefined,
+      { shallow: true }
+    );
+  }
+}, [selectedDate, filterMode, searchQuery, router]);
+
   
 
   return {
