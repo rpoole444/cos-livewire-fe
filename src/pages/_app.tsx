@@ -1,27 +1,24 @@
-import React from 'react';
-import { AppProps } from 'next/app';
-import { AuthProvider } from '../context/AuthContext';
-import '../styles/globals.css';
+import React            from 'react';
+import type { AppProps } from 'next/app';
 
-import ClientOnly        from '@/components/ClientOnly';
-import Header            from '@/components/Header';   // persistent, needs user
+import { AuthProvider } from '@/context/AuthContext';
+import ClientOnly       from '@/components/ClientOnly';
+import Header           from '@/components/Header';
 
 import '@/styles/globals.css';
 
-/* simple global logging – optional */
+/* optional: simple global loggers */
 if (typeof window !== 'undefined') {
-  window.addEventListener('error',               e => console.log('🔥 Global',   e.error));
-  window.addEventListener('unhandledrejection',  e => console.log('🔥 Promise',  e.reason));
+  window.addEventListener('error',              e => console.log('🔥 Global ',  e.error));
+  window.addEventListener('unhandledrejection', e => console.log('🔥 Promise', e.reason));
 }
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ClientOnly>
       <AuthProvider>
-        <Header />
         <Component {...pageProps} />
       </AuthProvider>
     </ClientOnly>
   );
 }
-
