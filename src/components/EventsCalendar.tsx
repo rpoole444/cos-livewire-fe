@@ -4,7 +4,6 @@ import { generateDate, months } from "../util/calendar";
 import cn from "../util/cn";
 import { GrFormNext, GrFormPrevious } from "react-icons/gr";
 import { Event } from "@/interfaces/interfaces";
-import Link from "next/link";
 import { parseLocalDayjs } from "@/util/dateHelper";
 
 interface CalendarProps {

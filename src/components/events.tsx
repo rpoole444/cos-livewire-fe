@@ -43,20 +43,22 @@ const Events: React.FC<EventsProps> = ({ events }) => {
       <div className="max-h-screen overflow-y-auto">
         {events && events.length > 0 ? (
           <ul className="space-y-6">
-            {events.map((event) => (
-              <li key={event.id}>
-                <Link href={`/eventRouter/${event.id}`} passHref>
-                  <a className="block"> {/* gives the child a clickable wrapper */}
-                    <EventCard
-                      event={event}
-                      handleDelete={isAdmin ? handleDelete : undefined}
-                      user={user}
-                    />
-                  </a>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {events.map(event => (
+            <li key={event.id}>
+              {/* ⬇️  <Link> gets the classes that used to be on <a> */}
+              <Link
+                href={`/eventRouter/${event.id}`}
+                className="block"        /* makes the whole card clickable */
+              >
+                <EventCard
+                  event={event}
+                  handleDelete={isAdmin ? handleDelete : undefined}
+                  user={user}
+                />
+              </Link>
+            </li>
+          ))}
+        </ul>
         ) : (
           <div className="text-center text-white flex flex-col items-center justify-center py-10">
             <AiOutlineCalendar size={48} className="mb-4" />
