@@ -38,7 +38,7 @@ const WelcomeUser = () => {
               ⚙️ Admin Settings
             </Link>
             <Link
-              href="/AdminService"
+              href="/adminservice"
               className="w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition"
             >
               ✅ Review Events
