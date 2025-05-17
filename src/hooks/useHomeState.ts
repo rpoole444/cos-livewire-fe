@@ -1,11 +1,9 @@
 import { useRouter } from 'next/router';
-import { useState, useEffect, Dispatch, SetStateAction } from 'react';
+import { useState, useEffect, useRef, Dispatch, SetStateAction } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 
-/* ── calendar view options ─────────────────────────────────────── */
 export type FilterMode = 'day' | 'week' | 'all';
 
-/* what consumers receive */
 export interface HomeState {
   selectedDate: Dayjs;
   setSelectedDate: Dispatch<SetStateAction<Dayjs>>;
@@ -15,32 +13,42 @@ export interface HomeState {
   setSearchQuery: Dispatch<SetStateAction<string>>;
 }
 
-/* ── runtime guards ────────────────────────────────────────────── */
 const isFilterMode = (v: unknown): v is FilterMode =>
   v === 'day' || v === 'week' || v === 'all';
 
 const isISODate = (v: unknown): v is string =>
   typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
-/* ── safe storage helpers (no-op on server) ────────────────────── */
 const isBrowser = typeof window !== 'undefined';
 
 const safeGet = (key: string): string | null =>
-  isBrowser ? window.localStorage.getItem(key) : null;
+  isBrowser ? localStorage.getItem(key) : null;
 
 const safeSet = (key: string, val: string) => {
-  if (isBrowser) window.localStorage.setItem(key, val);
+  if (isBrowser) localStorage.setItem(key, val);
 };
 
-/**
- * Persist calendar date, view, and search in URL + localStorage.
- * LocalStorage keys: agg_date, agg_view, agg_search
- */
+const HOURS_BEFORE_RESET = 3;
+
 export function useHomeState(): HomeState {
   const router = useRouter();
 
-  /* ── hydrate on first render ─────────────────────────────────── */
+  // Determine once whether a reset is needed
+  const resetNeededRef = useRef<boolean>(false);
+  if (resetNeededRef.current === false) {
+    const lastReset = safeGet('agg_last_reset');
+    if (!lastReset) {
+      resetNeededRef.current = true;
+    } else {
+      const then = dayjs(lastReset);
+      resetNeededRef.current = dayjs().diff(then, 'hour') >= HOURS_BEFORE_RESET;
+    }
+  }
+
+  // Initial state: selectedDate
   const [selectedDate, setSelectedDate] = useState<Dayjs>(() => {
+    if (resetNeededRef.current) return dayjs();
+
     const qp = router.query.date;
     const qd = Array.isArray(qp) ? qp[0] : qp;
     if (isISODate(qd)) return dayjs(qd);
@@ -48,10 +56,13 @@ export function useHomeState(): HomeState {
     const ls = safeGet('agg_date');
     if (isISODate(ls)) return dayjs(ls);
 
-    return dayjs(); // today
+    return dayjs();
   });
 
+  // Initial state: filterMode
   const [filterMode, setFilterMode] = useState<FilterMode>(() => {
+    if (resetNeededRef.current) return 'day';
+
     const qp = router.query.view;
     const qv = Array.isArray(qp) ? qp[0] : qp;
     if (isFilterMode(qv)) return qv;
@@ -62,7 +73,10 @@ export function useHomeState(): HomeState {
     return 'day';
   });
 
+  // Initial state: searchQuery
   const [searchQuery, setSearchQuery] = useState<string>(() => {
+    if (resetNeededRef.current) return '';
+
     const qp = router.query.q;
     const qq = Array.isArray(qp) ? qp[0] : qp;
     if (typeof qq === 'string') return qq;
@@ -70,28 +84,29 @@ export function useHomeState(): HomeState {
     return safeGet('agg_search') ?? '';
   });
 
-  /* ── persist whenever state changes ──────────────────────────── */
+  // Persist state changes to localStorage and the URL
   useEffect(() => {
-    /* localStorage */
-    safeSet('agg_date', selectedDate.format('YYYY-MM-DD'));
+    const formattedDate = selectedDate.format('YYYY-MM-DD');
+
+    safeSet('agg_date', formattedDate);
     safeSet('agg_view', filterMode);
     safeSet('agg_search', searchQuery);
+    safeSet('agg_last_reset', dayjs().toISOString());
 
-    /* update URL only in browser (no SSR) */
-    if (isBrowser) {
+    if (isBrowser && router.isReady) {
       router.replace(
         {
-          pathname: router.pathname, // 🟢 Explicitly preserve the current dynamic route
+          pathname: router.pathname,
           query: {
             ...router.query,
-            date: selectedDate.format('YYYY-MM-DD'),
+            date: formattedDate,
             view: filterMode,
-            q: searchQuery || undefined, // drop if empty
+            q: searchQuery || undefined,
           },
         },
         undefined,
         { shallow: true }
-      )
+      );
     }
   }, [selectedDate, filterMode, searchQuery, router]);
 
