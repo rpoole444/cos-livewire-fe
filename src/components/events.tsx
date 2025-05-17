@@ -45,17 +45,12 @@ const Events: React.FC<EventsProps> = ({ events }) => {
           <ul className="space-y-6">
           {events.map(event => (
             <li key={event.id}>
-              {/* ⬇️  <Link> gets the classes that used to be on <a> */}
-              <Link
-                href={`/eventRouter/${event.id}`}
-                className="block"        /* makes the whole card clickable */
-              >
                 <EventCard
                   event={event}
+                  handleCardClick={(id) => router.push(`/eventRouter/${id}`)}
                   handleDelete={isAdmin ? handleDelete : undefined}
                   user={user}
                 />
-              </Link>
             </li>
           ))}
         </ul>
