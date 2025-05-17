@@ -6,6 +6,14 @@ const nextConfig = {
    images: {
      domains: ['alpinegg-posters.s3.us-east-2.amazonaws.com'],
    },
+   async rewrites() {
+    return [
+      {
+        source: '/adminservice',
+        destination: '/AdminService',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
