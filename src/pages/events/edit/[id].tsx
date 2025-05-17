@@ -7,19 +7,32 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const EditEventPage = () => {
   const router = useRouter();
   const { id } = router.query;
+
+  if (!router.isReady || !id) {
+    return <div className="text-white p-6">Loading event data...</div>;
+  }
   const [eventData, setEventData] = useState<Event | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [removePoster, setRemovePoster] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      fetch(`${API_BASE_URL}/api/events/${id}`, { credentials: 'include' })
-        .then(res => res.json())
-        .then(data => setEventData(data))
-        .catch(err => console.error('Error loading event:', err));
-    }
-  }, [id]);
+    if (!router.isReady || !id) return;
+  
+    const fetchEvent = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/events/${id}`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch event');
+        const data = await res.json();
+        setEventData(data);
+      } catch (err) {
+        console.error('Error loading event:', err);
+      }
+    };
+  
+    fetchEvent();
+  }, [router.isReady, id]);
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
