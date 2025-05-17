@@ -40,7 +40,6 @@ const Events: React.FC<EventsProps> = ({ events }) => {
 
   return (
     <div className="bg-gray-900 p-6 rounded-lg shadow-lg min-h-screen flex flex-col">
-      <div className="max-h-screen overflow-y-auto">
         {events && events.length > 0 ? (
           <ul className="space-y-6">
           {events.map(event => (
@@ -61,7 +60,6 @@ const Events: React.FC<EventsProps> = ({ events }) => {
             <Image src="/trumpet.png" alt="Trumpet" width={200} height={200} priority />
           </div>
         )}
-      </div>
     </div>
   );
 };
