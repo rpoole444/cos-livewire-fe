@@ -35,13 +35,13 @@ const WelcomeUser = () => {
               href="/AdminUsersPage"
               className="w-full text-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-md transition"
             >
-              ⚙️ Admin Settings
+               Manage Admin Users
             </Link>
             <Link
               href="/adminservice"
               className="w-full text-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition"
             >
-              ✅ Review Events
+               Review & Approve Events
             </Link>
           </>
         )}
