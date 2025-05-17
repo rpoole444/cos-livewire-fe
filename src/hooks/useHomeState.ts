@@ -84,48 +84,47 @@ export function useHomeState(): HomeState {
     return safeGet('agg_search') ?? '';
   });
 
-  // Persist state changes to localStorage and the URL
-  // Persist state changes to localStorage and the URL
-useEffect(() => {
-  if (!isBrowser || !router.isReady) return;
-
-  // ⛔ pages where we must NOT touch the URL
-  const isEventDetail = router.pathname.includes('[eventId]') || router.asPath.includes('/eventRouter/');
-  const isEditPage    = router.pathname.includes('[editId]')  || router.asPath.includes('/events/edit/');
-
-  if (isEventDetail || isEditPage) return;   // 👈 added isEditPage
-
-  const formattedDate = selectedDate.format('YYYY-MM-DD');
-
-  // save to localStorage
-  safeSet('agg_date',  formattedDate);
-  safeSet('agg_view',  filterMode);
-  safeSet('agg_search', searchQuery);
-  safeSet('agg_last_reset', dayjs().toISOString());
-
-  // only update the URL if something actually changed
-  const needsUpdate =
-    router.query.date !== formattedDate ||
-    router.query.view !== filterMode   ||
-    router.query.q    !== searchQuery;
-
-  if (needsUpdate) {
-    router.replace(
-      {
-        pathname: router.pathname,
-        query: {
-          ...router.query,
-          date: formattedDate,
-          view: filterMode,
-          q: searchQuery || undefined,
+  useEffect(() => {
+    if (!isBrowser || !router.isReady) return;
+  
+    // ✅ Only the home / calendar pages may rewrite the URL
+    const isCalendarPage =
+      router.pathname === '/' ||      // landing calendar
+      router.pathname === '/calendar';
+  
+    if (!isCalendarPage) return;      // ← do nothing on detail/edit pages
+  
+    const formattedDate = selectedDate.format('YYYY-MM-DD');
+  
+    // ── persist to localStorage ────────────────────────────
+    safeSet('agg_date',  formattedDate);
+    safeSet('agg_view',  filterMode);
+    safeSet('agg_search', searchQuery);
+    safeSet('agg_last_reset', dayjs().toISOString());
+  
+    // ── only touch router if something changed ─────────────
+    const needsUpdate =
+      router.query.date !== formattedDate ||
+      router.query.view !== filterMode   ||
+      router.query.q    !== searchQuery;
+  
+    if (needsUpdate) {
+      router.replace(
+        {
+          pathname: router.pathname,
+          query: {
+            ...router.query,
+            date: formattedDate,
+            view: filterMode,
+            q: searchQuery || undefined,  // drop when empty
+          },
         },
-      },
-      undefined,
-      { shallow: true }
-    );
-  }
-}, [selectedDate, filterMode, searchQuery, router]);
-
+        undefined,
+        { shallow: true }
+      );
+    }
+  }, [selectedDate, filterMode, searchQuery, router]);
+  
   
 
   return {
