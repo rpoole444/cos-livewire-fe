@@ -85,6 +85,16 @@ const EventDetailPage = ({ event, events }: Props) => {
         <main className="container mx-auto p-6 lg:flex gap-8">
           <section className="flex-1">
             <EventCard event={event} />
+             {/* edit-button for owner or admin */}
+            {user && (user.id === event.user_id || user.is_admin) && (
+              <Link href={`/events/edit/${event.id}`} passHref>
+                <button
+                  className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md shadow"
+                >
+                  Edit Event
+                </button>
+              </Link>
+            )}
             <div className="flex flex-wrap gap-3 mt-6 items-center">
               <button
                 onClick={getDirections}
