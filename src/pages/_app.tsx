@@ -16,16 +16,12 @@ if (typeof window !== 'undefined') {
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <AuthProvider>
-      {/* browser-only, persistent UI */}
-      <ClientOnly>
+    <ClientOnly>
+      <AuthProvider>
         <Header />
-        {/* <ToastContainer />  if you have one */}
-      </ClientOnly>
-
-      {/* every routed page */}
-      <Component {...pageProps} />
-    </AuthProvider>
+        <Component {...pageProps} />
+      </AuthProvider>
+    </ClientOnly>
   );
 }
 
