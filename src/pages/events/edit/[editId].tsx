@@ -2,69 +2,73 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Event } from '@/interfaces/interfaces';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const EditEventPage = () => {
+  /* ── router + URL param ────────────────────────────── */
   const router = useRouter();
-  const { id } = router.query;
+  const { editId } = router.query;          // ← string | string[] | undefined
 
+  /* ── local state (hooks MUST be first) ─────────────── */
   const [eventData, setEventData] = useState<Event | null>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const [file,       setFile]       = useState<File | null>(null);
   const [removePoster, setRemovePoster] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
+  /* ── fetch event once router & param are ready ─────── */
   useEffect(() => {
-    if (!router.isReady || !id) return;
-    
-    const fetchEvent = async () => {
+    if (!router.isReady || typeof editId !== 'string') return;
+
+    (async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/events/${id}`, { credentials: 'include' });
+        const res  = await fetch(`${API_BASE_URL}/api/events/${editId}`, {
+          credentials: 'include',
+        });
         if (!res.ok) throw new Error('Failed to fetch event');
         const data = await res.json();
         setEventData(data);
       } catch (err) {
         console.error('Error loading event:', err);
       }
-    };
-    
-    fetchEvent();
-  }, [router.isReady, id]);
-  
-  if (!router.isReady || !id) {
-    return <div className="text-white p-6">Loading event data...</div>;
-  }
+    })();
+  }, [router.isReady, editId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  /* ── early-return placeholders (after hooks) ───────── */
+  if (!router.isReady || typeof editId !== 'string')
+    return <div className="text-white p-6">Loading event data…</div>;
+
+  if (!eventData)
+    return <div className="text-white p-6">Loading event…</div>;
+
+  /* ── helpers ───────────────────────────────────────── */
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setEventData(prev => prev ? { ...prev, [name]: value } : null);
+    setEventData((prev) => (prev ? { ...prev, [name]: value } : prev));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!eventData) return;
 
     const formData = new FormData();
-    Object.entries(eventData).forEach(([key, value]) => {
-      if (typeof value === 'string') formData.append(key, value);
-    });
-
+    Object.entries(eventData).forEach(([k, v]) =>
+      formData.append(k, String(v ?? ''))
+    );
     formData.append('removePoster', String(removePoster));
     if (file) formData.append('poster', file);
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/events/${editId}`, {
         method: 'PUT',
         body: formData,
         credentials: 'include',
       });
 
-      if (res.ok) {
-        router.push('/AdminServices'); // or wherever you want to redirect
-      } else {
-        const err = await res.json();
-        alert(`Error: ${err.message}`);
-      }
+      if (res.ok) router.push('/AdminServices');
+      else alert(`Error: ${(await res.json()).message}`);
     } catch (err) {
       console.error('Update failed:', err);
     } finally {
@@ -72,8 +76,7 @@ const EditEventPage = () => {
     }
   };
 
-  if (!eventData) return <div className="text-white p-6">Loading...</div>;
-
+  /* ── render form ───────────────────────────────────── */
   return (
     <div className="p-6 max-w-2xl mx-auto text-white">
       <h1 className="text-2xl font-bold mb-6">Edit Event</h1>
@@ -82,7 +85,7 @@ const EditEventPage = () => {
         {/* Title */}
         <input
           name="title"
-          value={eventData.title}
+          value={eventData.title ?? ''}
           onChange={handleChange}
           placeholder="Title"
           className="w-full p-2 bg-gray-900 border border-gray-700 rounded"
@@ -91,7 +94,7 @@ const EditEventPage = () => {
         {/* Description */}
         <textarea
           name="description"
-          value={eventData.description}
+          value={eventData.description ?? ''}
           onChange={handleChange}
           placeholder="Description"
           rows={4}
@@ -101,7 +104,7 @@ const EditEventPage = () => {
         {/* Location */}
         <input
           name="location"
-          value={eventData.location}
+          value={eventData.location ?? ''}
           onChange={handleChange}
           placeholder="Location"
           className="w-full p-2 bg-gray-900 border border-gray-700 rounded"
@@ -111,7 +114,7 @@ const EditEventPage = () => {
         <input
           type="date"
           name="date"
-          value={eventData.date?.split('T')[0] || ''}
+          value={eventData.date?.split('T')[0] ?? ''}
           onChange={handleChange}
           className="w-full p-2 bg-gray-900 border border-gray-700 rounded"
         />
@@ -121,14 +124,14 @@ const EditEventPage = () => {
           <input
             type="time"
             name="start_time"
-            value={eventData.start_time}
+            value={eventData.start_time ?? ''}
             onChange={handleChange}
             className="p-2 bg-gray-900 border border-gray-700 rounded"
           />
           <input
             type="time"
             name="end_time"
-            value={eventData.end_time}
+            value={eventData.end_time ?? ''}
             onChange={handleChange}
             className="p-2 bg-gray-900 border border-gray-700 rounded"
           />
@@ -137,16 +140,16 @@ const EditEventPage = () => {
         {/* Genre */}
         <input
           name="genre"
-          value={eventData.genre}
+          value={eventData.genre ?? ''}
           onChange={handleChange}
           placeholder="Genre"
           className="w-full p-2 bg-gray-900 border border-gray-700 rounded"
         />
 
-        {/* Ticket Price */}
+        {/* Ticket Price (string-coerce) */}
         <input
           name="ticket_price"
-          value={eventData.ticket_price}
+          value={`${eventData.ticket_price ?? ''}`}
           onChange={handleChange}
           placeholder="Ticket Price"
           className="w-full p-2 bg-gray-900 border border-gray-700 rounded"
@@ -155,13 +158,13 @@ const EditEventPage = () => {
         {/* Website Link */}
         <input
           name="website_link"
-          value={eventData.website_link}
+          value={eventData.website_link ?? ''}
           onChange={handleChange}
           placeholder="Website / Ticket Link"
           className="w-full p-2 bg-gray-900 border border-gray-700 rounded"
         />
 
-        {/* Poster */}
+        {/* Poster preview + remove checkbox */}
         {eventData.poster && !removePoster && (
           <div className="mt-4">
             <p className="text-sm text-gray-400 mb-2">Current Poster:</p>
@@ -183,8 +186,11 @@ const EditEventPage = () => {
           </div>
         )}
 
+        {/* Upload new poster */}
         <div>
-          <label className="text-sm font-medium text-gray-300 block mb-1">Upload New Poster</label>
+          <label className="text-sm font-medium text-gray-300 block mb-1">
+            Upload New Poster
+          </label>
           <input
             type="file"
             accept="image/*"
@@ -198,7 +204,7 @@ const EditEventPage = () => {
           disabled={isSubmitting}
           className="bg-green-600 hover:bg-green-700 py-2 px-4 rounded text-white"
         >
-          {isSubmitting ? 'Saving...' : 'Save Changes'}
+          {isSubmitting ? 'Saving…' : 'Save Changes'}
         </button>
       </form>
     </div>
