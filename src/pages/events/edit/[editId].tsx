@@ -2,7 +2,8 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Event } from '@/interfaces/interfaces';
-
+import Header from '@/components/Header';
+import Link from 'next/link';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const EditEventPage = () => {
@@ -86,6 +87,18 @@ const EditEventPage = () => {
   /* ── render form ───────────────────────────────────── */
   return (
     <div className="p-6 max-w-2xl mx-auto text-white">
+      <div className="min-h-screen bg-gray-900 text-white">
+        <Header />
+
+      <div className="px-6 pt-2">
+        <Link href="/" passHref>
+          <span className="text-sm text-yellow-300 hover:underline">
+            ← Back&nbsp;to&nbsp;All&nbsp;Events
+          </span>
+        </Link>
+      </div>
+
+     <div className="p-6 max-w-2xl mx-auto"></div>
       <h1 className="text-2xl font-bold mb-6">Edit Event</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -214,6 +227,7 @@ const EditEventPage = () => {
           {isSubmitting ? 'Saving…' : 'Save Changes'}
         </button>
       </form>
+      </div>
     </div>
   );
 };
