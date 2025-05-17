@@ -20,6 +20,7 @@ export interface CustomEvent {
   recurrence?: string,
   repeatCount?: number,
   is_approved: boolean
+  user_id: number; 
 }
 
 // interfaces.ts
@@ -49,6 +50,7 @@ export interface Event extends CustomEvent {
     last_name: string;
     email: string;
   };
+  user_id: number; 
 }
 
 interface User {

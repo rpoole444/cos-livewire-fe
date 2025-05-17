@@ -9,6 +9,12 @@ import { deleteEvent } from '@/pages/api/route';
 
 interface EventsProps {
   events: CustomEvent[];
+  handleCardClick?: (id: number) => void;
+  handleDelete?: (id: number) => void;
+  user?: {
+    id: number;
+    is_admin: boolean;
+  };
 }
 
 const Events: React.FC<EventsProps> = ({ events }) => {
@@ -42,6 +48,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
                   event={event}
                   handleCardClick={handleCardClick}
                   handleDelete={isAdmin ? handleDelete : undefined}
+                  user={user}
                 />
               </li>
             ))}

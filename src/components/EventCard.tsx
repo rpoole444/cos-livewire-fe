@@ -1,12 +1,14 @@
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useState,  } from "react";
 import Image from "next/image";
 import { Event } from "@/interfaces/interfaces";
-
+import { useRouter } from 'next/router';
+import { UserType } from "@/types";
 interface EventCardProps {
   event: Event;
   handleCardClick?: (id: number) => void;
   handleDelete?: (id: number) => void; 
+  user?: UserType | null
 }
 
 const formatDate = (dateString: string) => {
@@ -38,9 +40,10 @@ const formatTime = (timeString: string) => {
   }
 };
 
-const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick, handleDelete }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick, handleDelete, user }) => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const toggleDescription = () => setShowFullDescription(!showFullDescription);
+  const router = useRouter();
 
   const descriptionTooLong = event.description && event.description.length > 200;
 
@@ -149,6 +152,18 @@ const EventCard: React.FC<EventCardProps> = ({ event, handleCardClick, handleDel
           Delete Event
         </button>
       )}
+      {user && (user.id === event.user_id || user.is_admin) && (
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      router.push(`/events/edit/${event.id}`);
+    }}
+    className="mt-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition"
+  >
+    Edit Event
+  </button>
+)}
+
     </div>
   );
 };
