@@ -8,17 +8,14 @@ const EditEventPage = () => {
   const router = useRouter();
   const { id } = router.query;
 
-  if (!router.isReady || !id) {
-    return <div className="text-white p-6">Loading event data...</div>;
-  }
   const [eventData, setEventData] = useState<Event | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [removePoster, setRemovePoster] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  
   useEffect(() => {
     if (!router.isReady || !id) return;
-  
+    
     const fetchEvent = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/api/events/${id}`, { credentials: 'include' });
@@ -29,10 +26,13 @@ const EditEventPage = () => {
         console.error('Error loading event:', err);
       }
     };
-  
+    
     fetchEvent();
   }, [router.isReady, id]);
   
+  if (!router.isReady || !id) {
+    return <div className="text-white p-6">Loading event data...</div>;
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
