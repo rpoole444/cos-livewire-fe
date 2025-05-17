@@ -86,14 +86,27 @@ export function useHomeState(): HomeState {
 
   // Persist state changes to localStorage and the URL
   useEffect(() => {
+    if (!isBrowser || !router.isReady) return;
+  
+    // Skip replace on dynamic route like /eventRouter/[eventId]
+    if (router.pathname.includes('[eventId]') || router.asPath.includes('/eventRouter/')) return;
+  
     const formattedDate = selectedDate.format('YYYY-MM-DD');
-
+  
+    // Save to localStorage
     safeSet('agg_date', formattedDate);
     safeSet('agg_view', filterMode);
     safeSet('agg_search', searchQuery);
     safeSet('agg_last_reset', dayjs().toISOString());
-
-    if (isBrowser && router.isReady && !router.asPath.includes('[eventId]')) {
+  
+    // Only update the router if query values actually changed
+    const current = router.query;
+    const needsUpdate =
+      current.date !== formattedDate ||
+      current.view !== filterMode ||
+      current.q !== searchQuery;
+  
+    if (needsUpdate) {
       router.replace(
         {
           pathname: router.pathname,
@@ -108,8 +121,8 @@ export function useHomeState(): HomeState {
         { shallow: true }
       );
     }
-    
   }, [selectedDate, filterMode, searchQuery, router]);
+  
 
   return {
     selectedDate,
