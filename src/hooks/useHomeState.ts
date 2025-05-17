@@ -93,7 +93,7 @@ export function useHomeState(): HomeState {
     safeSet('agg_search', searchQuery);
     safeSet('agg_last_reset', dayjs().toISOString());
 
-    if (isBrowser && router.isReady) {
+    if (isBrowser && router.isReady && !router.asPath.includes('[eventId]')) {
       router.replace(
         {
           pathname: router.pathname,
@@ -108,6 +108,7 @@ export function useHomeState(): HomeState {
         { shallow: true }
       );
     }
+    
   }, [selectedDate, filterMode, searchQuery, router]);
 
   return {

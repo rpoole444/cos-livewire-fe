@@ -181,16 +181,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
   const id = Number(context.params?.eventId);
 
   if (!id || isNaN(id)) {
-    console.warn('Invalid or missing eventId:', id);
+    console.warn('Invalid or missing eventId:', context.params?.eventId);
     return { notFound: true };
   }
 
   try {
     const event = await fetchEventDetails(id);
     const allEvents = await getEvents();
+    console.log("Server request for eventId:", context.params?.eventId);
 
     if (!event || typeof event.id !== 'number') {
-      console.warn('Invalid event response:', event);
+      console.warn('Invalid event response');
       return { notFound: true };
     }
 
@@ -205,8 +206,5 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return { notFound: true };
   }
 };
-
-
-
 
 export default EventDetailPage;
