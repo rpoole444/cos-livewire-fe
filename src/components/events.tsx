@@ -39,7 +39,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
   };
 
   return (
-    <div className="bg-gray-900 p-6 rounded-lg shadow-lg">
+    <div className="bg-gray-900 p-6 rounded-lg shadow-lg min-h-screen flex flex-col">
       <div className="max-h-screen overflow-y-auto">
         {events && events.length > 0 ? (
           <ul className="space-y-6">
