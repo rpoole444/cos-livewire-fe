@@ -81,6 +81,7 @@ export function useHomeState(): HomeState {
     if (isBrowser) {
       router.replace(
         {
+          pathname: router.pathname, // 🟢 Explicitly preserve the current dynamic route
           query: {
             ...router.query,
             date: selectedDate.format('YYYY-MM-DD'),
@@ -90,7 +91,7 @@ export function useHomeState(): HomeState {
         },
         undefined,
         { shallow: true }
-      );
+      )
     }
   }, [selectedDate, filterMode, searchQuery, router]);
 
