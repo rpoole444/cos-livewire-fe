@@ -2,6 +2,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Event } from '@/interfaces/interfaces';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const EditEventPage = () => {
   const router = useRouter();
@@ -13,7 +14,7 @@ const EditEventPage = () => {
 
   useEffect(() => {
     if (id) {
-      fetch(`/api/events/${id}`, { credentials: 'include' })
+      fetch(`${API_BASE_URL}/api/events/${id}`, { credentials: 'include' })
         .then(res => res.json())
         .then(data => setEventData(data))
         .catch(err => console.error('Error loading event:', err));
@@ -39,7 +40,7 @@ const EditEventPage = () => {
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`/api/events/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/events/${id}`, {
         method: 'PUT',
         body: formData,
         credentials: 'include',
