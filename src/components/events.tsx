@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { deleteEvent } from '@/pages/api/route';
+import Link from 'next/link'; // ← Add this
 
 interface EventsProps {
   events: CustomEvent[];
@@ -44,12 +45,15 @@ const Events: React.FC<EventsProps> = ({ events }) => {
           <ul className="space-y-6">
             {events.map((event) => (
               <li key={event.id}>
-                <EventCard
-                  event={event}
-                  handleCardClick={handleCardClick}
-                  handleDelete={isAdmin ? handleDelete : undefined}
-                  user={user}
-                />
+                <Link href={`/eventRouter/${event.id}`} passHref>
+                  <a className="block"> {/* gives the child a clickable wrapper */}
+                    <EventCard
+                      event={event}
+                      handleDelete={isAdmin ? handleDelete : undefined}
+                      user={user}
+                    />
+                  </a>
+                </Link>
               </li>
             ))}
           </ul>
