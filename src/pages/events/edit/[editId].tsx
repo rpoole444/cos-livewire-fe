@@ -51,14 +51,14 @@ const EditEventPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     const formData = new FormData();
     Object.entries(eventData).forEach(([k, v]) =>
       formData.append(k, String(v ?? ''))
     );
     formData.append('removePoster', String(removePoster));
     if (file) formData.append('poster', file);
-
+  
     try {
       setIsSubmitting(true);
       const res = await fetch(`${API_BASE_URL}/api/events/${editId}`, {
@@ -66,15 +66,22 @@ const EditEventPage = () => {
         body: formData,
         credentials: 'include',
       });
-
-      if (res.ok) router.push('/AdminServices');
-      else alert(`Error: ${(await res.json()).message}`);
-    } catch (err) {
+  
+      if (res.ok) {
+        const updated = await res.json();          // ← updated event
+        router.push(`/eventRouter/${updated.id}`); // go to detail page
+      } else {
+        const { message } = await res.json();
+        alert(`Error: ${message}`);
+      }                 // ← this brace closes the if/else
+    } catch (err) {     // ← this brace closes the try
       console.error('Update failed:', err);
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  
 
   /* ── render form ───────────────────────────────────── */
   return (
