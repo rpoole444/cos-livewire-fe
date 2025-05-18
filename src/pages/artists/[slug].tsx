@@ -4,6 +4,8 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
+import Header from '@/components/Header';
+import Link from 'next/link';
 
 interface Event {
   id: number;
@@ -48,6 +50,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
       <div className="min-h-screen bg-gray-900 text-white p-6">
         <div className="max-w-4xl mx-auto space-y-6">
+          <Header/>
           <div className="flex flex-col md:flex-row gap-6 items-center">
             <Image
               src={artist.profile_image}
@@ -69,11 +72,13 @@ const ArtistProfilePage = ({ artist }: Props) => {
             {artist.events && artist.events.length > 0 ? (
               <ul className="space-y-4">
                 {artist.events.map(event => (
-                  <li key={event.id} className="bg-gray-800 p-4 rounded-lg shadow">
-                    <h3 className="text-lg font-bold text-gold">{event.title}</h3>
-                    <p className="text-gray-300">📅 {new Date(event.date).toLocaleDateString()}</p>
-                    <p className="text-gray-400">📍 {event.venue_name} - {event.location}</p>
-                    <p className="text-gray-400">🎵 {event.genre}</p>
+                  <li key={event.id} className="bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-700 transition">
+                    <Link href={`/eventRouter/${event.id}`} className="block cursor-pointer">
+                      <h3 className="text-lg font-bold text-gold">{event.title}</h3>
+                      <p className="text-gray-300">📅 {new Date(event.date).toLocaleDateString()}</p>
+                      <p className="text-gray-400">📍 {event.venue_name} - {event.location}</p>
+                      <p className="text-gray-400">🎵 {event.genre}</p>
+                    </Link>
                   </li>
                 ))}
               </ul>
