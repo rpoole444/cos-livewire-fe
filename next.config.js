@@ -15,6 +15,11 @@ const nextConfig = {
         destination: '/AdminService',
         permanent: true
       },
+      {
+        source: '/adminService', // ← Covers camelCase too
+        destination: '/AdminService',
+        permanent: true,
+      },
     ];
   },
 };
