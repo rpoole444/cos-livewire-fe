@@ -87,9 +87,17 @@ export default function ArtistSignupPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input name="display_name" placeholder="Display Name" value={form.display_name} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         
-        <input name="slug" placeholder="Custom URL Slug (e.g. your-name)" value={form.slug} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        <p className="text-sm text-gray-400">Your public profile will be at <code>/artists/{form.slug || 'your-slug'}</code></p>
-
+        <input
+          name="slug"
+          placeholder="URL Slug (e.g. reid-poole-quartet)"
+          value={form.slug}
+          onChange={handleChange}
+          className="w-full p-2 rounded bg-gray-800 border border-gray-600"
+        />
+        <p className="text-sm text-gray-400">
+          This becomes your public link: <code>/artists/{form.slug || 'your-slug'}</code>
+        </p>
+        
         <label className="block text-sm font-semibold">Upload Profile Image</label>
         <input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm" />
 
