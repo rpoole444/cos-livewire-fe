@@ -3,6 +3,7 @@ import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
+import { useAuth } from '@/context/AuthContext';
 
 interface Event {
   id: number;
@@ -16,6 +17,7 @@ interface Event {
 interface Artist {
   id: number;
   display_name: string;
+  user_id:number;
   bio: string;
   contact_email: string;
   profile_image: string;
@@ -29,6 +31,9 @@ interface Props {
 }
 
 const ArtistProfilePage = ({ artist }: Props) => {
+  const { user } = useAuth();
+  const canEdit = artist && user && (user.id === artist.user_id || user.is_admin);
+  
   const router = useRouter();
 
   if (!artist) return <div className="text-white p-6">Artist not found</div>;
@@ -75,6 +80,16 @@ const ArtistProfilePage = ({ artist }: Props) => {
             ) : (
               <p className="text-gray-400">No upcoming events listed.</p>
             )}
+
+            {canEdit && (
+              <button
+                onClick={() => router.push(`/artists/edit/${artist.slug}`)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mt-4"
+              >
+                ✏️ Edit Profile
+              </button>
+            )}
+
           </div>
         </div>
       </div>
