@@ -237,22 +237,22 @@ const UserProfile: React.FC = () => {
               >
                 Back to Home
               </button>
-              {hasArtistProfile ? (
-                <button
-                  onClick={() => router.push(`/artists/${artistSlug}`)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
-                >
-                  Alpine Pro Dashboard
-                </button>
-              ) : (
-                user?.is_admin && (
+
+                {user?.is_admin && !hasArtistProfile && (
                 <button
                   onClick={() => router.push("/artist-signup")}
                   className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold"
                 >
                   Create Pro Profile
                 </button>
-                )
+                )}
+                { hasArtistProfile && (
+                <button
+                  onClick={() => router.push(`/artists/${artistSlug}`)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
+                >
+                  Alpine Pro Dashboard
+                </button>
               )}
               {message && <div className="text-center text-sm text-red-400 mt-2">{message}</div>}
             </div>
