@@ -1,3 +1,5 @@
+const { truncate } = require('fs');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
    // 🚧  Disable React-Strict-Mode while we hunt the mismatch
@@ -11,6 +13,7 @@ const nextConfig = {
       {
         source: '/adminservice',
         destination: '/AdminService',
+        permanent: true
       },
     ];
   },
