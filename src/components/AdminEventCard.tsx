@@ -15,6 +15,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
   const [formattedDate, setFormattedDate] = useState('');
   const [formattedStartTime, setFormattedStartTime] = useState('');
   const [formattedEndTime, setFormattedEndTime] = useState('');
+  const [isApproving, setIsApproving] = useState(false);
 
   useEffect(() => {
     if (event.date) {
@@ -31,6 +32,15 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleApproveClick = async () => {
+    setIsApproving(true);
+    try {
+      await onApprove();
+    } finally {
+      setIsApproving(false);
+    }
   };
 
   const handleEditClick = () => setIsEditing(true);
@@ -236,11 +246,20 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
           </button>
         )}
         <button
-          onClick={onApprove}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md"
+          onClick={handleApproveClick}
+          className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md flex items-center justify-center min-w-[100px]"
+          disabled={isApproving}
         >
-          Approve
+          {isApproving ? (
+            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+          ) : (
+            "Approve"
+          )}
         </button>
+
         <button
           onClick={onDeny}
           className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
