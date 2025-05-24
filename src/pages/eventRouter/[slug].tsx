@@ -39,28 +39,11 @@ const EventDetailPage = ({ event, events }: Props) => {
   return (
     <>
       <Head>
-        <title>{event.title} | Alpine Groove Guide</title>
+  <title>{event.title} | Alpine Groove Guide</title>
+  <meta name="description" content={event.description?.slice(0, 150)} />
+  <link rel="canonical" href={`https://app.alpinegrooveguide.com/eventRouter/${event.slug}`} />
+</Head>
 
-        {/* Open Graph */}
-        <meta property="og:title" content={event.title} />
-        <meta property="og:description" content={event.description?.slice(0, 150) || 'Discover live music across Colorado with Alpine Groove Guide.'} />
-        <meta property="og:image" content={event.poster?.startsWith('http') ? event.poster : 'https://app.alpinegrooveguide.com/alpine_groove_guide_icon.png'} />
-        <meta property="og:image:type" content="image/jpeg" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:url" content={`https://app.alpinegrooveguide.com/share/${event.slug}`} />
-        <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="Alpine Groove Guide" />
-
-        {/* Twitter */}
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={event.title} />
-        <meta name="twitter:description" content={event.description?.slice(0, 150) || 'Discover live music across Colorado with Alpine Groove Guide.'} />
-        <meta name="twitter:image" content={event.poster?.startsWith('http') ? event.poster : 'https://app.alpinegrooveguide.com/alpine_groove_guide_icon.png'} />
-        <meta name="twitter:url" content={`https://app.alpinegrooveguide.com/share/${event.slug}`} />
-
-        <link rel="canonical" href={`https://app.alpinegrooveguide.com/share/${event.slug}`} />
-      </Head>
 
 
       <div className="min-h-screen bg-gray-900 text-white font-sans">
