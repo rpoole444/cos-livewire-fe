@@ -21,6 +21,7 @@ export interface CustomEvent {
   repeatCount?: number,
   is_approved: boolean
   user_id: number; 
+  slug:string;
 }
 
 // interfaces.ts
@@ -44,7 +45,8 @@ export interface Event extends CustomEvent {
   poster: string | null;
   recurrence?: string,
   repeatCount?: number,
-  is_approved: boolean
+  is_approved: boolean,
+  slug:string,
   user?: {
     first_name: string;
     last_name: string;

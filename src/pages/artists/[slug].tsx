@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import Link from 'next/link';
 
+
+
 interface Event {
   id: number;
   title: string;
@@ -14,6 +16,7 @@ interface Event {
   venue_name: string;
   location: string;
   genre: string;
+  slug: string;
 }
 
 interface Artist {
@@ -73,7 +76,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
               <ul className="space-y-4">
                 {artist.events.map(event => (
                   <li key={event.id} className="bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-700 transition">
-                    <Link href={`/eventRouter/${event.id}`} className="block cursor-pointer">
+                    <Link href={`/eventRouter/${event.slug}`} className="block cursor-pointer">
                       <h3 className="text-lg font-bold text-gold">{event.title}</h3>
                       <p className="text-gray-300">📅 {new Date(event.date).toLocaleDateString()}</p>
                       <p className="text-gray-400">📍 {event.venue_name} - {event.location}</p>

@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Script from "next/script";
+import { slugify } from '@/util/slugify'; // Adjust path if needed
 
 interface Event {
   title: string;
@@ -179,31 +180,33 @@ const generateRecurringDates = (startDateStr: string, frequency: string, count =
 
 const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   e.preventDefault();
-
+  
   if (!user) {
     console.error('No user logged in');
     return;
   }
-
+  
   try {
-     setIsSubmitting(true); 
+    setIsSubmitting(true); 
     let ticketPriceValue = eventData.ticketPrice;
-
-// Use custom ticket price if "Other" is selected
-if (ticketPriceValue === 'Other' && eventData.customTicketPrice?.trim()) {
-  ticketPriceValue = eventData.customTicketPrice.trim();
-} else if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
-  ticketPriceValue = ticketPriceValue;
-} else {
-  ticketPriceValue = `$${ticketPriceValue}`;
-}
-
-
+    
+    // Use custom ticket price if "Other" is selected
+    if (ticketPriceValue === 'Other' && eventData.customTicketPrice?.trim()) {
+      ticketPriceValue = eventData.customTicketPrice.trim();
+    } else if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
+      ticketPriceValue = ticketPriceValue;
+    } else {
+      ticketPriceValue = `$${ticketPriceValue}`;
+    }
+    
+    
     const count = Math.min(eventData.repeatCount || 1, 4); // Limit to 4
     const recurrenceDates = eventData.recurrence
-      ? generateRecurringDates(eventData.date, eventData.recurrence, count)
-      : [eventData.date];
-
+    ? generateRecurringDates(eventData.date, eventData.recurrence, count)
+    : [eventData.date];
+    
+    const fullSlug = `${slugify(eventData.title)}-${Date.now().toString(36)}`;
+    
     const formData = new FormData();
     formData.append('user_id', user.id.toString());
     formData.append('title', eventData.title);
@@ -224,6 +227,8 @@ if (ticketPriceValue === 'Other' && eventData.customTicketPrice?.trim()) {
     formData.append('venue_name', eventData.venue_name);
     formData.append('website', eventData.website);
     formData.append('recurrenceDates', JSON.stringify(recurrenceDates)); // ✅ new key
+    formData.append('slug', fullSlug);
+
     if (file) {
       formData.append('poster', file);
     }
@@ -236,7 +241,7 @@ if (ticketPriceValue === 'Other' && eventData.customTicketPrice?.trim()) {
 
     setSubmissionSuccess(true);
     setTimeout(() => {
-      router.push('/');
+      router.push(`/`); // ✅ Redirect to slug route
       setSubmissionSuccess(false);
     }, 3000);
   } catch (error) {
@@ -283,7 +288,9 @@ if (!user) {
     return (
       <div className="container mx-auto p-4">
         <h1 className="text-center text-2xl font-bold mb-6">
-          Submission successful! Redirecting to homepage...
+        ✅ Your event has been submitted!
+        <br />
+        You’ll receive an email when it's approved and live on the calendar.
         </h1>
       </div>
     );

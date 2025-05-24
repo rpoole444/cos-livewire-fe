@@ -46,7 +46,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
             <li key={event.id}>
                 <EventCard
                   event={event}
-                  handleCardClick={(id) => router.push(`/eventRouter/${id}`)}
+                  handleCardClick={(id) => router.push(`/eventRouter/${event.slug}`)}
                   handleDelete={isAdmin ? handleDelete : undefined}
                   user={user}
                 />

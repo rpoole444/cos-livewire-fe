@@ -12,6 +12,8 @@ import RegistrationForm from '@/components/registration';
 import { Event } from '@/interfaces/interfaces';
 import { useAuth } from '@/context/AuthContext';
 import { FaFacebookF, FaTwitter, FaLink, FaLocationArrow, FaShareAlt } from 'react-icons/fa';
+import { useRouter } from 'next/router';
+import { fetchEventDetailsBySlug } from '../api/route'; // or wherever you define it
 
 
 interface Props {
@@ -22,6 +24,7 @@ interface Props {
 const EventDetailPage = ({ event, events }: Props) => {
   const { user } = useAuth();
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const router = useRouter();
 
   const switchAuthMode = () => {
     setAuthMode((prev) => (prev === 'login' ? 'register' : 'login'));
@@ -52,7 +55,7 @@ const EventDetailPage = ({ event, events }: Props) => {
         />
         <meta
           property="og:url"
-          content={`https://app.alpinegrooveguide.com/eventRouter/${event.id}`}
+          content={`https://app.alpinegrooveguide.com/eventRouter/${event.slug}`}
         />
         <meta property="og:type" content="website" />
         <meta name="twitter:card" content="summary_large_image" />
@@ -71,7 +74,7 @@ const EventDetailPage = ({ event, events }: Props) => {
         />
         <link
           rel="canonical"
-          href={`https://app.alpinegrooveguide.com/eventRouter/${event.id}`}
+          href={`https://app.alpinegrooveguide.com/eventRouter/${event.slug}`}
         />
       </Head>
 
@@ -108,7 +111,7 @@ const EventDetailPage = ({ event, events }: Props) => {
                     navigator.share({
                       title: event.title,
                       text: event.description?.slice(0, 100),
-                      url: `https://app.alpinegrooveguide.com/eventRouter/${event.id}`,
+                      url: `https://app.alpinegrooveguide.com/eventRouter/${event.slug}`,
                     });
                   }
                 }}
@@ -119,7 +122,7 @@ const EventDetailPage = ({ event, events }: Props) => {
 
               <a
                 href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                  `https://app.alpinegrooveguide.com/eventRouter/${event.id}`
+                  `https://app.alpinegrooveguide.com/eventRouter/${event.slug}`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -130,7 +133,7 @@ const EventDetailPage = ({ event, events }: Props) => {
 
               <a
                 href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                  `https://app.alpinegrooveguide.com/eventRouter/${event.id}`
+                  `https://app.alpinegrooveguide.com/eventRouter/${event.slug}`
                 )}&text=${encodeURIComponent(event.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -141,7 +144,7 @@ const EventDetailPage = ({ event, events }: Props) => {
 
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`https://app.alpinegrooveguide.com/eventRouter/${event.id}`);
+                  navigator.clipboard.writeText(`https://app.alpinegrooveguide.com/eventRouter/${event.slug}`);
                   alert('Link copied to clipboard!');
                 }}
                 className="bg-gray-700 hover:bg-gray-800 text-white font-semibold px-4 py-2 rounded-md shadow transition transform hover:scale-105 flex items-center gap-2"
@@ -188,17 +191,16 @@ const EventDetailPage = ({ event, events }: Props) => {
 };
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const id = Number(context.params?.eventId);
+  const slug = context.params?.slug;
 
-  if (!id || isNaN(id)) {
-    console.warn('Invalid or missing eventId:', context.params?.eventId);
+  if (!slug || typeof slug !== 'string') {
+    console.warn('Invalid or missing event slug:', slug);
     return { notFound: true };
   }
 
   try {
-    const event = await fetchEventDetails(id);
+    const event = await fetchEventDetailsBySlug(slug);
     const allEvents = await getEvents();
-    console.log("Server request for eventId:", context.params?.eventId);
 
     if (!event || typeof event.id !== 'number') {
       console.warn('Invalid event response');

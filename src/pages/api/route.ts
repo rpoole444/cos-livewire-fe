@@ -212,6 +212,13 @@ async function fetchAllUsers(): Promise<void> {
   return data
 }
 
+export async function fetchEventDetailsBySlug(slug: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events/slug/${slug}`);
+  if (!res.ok) throw new Error("Event not found");
+  return res.json();
+}
+
+
 async function deleteEvent(eventId: number): Promise<void> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
