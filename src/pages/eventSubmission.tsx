@@ -290,7 +290,7 @@ if (!user) {
         <h1 className="text-center text-2xl font-bold mb-6">
         ✅ Your event has been submitted!
         <br />
-        You’ll receive an email when it's approved and live on the calendar.
+        You&apos;’ll receive an email when it&apos;'s approved and live on the calendar.
         </h1>
       </div>
     );
