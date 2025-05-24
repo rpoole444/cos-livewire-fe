@@ -39,10 +39,10 @@ const EventDetailPage = ({ event, events }: Props) => {
   return (
     <>
       <Head>
-  <title>{event.title} | Alpine Groove Guide</title>
-  <meta name="description" content={event.description?.slice(0, 150)} />
-  <link rel="canonical" href={`https://app.alpinegrooveguide.com/eventRouter/${event.slug}`} />
-</Head>
+        <title>{event.title} | Alpine Groove Guide</title>
+        <meta name="description" content={event.description?.slice(0, 150)} />
+        <link rel="canonical" href={`https://app.alpinegrooveguide.com/eventRouter/${event.slug}`} />
+      </Head>
 
 
 
@@ -79,7 +79,7 @@ const EventDetailPage = ({ event, events }: Props) => {
                     navigator.share({
                       title: event.title,
                       text: event.description?.slice(0, 100),
-                      url: `https://app.alpinegrooveguide.com/eventRouter/${event.slug}`,
+                      url: `https://app.alpinegrooveguide.com/share/${event.slug}`,
                     });
                   }
                 }}
@@ -90,7 +90,7 @@ const EventDetailPage = ({ event, events }: Props) => {
 
               <a
                 href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                  `https://app.alpinegrooveguide.com/eventRouter/${event.slug}`
+                  `https://app.alpinegrooveguide.com/share/${event.slug}`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -101,7 +101,7 @@ const EventDetailPage = ({ event, events }: Props) => {
 
               <a
                 href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                  `https://app.alpinegrooveguide.com/eventRouter/${event.slug}`
+                  `https://app.alpinegrooveguide.com/share/${event.slug}`
                 )}&text=${encodeURIComponent(event.title)}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -112,7 +112,7 @@ const EventDetailPage = ({ event, events }: Props) => {
 
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`https://app.alpinegrooveguide.com/eventRouter/${event.slug}`);
+                  navigator.clipboard.writeText(`https://app.alpinegrooveguide.com/share/${event.slug}`);
                   alert('Link copied to clipboard!');
                 }}
                 className="bg-gray-700 hover:bg-gray-800 text-white font-semibold px-4 py-2 rounded-md shadow transition transform hover:scale-105 flex items-center gap-2"
