@@ -24,6 +24,7 @@ export const getServerSideProps = async (context:any) => {
     <html lang="en">
       <head>
         <title>${event.title}</title>
+        <meta property="fb:app_id" content="1227448998748931" />
         <meta property="og:title" content="${event.title}" />
         <meta property="og:description" content="${description}" />
         <meta property="og:image" content="${imageUrl}" />
