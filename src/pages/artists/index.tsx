@@ -14,11 +14,11 @@ interface Artist {
 export default function ArtistDirectoryPage() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
     const fetchArtists = async () => {
       try {
-        const res = await fetch('/api/artists/public-list');
+        const res = await fetch(`${API_BASE_URL}/api//artists/public-list`);
         const data = await res.json();
         setArtists(data);
       } catch (err) {
