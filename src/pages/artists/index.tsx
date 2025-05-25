@@ -18,7 +18,7 @@ export default function ArtistDirectoryPage() {
   useEffect(() => {
     const fetchArtists = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api//artists/public-list`);
+        const res = await fetch(`${API_BASE_URL}/api/artists/public-list`);
         const data = await res.json();
         setArtists(data);
       } catch (err) {
