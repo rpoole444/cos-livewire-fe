@@ -10,14 +10,12 @@ interface CalendarProps {
   currentDate: Dayjs;
   onDateSelect: (date: Dayjs) => void;
   events: Event[];
-  filterMode: "day" | "week" | "all";
 }
 
 export default function Calendar({
   currentDate,
   onDateSelect,
   events,
-  filterMode,
 }: CalendarProps) {
   const days = ["S", "M", "T", "W", "T", "F", "S"];
   const [today, setToday] = useState<Dayjs>(currentDate);
@@ -27,15 +25,19 @@ export default function Calendar({
   }, [currentDate]);
 
   const handleNext = () => {
-    const newDate = today.add(1, filterMode === "week" ? "week" : "month");
+    const newDate = today.add(1, "month");
     setToday(newDate);
-    onDateSelect(newDate);
   };
 
   const handlePrevious = () => {
-    const newDate = today.subtract(1, filterMode === "week" ? "week" : "month");
+    const newDate = today.subtract(1, "month");
     setToday(newDate);
-    onDateSelect(newDate);
+  };
+
+  const handleToday = () => {
+    const now = dayjs();
+    setToday(now);
+    onDateSelect(now);
   };
 
   const getEventsForDate = (date: Dayjs) =>
@@ -54,9 +56,12 @@ export default function Calendar({
             onClick={handlePrevious}
             aria-label="Previous"
           />
-          <span className="text-sm text-gray-300">
-            Viewing by {filterMode === "week" ? "Week" : filterMode === "day" ? "Day" : "Month"}
-          </span>
+          <button
+            onClick={handleToday}
+            className="text-sm px-3 py-1 border border-gray-500 rounded hover:bg-blue-500 hover:text-white transition"
+          >
+            Today
+          </button>
           <GrFormNext
             className="w-6 h-6 cursor-pointer hover:scale-110 transition"
             onClick={handleNext}
@@ -71,6 +76,7 @@ export default function Calendar({
           <div key={i}>{day}</div>
         ))}
       </div>
+
       <div className="grid grid-cols-7 gap-1 text-sm">
         {generateDate(today.month(), today.year()).map(({ date, currentMonth }, index) => {
           const eventsForDate = getEventsForDate(date);

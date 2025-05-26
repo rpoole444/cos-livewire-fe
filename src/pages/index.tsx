@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import dayjs from 'dayjs';
-import isBetween from 'dayjs/plugin/isBetween';
+import React, { useState, useEffect, useRef } from 'react';
+
+
 import Fuse from 'fuse.js';
 import Image from 'next/image';
+import { Switch } from '@headlessui/react';
+import { Search, CalendarSearch } from 'lucide-react';
 
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
@@ -14,46 +16,54 @@ import Events from '@/components/events';
 import UpcomingShows from '@/components/UpcomingShows';
 
 import { useAuth } from '@/context/AuthContext';
-import { useHomeState, FilterMode } from '@/hooks/useHomeState';
+import { useHomeState } from '@/hooks/useHomeState';
 import { getEvents } from './api/route';
 import { Event } from '@/interfaces/interfaces';
 import { parseMSTDate, parseLocalDayjs } from '@/util/dateHelper';
 
-dayjs.extend(isBetween);
+import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+
+dayjs.extend(isSameOrAfter);
+
+function classNames(...classes: string[]) {
+  return classes.filter(Boolean).join(' ');
+}
 
 type AuthMode = 'login' | 'register';
 
 export default function Home() {
-  /* ── sticky calendar/search state ────────────────────────────── */
   const {
     selectedDate,
     setSelectedDate,
-    filterMode,
-    setFilterMode,
     searchQuery,
     setSearchQuery,
   } = useHomeState();
 
-  /* ── local component state ───────────────────────────────────── */
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [searchAllUpcoming, setSearchAllUpcoming] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('searchAllUpcoming') === 'true';
+    }
+    return false;
+  });
 
+  const resultsRef = useRef<HTMLDivElement | null>(null);
   const { user } = useAuth();
 
   const switchAuthMode = () =>
     setAuthMode((m) => (m === 'login' ? 'register' : 'login'));
 
-  /* ── load events once ────────────────────────────────────────── */
   useEffect(() => {
     (async () => {
       try {
         const data = await getEvents();
         const approved = data
           .filter((e: any) => e.is_approved)
-          .sort(
-            (a: any, b: any) =>
-              parseMSTDate(a.date).getTime() - parseMSTDate(b.date).getTime()
+          .sort((a: any, b: any) =>
+            parseMSTDate(a.date).getTime() - parseMSTDate(b.date).getTime()
           );
         setEvents(approved);
       } catch (err) {
@@ -62,51 +72,32 @@ export default function Home() {
     })();
   }, []);
 
-  /* ── filter + search whenever deps change ────────────────────── */
   useEffect(() => {
-    let filtered: Event[] = [];
+    localStorage.setItem('searchAllUpcoming', String(searchAllUpcoming));
 
-    if (filterMode === 'day') {
-      filtered = events.filter((e) =>
-        parseLocalDayjs(e.date).isSame(selectedDate, 'day')
-      );
-    } else if (filterMode === 'week') {
-      const start = selectedDate.startOf('week');
-      const end = selectedDate.endOf('week');
-      filtered = events.filter((e) =>
-        parseLocalDayjs(e.date).isBetween(start, end, null, '[]')
-      );
-    } else {
-      /* 'all' */
-      const today = dayjs().startOf('day');
-      filtered = events.filter(
-        (e) =>
-          parseLocalDayjs(e.date).isSame(today, 'day') ||
-          parseLocalDayjs(e.date).isAfter(today)
-      );
-    }
+    const today = dayjs().startOf('day');
+    let targetEvents = searchAllUpcoming
+      ? events.filter((e) => parseLocalDayjs(e.date).isSameOrAfter(today))
+      : events.filter((e) => parseLocalDayjs(e.date).isSame(selectedDate, 'day'));
 
     if (searchQuery.trim()) {
-      const fuse = new Fuse(filtered, {
+      const fuse = new Fuse(targetEvents, {
         keys: ['title', 'genre', 'venue_name', 'description'],
         threshold: 0.3,
       });
-      filtered = fuse.search(searchQuery).map((r) => r.item);
+      targetEvents = fuse.search(searchQuery).map((r) => r.item);
     }
 
-    setFilteredEvents(filtered);
-  }, [events, selectedDate, filterMode, searchQuery]);
+    setFilteredEvents(targetEvents);
 
-  /* ── handlers ────────────────────────────────────────────────── */
-  const handleDateSelect = setSelectedDate;
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-    setFilterMode(e.target.value as FilterMode);
+    if (searchAllUpcoming && searchQuery && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [events, selectedDate, searchQuery, searchAllUpcoming]);
 
-  /* ── render ──────────────────────────────────────────────────── */
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
       <Header />
-
       <HeroSection user={user} setAuthMode={switchAuthMode} />
 
       <div className="text-center py-6 px-4 md:px-0">
@@ -114,89 +105,95 @@ export default function Home() {
           Welcome to Alpine Groove Guide
         </h2>
         <p className="text-gray-300 mt-2 max-w-xl mx-auto text-base md:text-lg">
-          Discover the best live music happening across Colorado Springs and
-          beyond.
+          Discover the best live music happening across Colorado Springs and beyond.
         </p>
       </div>
 
       <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
         <main className="container mx-auto px-4 md:px-8 py-6">
           <div className="flex flex-col gap-6">
-            {/* ── calendar ────────────────────────────── */}
             <aside className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-700">
-              {filterMode === 'all' && (
-                <div className="mb-4 text-yellow-300 text-sm border border-yellow-400/50 bg-yellow-100/10 rounded-lg p-3">
-                  📌 The calendar is disabled in
-                  <strong> All Upcoming Events</strong> mode. <br />
-                  To use the calendar, switch to
-                  <em> Today’s</em> or <em>This Week’s</em> view.
-                </div>
-              )}
-
-              <div
-                className={
-                  filterMode === 'all' ? 'pointer-events-none opacity-40' : ''
-                }
-              >
-                <EventsCalendar
-                  currentDate={selectedDate}
-                  events={events}
-                  onDateSelect={handleDateSelect}
-                  filterMode={filterMode}
-                />
-              </div>
+            <EventsCalendar
+              currentDate={selectedDate}
+              events={events}
+              onDateSelect={(date) => {
+                setSelectedDate(date);
+                setSearchQuery(''); // Clear search on calendar click
+                setSearchAllUpcoming(false); // Reset toggle to daily view
+              }}
+            />
             </aside>
 
-            {/* ── events list + controls ───────────────── */}
-            <section id="events" className="flex-grow scroll-mt-20">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3">
+            <section id="events" className="flex-grow scroll-mt-20" ref={resultsRef}>
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-3">
                 <h1 className="text-3xl font-bold tracking-tight">Events</h1>
-
-                <select
-                  id="event-pulldown"
-                  value={filterMode}
-                  onChange={handleFilterChange}
-                  className="p-2 border border-gray-600 rounded-md text-black bg-white focus:outline-none focus:ring-2 focus:ring-gold"
-                >
-                  <option value="day">Today&apos;s Events</option>
-                  <option value="week">This Week&apos;s Events</option>
-                  <option value="all">All Upcoming Events</option>
-                </select>
-              </div>
-
-              <div className="mb-6">
-                <input
-                  type="text"
-                  placeholder="Search by title, genre, artist, or venue..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full p-3 border border-gray-600 rounded-md text-black bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold"
-                />
-              </div>
-
-              {filteredEvents.length ? (
-                <Events events={filteredEvents} />
-              ) : (
-                <div className="text-center mt-12 flex flex-col items-center gap-6">
-                  <Image
-                    src="/alpine_groove_guide_icon.png"
-                    alt="Alpine Groove Logo"
-                    width={180}
-                    height={180}
-                    className="opacity-80 animate-pulse"
-                  />
-                  <p className="text-gray-400 text-lg font-medium">
-                    🥺 No events to display.
-                    <br className="hidden sm:inline" />
-                    Try adjusting your search or filter!
-                  </p>
+                <div className="flex flex-col md:flex-row gap-2 md:items-center w-full md:w-auto">
+                  <div className="relative w-full md:w-80">
+                    <input
+                      type="text"
+                      placeholder="Search by title, genre, artist, or venue..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full p-3 pl-10 border border-gray-600 rounded-md text-black bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold"
+                    />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={searchAllUpcoming}
+                      onChange={setSearchAllUpcoming}
+                      className={classNames(
+                        searchAllUpcoming ? 'bg-blue-600' : 'bg-gray-600',
+                        'relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none'
+                      )}
+                    >
+                      <span
+                        className={classNames(
+                          searchAllUpcoming ? 'translate-x-6' : 'translate-x-1',
+                          'inline-block h-4 w-4 transform bg-white rounded-full transition-transform duration-200'
+                        )}
+                      />
+                    </Switch>
+                    <span className="text-sm text-gray-300 flex items-center gap-1">
+                      <CalendarSearch className="w-4 h-4" /> All Upcoming
+                    </span>
+                  </div>
                 </div>
+              </div>
+
+              {searchAllUpcoming && searchQuery && (
+                <p className="text-xs text-gray-400 italic mb-4">
+                  Showing search results across all approved upcoming events.
+                </p>
               )}
+
+              <div className={classNames(
+                'transition-opacity duration-500',
+                searchAllUpcoming && searchQuery ? 'opacity-100' : 'opacity-90'
+              )}>
+                {filteredEvents.length ? (
+                  <Events events={filteredEvents} />
+                ) : (
+                  <div className="text-center mt-12 flex flex-col items-center gap-6">
+                    <Image
+                      src="/alpine_groove_guide_icon.png"
+                      alt="Alpine Groove Logo"
+                      width={180}
+                      height={180}
+                      className="opacity-80 animate-pulse"
+                    />
+                    <p className="text-gray-400 text-lg font-medium">
+                      🥺 No events to display.
+                      <br className="hidden sm:inline" />
+                      Try adjusting your search or clicking another date!
+                    </p>
+                  </div>
+                )}
+              </div>
             </section>
           </div>
         </main>
 
-        {/* ── right-hand column (auth + recommendations) ─────────── */}
         <aside
           id="auth-section"
           className="w-full md:w-[40%] lg:w-[30%] xl:w-1/4 max-w-md bg-white p-6 shadow-xl text-black rounded-lg overflow-auto"
