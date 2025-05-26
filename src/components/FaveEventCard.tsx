@@ -23,7 +23,7 @@ const FaveEventCard: React.FC<EventCardProps> = ({ id, title, genre, venueName, 
 
   return (
     <Link
-      href={`/eventRouter/${id}`}
+      href={`/eventRouter/${slug}`}
       className="block p-3 mb-3 bg-gray-100 shadow-sm rounded-md
                  cursor-pointer hover:bg-gray-200 transition text-sm"
     >
