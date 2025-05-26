@@ -17,15 +17,32 @@ export default function ArtistSignupPage() {
     contact_email: user?.email || '',
     genres: [] as string[],
     slug: '',
+    embed_youtube: '',
+    embed_soundcloud: '',
+    embed_bandcamp: '',
+    website: '',
   });
 
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<{ [key: string]: File | null }>({
+    profile_image: null,
+    promo_photo: null,
+    stage_plot: null,
+    press_kit: null,
+  });
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, files: selected } = e.target;
+    if (selected && selected.length > 0) {
+      setFiles(prev => ({ ...prev, [name]: selected[0] }));
+    }
   };
 
   const handleGenreToggle = (genre: string) => {
@@ -49,7 +66,7 @@ export default function ArtistSignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || form.genres.length === 0 || !file) {
+    if (!user || form.genres.length === 0 || !files.profile_image) {
       setError("Missing required fields");
       return;
     }
@@ -57,12 +74,20 @@ export default function ArtistSignupPage() {
     setLoading(true);
     try {
       const formData = new FormData();
-      formData.append('display_name', form.display_name);
-      formData.append('slug', form.slug);
-      formData.append('bio', form.bio);
-      formData.append('contact_email', form.contact_email);
-      formData.append('profile_image', file);
-      formData.append('genres', JSON.stringify(form.genres));
+      Object.entries(form).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value);
+        }
+      });
+      
+
+      Object.entries(files).forEach(([key, file]) => {
+        if (file) formData.append(key, file);
+      });
+
+      formData.append('is_pro', 'true');
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists`, {
         method: 'POST',
@@ -86,7 +111,7 @@ export default function ArtistSignupPage() {
       <h1 className="text-2xl font-bold mb-4">Create Artist Profile</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input name="display_name" placeholder="Display Name" value={form.display_name} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        
+
         <input
           name="slug"
           placeholder="URL Slug (e.g. reid-poole-quartet)"
@@ -97,9 +122,9 @@ export default function ArtistSignupPage() {
         <p className="text-sm text-gray-400">
           This becomes your public link: <code>/artists/{form.slug || 'your-slug'}</code>
         </p>
-        
-        <label className="block text-sm font-semibold">Upload Profile Image</label>
-        <input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm" />
+
+        <label className="block text-sm font-semibold">Profile Image</label>
+        <input type="file" name="profile_image" accept="image/*" onChange={handleFileChange} className="w-full text-sm" />
 
         <input name="contact_email" placeholder="Contact Email" value={form.contact_email} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <textarea name="bio" placeholder="Bio" value={form.bio} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" rows={4} />
@@ -115,6 +140,20 @@ export default function ArtistSignupPage() {
             ))}
           </div>
         </div>
+
+        <input name="website" placeholder="Website (https://...)" value={form.website} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        <input name="embed_youtube" placeholder="YouTube Embed Link" value={form.embed_youtube} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        <input name="embed_soundcloud" placeholder="SoundCloud Embed Link" value={form.embed_soundcloud} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        <input name="embed_bandcamp" placeholder="Bandcamp Embed Link" value={form.embed_bandcamp} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+
+        <label className="block text-sm font-semibold mt-4">Promo Photo</label>
+        <input type="file" name="promo_photo" accept="image/*" onChange={handleFileChange} className="w-full text-sm" />
+
+        <label className="block text-sm font-semibold mt-4">Stage Plot</label>
+        <input type="file" name="stage_plot" accept="image/*,.pdf" onChange={handleFileChange} className="w-full text-sm" />
+
+        <label className="block text-sm font-semibold mt-4">Press Kit</label>
+        <input type="file" name="press_kit" accept="application/pdf,image/*" onChange={handleFileChange} className="w-full text-sm" />
 
         {error && <p className="text-red-500">{error}</p>}
         <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white">
