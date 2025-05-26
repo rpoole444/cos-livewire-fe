@@ -24,6 +24,8 @@ const LoginPage = () => {
           <Image
             src="/alpine_groove_guide_icon.png"
             alt="Alpine Groove Guide Logo"
+            width={180}
+            height={180}
             className="mx-auto mb-4 w-20"
           />
           <h1 className="text-3xl font-extrabold text-gold mb-2">Welcome Back</h1>

@@ -554,7 +554,12 @@ if (!user) {
           {/* 📸 Poster Upload */}
           <div className="mt-8">
             <h2 className="text-xl font-bold text-gray-800 mb-4">📸 Upload Poster</h2>
-            <label htmlFor="poster" className="block text-sm font-semibold text-gray-800">Poster File (JPEG, PNG, or PDF)</label>
+            <label htmlFor="poster" className="block text-sm font-semibold text-gray-800">
+              Poster File (JPEG, PNG, or PDF)
+            </label>
+            <p className="text-xs text-gray-500 mt-1">
+              Use a square image for best results.
+            </p>
             <input
               type="file"
               id="poster"
@@ -564,6 +569,7 @@ if (!user) {
               className="mt-1 p-2 w-full border border-gray-300 rounded-md text-black"
             />
           </div>
+
 
           {/* ✅ Submit Buttons */}
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-10">

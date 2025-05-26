@@ -46,37 +46,44 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
   const eventsToDisplay = showAll ? filteredEvents : filteredEvents.slice(0, MAX_RECOMMENDATIONS);
 
   return (
-    <div className="bg-white p-4 mt-5 rounded-lg shadow-lg max-h-100 overflow-y-auto justify-center">
-      <h2 className="text-xl font-bold mb-4">{user.displayName}&apos;s Upcoming Music Recommendations</h2>
+    <div className="bg-white p-5 mt-6 rounded-2xl shadow-lg max-h-[520px] overflow-y-auto border border-gray-300">
+      <h2 className="text-xl font-bold text-indigo-700 mb-4 text-center">
+        {user.displayName}&apos;s Music Picks 🎶
+      </h2>
       {eventsToDisplay.length > 0 ? (
         <>
-          {eventsToDisplay.map(event => (
-            <FaveEventCard
-              key={event.id}
-              id={event.id}
-              title={event.title}
-              genre={event.genre}
-              venueName={event.venue_name}
-              date={event.date}
-              startTime={event.start_time}
-              slug={event.slug}
-              formatTime={formatTime}
-            />
+          <ul className="space-y-4">
+            {eventsToDisplay.map(event => (
+              <li key={event.id}>
+                <FaveEventCard
+                  id={event.id}
+                  title={event.title}
+                  genre={event.genre}
+                  venueName={event.venue_name}
+                  date={event.date}
+                  startTime={event.start_time}
+                  slug={event.slug}
+                  formatTime={formatTime}
+                />
+              </li>
+            ))}
+          </ul>
 
-          ))}
           {!showAll && filteredEvents.length > MAX_RECOMMENDATIONS && (
             <div className="text-center mt-4">
               <button
                 onClick={() => setShowAll(true)}
-                className="text-indigo-600 hover:underline text-sm"
+                className="inline-block px-4 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700 transition"
               >
-                See more...
+                Show More
               </button>
             </div>
           )}
         </>
       ) : (
-        <p>No upcoming events match your favorite genres.</p>
+        <p className="text-gray-600 text-sm text-center">
+          No upcoming events match your favorite genres yet.
+        </p>
       )}
     </div>
   );

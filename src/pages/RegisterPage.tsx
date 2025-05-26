@@ -24,7 +24,9 @@ const RegisterPage = () => {
           <Image
             src="/alpine_groove_guide_icon.png"
             alt="Alpine Groove Guide Logo"
-            className="mx-auto mb-4 w-20"
+            className="mx-auto mb-4 w-20" 
+            width={180}
+            height={180}
           />
           <h1 className="text-3xl font-extrabold text-gold mb-2">Create an Account</h1>
           <p className="text-gray-300">Register to submit events and join the Colorado Springs music scene.</p>
