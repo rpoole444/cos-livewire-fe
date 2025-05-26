@@ -59,19 +59,28 @@ const UserProfile: React.FC = () => {
   useEffect(() => {
     const checkArtistProfile = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/artists/user/${user?.id}`, { credentials: 'include' });
+        const res = await fetch(`${API_BASE_URL}/api/artists/user/${user?.id}`, {
+          credentials: 'include',
+        });
+  
         if (res.ok) {
           const data = await res.json();
           setHasArtistProfile(true);
           setArtistSlug(data.slug);
+        } else if (res.status === 404) {
+          // Expected: no artist profile yet
+          setHasArtistProfile(false);
+        } else {
+          console.error("Unexpected response checking artist profile:", res.status);
         }
       } catch (err) {
-        console.log("No artist profile found yet");
+        console.error("Network or server error checking artist profile:", err);
       }
     };
-
+  
     if (user?.id) checkArtistProfile();
   }, [user]);
+  
 
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
