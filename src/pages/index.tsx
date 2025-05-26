@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-
-
 import Fuse from 'fuse.js';
 import Image from 'next/image';
 import { Switch } from '@headlessui/react';
@@ -49,6 +47,19 @@ export default function Home() {
     }
     return false;
   });
+  const [showHero, setShowHero] = useState(true);
+
+  useEffect(() => {
+    const lastVisit = localStorage.getItem('lastVisitDate');
+    const today = dayjs().format('YYYY-MM-DD');
+
+    if (lastVisit === today) {
+      setShowHero(false);
+    } else {
+      localStorage.setItem('lastVisitDate', today);
+      setShowHero(true);
+    }
+  }, []);
 
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const { user } = useAuth();
@@ -98,7 +109,11 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
       <Header />
-      <HeroSection user={user} setAuthMode={switchAuthMode} />
+      {showHero && (
+        <div className="animate-fadeIn transition-opacity duration-700 ease-in-out">
+          <HeroSection user={user} setAuthMode={switchAuthMode} />
+        </div>
+      )}
 
       <div className="text-center py-6 px-4 md:px-0">
         <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gold drop-shadow-md">
@@ -113,15 +128,15 @@ export default function Home() {
         <main className="container mx-auto px-4 md:px-8 py-6">
           <div className="flex flex-col gap-6">
             <aside className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-700">
-            <EventsCalendar
-              currentDate={selectedDate}
-              events={events}
-              onDateSelect={(date) => {
-                setSelectedDate(date);
-                setSearchQuery(''); // Clear search on calendar click
-                setSearchAllUpcoming(false); // Reset toggle to daily view
-              }}
-            />
+              <EventsCalendar
+                currentDate={selectedDate}
+                events={events}
+                onDateSelect={(date) => {
+                  setSelectedDate(date);
+                  setSearchQuery(''); // Clear search on calendar click
+                  setSearchAllUpcoming(false); // Reset toggle to daily view
+                }}
+              />
             </aside>
 
             <section id="events" className="flex-grow scroll-mt-20" ref={resultsRef}>
