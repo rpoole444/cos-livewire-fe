@@ -10,14 +10,15 @@ interface EventCardProps {
   venueName: string;
   date: string;
   startTime: string;
+  slug:string
   formatTime: (timeString: string) => string;
 }
 
-const FaveEventCard: React.FC<EventCardProps> = ({ id, title, genre, venueName, date, startTime, formatTime }) => {
+const FaveEventCard: React.FC<EventCardProps> = ({ id, title, genre, venueName, date,slug, startTime, formatTime }) => {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push(`/eventRouter/${id}`);
+    router.push(`/eventRouter/${slug}`);
   };
 
   return (
