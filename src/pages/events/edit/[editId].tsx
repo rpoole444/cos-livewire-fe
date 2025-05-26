@@ -70,7 +70,7 @@ const EditEventPage = () => {
   
       if (res.ok) {
         const updated = await res.json();          // ← updated event
-        router.push(`/eventRouter/${editId}`); // go to detail page
+        router.push(`/eventRouter/${eventData.slug}`); // go to detail page
       } else {
         const { message } = await res.json();
         alert(`Error: ${message}`);
