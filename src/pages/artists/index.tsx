@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
+import Header from '@/components/Header';
 
 interface Artist {
   display_name: string;
@@ -37,7 +38,7 @@ export default function ArtistDirectoryPage() {
         <title>Artist Directory | Alpine Groove Guide</title>
         <meta name="description" content="Browse all Alpine Pro artist profiles" />
       </Head>
-
+      <Header/>
       <h1 className="text-3xl font-bold mb-6">🎶 Artist Directory</h1>
 
       {loading ? (
