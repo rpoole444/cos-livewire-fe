@@ -72,7 +72,14 @@ const ArtistProfilePage = ({ artist }: Props) => {
               <p className="text-gray-300 mb-2">{artist.bio}</p>
               <p className="text-sm text-gray-400">📧 {artist.contact_email}</p>
               <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
-              {artist.website && <p className="text-sm text-blue-400">🔗 <a href={artist.website} target="_blank" rel="noopener noreferrer">Website</a></p>}
+              {artist.website && <p className="text-sm text-blue-400">🔗 <a
+                href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 underline"
+              >
+                {artist.website}
+              </a></p>}
             </div>
           </div>
 
