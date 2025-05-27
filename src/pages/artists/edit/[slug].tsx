@@ -19,8 +19,19 @@ export default function EditArtistProfilePage() {
     contact_email: '',
     profile_image: '',
     genres: [] as string[],
+    website: '',
+    embed_youtube: '',
+    embed_soundcloud: '',
+    embed_bandcamp: '',
   });
-  const [file, setFile] = useState<File | null>(null);
+
+  const [files, setFiles] = useState({
+    profile_image: null,
+    promo_photo: null,
+    stage_plot: null,
+    press_kit: null,
+  });
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -36,6 +47,10 @@ export default function EditArtistProfilePage() {
           contact_email: data.contact_email,
           profile_image: data.profile_image,
           genres: data.genres || [],
+          website: data.website || '',
+          embed_youtube: data.embed_youtube || '',
+          embed_soundcloud: data.embed_soundcloud || '',
+          embed_bandcamp: data.embed_bandcamp || '',
         });
       } catch (err) {
         setError('Error loading artist profile');
@@ -47,6 +62,13 @@ export default function EditArtistProfilePage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, files: selectedFiles } = e.target;
+    if (selectedFiles?.[0]) {
+      setFiles(prev => ({ ...prev, [name]: selectedFiles[0] }));
+    }
   };
 
   const handleGenreToggle = (genre: string) => {
@@ -64,11 +86,17 @@ export default function EditArtistProfilePage() {
     setLoading(true);
 
     const formData = new FormData();
-    formData.append('display_name', form.display_name);
-    formData.append('bio', form.bio);
-    formData.append('contact_email', form.contact_email);
-    formData.append('genres', JSON.stringify(form.genres));
-    if (file) formData.append('profile_image', file);
+    Object.entries(form).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        formData.append(key, JSON.stringify(value));
+      } else {
+        formData.append(key, value);
+      }
+    });
+
+    Object.entries(files).forEach(([key, file]) => {
+      if (file) formData.append(key, file);
+    });
 
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${slug}`, {
@@ -92,7 +120,28 @@ export default function EditArtistProfilePage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <input name="display_name" value={form.display_name} onChange={handleChange} placeholder="Display Name" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <input name="contact_email" value={form.contact_email} onChange={handleChange} placeholder="Contact Email" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        <input name="website" value={form.website} onChange={handleChange} placeholder="Website URL" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <textarea name="bio" value={form.bio} onChange={handleChange} placeholder="Bio" className="w-full p-2 rounded bg-gray-800 border border-gray-600" rows={4} />
+
+        <input name="embed_youtube" value={form.embed_youtube} onChange={handleChange} placeholder="YouTube Embed Link" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        <input name="embed_soundcloud" value={form.embed_soundcloud} onChange={handleChange} placeholder="SoundCloud Embed Link" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        <input name="embed_bandcamp" value={form.embed_bandcamp} onChange={handleChange} placeholder="Bandcamp Embed Link" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+
+        <label className="block">Upload New Profile Image:
+          <input type="file" accept="image/*" name="profile_image" onChange={handleFileChange} className="w-full text-sm mt-1" />
+        </label>
+
+        <label className="block">Upload Promo Photo:
+          <input type="file" accept="image/*" name="promo_photo" onChange={handleFileChange} className="w-full text-sm mt-1" />
+        </label>
+
+        <label className="block">Upload Stage Plot:
+          <input type="file" name="stage_plot" onChange={handleFileChange} className="w-full text-sm mt-1" />
+        </label>
+
+        <label className="block">Upload Press Kit:
+          <input type="file" name="press_kit" onChange={handleFileChange} className="w-full text-sm mt-1" />
+        </label>
 
         <div>
           <label className="block font-semibold mb-1">Genres (up to 4)</label>
@@ -105,10 +154,6 @@ export default function EditArtistProfilePage() {
             ))}
           </div>
         </div>
-
-        <label className="block">Upload New Profile Image:
-          <input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] || null)} className="w-full text-sm mt-1" />
-        </label>
 
         {error && <p className="text-red-500">{error}</p>}
         <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white">

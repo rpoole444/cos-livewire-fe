@@ -7,8 +7,6 @@ import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import Link from 'next/link';
 
-
-
 interface Event {
   id: number;
   title: string;
@@ -22,10 +20,18 @@ interface Event {
 interface Artist {
   id: number;
   display_name: string;
-  user_id:number;
+  user_id: number;
   bio: string;
   contact_email: string;
   profile_image: string;
+  promo_photo?: string;
+  stage_plot?: string;
+  press_kit?: string;
+  embed_youtube?: string;
+  embed_soundcloud?: string;
+  embed_bandcamp?: string;
+  website?: string;
+  is_pro?: boolean;
   genres: string[];
   slug: string;
   events: Event[];
@@ -38,7 +44,6 @@ interface Props {
 const ArtistProfilePage = ({ artist }: Props) => {
   const { user } = useAuth();
   const canEdit = artist && user && (user.id === artist.user_id || user.is_admin);
-  
   const router = useRouter();
 
   if (!artist) return <div className="text-white p-6">Artist not found</div>;
@@ -53,7 +58,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
       <div className="min-h-screen bg-gray-900 text-white p-6">
         <div className="max-w-4xl mx-auto space-y-6">
-          <Header/>
+          <Header />
           <div className="flex flex-col md:flex-row gap-6 items-center">
             <Image
               src={artist.profile_image}
@@ -67,8 +72,49 @@ const ArtistProfilePage = ({ artist }: Props) => {
               <p className="text-gray-300 mb-2">{artist.bio}</p>
               <p className="text-sm text-gray-400">📧 {artist.contact_email}</p>
               <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
+              {artist.website && <p className="text-sm text-blue-400">🔗 <a href={artist.website} target="_blank" rel="noopener noreferrer">Website</a></p>}
             </div>
           </div>
+
+          {(artist.embed_youtube || artist.embed_soundcloud || artist.embed_bandcamp) && (
+            <div className="space-y-6">
+              {artist.embed_youtube && (
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">📺 Video</h3>
+                  <div className="aspect-video">
+                    <iframe src={artist.embed_youtube} className="w-full h-full" allowFullScreen></iframe>
+                  </div>
+                </div>
+              )}
+              {artist.embed_soundcloud && (
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">🎧 SoundCloud</h3>
+                  <iframe width="100%" height="166" scrolling="no" frameBorder="no" allow="autoplay" src={artist.embed_soundcloud}></iframe>
+                </div>
+              )}
+              {artist.embed_bandcamp && (
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">🎵 Bandcamp</h3>
+                  <iframe style={{ border: 0 }} src={artist.embed_bandcamp} width="100%" height="120" allow="autoplay"></iframe>
+                </div>
+              )}
+            </div>
+          )}
+
+          {(artist.promo_photo || artist.stage_plot || artist.press_kit) && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold mt-6">📎 Downloads</h3>
+              {artist.promo_photo && (
+                <p><a href={artist.promo_photo} target="_blank" className="text-blue-400 underline">📸 Promo Photo</a></p>
+              )}
+              {artist.stage_plot && (
+                <p><a href={artist.stage_plot} target="_blank" className="text-blue-400 underline">🎚️ Stage Plot</a></p>
+              )}
+              {artist.press_kit && (
+                <p><a href={artist.press_kit} target="_blank" className="text-blue-400 underline">📄 Press Kit</a></p>
+              )}
+            </div>
+          )}
 
           <div className="mt-8">
             <h2 className="text-2xl font-semibold mb-4">Upcoming Events</h2>
@@ -97,7 +143,6 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 ✏️ Edit Profile
               </button>
             )}
-
           </div>
         </div>
       </div>
