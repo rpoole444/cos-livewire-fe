@@ -24,6 +24,7 @@ const UserProfile: React.FC = () => {
   const [profilePicture, setProfilePicture] = useState<string>(user?.profile_picture || "");
   const [hasArtistProfile, setHasArtistProfile] = useState(false);
   const [artistSlug, setArtistSlug] = useState("");
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   useEffect(() => {
     if (!user) router.push("/");
@@ -62,13 +63,12 @@ const UserProfile: React.FC = () => {
         const res = await fetch(`${API_BASE_URL}/api/artists/user/${user?.id}`, {
           credentials: 'include',
         });
-  
+
         if (res.ok) {
           const data = await res.json();
           setHasArtistProfile(true);
           setArtistSlug(data.slug);
         } else if (res.status === 404) {
-          // Expected: no artist profile yet
           setHasArtistProfile(false);
         } else {
           console.error("Unexpected response checking artist profile:", res.status);
@@ -77,10 +77,9 @@ const UserProfile: React.FC = () => {
         console.error("Network or server error checking artist profile:", err);
       }
     };
-  
+
     if (user?.id) checkArtistProfile();
   }, [user]);
-  
 
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
@@ -135,6 +134,25 @@ const UserProfile: React.FC = () => {
       setMessage(data.message);
     } catch (err) {
       setMessage("Failed to send reset email.");
+    }
+  };
+
+  const handleDonate = async (mode: 'payment' | 'subscription') => {
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/payments/create-tip-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user?.email, amount: 700, mode }),
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch (err) {
+      console.error("Stripe session error", err);
+      setMessage("Something went wrong. Please try again.");
+    } finally {
+      setCheckoutLoading(false);
     }
   };
 
@@ -268,6 +286,23 @@ const UserProfile: React.FC = () => {
                   Alpine Pro Dashboard
                 </button>
               )}
+              <div className="mt-4 border-t border-gray-700 pt-4">
+                <h3 className="font-semibold mb-2">Support Alpine Groove Guide</h3>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    onClick={() => handleDonate("payment")}
+                    className="bg-pink-600 hover:bg-pink-700 text-white py-2 rounded font-semibold"
+                  >
+                    💵 Send a $7 Tip
+                  </button>
+                  <button
+                    onClick={() => handleDonate("subscription")}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-semibold"
+                  >
+                    💫 $7/Month Membership
+                  </button>
+                </div>
+              </div>
               {message && <div className="text-center text-sm text-red-400 mt-2">{message}</div>}
             </div>
           </div>
