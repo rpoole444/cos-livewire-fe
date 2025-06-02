@@ -25,6 +25,7 @@ const UserProfile: React.FC = () => {
   const [hasArtistProfile, setHasArtistProfile] = useState(false);
   const [artistSlug, setArtistSlug] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   useEffect(() => {
     if (!user) router.push("/");
@@ -80,6 +81,19 @@ const UserProfile: React.FC = () => {
 
     if (user?.id) checkArtistProfile();
   }, [user]);
+
+  useEffect(() => {
+    if (router.query.success === 'true') {
+      setShowSuccessToast(true);
+  
+      const cleaned = new URL(window.location.href);
+      cleaned.searchParams.delete('success');
+      window.history.replaceState({}, document.title, cleaned.toString());
+  
+      const timeout = setTimeout(() => setShowSuccessToast(false), 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [router.query.success]);  
 
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
@@ -159,7 +173,11 @@ const UserProfile: React.FC = () => {
   return user ? (
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
-
+      {showSuccessToast && (
+        <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow mb-4 max-w-xl mx-auto">
+          ✅ Success! You’ve unlocked Alpine Pro.
+        </div>
+      )}
       <div className="max-w-5xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
         🎤 Profile: {user.first_name} {user.last_name}
