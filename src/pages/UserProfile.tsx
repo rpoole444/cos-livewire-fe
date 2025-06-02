@@ -143,7 +143,7 @@ const UserProfile: React.FC = () => {
       const res = await fetch(`${API_BASE_URL}/api/payments/create-tip-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user?.email, amount: 700, mode }),
+        body: JSON.stringify({ email: user?.email, amount: 7, mode }),
         credentials: 'include',
       });
       const data = await res.json();
