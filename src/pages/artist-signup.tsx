@@ -98,7 +98,7 @@ export default function ArtistSignupPage() {
       if (!res.ok) throw new Error('Failed to create artist profile');
 
       const data = await res.json();
-      router.push(`/artists/${data.slug}`);
+      router.push(`/artists/${data.slug}?trial=active`);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -108,7 +108,11 @@ export default function ArtistSignupPage() {
 
   return (
     <div className="max-w-xl mx-auto p-6 text-white">
-      <h1 className="text-2xl font-bold mb-4">Create Artist Profile</h1>
+      <h1 className="text-2xl font-bold mb-2">🎤 Claim Your Artist Profile</h1>
+      <p className="text-sm text-gray-300 mb-4">
+        Create your public artist profile and enjoy 30 days of Alpine Pro access free.
+        Add your music, bio, media kit, and upcoming shows — no credit card required!
+      </p>      
       <form onSubmit={handleSubmit} className="space-y-4">
         <input name="display_name" placeholder="Display Name" value={form.display_name} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
 
