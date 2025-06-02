@@ -7,6 +7,7 @@ export interface UserType {
   password?: string;
   is_admin: boolean;
   is_logged_in?: boolean;
+  is_pro?: boolean; 
   top_music_genres: string[]; // array after parsing
   user_description?: string;
   profile_picture?: string;
