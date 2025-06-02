@@ -59,6 +59,14 @@ export default function EditArtistProfilePage() {
     fetchArtist();
   }, [slug]);
 
+  useEffect(() => {
+    if (user === null) {
+      setError("You must be logged in to access this page.");
+      router.push('/login');
+    }
+  }, [user]);
+  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
