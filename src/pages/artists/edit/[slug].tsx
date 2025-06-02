@@ -82,37 +82,45 @@ export default function EditArtistProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !slug) return;
+  
+    if (!user || !slug) {
+      setError("You must be logged in to edit your profile.");
+      return;
+    }
+  
     setLoading(true);
-
     const formData = new FormData();
+  
     Object.entries(form).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        formData.append(key, JSON.stringify(value));
-      } else {
-        formData.append(key, value);
-      }
+      formData.append(key, Array.isArray(value) ? JSON.stringify(value) : value);
     });
-
+  
     Object.entries(files).forEach(([key, file]) => {
       if (file) formData.append(key, file);
     });
-
+  
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${slug}`, {
         method: 'PUT',
         body: formData,
-        credentials: 'include'
+        credentials: 'include',
       });
-
+  
+      if (res.status === 401) {
+        setError("Your session has expired. Redirecting to login...");
+        setTimeout(() => router.push('/login'), 2000);
+        return;
+      }
+  
       if (!res.ok) throw new Error('Failed to update artist profile');
       router.push(`/artists/${slug}`);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="max-w-xl mx-auto p-6 text-white">
