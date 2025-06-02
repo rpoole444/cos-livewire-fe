@@ -248,12 +248,17 @@ const UserProfile: React.FC = () => {
               </button>
 
                 {user?.is_admin && !hasArtistProfile && (
-                <button
+                <>
+                  <button
                   onClick={() => router.push("/artist-signup")}
                   className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold"
-                >
-                  Create Pro Profile
-                </button>
+                  >
+                    🎁 Create Pro Artist Profile (Free Trial)
+                  </button>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Get 30 days of free access to Alpine Pro features — no credit card required.
+                  </p>
+                </>
                 )}
                 { hasArtistProfile && (
                 <button
