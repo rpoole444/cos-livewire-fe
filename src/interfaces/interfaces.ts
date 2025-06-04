@@ -63,6 +63,7 @@ interface User {
   password: string;
   is_admin: boolean;
   is_logged_in: boolean;
+  is_pro?: boolean;
 }
 
 export type Users = User[];
