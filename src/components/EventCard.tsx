@@ -71,10 +71,24 @@ const EventCard: React.FC<EventCardProps> = ({
             />
           </div>
         ) : (
-          <div className="w-full sm:w-[150px] h-[150px] bg-gray-700 text-center flex items-center justify-center rounded-md text-gray-400">
-            No Poster
+          <div className="w-full sm:w-[150px] h-[150px] bg-gray-800 flex flex-col items-center justify-center rounded-md text-center p-2">
+            <Image
+              src="/alpine_groove_guide_icon.png"
+              alt="Alpine Groove Guide Logo"
+              width={48}
+              height={48}
+              className="mb-2"
+            />
+          <p className="text-xs text-white leading-tight">
+              Go check out <strong>{event.title}</strong><br />
+              as posted by <strong>
+                {(event.user as any)?.displayName || event.user?.first_name || 'local musician'}
+              </strong>
+            </p>
+
           </div>
         )}
+
 
         {/* Details */}
         <div className="flex-1 text-sm text-gray-300 space-y-1">
