@@ -35,8 +35,18 @@ export default function ArtistSignupPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+  
+    let cleanValue = value;
+  
+    // Auto-extract iframe src if user pastes embed code
+    const iframeMatch = value.match(/<iframe.*?src=["'](.*?)["']/);
+    if (iframeMatch) {
+      cleanValue = iframeMatch[1]; // The extracted src URL
+    }
+  
+    setForm(prev => ({ ...prev, [name]: cleanValue }));
   };
+  
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, files: selected } = e.target;
@@ -146,9 +156,50 @@ export default function ArtistSignupPage() {
         </div>
 
         <input name="website" placeholder="Website (https://...)" value={form.website} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        <input name="embed_youtube" placeholder="YouTube Embed Link" value={form.embed_youtube} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        <input name="embed_soundcloud" placeholder="SoundCloud Embed Link" value={form.embed_soundcloud} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        <input name="embed_bandcamp" placeholder="Bandcamp Embed Link" value={form.embed_bandcamp} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        <input name="embed_youtube" placeholder="Paste YouTube embed link or iframe code" value={form.embed_youtube} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        {form.embed_youtube && (
+          <div className="mt-2">
+            <p className="text-xs text-gray-400 mb-1">Preview:</p>
+            <iframe
+              src={form.embed_youtube}
+              title="YouTube Preview"
+              width="100%"
+              height="250"
+              className="rounded border border-gray-600"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        )}
+
+        <input name="embed_soundcloud" placeholder="Paste SoundCloud embed link or iframe code" value={form.embed_soundcloud} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        {form.embed_soundcloud && (
+          <div className="mt-2">
+            <p className="text-xs text-gray-400 mb-1">Preview:</p>
+            <iframe
+              width="100%"
+              height="166"
+              scrolling="no"
+              frameBorder="no"
+              allow="autoplay"
+              src={form.embed_soundcloud}
+              className="rounded border border-gray-600"
+            />
+          </div>
+        )}
+
+        <input name="embed_bandcamp" placeholder="Paste Bandcamp embed link or iframe code" value={form.embed_bandcamp} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        {form.embed_bandcamp && (
+          <div className="mt-2">
+            <p className="text-xs text-gray-400 mb-1">Preview:</p>
+            <iframe
+              style={{ border: '0', width: '100%', height: '120px' }}
+              src={form.embed_bandcamp}
+              seamless
+              className="rounded border border-gray-600"
+            />
+          </div>
+        )}
 
         <label className="block text-sm font-semibold mt-4">Promo Photo</label>
         <input type="file" name="promo_photo" accept="image/*" onChange={handleFileChange} className="w-full text-sm" />
