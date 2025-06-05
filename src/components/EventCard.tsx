@@ -80,12 +80,8 @@ const EventCard: React.FC<EventCardProps> = ({
               className="mb-2"
             />
           <p className="text-xs text-white leading-tight">
-              Go check out <strong>{event.title}</strong><br />
-              as posted by <strong>
-                {(event.user as any)?.displayName || event.user?.first_name || 'local musician'}
-              </strong>
+              Go check out <strong>{event.title}</strong>!
             </p>
-
           </div>
         )}
 
