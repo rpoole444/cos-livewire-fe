@@ -120,27 +120,16 @@ useEffect(() => {
                     Enjoying the music? Send a tip directly to support their work.
                   </p>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    {/* QR code */}
-                    <img
-                      src="/images/tip_jar_qr.png" // Replace with dynamic path or S3 URL if needed
-                      alt="Tip this artist QR"
-                      className="w-28 h-28 border border-gray-600 rounded-lg"
-                    />
-
-                    {/* Animated Tip Button */}
-                    <a
-                      href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block bg-green-600 hover:bg-green-700 hover:scale-105 transform transition text-white px-5 py-2 text-lg font-semibold rounded shadow"
-                    >
-                      💸 Tip this artist
-                    </a>
-                  </div>
+                  <a
+                    href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block bg-green-600 hover:bg-green-700 hover:scale-105 transform transition text-white px-5 py-2 text-lg font-semibold rounded shadow"
+                  >
+                    💸 Tip this artist
+                  </a>
                 </div>
               )}
-
 
               <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
               {artist.website && <p className="text-sm text-blue-400">🔗 <a
