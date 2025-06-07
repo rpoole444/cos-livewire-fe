@@ -114,18 +114,34 @@ useEffect(() => {
               <p className="text-gray-300 mb-2">{artist.bio}</p>
               <p className="text-sm text-gray-400">📧 {artist.contact_email}</p>
               {artist.tip_jar_url && (
-                <p className="mt-4">
-                  💸{' '}
-                  <a
-                    href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow mt-2"
-                  >
-                    Tip this artist
-                  </a>
-                </p>
+                <div className="mt-6 bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-green-500">
+                  <h3 className="text-lg font-bold mb-2 text-green-400">Support this artist 🎺</h3>
+                  <p className="text-gray-300 text-sm mb-4">
+                    Enjoying the music? Send a tip directly to support their work.
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    {/* QR code */}
+                    <img
+                      src="/images/tip_jar_qr.png" // Replace with dynamic path or S3 URL if needed
+                      alt="Tip this artist QR"
+                      className="w-28 h-28 border border-gray-600 rounded-lg"
+                    />
+
+                    {/* Animated Tip Button */}
+                    <a
+                      href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-green-600 hover:bg-green-700 hover:scale-105 transform transition text-white px-5 py-2 text-lg font-semibold rounded shadow"
+                    >
+                      💸 Tip this artist
+                    </a>
+                  </div>
+                </div>
               )}
+
+
               <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
               {artist.website && <p className="text-sm text-blue-400">🔗 <a
                 href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
