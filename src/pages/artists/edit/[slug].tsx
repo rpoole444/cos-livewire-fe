@@ -23,6 +23,7 @@ export default function EditArtistProfilePage() {
     embed_youtube: '',
     embed_soundcloud: '',
     embed_bandcamp: '',
+    tip_jar_url: '',
   });
 
   const [files, setFiles] = useState({
@@ -51,6 +52,7 @@ export default function EditArtistProfilePage() {
           embed_youtube: data.embed_youtube || '',
           embed_soundcloud: data.embed_soundcloud || '',
           embed_bandcamp: data.embed_bandcamp || '',
+          tip_jar_url: '',
         });
       } catch (err) {
         setError('Error loading artist profile');
@@ -138,6 +140,17 @@ export default function EditArtistProfilePage() {
         <input name="contact_email" value={form.contact_email} onChange={handleChange} placeholder="Contact Email" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <input name="website" value={form.website} onChange={handleChange} placeholder="Website URL" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <textarea name="bio" value={form.bio} onChange={handleChange} placeholder="Bio" className="w-full p-2 rounded bg-gray-800 border border-gray-600" rows={4} />
+        <label className="block mb-2">
+          Tip Jar URL (PayPal/Venmo):
+          <input
+            type="text"
+            name="tip_jar_url"
+            value={form.tip_jar_url}
+            onChange={handleChange}
+            className="w-full px-3 py-2 rounded bg-gray-800 text-white"
+            placeholder="https://venmo.com/u/yourhandle or PayPal.me/yourname"
+          />
+        </label>
 
         <input name="embed_youtube" value={form.embed_youtube} onChange={handleChange} placeholder="YouTube Embed Link" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <input name="embed_soundcloud" value={form.embed_soundcloud} onChange={handleChange} placeholder="SoundCloud Embed Link" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />

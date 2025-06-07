@@ -35,6 +35,7 @@ interface Artist {
   is_pro?: boolean;
   genres: string[];
   slug: string;
+  tip_jar_url: string;
   events: Event[]
   trial_expired?: boolean;
 }
@@ -112,6 +113,19 @@ useEffect(() => {
               <h1 className="text-4xl font-bold mb-2">{artist.display_name}</h1>
               <p className="text-gray-300 mb-2">{artist.bio}</p>
               <p className="text-sm text-gray-400">📧 {artist.contact_email}</p>
+              {artist.tip_jar_url && (
+                <p className="mt-4">
+                  💸{' '}
+                  <a
+                    href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow mt-2"
+                  >
+                    Tip this artist
+                  </a>
+                </p>
+              )}
               <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
               {artist.website && <p className="text-sm text-blue-400">🔗 <a
                 href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}

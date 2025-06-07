@@ -21,6 +21,7 @@ export default function ArtistSignupPage() {
     embed_soundcloud: '',
     embed_bandcamp: '',
     website: '',
+    tip_jar_url: '',
   });
 
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
@@ -156,6 +157,14 @@ export default function ArtistSignupPage() {
         </div>
 
         <input name="website" placeholder="Website (https://...)" value={form.website} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        <input
+          name="tip_jar_url"
+          placeholder="Tip Jar (Venmo/PayPal URL)"
+          value={form.tip_jar_url}
+          onChange={handleChange}
+          className="w-full p-2 rounded bg-gray-800 border border-gray-600"
+        />
+
         <input name="embed_youtube" placeholder="Paste YouTube embed link or iframe code" value={form.embed_youtube} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         {form.embed_youtube && (
           <div className="mt-2">
