@@ -62,11 +62,11 @@ export default function EditArtistProfilePage() {
   }, [slug]);
 
   useEffect(() => {
-    if (user === null) {
+    if (router.isReady && user === null) {
       setError("You must be logged in to access this page.");
       router.push('/login');
     }
-  }, [user]);
+  }, [user, router]);
   
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
