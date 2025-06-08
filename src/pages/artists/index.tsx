@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
+import Image from 'next/image';
 
 interface Artist {
   display_name: string;
@@ -77,9 +78,11 @@ export default function ArtistDirectoryPage() {
               className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition block shadow-md"
             >
               <div className="flex items-center gap-4">
-                <img
+                <Image
                   src={artist.profile_image}
                   alt={artist.display_name}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 rounded-full object-cover"
                 />
                 <div>
