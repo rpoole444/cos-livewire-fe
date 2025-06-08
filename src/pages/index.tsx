@@ -12,7 +12,6 @@ import WelcomeUser from '@/components/WelcomeUser';
 import EventsCalendar from '@/components/EventsCalendar';
 import Events from '@/components/events';
 import UpcomingShows from '@/components/UpcomingShows';
-
 import { useAuth } from '@/context/AuthContext';
 import { useHomeState } from '@/hooks/useHomeState';
 import { getEvents } from './api/route';
@@ -124,6 +123,24 @@ export default function Home() {
         </p>
       </div>
 
+      {user?.is_admin && (
+        <div className="px-4 py-6 max-w-5xl mx-auto">
+          <div className="mt-6 bg-gray-800 text-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
+            <h3 className="text-lg font-bold mb-2 text-yellow-300">🧑‍🎤 Artist Directory (Admin Preview)</h3>
+            <p className="text-sm text-gray-300 mb-4">
+              Preview and test Alpine Pro artist pages before they go live to the public.
+            </p>
+            <a
+              href="/artists"
+              className="inline-block px-4 py-2 bg-yellow-500 text-black rounded-md font-semibold hover:bg-yellow-400 transition"
+            >
+              🔍 View Artist Directory
+            </a>
+          </div>
+        </div>
+      )}
+
+
       <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
         <main className="container mx-auto px-4 md:px-8 py-6">
           <div className="flex flex-col gap-6">
@@ -133,8 +150,8 @@ export default function Home() {
                 events={events}
                 onDateSelect={(date) => {
                   setSelectedDate(date);
-                  setSearchQuery(''); // Clear search on calendar click
-                  setSearchAllUpcoming(false); // Reset toggle to daily view
+                  setSearchQuery('');
+                  setSearchAllUpcoming(false);
                 }}
               />
             </aside>
