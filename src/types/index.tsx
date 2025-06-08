@@ -8,7 +8,8 @@ export interface UserType {
   is_admin: boolean;
   is_logged_in?: boolean;
   is_pro?: boolean; 
-  top_music_genres: string[]; // array after parsing
+  trial_ends_at?: string | null;
+  top_music_genres: string[];
   user_description?: string;
   profile_picture?: string;
 }

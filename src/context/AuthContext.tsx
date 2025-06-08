@@ -64,6 +64,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           displayName: data.user.displayName ?? data.user.display_name ?? '', 
           top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [],
           profile_picture: profilePictureData.profile_picture_url || null,
+          trial_ends_at: data.user.trial_ends_at || null, 
+
         });
         console.log("setUser payload:", {
           ...data.user,
@@ -117,6 +119,7 @@ const login = async (email: string, password: string) => {
       displayName: data.user.displayName ?? data.user.display_name ?? '', 
       top_music_genres: genres,
       profile_picture: profileData.profile_picture_url,
+      trial_ends_at: data.user.trial_ends_at || null, 
     });
 
 console.log("setUser payload:", {
