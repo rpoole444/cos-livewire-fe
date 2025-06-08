@@ -51,6 +51,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const canEdit = artist && user && (user.id === artist.user_id || user.is_admin);
   const router = useRouter();
   const [showTrialToast, setShowTrialToast] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (router.query.trial === 'active') {
@@ -59,30 +60,56 @@ const ArtistProfilePage = ({ artist }: Props) => {
     }
   }, [router.query]);
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to permanently delete this artist profile?')) return;
+
+    setDeleting(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist?.slug}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (res.ok) {
+        alert('Artist profile deleted successfully.');
+        router.push('/');
+      } else {
+        const errData = await res.json();
+        alert(`Failed to delete artist: ${errData.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('An error occurred while deleting.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (!artist) return <div className="text-white p-6">Artist not found</div>;
 
   if (artist.trial_expired && !artist.is_pro) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white text-center px-6 py-12">
-        <div className="bg-gray-800 p-8 rounded-xl shadow-lg max-w-xl w-full border-2 border-red-500">
-          <h1 className="text-3xl font-bold mb-4">🎤 {artist.display_name}</h1>
-          <p className="text-lg mb-6">
-            ⛔️ This artist profile is currently locked. Your free trial has ended.
-          </p>
-          <p className="text-sm mb-6 text-gray-400">
-            Unlock access to your bio, contact info, media embeds, and downloads with Alpine Pro.
-          </p>
-          <Link href="/upgrade">
-            <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 rounded shadow">
-              💫 Upgrade to Alpine Pro
-            </button>
-          </Link>
-        </div>
+      <div className="text-white p-6 max-w-xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4">{artist.display_name}</h1>
+        <Image
+          src={artist.profile_image}
+          alt={artist.display_name}
+          width={192}
+          height={192}
+          className="rounded-full shadow mb-4"
+        />
+        <p className="mb-4">
+          Your free trial has expired. To unlock full access to your artist profile (bio, contact, media, and downloads),
+          please upgrade to Alpine Pro.
+        </p>
+        <Link href="/upgrade">
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+            Upgrade to Pro
+          </button>
+        </Link>
       </div>
-    );    
+    );
   }
-
-  const showLockedFeatures = !artist.trial_expired || artist.is_pro;
 
   return (
     <>
@@ -112,46 +139,37 @@ const ArtistProfilePage = ({ artist }: Props) => {
             <div>
               <h1 className="text-4xl font-bold mb-2">{artist.display_name}</h1>
               <p className="text-gray-300 mb-2">{artist.bio}</p>
-              {showLockedFeatures && (
-                <>
-                  <p className="text-sm text-gray-400">📧 {artist.contact_email}</p>
-                  {artist.tip_jar_url && (
-                    <div className="mt-6 bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-green-500">
-                      <h3 className="text-lg font-bold mb-2 text-green-400">Support this artist 🎺</h3>
-                      <p className="text-gray-300 text-sm mb-4">
-                        Enjoying the music? Send a tip directly to support their work.
-                      </p>
-                      <a
-                        href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block bg-green-600 hover:bg-green-700 hover:scale-105 transform transition text-white px-5 py-2 text-lg font-semibold rounded shadow"
-                      >
-                        💸 Tip this artist
-                      </a>
-                    </div>
-                  )}
-                  <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
-                  {artist.website && <p className="text-sm text-blue-400">🔗 <a
-                    href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
+              <p className="text-sm text-gray-400">📧 {artist.contact_email}</p>
+              {artist.tip_jar_url && (
+                <div className="mt-6 bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-green-500">
+                  <h3 className="text-lg font-bold mb-2 text-green-400">Support this artist 🎺</h3>
+                  <p className="text-gray-300 text-sm mb-4">
+                    Enjoying the music? Send a tip directly to support their work.
+                  </p>
+
+                  <a
+                    href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-400 underline"
+                    className="inline-block bg-green-600 hover:bg-green-700 hover:scale-105 transform transition text-white px-5 py-2 text-lg font-semibold rounded shadow"
                   >
-                    {artist.website}
-                  </a></p>}
-                </>
-              )}
-              {!showLockedFeatures && (
-                <div className="bg-red-800 text-white p-4 mt-4 rounded shadow text-center text-sm">
-                  🔒 Some features are hidden.{' '}
-                  <Link href="/upgrade" className="underline text-yellow-300 font-medium">Upgrade to Alpine Pro</Link> to unlock them.
+                    💸 Tip this artist
+                  </a>
                 </div>
               )}
+              <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
+              {artist.website && <p className="text-sm text-blue-400">🔗 <a
+                href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 underline"
+              >
+                {artist.website}
+              </a></p>}
             </div>
           </div>
 
-          {showLockedFeatures && (artist.embed_youtube || artist.embed_soundcloud || artist.embed_bandcamp) && (
+          {(artist.embed_youtube || artist.embed_soundcloud || artist.embed_bandcamp) && (
             <div className="space-y-6">
               {artist.embed_youtube && (
                 <div>
@@ -176,7 +194,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
             </div>
           )}
 
-          {showLockedFeatures && (artist.promo_photo || artist.stage_plot || artist.press_kit) && (
+          {(artist.promo_photo || artist.stage_plot || artist.press_kit) && (
             <div className="space-y-4">
               <h3 className="text-xl font-semibold mt-6">📎 Downloads</h3>
               {artist.promo_photo && (
@@ -211,12 +229,21 @@ const ArtistProfilePage = ({ artist }: Props) => {
             )}
 
             {canEdit && (
-              <button
-                onClick={() => router.push(`/artists/edit/${artist.slug}`)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded mt-4"
-              >
-                ✏️ Edit Profile
-              </button>
+              <div className="flex flex-wrap gap-4 mt-6">
+                <button
+                  onClick={() => router.push(`/artists/edit/${artist.slug}`)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                >
+                  ✏️ Edit Profile
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                >
+                  🗑️ Delete Profile
+                </button>
+              </div>
             )}
           </div>
         </div>
