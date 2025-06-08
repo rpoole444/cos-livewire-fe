@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import Link from 'next/link';
+import TrialBanner from '@/components/TrialBanner'; // adjust path as needed
 
 interface Event {
   id: number;
@@ -36,8 +37,9 @@ interface Artist {
   genres: string[];
   slug: string;
   tip_jar_url: string;
-  events: Event[]
+  events: Event[];
   trial_expired?: boolean;
+  trial_ends_at?: string | null;
 }
 
 interface Props {
@@ -50,40 +52,37 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const router = useRouter();
   const [showTrialToast, setShowTrialToast] = useState(false);
 
-useEffect(() => {
-  if (router.query.trial === 'active') {
-    setShowTrialToast(true);
-    setTimeout(() => setShowTrialToast(false), 5000); // Hide after 5 seconds
-  }
-}, [router.query]);
-
+  useEffect(() => {
+    if (router.query.trial === 'active') {
+      setShowTrialToast(true);
+      setTimeout(() => setShowTrialToast(false), 5000);
+    }
+  }, [router.query]);
 
   if (!artist) return <div className="text-white p-6">Artist not found</div>;
 
   if (artist.trial_expired && !artist.is_pro) {
-    
     return (
-      <div className="text-white p-6 max-w-xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4">{artist.display_name}</h1>
-        <Image
-          src={artist.profile_image}
-          alt={artist.display_name}
-          width={192}
-          height={192}
-          className="rounded-full shadow mb-4"
-        />
-        <p className="mb-4">
-          Your free trial has expired. To unlock full access to your artist profile (bio, contact, media, and downloads),
-          please upgrade to Alpine Pro.
-        </p>
-        <Link href="/upgrade">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-            Upgrade to Pro
-          </button>
-        </Link>
+      <div className="min-h-screen flex items-center justify-center bg-black text-white text-center px-6 py-12">
+        <div className="bg-gray-800 p-8 rounded-xl shadow-lg max-w-xl w-full border-2 border-red-500">
+          <h1 className="text-3xl font-bold mb-4">🎤 {artist.display_name}</h1>
+          <p className="text-lg mb-6">
+            ⛔️ This artist profile is currently locked. Your free trial has ended.
+          </p>
+          <p className="text-sm mb-6 text-gray-400">
+            Unlock access to your bio, contact info, media embeds, and downloads with Alpine Pro.
+          </p>
+          <Link href="/upgrade">
+            <button className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 rounded shadow">
+              💫 Upgrade to Alpine Pro
+            </button>
+          </Link>
+        </div>
       </div>
-    );
+    );    
   }
+
+  const showLockedFeatures = !artist.trial_expired || artist.is_pro;
 
   return (
     <>
@@ -101,6 +100,7 @@ useEffect(() => {
             </div>
           )}
           <Header />
+          <TrialBanner trial_ends_at={artist.trial_ends_at} is_pro={artist.is_pro} />
           <div className="flex flex-col md:flex-row gap-6 items-center">
             <Image
               src={artist.profile_image}
@@ -112,38 +112,46 @@ useEffect(() => {
             <div>
               <h1 className="text-4xl font-bold mb-2">{artist.display_name}</h1>
               <p className="text-gray-300 mb-2">{artist.bio}</p>
-              <p className="text-sm text-gray-400">📧 {artist.contact_email}</p>
-              {artist.tip_jar_url && (
-                <div className="mt-6 bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-green-500">
-                  <h3 className="text-lg font-bold mb-2 text-green-400">Support this artist 🎺</h3>
-                  <p className="text-gray-300 text-sm mb-4">
-                    Enjoying the music? Send a tip directly to support their work.
-                  </p>
-
-                  <a
-                    href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
+              {showLockedFeatures && (
+                <>
+                  <p className="text-sm text-gray-400">📧 {artist.contact_email}</p>
+                  {artist.tip_jar_url && (
+                    <div className="mt-6 bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-green-500">
+                      <h3 className="text-lg font-bold mb-2 text-green-400">Support this artist 🎺</h3>
+                      <p className="text-gray-300 text-sm mb-4">
+                        Enjoying the music? Send a tip directly to support their work.
+                      </p>
+                      <a
+                        href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block bg-green-600 hover:bg-green-700 hover:scale-105 transform transition text-white px-5 py-2 text-lg font-semibold rounded shadow"
+                      >
+                        💸 Tip this artist
+                      </a>
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
+                  {artist.website && <p className="text-sm text-blue-400">🔗 <a
+                    href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block bg-green-600 hover:bg-green-700 hover:scale-105 transform transition text-white px-5 py-2 text-lg font-semibold rounded shadow"
+                    className="text-blue-400 underline"
                   >
-                    💸 Tip this artist
-                  </a>
+                    {artist.website}
+                  </a></p>}
+                </>
+              )}
+              {!showLockedFeatures && (
+                <div className="bg-red-800 text-white p-4 mt-4 rounded shadow text-center text-sm">
+                  🔒 Some features are hidden.{' '}
+                  <Link href="/upgrade" className="underline text-yellow-300 font-medium">Upgrade to Alpine Pro</Link> to unlock them.
                 </div>
               )}
-
-              <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
-              {artist.website && <p className="text-sm text-blue-400">🔗 <a
-                href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 underline"
-              >
-                {artist.website}
-              </a></p>}
             </div>
           </div>
 
-          {(artist.embed_youtube || artist.embed_soundcloud || artist.embed_bandcamp) && (
+          {showLockedFeatures && (artist.embed_youtube || artist.embed_soundcloud || artist.embed_bandcamp) && (
             <div className="space-y-6">
               {artist.embed_youtube && (
                 <div>
@@ -168,7 +176,7 @@ useEffect(() => {
             </div>
           )}
 
-          {(artist.promo_photo || artist.stage_plot || artist.press_kit) && (
+          {showLockedFeatures && (artist.promo_photo || artist.stage_plot || artist.press_kit) && (
             <div className="space-y-4">
               <h3 className="text-xl font-semibold mt-6">📎 Downloads</h3>
               {artist.promo_photo && (

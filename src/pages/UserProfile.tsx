@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Image from "next/image";
+import TrialBanner from '@/components/TrialBanner';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -173,6 +174,7 @@ const UserProfile: React.FC = () => {
   return user ? (
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
+      <TrialBanner />
       {showSuccessToast && (
         <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow mb-4 max-w-xl mx-auto">
           ✅ Success! You’ve unlocked Alpine Pro.
