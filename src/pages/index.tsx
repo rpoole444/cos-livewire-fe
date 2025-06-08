@@ -3,7 +3,7 @@ import Fuse from 'fuse.js';
 import Image from 'next/image';
 import { Switch } from '@headlessui/react';
 import { Search, CalendarSearch } from 'lucide-react';
-
+import Link from 'next/link';
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import LoginForm from '@/components/login';
@@ -130,12 +130,11 @@ export default function Home() {
             <p className="text-sm text-gray-300 mb-4">
               Preview and test Alpine Pro artist pages before they go live to the public.
             </p>
-            <a
-              href="/artists"
-              className="inline-block px-4 py-2 bg-yellow-500 text-black rounded-md font-semibold hover:bg-yellow-400 transition"
-            >
-              🔍 View Artist Directory
-            </a>
+            <Link href="/artists">
+              <a className="inline-block px-4 py-2 bg-yellow-500 text-black rounded font-semibold hover:bg-yellow-400">
+                View Directory
+              </a>
+            </Link>
           </div>
         </div>
       )}
