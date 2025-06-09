@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { UserType } from '../types';
-import { useRouter } from 'next/router';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface AuthContextType {
   user: UserType | null;
@@ -10,19 +9,16 @@ interface AuthContextType {
   logout: () => void;
   updateUser: (updatedUser: UserType) => void;
   loading: boolean;
-  refetchUser: () => Promise<void>
-}
-interface ProfilePictureResponse {
-  profile_picture_url: string;
+  refetchUser: () => Promise<void>;
 }
 
 const defaultContext: AuthContextType = {
   user: null,
-  login: async (email: string, password: string) => {},
+  login: async () => {},
   logout: () => {},
-  updateUser: (updatedUser: UserType) => {},
+  updateUser: () => {},
   loading: true,
-  refetchUser: async () => {}, 
+  refetchUser: async () => {},
 };
 
 const AuthContext = createContext<AuthContextType>(defaultContext);
@@ -33,63 +29,61 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserType | null>(null);
-  const [loading, setLoading] = useState(true); // ✅ Add this line
+  const [loading, setLoading] = useState(true);
 
-
-  
- useEffect(() => {
-  const checkAuthStatus = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
-        credentials: 'include',
-      });
-      const data = await response.json();
-
-      if (data.isLoggedIn) {
-        // Fetch the profile picture
-        const profilePictureResponse = await fetch(
-          `${API_BASE_URL}/api/auth/profile-picture`,
-          { credentials: 'include' }
-        );
-        const profilePictureData = await profilePictureResponse.json();
-
-        // Parse genres if necessary
-        let parsedGenres = [];
-        if (data.user.top_music_genres) {
-          try {
-            parsedGenres = JSON.parse(data.user.top_music_genres);
-          } catch (error) {
-            console.error('Error parsing genres:', error);
-          }
-        }
-
-        // Set user state with all data at once
-        setUser({
-          ...data.user,
-          displayName: data.user.displayName ?? data.user.display_name ?? '', 
-          top_music_genres: Array.isArray(parsedGenres) ? parsedGenres : [],
-          profile_picture: profilePictureData.profile_picture_url || null,
-          trial_ends_at: data.user.trial_ends_at || null, 
-
-        });
-        console.log("setUser payload:", {
-          ...data.user,
-          displayName: data.user.displayName ?? data.user.display_name
-        });
+  const parseGenres = (input: any): string[] => {
+    if (Array.isArray(input)) return input;
+    if (typeof input === 'string') {
+      try {
+        return JSON.parse(input);
+      } catch (err) {
+        console.error('Genre parse error:', err);
       }
-    } catch (error) {
-      console.error('Error fetching auth status:', error);
-    }finally {
-      setLoading(false); // ✅ Always end loading
     }
+    return [];
   };
 
-  checkAuthStatus();
-}, []);
+  const fetchUserWithExtras = async (): Promise<UserType | null> => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
+      credentials: 'include',
+    });
+    const data = await response.json();
 
+    if (!data.isLoggedIn) return null;
 
-const login = async (email: string, password: string) => {
-  try {
+    const profilePicRes = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
+      credentials: 'include',
+    });
+    const profilePicData = await profilePicRes.json();
+
+    return {
+      ...data.user,
+      displayName: data.user.displayName ?? data.user.display_name ?? '',
+      top_music_genres: parseGenres(data.user.top_music_genres),
+      profile_picture: profilePicData.profile_picture_url || null,
+      trial_ends_at: data.user.trial_ends_at || null,
+    };
+  };
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const userData = await fetchUserWithExtras();
+        if (userData) {
+          setUser(userData);
+          console.log("setUser payload:", userData);
+        }
+      } catch (err) {
+        console.error('Error fetching auth status:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, []);
+
+  const login = async (email: string, password: string) => {
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -111,78 +105,31 @@ const login = async (email: string, password: string) => {
       ? await profileRes.json()
       : { profile_picture_url: null };
 
-    const genres = Array.isArray(data.user.top_music_genres)
-      ? data.user.top_music_genres
-      : (() => {
-          try {
-            return JSON.parse(data.user.top_music_genres);
-          } catch {
-            return [];
-          }
-        })();
+    const genres = parseGenres(data.user.top_music_genres);
 
-    setUser({
+    const fullUser: UserType = {
       ...data.user,
-      displayName: data.user.displayName ?? data.user.display_name ?? '', 
+      displayName: data.user.displayName ?? data.user.display_name ?? '',
       top_music_genres: genres,
       profile_picture: profileData.profile_picture_url,
-      trial_ends_at: data.user.trial_ends_at || null, 
-    });
+      trial_ends_at: data.user.trial_ends_at || null,
+    };
 
-console.log("setUser payload:", {
-  ...data.user,
-  displayName: data.user.displayName ?? data.user.display_name
-});
+    setUser(fullUser);
+    console.log("setUser payload:", fullUser);
+  };
 
-  } catch (error) {
-    console.error("Login error:", error);
-    throw error;
-  }
-};
-
-const refetchUser = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
-      credentials: 'include',
-    });
-    const data = await response.json();
-
-    if (data.isLoggedIn) {
-      const profilePictureResponse = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
-        credentials: 'include',
-      });
-      const profilePictureData = await profilePictureResponse.json();
-
-      // ✅ Only parse if it's a string
-      let parsedGenres = [];
-      if (data.user.top_music_genres) {
-        if (typeof data.user.top_music_genres === 'string') {
-          try {
-            parsedGenres = JSON.parse(data.user.top_music_genres);
-          } catch (error) {
-            console.error('Error parsing genres:', error);
-          }
-        } else {
-          parsedGenres = data.user.top_music_genres;
-        }
+  const refetchUser = async () => {
+    try {
+      const userData = await fetchUserWithExtras();
+      if (userData) {
+        setUser(userData);
+        console.log("✅ refetchUser payload:", userData);
       }
-
-      const payload = {
-        ...data.user,
-        displayName: data.user.displayName ?? data.user.display_name ?? '',
-        top_music_genres: parsedGenres,
-        profile_picture: profilePictureData.profile_picture_url || null,
-        trial_ends_at: data.user.trial_ends_at || null,
-      };
-
-      setUser(payload);
-      console.log("✅ refetchUser payload", payload);
+    } catch (err) {
+      console.error("Error in refetchUser:", err);
     }
-  } catch (err) {
-    console.error('Error refetching user:', err);
-  }
-};
-
+  };
 
   const logout = async () => {
     try {
@@ -205,7 +152,9 @@ const refetchUser = async () => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, refetchUser, loading }}>
+    <AuthContext.Provider
+      value={{ user, login, logout, updateUser, refetchUser, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );

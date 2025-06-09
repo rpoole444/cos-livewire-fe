@@ -18,54 +18,59 @@ const UserProfile: React.FC = () => {
   const { success } = router.query;
 
   const [isEditing, setIsEditing] = useState(false);
-  const [email, setEmail] = useState(user?.email || "");
-  const [displayName, setDisplayName] = useState(user?.displayName || "");
-  const [description, setDescription] = useState(user?.user_description || "");
+  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [description, setDescription] = useState("");
   const [genres, setGenres] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [profilePicture, setProfilePicture] = useState<string>(user?.profile_picture || "");
+  const [profilePicture, setProfilePicture] = useState("");
   const [hasArtistProfile, setHasArtistProfile] = useState(false);
   const [artistSlug, setArtistSlug] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [hasRefetched, setHasRefetched] = useState(false);
 
+  // If redirected from Stripe, fetch updated user info
   useEffect(() => {
-    if (!loading && !user) router.push("/");
-  }, [user, loading, router]);
+    if (!router.isReady) return;
 
-  useEffect(() => {
-    if (user?.top_music_genres && Array.isArray(user.top_music_genres)) {
-      setGenres(user.top_music_genres);
+    if (success === 'true') {
+      const run = async () => {
+        await refetchUser();
+        setHasRefetched(true);
+        setShowSuccessToast(true);
+
+        const cleaned = new URL(window.location.href);
+        cleaned.searchParams.delete('success');
+        window.history.replaceState({}, document.title, cleaned.toString());
+
+        setTimeout(() => setShowSuccessToast(false), 5000);
+      };
+      run();
     } else {
-      setGenres([]);
+      setHasRefetched(true);
     }
-  }, [user]);  
+  }, [success, router.isReady]);
 
+  // Once user is available, populate form values
   useEffect(() => {
-    // Only try to refetch if the component loaded and no user is available
-    if (!loading && !user) {
-      refetchUser();
+    if (user) {
+      setEmail(user.email || "");
+      setDisplayName(user.displayName || "");
+      setDescription(user.user_description || "");
+      setGenres(Array.isArray(user.top_music_genres) ? user.top_music_genres : []);
+      setProfilePicture(user.profile_picture || "");
     }
-  }, [loading, user]);
+  }, [user]);
 
-  useEffect(() => {
-    const fetchPicture = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, { credentials: "include" });
-        const data = await res.json();
-        if (data.profile_picture_url) setProfilePicture(data.profile_picture_url);
-      } catch (err) {
-        console.error("Image fetch error", err);
-      }
-    };
-    fetchPicture();
-  }, []);
-
+  // Check for associated artist profile
   useEffect(() => {
     const checkArtistProfile = async () => {
+      if (!user?.id) return;
+
       try {
-        const res = await fetch(`${API_BASE_URL}/api/artists/user/${user?.id}`, {
+        const res = await fetch(`${API_BASE_URL}/api/artists/user/${user.id}`, {
           credentials: 'include',
         });
 
@@ -73,39 +78,16 @@ const UserProfile: React.FC = () => {
           const data = await res.json();
           setHasArtistProfile(true);
           setArtistSlug(data.slug);
-        } else if (res.status === 404) {
-          setHasArtistProfile(false);
-          setArtistSlug('');
         } else {
-          console.error("Unexpected response checking artist profile:", res.status);
+          setHasArtistProfile(false);
         }
-        
       } catch (err) {
-        console.error("Network or server error checking artist profile:", err);
+        console.error("Artist profile fetch error:", err);
       }
     };
 
-    if (user?.id) checkArtistProfile();
+    checkArtistProfile();
   }, [user]);
-
-  useEffect(() => {
-    if (!router.isReady) return;
-    if (success === 'true') {
-      const run = async () => {
-        await refetchUser(); // ✅ Pull the updated user state from the server
-        setShowSuccessToast(true);
-  
-        const cleaned = new URL(window.location.href);
-        cleaned.searchParams.delete('success');
-        window.history.replaceState({}, document.title, cleaned.toString());
-  
-        setTimeout(() => setShowSuccessToast(false), 5000);
-      };
-  
-      run();
-    }
-  }, [success, router.isReady]);
-  ;  
 
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
@@ -119,8 +101,8 @@ const UserProfile: React.FC = () => {
     if (!user) return;
 
     const formData = new FormData();
-    formData.append("first_name", user.first_name);
-    formData.append("last_name", user.last_name);
+    formData.append("first_name", user.first_name || "");
+    formData.append("last_name", user.last_name || "");
     formData.append("displayName", displayName);
     formData.append("email", email);
     formData.append("user_description", description);
@@ -133,19 +115,23 @@ const UserProfile: React.FC = () => {
         body: formData,
         credentials: "include",
       });
+
       const data = await res.json();
+      updateUser({
+        ...user,
+        email,
+        user_description: description,
+        displayName,
+        top_music_genres: genres,
+        profile_picture: data.profile_picture,
+      });
       setProfilePicture(data.profile_picture);
-      updateUser({ ...user, email, user_description: description, displayName: displayName, top_music_genres: genres, profile_picture: data.profile_picture });
       setMessage("Profile updated successfully!");
       setIsEditing(false);
     } catch (err) {
       console.error(err);
       setMessage("Error updating profile.");
     }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) setFile(e.target.files[0]);
   };
 
   const handleResetPassword = async () => {
@@ -163,6 +149,10 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) setFile(e.target.files[0]);
+  };
+
   const handleDonate = async (mode: 'payment' | 'subscription') => {
     setCheckoutLoading(true);
     try {
@@ -173,7 +163,6 @@ const UserProfile: React.FC = () => {
         credentials: 'include',
       });
       const data = await res.json();
-      console.log(data.url)
       if (data.url) window.location.href = data.url;
     } catch (err) {
       console.error("Stripe session error", err);
@@ -183,15 +172,15 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (loading || !hasRefetched) {
     return <div className="text-white text-center mt-20">Loading your profile...</div>;
   }
-  
+
   if (!user) {
     return <div className="text-white text-center mt-20">Redirecting...</div>;
   }
-  
-  return user ? (
+
+  return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
       <TrialBanner />
@@ -201,14 +190,15 @@ const UserProfile: React.FC = () => {
         </div>
       )}
       <div className="max-w-5xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
-        🎤 Profile: {user?.displayName}
-        {user?.is_pro && (
-          <div className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-            Alpine Pro Member
-          </div>
-        )}
-      </h1>
+        <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
+          🎤 Profile: {user.displayName}
+          {user.is_pro && (
+            <div className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+              Alpine Pro Member
+            </div>
+          )}
+        </h1>
+
         <div className="flex flex-col md:flex-row gap-8">
           <div className="md:w-1/3 flex justify-center">
             {profilePicture && (
@@ -313,11 +303,11 @@ const UserProfile: React.FC = () => {
                 Back to Home
               </button>
 
-                {user?.is_admin && !hasArtistProfile && (
+              {user?.is_admin && !hasArtistProfile && (
                 <>
                   <button
-                  onClick={() => router.push("/artist-signup")}
-                  className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold"
+                    onClick={() => router.push("/artist-signup")}
+                    className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold"
                   >
                     🎁 Create Pro Artist Profile (Free Trial)
                   </button>
@@ -325,8 +315,9 @@ const UserProfile: React.FC = () => {
                     Get 30 days of free access to Alpine Pro features — no credit card required.
                   </p>
                 </>
-                )}
-                { hasArtistProfile && (
+              )}
+
+              {hasArtistProfile && (
                 <button
                   onClick={() => router.push(`/artists/${artistSlug}`)}
                   className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
@@ -334,6 +325,7 @@ const UserProfile: React.FC = () => {
                   Alpine Pro Dashboard
                 </button>
               )}
+
               <div className="mt-4 border-t border-gray-700 pt-4">
                 <h3 className="font-semibold mb-2">Support Alpine Groove Guide</h3>
                 <div className="flex flex-col sm:flex-row gap-2">
@@ -351,14 +343,13 @@ const UserProfile: React.FC = () => {
                   </button>
                 </div>
               </div>
+
               {message && <div className="text-center text-sm text-red-400 mt-2">{message}</div>}
             </div>
           </div>
         </div>
       </div>
     </div>
-  ) : (
-    <div className="text-center text-white mt-20">Loading profile...</div>
   );
 };
 
