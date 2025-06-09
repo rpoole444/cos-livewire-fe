@@ -10,6 +10,7 @@ interface AuthContextType {
   logout: () => void;
   updateUser: (updatedUser: UserType) => void;
   loading: boolean;
+  refetchUser: () => Promise<void>
 }
 interface ProfilePictureResponse {
   profile_picture_url: string;
@@ -21,6 +22,7 @@ const defaultContext: AuthContextType = {
   logout: () => {},
   updateUser: (updatedUser: UserType) => {},
   loading: true,
+  refetchUser: async () => {}, 
 };
 
 const AuthContext = createContext<AuthContextType>(defaultContext);
@@ -138,6 +140,40 @@ console.log("setUser payload:", {
   }
 };
 
+const refetchUser = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
+      credentials: 'include',
+    });
+    const data = await response.json();
+
+    if (data.isLoggedIn) {
+      const profilePictureResponse = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
+        credentials: 'include',
+      });
+      const profilePictureData = await profilePictureResponse.json();
+
+      let parsedGenres = [];
+      if (data.user.top_music_genres) {
+        try {
+          parsedGenres = JSON.parse(data.user.top_music_genres);
+        } catch (error) {
+          console.error('Error parsing genres:', error);
+        }
+      }
+
+      setUser({
+        ...data.user,
+        displayName: data.user.displayName ?? data.user.display_name ?? '',
+        top_music_genres: parsedGenres,
+        profile_picture: profilePictureData.profile_picture_url || null,
+        trial_ends_at: data.user.trial_ends_at || null,
+      });
+    }
+  } catch (err) {
+    console.error('Error refetching user:', err);
+  }
+};
 
 
   const logout = async () => {
@@ -161,7 +197,7 @@ console.log("setUser payload:", {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, refetchUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -13,7 +13,7 @@ const genresList = [
 ];
 
 const UserProfile: React.FC = () => {
-  const { user, loading, updateUser } = useAuth();
+  const { user, loading, updateUser, refetchUser } = useAuth();
   const router = useRouter();
   const { success } = router.query;
 
@@ -90,16 +90,21 @@ const UserProfile: React.FC = () => {
   useEffect(() => {
     if (!router.isReady) return;
     if (success === 'true') {
-      setShowSuccessToast(true);
+      const run = async () => {
+        await refetchUser(); // ✅ Pull the updated user state from the server
+        setShowSuccessToast(true);
   
-      const cleaned = new URL(window.location.href);
-      cleaned.searchParams.delete('success');
-      window.history.replaceState({}, document.title, cleaned.toString());
+        const cleaned = new URL(window.location.href);
+        cleaned.searchParams.delete('success');
+        window.history.replaceState({}, document.title, cleaned.toString());
   
-      const timeout = setTimeout(() => setShowSuccessToast(false), 5000);
-      return () => clearTimeout(timeout);
+        setTimeout(() => setShowSuccessToast(false), 5000);
+      };
+  
+      run();
     }
-  }, [success,router.isReady]);  
+  }, [success, router.isReady]);
+  ;  
 
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
