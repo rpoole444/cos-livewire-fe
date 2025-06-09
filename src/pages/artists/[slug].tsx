@@ -91,29 +91,32 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
   if (!artist) return <div className="text-white p-6">Artist not found</div>;
 
-  if (artist.trial_ends_at && artist.trial_expired && !artist.is_pro) {
-    return (
-      <div className="text-white p-6 max-w-xl mx-auto">
-        <h1 className="text-2xl font-bold mb-4">{artist.display_name}</h1>
-        <Image
-          src={artist.profile_image}
-          alt={artist.display_name}
-          width={192}
-          height={192}
-          className="rounded-full shadow mb-4"
-        />
-        <p className="mb-4">
-          Your free trial has expired. To unlock full access to your artist profile (bio, contact, media, and downloads),
-          please upgrade to Alpine Pro.
-        </p>
-        <Link href="/upgrade">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-            Upgrade to Pro
-          </button>
-        </Link>
-      </div>
-    );
-  }  
+  const shouldShowUpgradeWall = (!artist.is_pro && (artist.trial_expired || !artist.trial_ends_at));
+
+if (shouldShowUpgradeWall) {
+  return (
+    <div className="text-white p-6 max-w-xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">{artist.display_name}</h1>
+      <Image
+        src={artist.profile_image}
+        alt={artist.display_name}
+        width={192}
+        height={192}
+        className="rounded-full shadow mb-4"
+      />
+      <p className="mb-4">
+        Your free trial has expired. To unlock full access to your artist profile (bio, contact, media, and downloads),
+        please upgrade to Alpine Pro.
+      </p>
+      <Link href="/upgrade">
+        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+          Upgrade to Pro
+        </button>
+      </Link>
+    </div>
+  );
+}
+ 
 
   return (
     <>
