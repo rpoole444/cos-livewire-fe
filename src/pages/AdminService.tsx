@@ -22,7 +22,7 @@ const AdminService: React.FC = () => {
     <div className="min-h-screen bg-gray-900 text-white py-10 px-4">
       <div className="max-w-5xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold text-center">
-          Welcome, {user?.first_name}! 🎧
+          Welcome, {user?.displayName}! 🎧
         </h1>
         <p className="text-center text-md text-gray-300 max-w-2xl mx-auto">
           You’re an admin for Alpine Groove Guide. Review pending events for grammar, clarity, and content.
