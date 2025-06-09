@@ -9,6 +9,9 @@ import Header from '@/components/Header';
 import Link from 'next/link';
 import TrialBanner from '@/components/TrialBanner'; // adjust path as needed
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+dayjs.extend(utc);
+
 
 interface Event {
   id: number;
@@ -218,7 +221,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                   <li key={event.id} className="bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-700 transition">
                     <Link href={`/eventRouter/${event.slug}`} className="block cursor-pointer">
                       <h3 className="text-lg font-bold text-gold">{event.title}</h3>
-                      <p className="text-gray-300">📅 {dayjs(event.date).format('MMMM D, YYYY')}</p>
+                      <p className="text-gray-300">📅 {dayjs.utc(event.date).format('MMMM D, YYYY')}</p>
                       <p className="text-gray-400">📍 {event.venue_name} - {event.location}</p>
                       <p className="text-gray-400">🎵 {event.genre}</p>
                     </Link>
