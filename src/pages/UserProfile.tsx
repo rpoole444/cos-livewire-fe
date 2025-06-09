@@ -88,6 +88,7 @@ const UserProfile: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
+    if (!router.isReady) return;
     if (success === 'true') {
       setShowSuccessToast(true);
   
@@ -98,7 +99,7 @@ const UserProfile: React.FC = () => {
       const timeout = setTimeout(() => setShowSuccessToast(false), 5000);
       return () => clearTimeout(timeout);
     }
-  }, [success]);  
+  }, [success,router.isReady]);  
 
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
@@ -166,6 +167,7 @@ const UserProfile: React.FC = () => {
         credentials: 'include',
       });
       const data = await res.json();
+      console.log(data.url)
       if (data.url) window.location.href = data.url;
     } catch (err) {
       console.error("Stripe session error", err);
@@ -186,7 +188,7 @@ const UserProfile: React.FC = () => {
       )}
       <div className="max-w-5xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
-        🎤 Profile: {user.first_name} {user.last_name}
+        🎤 Profile: {user?.displayName}
         {user?.is_pro && (
           <div className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
             Alpine Pro Member
