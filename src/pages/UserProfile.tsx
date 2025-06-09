@@ -15,6 +15,8 @@ const genresList = [
 const UserProfile: React.FC = () => {
   const { user, updateUser } = useAuth();
   const router = useRouter();
+  const { success } = router.query;
+
   const [isEditing, setIsEditing] = useState(false);
   const [email, setEmail] = useState(user?.email || "");
   const [displayName, setDisplayName] = useState(user?.displayName || "");
@@ -86,7 +88,7 @@ const UserProfile: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    if (router.query.success === 'true') {
+    if (success === 'true') {
       setShowSuccessToast(true);
   
       const cleaned = new URL(window.location.href);
@@ -96,7 +98,7 @@ const UserProfile: React.FC = () => {
       const timeout = setTimeout(() => setShowSuccessToast(false), 5000);
       return () => clearTimeout(timeout);
     }
-  }, [router.query.success]);  
+  }, [success]);  
 
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
