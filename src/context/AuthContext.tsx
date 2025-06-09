@@ -153,22 +153,30 @@ const refetchUser = async () => {
       });
       const profilePictureData = await profilePictureResponse.json();
 
+      // ✅ Only parse if it's a string
       let parsedGenres = [];
       if (data.user.top_music_genres) {
-        try {
-          parsedGenres = JSON.parse(data.user.top_music_genres);
-        } catch (error) {
-          console.error('Error parsing genres:', error);
+        if (typeof data.user.top_music_genres === 'string') {
+          try {
+            parsedGenres = JSON.parse(data.user.top_music_genres);
+          } catch (error) {
+            console.error('Error parsing genres:', error);
+          }
+        } else {
+          parsedGenres = data.user.top_music_genres;
         }
       }
 
-      setUser({
+      const payload = {
         ...data.user,
         displayName: data.user.displayName ?? data.user.display_name ?? '',
         top_music_genres: parsedGenres,
         profile_picture: profilePictureData.profile_picture_url || null,
         trial_ends_at: data.user.trial_ends_at || null,
-      });
+      };
+
+      setUser(payload);
+      console.log("✅ refetchUser payload", payload);
     }
   } catch (err) {
     console.error('Error refetching user:', err);

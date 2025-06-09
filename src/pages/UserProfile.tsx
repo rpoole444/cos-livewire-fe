@@ -35,25 +35,19 @@ const UserProfile: React.FC = () => {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user?.top_music_genres) {
-      try {
-        const parsed = Array.isArray(user.top_music_genres)
-          ? user.top_music_genres
-          : JSON.parse(user.top_music_genres);
-        setGenres(parsed || []);
-      } catch (err) {
-        console.error("Genre parse error", err);
-        setGenres([]);
-      }
+    if (user?.top_music_genres && Array.isArray(user.top_music_genres)) {
+      setGenres(user.top_music_genres);
+    } else {
+      setGenres([]);
     }
-  }, [user]);
-  
+  }, [user]);  
+
   useEffect(() => {
     // Only try to refetch if the component loaded and no user is available
     if (!loading && !user) {
       refetchUser();
     }
-  }, [loading, user, refetchUser]);
+  }, [loading, user]);
 
   useEffect(() => {
     const fetchPicture = async () => {
