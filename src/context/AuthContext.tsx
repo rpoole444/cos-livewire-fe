@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUser: (updatedUser: UserType) => void;
+  loading: boolean;
 }
 interface ProfilePictureResponse {
   profile_picture_url: string;
@@ -19,6 +20,7 @@ const defaultContext: AuthContextType = {
   login: async (email: string, password: string) => {},
   logout: () => {},
   updateUser: (updatedUser: UserType) => {},
+  loading: true,
 };
 
 const AuthContext = createContext<AuthContextType>(defaultContext);
@@ -29,6 +31,7 @@ export function useAuth() {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserType | null>(null);
+  const [loading, setLoading] = useState(true); // ✅ Add this line
 
 
   
@@ -74,6 +77,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Error fetching auth status:', error);
+    }finally {
+      setLoading(false); // ✅ Always end loading
     }
   };
 
@@ -156,7 +161,7 @@ console.log("setUser payload:", {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

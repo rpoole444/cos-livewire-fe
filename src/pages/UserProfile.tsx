@@ -13,7 +13,7 @@ const genresList = [
 ];
 
 const UserProfile: React.FC = () => {
-  const { user, updateUser } = useAuth();
+  const { user, loading, updateUser } = useAuth();
   const router = useRouter();
   const { success } = router.query;
 
@@ -31,8 +31,8 @@ const UserProfile: React.FC = () => {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   useEffect(() => {
-    if (!user) router.push("/");
-  }, [user, router]);
+    if (!loading && !user) router.push("/");
+  }, [user, loading, router]);
 
   useEffect(() => {
     if (user?.top_music_genres) {
@@ -177,6 +177,14 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return <div className="text-white text-center mt-20">Loading your profile...</div>;
+  }
+  
+  if (!user) {
+    return <div className="text-white text-center mt-20">Redirecting...</div>;
+  }
+  
   return user ? (
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
