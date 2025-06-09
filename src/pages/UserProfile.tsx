@@ -47,6 +47,13 @@ const UserProfile: React.FC = () => {
       }
     }
   }, [user]);
+  
+  useEffect(() => {
+    // Only try to refetch if the component loaded and no user is available
+    if (!loading && !user) {
+      refetchUser();
+    }
+  }, [loading, user, refetchUser]);
 
   useEffect(() => {
     const fetchPicture = async () => {
