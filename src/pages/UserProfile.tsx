@@ -66,15 +66,17 @@ const UserProfile: React.FC = () => {
           credentials: 'include',
         });
 
-        if (res.ok) {
+        if (res.status === 200) {
           const data = await res.json();
           setHasArtistProfile(true);
           setArtistSlug(data.slug);
         } else if (res.status === 404) {
           setHasArtistProfile(false);
+          setArtistSlug('');
         } else {
           console.error("Unexpected response checking artist profile:", res.status);
         }
+        
       } catch (err) {
         console.error("Network or server error checking artist profile:", err);
       }

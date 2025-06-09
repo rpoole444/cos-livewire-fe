@@ -91,7 +91,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
   if (!artist) return <div className="text-white p-6">Artist not found</div>;
 
-  if (artist.trial_expired && !artist.is_pro) {
+  if (artist.trial_ends_at && artist.trial_expired && !artist.is_pro) {
     return (
       <div className="text-white p-6 max-w-xl mx-auto">
         <h1 className="text-2xl font-bold mb-4">{artist.display_name}</h1>
@@ -113,7 +113,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
         </Link>
       </div>
     );
-  }
+  }  
 
   return (
     <>
