@@ -355,7 +355,9 @@ if (!user) {
               key={idx}
               event={event}
               index={idx}
-              locationRef={(el) => (locationInputRefs.current[idx] = el)}
+              locationRef={(el: HTMLInputElement | null) => {
+                locationInputRefs.current[idx] = el;
+              }}
               onChange={handleChange}
               onFileChange={handleFileChange}
               onRemove={removeEvent}

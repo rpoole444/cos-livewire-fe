@@ -25,7 +25,7 @@ interface Event {
 interface Props {
   event: Event;
   index: number;
-  locationRef: React.RefObject<HTMLInputElement>;
+  locationRef: React.Ref<HTMLInputElement>;
   onChange: (
     index: number,
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
