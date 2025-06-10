@@ -13,8 +13,18 @@ const AdminUsersPage = () => {
   const [users, setUsers] = useState<Users>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const { user: currentUser, logout } = useAuth();
+  const { user: currentUser, logout, loading } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!currentUser) {
+        router.replace('/LoginPage?redirect=/AdminUsersPage');
+      } else if (!currentUser.is_admin) {
+        router.replace('/');
+      }
+    }
+  }, [currentUser, loading, router]);
 
   useEffect(() => {
     const fetchUsers = async () => {

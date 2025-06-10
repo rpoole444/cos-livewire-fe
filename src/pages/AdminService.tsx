@@ -1,5 +1,5 @@
 import '../styles/globals.css';
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -7,7 +7,17 @@ import EventReview from '@/components/EventReview';
 
 const AdminService: React.FC = () => {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.replace('/LoginPage?redirect=/AdminService');
+      } else if (!user.is_admin) {
+        router.replace('/');
+      }
+    }
+  }, [user, loading, router]);
 
   const handleLogout = async () => {
     try {

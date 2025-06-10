@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Event } from '@/interfaces/interfaces';
 import Header from '@/components/Header';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const EditEventPage = () => {
@@ -11,11 +12,28 @@ const EditEventPage = () => {
   const router = useRouter();
   const { editId } = router.query;          // ← string | string[] | undefined
 
+  const { user, loading } = useAuth();
+
   /* ── local state (hooks MUST be first) ─────────────── */
   const [eventData, setEventData] = useState<Event | null>(null);
   const [file,       setFile]       = useState<File | null>(null);
   const [removePoster, setRemovePoster] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      const redirect = editId ? `/events/edit/${editId}` : '/events/edit';
+      router.replace(`/LoginPage?redirect=${redirect}`);
+    }
+  }, [user, loading, router, editId]);
+
+  useEffect(() => {
+    if (!loading && user && eventData) {
+      if (!(user.is_admin || user.id === eventData.user_id)) {
+        router.replace('/');
+      }
+    }
+  }, [loading, user, eventData, router]);
 
   /* ── fetch event once router & param are ready ─────── */
   useEffect(() => {
