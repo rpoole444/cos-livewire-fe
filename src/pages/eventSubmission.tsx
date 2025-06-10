@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import Script from "next/script";
 import { slugify } from '@/util/slugify'; // Adjust path if needed
+import dayjs from 'dayjs';
+import EventForm from '../components/EventForm';
 
 interface Event {
   title: string;
@@ -23,14 +25,15 @@ interface Event {
   address: string;
   venue_name: string; 
   website: string;
-  poster: string | null; 
+  poster: string | null;
   recurrence: string;
   repeatCount: number;
+  posterFile?: File | null;
 }
 
 
 const EventSubmission = () => {
-  const [eventData, setEventData] = useState<Event>({
+  const initialEvent: Event = {
     title: '',
     description: '',
     location: '',
@@ -43,54 +46,78 @@ const EventSubmission = () => {
     ageRestriction: '',
     website_link: '',
     address: '',
-    venue_name: '', 
-    website: '', 
-    poster: '' , 
-    recurrence:'',
+    venue_name: '',
+    website: '',
+    poster: '',
+    recurrence: '',
     repeatCount: 1,
     customTicketPrice: '',
-  });
-  const [file, setFile] = useState<File | null>(null);
+    posterFile: null,
+  };
+
+  const [events, setEvents] = useState<Event[]>([initialEvent]);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
-  const locationInputRef = useRef<HTMLInputElement>(null);
+  const locationInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  const isPro = user?.is_pro;
+  const isTrialActive = user?.trial_ends_at ? dayjs().isBefore(dayjs(user.trial_ends_at)) : false;
+  const canAddMultiple = Boolean(isPro || isTrialActive);
+
+  const addEvent = () => setEvents((prev) => [...prev, { ...initialEvent }]);
+  const removeEvent = (index: number) =>
+    setEvents((prev) => prev.filter((_, i) => i !== index));
 
   useEffect(() => {
     if (window.google) {
-      initializeAutocomplete();
+      events.forEach((_, idx) => initializeAutocomplete(idx));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-  if (!user) {
-    router.push('/LoginPage?redirect=/eventSubmission');
-  }
-}, [user, router]);
+    if (!user) {
+      router.push('/LoginPage?redirect=/eventSubmission');
+    }
+  }, [user, router]);
 
-const initializeAutocomplete = () => {
+const initializeAutocomplete = (index: number) => {
   if (
     typeof window !== 'undefined' &&
     window.google?.maps?.places?.Autocomplete &&
-    locationInputRef.current instanceof HTMLInputElement
+    locationInputRefs.current[index] instanceof HTMLInputElement
   ) {
-    const autocomplete = new window.google.maps.places.Autocomplete(locationInputRef.current);
-    autocomplete.addListener("place_changed", () => {
+    const autocomplete = new window.google.maps.places.Autocomplete(locationInputRefs.current[index]!);
+    autocomplete.addListener('place_changed', () => {
       const place = autocomplete.getPlace();
-      setEventData((prevState) => ({
-        ...prevState,
-        location: place.formatted_address || '',
-        venue_name: place.name || '',
-        website: place.website || '',
-        address: place.formatted_address || '',
-      }));
+      setEvents((prev) =>
+        prev.map((ev, i) =>
+          i === index
+            ? {
+                ...ev,
+                location: place.formatted_address || '',
+                venue_name: place.name || '',
+                website: place.website || '',
+                address: place.formatted_address || '',
+              }
+            : ev
+        )
+      );
     });
   }
 };
 
+useEffect(() => {
+  if (window.google) {
+    events.forEach((_, idx) => initializeAutocomplete(idx));
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [events.length]);
 
-const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+const handleFileChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
   if (e.target.files && e.target.files.length > 0) {
     const selectedFile = e.target.files[0];
     const validTypes = ['image/jpeg', 'image/png', 'application/pdf'];
@@ -107,17 +134,16 @@ const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       return;
     }
 
-    setFile(selectedFile);
+    setEvents((prev) => prev.map((ev, i) => (i === index ? { ...ev, posterFile: selectedFile } : ev)));
   }
 };
 
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    index: number,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
-    setEventData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
+    setEvents((prev) => prev.map((ev, i) => (i === index ? { ...ev, [name]: value } : ev)));
   };
 
   const handleLogout = async () => {
@@ -187,61 +213,59 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   }
   
   try {
-    setIsSubmitting(true); 
-    let ticketPriceValue = eventData.ticketPrice;
-    
-    // Use custom ticket price if "Other" is selected
-    if (ticketPriceValue === 'Other' && eventData.customTicketPrice?.trim()) {
-      ticketPriceValue = eventData.customTicketPrice.trim();
-    } else if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
-      ticketPriceValue = ticketPriceValue;
-    } else {
-      ticketPriceValue = `$${ticketPriceValue}`;
-    }
-    
-    
-    const count = Math.min(eventData.repeatCount || 1, 4); // Limit to 4
-    const recurrenceDates = eventData.recurrence
-    ? generateRecurringDates(eventData.date, eventData.recurrence, count)
-    : [eventData.date];
-    
-    const fullSlug = `${slugify(eventData.title)}-${Date.now().toString(36)}`;
-    
-    const formData = new FormData();
-    formData.append('user_id', user.id.toString());
-    formData.append('title', eventData.title);
-    formData.append('description', eventData.description);
-    formData.append('location', eventData.location);
-    formData.append('address', eventData.address);
-    formData.append('start_time', eventData.start_time);
-    formData.append('end_time', eventData.end_time);
-    formData.append('genre', eventData.genre);
-    formData.append('ticket_price', ticketPriceValue);
-    formData.append('age_restriction', eventData.ageRestriction);
-    formData.append(
-      'website_link',
-      eventData.website_link.startsWith('http')
-        ? eventData.website_link
-        : `http://${eventData.website_link}`
-    );
-    formData.append('venue_name', eventData.venue_name);
-    formData.append('website', eventData.website);
-    formData.append('recurrenceDates', JSON.stringify(recurrenceDates)); // ✅ new key
-    formData.append('slug', fullSlug);
+    setIsSubmitting(true);
 
-    if (file) {
-      formData.append('poster', file);
-    }
+    for (const ev of events) {
+      let ticketPriceValue = ev.ticketPrice;
+      if (ticketPriceValue === 'Other' && ev.customTicketPrice?.trim()) {
+        ticketPriceValue = ev.customTicketPrice.trim();
+      } else if (ticketPriceValue === 'Free' || ticketPriceValue === 'Donation') {
+        ticketPriceValue = ticketPriceValue;
+      } else {
+        ticketPriceValue = `$${ticketPriceValue}`;
+      }
 
-    const res = await submitEvent(formData);
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.error || 'Failed to submit event');
+      const count = Math.min(ev.repeatCount || 1, 4);
+      const recurrenceDates = ev.recurrence
+        ? generateRecurringDates(ev.date, ev.recurrence, count)
+        : [ev.date];
+
+      const fullSlug = `${slugify(ev.title)}-${Date.now().toString(36)}`;
+
+      const formData = new FormData();
+      formData.append('user_id', user.id.toString());
+      formData.append('title', ev.title);
+      formData.append('description', ev.description);
+      formData.append('location', ev.location);
+      formData.append('address', ev.address);
+      formData.append('start_time', ev.start_time);
+      formData.append('end_time', ev.end_time);
+      formData.append('genre', ev.genre);
+      formData.append('ticket_price', ticketPriceValue);
+      formData.append('age_restriction', ev.ageRestriction);
+      formData.append(
+        'website_link',
+        ev.website_link.startsWith('http') ? ev.website_link : `http://${ev.website_link}`
+      );
+      formData.append('venue_name', ev.venue_name);
+      formData.append('website', ev.website);
+      formData.append('recurrenceDates', JSON.stringify(recurrenceDates));
+      formData.append('slug', fullSlug);
+
+      if (ev.posterFile) {
+        formData.append('poster', ev.posterFile);
+      }
+
+      const res = await submitEvent(formData);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to submit event');
+      }
     }
 
     setSubmissionSuccess(true);
     setTimeout(() => {
-      router.push(`/`); // ✅ Redirect to slug route
+      router.push(`/`);
       setSubmissionSuccess(false);
     }, 3000);
   } catch (error) {
@@ -303,7 +327,7 @@ if (!user) {
         strategy="lazyOnload"
         async
         defer
-        onLoad={() => initializeAutocomplete()}
+        onLoad={() => events.forEach((_, idx) => initializeAutocomplete(idx))}
       />
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold">{user.first_name}, Let&apos;s get your event out there!!</h1>
@@ -326,282 +350,56 @@ if (!user) {
           </div>
         )}
         <form onSubmit={handleSubmit} className="mt-6 w-full max-w-2xl mx-auto space-y-6">
-          {/* 📝 Event Info */}
-          <div>
-            <h2 className="text-xl font-bold text-gray-800 mb-4">📝 Event Info</h2>
-
-            <div className="mb-4">
-              <label htmlFor="title" className="block text-sm font-semibold text-gray-800">Event Title</label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                required
-                placeholder={`e.g. ${user?.displayName ?? ''} Live at the Funk Summit`}
-                onChange={handleChange}
-                className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="description" className="block text-sm font-semibold text-gray-800">Event Description</label>
-              <textarea
-                id="description"
-                name="description"
-                rows={5}
-                required
-                placeholder="Tell us about the show, lineup, vibe, etc."
-                onChange={handleChange}
-                className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
-              ></textarea>
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="location" className="block text-sm font-semibold text-gray-800">Event Location</label>
-              <input
-                type="text"
-                id="location"
-                name="location"
-                ref={locationInputRef}
-                required
-                placeholder="Search venue or address..."
-                onChange={handleChange}
-                className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="date" className="block text-sm font-semibold text-gray-800">Event Date</label>
-                <input
-                  type="date"
-                  id="date"
-                  name="date"
-                  required
-                  onChange={handleChange}
-                  className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
-                />
-                <p className="text-xs text-gray-500 mt-1">All dates are MST (Mountain Standard Time)</p>
-              </div>
-
-              <div className="mb-4">
-                <label htmlFor="recurrence" className="block text-sm font-semibold text-gray-800">Repeat Event</label>
-                <select
-                  id="recurrence"
-                  name="recurrence"
-                  onChange={handleChange}
-                  className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
-                >
-                  <option value="">One-time Event</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
-                {eventData.recurrence && (
-                  <div className="mb-4">
-                    <label htmlFor="repeatCount" className="block text-sm font-semibold text-gray-800">
-                      How many times should it repeat? (Max 4)
-                    </label>
-                    <select
-                      id="repeatCount"
-                      name="repeatCount"
-                      value={eventData.repeatCount || 1}
-                      onChange={(e) =>
-                        setEventData((prev) => ({
-                          ...prev,
-                          repeatCount: Math.min(4, parseInt(e.target.value, 10)),
-                        }))
-                      }
-                      className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
-                    >
-                      {[1, 2, 3, 4].map((n) => (
-                        <option key={n} value={n}>
-                          {n} {n === 1 ? 'time' : 'times'}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-
-
-              <div>
-                <label htmlFor="start_time" className="block text-sm font-semibold text-gray-800">Start Time</label>
-                <input
-                  type="time"
-                  id="start_time"
-                  name="start_time"
-                  required
-                  onChange={handleChange}
-                  className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="end_time" className="block text-sm font-semibold text-gray-800">End Time</label>
-                <input
-                  type="time"
-                  id="end_time"
-                  name="end_time"
-                  required
-                  onChange={handleChange}
-                  className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* 🎶 Genre */}
-          <div>
-            <h2 className="text-xl font-bold text-gray-800 mb-4">🎶 Genre</h2>
-            <label htmlFor="genre" className="block text-sm font-semibold text-gray-800">Event Genre</label>
-            <select
-              id="genre"
-              name="genre"
-              required
+          {events.map((event, idx) => (
+            <EventForm
+              key={idx}
+              event={event}
+              index={idx}
+              locationRef={(el: HTMLInputElement | null) => {
+                locationInputRefs.current[idx] = el;
+              }}
               onChange={handleChange}
-              className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
-            >
-              <option value="">Select Genre</option>
-              <option value="Jazz">Jazz</option>
-              <option value="Funk">Funk</option>
-              <option value="Rock">Rock</option>
-              <option value="Soul">Soul</option>
-              <option value="Electronic">Electronic</option>
-              <option value="Indie">Indie</option>
-              <option value="Hip-Hop">Hip-Hop</option>
-              <option value="Pop">Pop</option>
-              <option value="Blues">Blues</option>
-              <option value="Alternative">Alternative</option>
-              <option value="Country">Country</option>
-              <option value="R&B">R&B</option>
-              <option value="Reggae">Reggae</option>
-              <option value="Techno">Techno</option>
-              <option value="Dance">Dance</option>
-              <option value="World">World</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-                    {/* 💵 Ticket Price */}
-          <label htmlFor="ticketPrice" className="block text-sm font-semibold text-gray-800">
-              Ticket Price / Door Charge
-            </label>
-            <select
-              id="ticketPrice"
-              name="ticketPrice"
-              value={eventData.ticketPrice}
-              onChange={handleChange}
-              className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
-            >
-              <option value="">Select a price</option>
-              <option value="Free">Free</option>
-              <option value="Donation">Donation</option>
-              <option value="Other">Other (Enter custom amount)</option>
-              {Array.from(Array(20).keys()).map(i => (
-                <option key={i} value={`${(i + 1) * 5}`}>${(i + 1) * 5}</option>
-              ))}
-            </select>
-
-            {eventData.ticketPrice === 'Other' && (
-              <input
-                type="number"
-                name="customTicketPrice"
-                placeholder="Enter custom amount (e.g. 7.00)"
-                value={eventData.customTicketPrice || ''}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                className="mt-2 p-3 w-full border border-gray-300 rounded-md text-black text-base"
-              />
-            )}
-
-
-          {/* 🔞 Age Restriction */}
-        <fieldset className="mt-10">
-          <legend className="text-xl font-bold text-gray-800 mb-4">🔞 Age Restriction</legend>
-          <div className="flex flex-wrap gap-4">
-            {["All Ages", "16+", "18+", "21+", "25+"].map(age => (
-              <label key={age} className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  id={`age-${age}`}
-                  name="ageRestriction"
-                  value={age}
-                  onChange={handleChange}
-                  checked={eventData.ageRestriction === age}
-                  className="w-5 h-5 text-indigo-600"
-                />
-                <span className="text-sm text-gray-800">{age}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-
-          {/* 🔗 Website / Link */}
-          <div className="mt-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">🔗 Event Link</h2>
-            <label htmlFor="website_link" className="block text-sm font-semibold text-gray-800">Event / Artist Website or Ticket Link</label>
-            <input
-              type="text"
-              id="website_link"
-              name="website_link"
-              onChange={handleChange}
-              placeholder="https://example.com"
-              className="mt-1 p-3 w-full border border-gray-300 rounded-md text-black text-base"
+              onFileChange={handleFileChange}
+              onRemove={removeEvent}
+              canRemove={canAddMultiple && events.length > 1}
             />
-          </div>
+          ))}
+          {canAddMultiple && (
+            <button
+              type="button"
+              onClick={addEvent}
+              className="text-blue-600 underline"
+            >
+              Add Another Event
+            </button>
+          )}
 
-          {/* 📸 Poster Upload */}
-          <div className="mt-8">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">📸 Upload Poster</h2>
-            <label htmlFor="poster" className="block text-sm font-semibold text-gray-800">
-              Poster File (JPEG, PNG, or PDF)
-            </label>
-            <p className="text-xs text-gray-500 mt-1">
-              Use a square image for best results.
-            </p>
-            <input
-              type="file"
-              id="poster"
-              name="poster"
-              accept="image/jpeg,image/png,application/pdf"
-              onChange={handleFileChange}
-              className="mt-1 p-2 w-full border border-gray-300 rounded-md text-black"
-            />
-          </div>
-
-
-          {/* ✅ Submit Buttons */}
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-10">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`relative bg-indigo-600 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition
-                        ${isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-indigo-700'}`}
-          >
-            {isSubmitting ? (
-              <>
-                <svg
-                  className="animate-spin h-5 w-5 mr-2 inline-block"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10"
-                          stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8z"></path>
-                </svg>
-                Submitting…
-              </>
-            ) : (
-              'Submit Event'
-            )}
-          </button>
-
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`relative bg-indigo-600 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition ${isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-indigo-700'}`}
+            >
+              {isSubmitting ? (
+                <>
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 inline-block"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none" viewBox="0 0 24 24"
+                  >
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                  </svg>
+                  Submitting…
+                </>
+              ) : (
+                `${events.length > 1 ? 'Submit Events' : 'Submit Event'}`
+              )}
+            </button>
 
             <Link
               href="/"
-              className={`text-indigo-600 font-medium underline
-                          ${isSubmitting ? 'pointer-events-none opacity-40' : 'hover:text-indigo-800'}`}
+              className={`text-indigo-600 font-medium underline ${isSubmitting ? 'pointer-events-none opacity-40' : 'hover:text-indigo-800'}`}
             >
               Back to Homepage
             </Link>
@@ -610,12 +408,10 @@ if (!user) {
               type="button"
               onClick={handleLogout}
               disabled={isSubmitting}
-              className={`text-red-500 hover:underline mt-2 sm:mt-0
-                          ${isSubmitting && 'opacity-40 cursor-not-allowed'}`}
+              className={`text-red-500 hover:underline mt-2 sm:mt-0 ${isSubmitting && 'opacity-40 cursor-not-allowed'}`}
             >
               Logout
             </button>
-
           </div>
         </form>
 
