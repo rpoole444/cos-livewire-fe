@@ -69,4 +69,19 @@ interface User {
 export type Users = User[];
 export type Events = Event[];
 
+export interface Artist {
+  id: number;
+  display_name: string;
+  user_id: number;
+  bio: string;
+  contact_email: string;
+  profile_image: string | null;
+  website?: string;
+  genres: string[];
+  slug: string;
+  is_approved?: boolean;
+}
+
+export type Artists = Artist[];
+
 export type { User };
