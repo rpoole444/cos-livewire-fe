@@ -45,14 +45,27 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
           {isExpanded ? 'Hide' : 'See More'}
         </button>
       </div>
+
       {isExpanded && (
         <div className="mt-4 space-y-4">
+          {/* Toggle edit/preview mode */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setIsEditing(prev => !prev)}
+              className="text-sm underline text-blue-500"
+            >
+              {isEditing ? 'Switch to Preview Mode' : 'Edit Mode'}
+            </button>
+          </div>
+
           {edited.profile_image && (
             <Image src={edited.profile_image} alt="Profile" width={150} height={150} className="rounded" />
           )}
+
           {isEditing && (
-            <input type="file" accept="image/*" onChange={handleFileChange} className="w-full" />
+            <input type="file" accept="image/*" name="profile_image" onChange={handleFileChange} className="w-full" />
           )}
+
           <div>
             <label className="block text-sm font-medium">Display Name</label>
             <input
@@ -64,6 +77,7 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
               className="mt-1 p-2 border rounded w-full"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium">Bio</label>
             <textarea
@@ -74,6 +88,7 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
               className="mt-1 p-2 border rounded w-full"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium">Contact Email</label>
             <input
@@ -85,6 +100,7 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
               className="mt-1 p-2 border rounded w-full"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium">Website</label>
             <input
@@ -96,20 +112,105 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
               className="mt-1 p-2 border rounded w-full"
             />
           </div>
-          <div className="flex gap-2 justify-end">
-            {isEditing ? (
-              <button onClick={handleSaveClick} className="bg-green-600 text-white px-3 py-1 rounded">
+
+          {edited.genres?.length > 0 && (
+            <div>
+              <label className="text-sm font-medium">Genres</label>
+              <p className="mt-1">{edited.genres.join(', ')}</p>
+            </div>
+          )}
+
+          {edited.tip_jar_url && (
+            <div>
+              <label className="text-sm font-medium">Tip Jar URL</label>
+              <a href={edited.tip_jar_url} className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">
+                {edited.tip_jar_url}
+              </a>
+            </div>
+          )}
+
+          {edited.promo_photo && (
+            <div>
+              <label className="text-sm font-medium">Promo Photo</label>
+              <Image src={edited.promo_photo} alt="Promo" width={300} height={200} className="rounded-md" />
+            </div>
+          )}
+
+          {edited.stage_plot && (
+            <div>
+              <label className="text-sm font-medium">Stage Plot</label>
+              <Image src={edited.stage_plot} alt="Stage Plot" width={300} height={200} className="rounded-md" />
+            </div>
+          )}
+
+          {edited.press_kit && (
+            <div>
+              <label className="text-sm font-medium">Press Kit</label>
+              <a href={edited.press_kit} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                View Press Kit PDF
+              </a>
+            </div>
+          )}
+
+          {edited.embed_youtube && (
+            <div>
+              <label className="text-sm font-medium">YouTube Embed</label>
+              <iframe
+                src={edited.embed_youtube}
+                className="w-full mt-1 rounded"
+                width="100%"
+                height="200"
+                allowFullScreen
+              />
+            </div>
+          )}
+
+          {edited.embed_soundcloud && (
+            <div>
+              <label className="text-sm font-medium">SoundCloud Embed</label>
+              <iframe
+                src={edited.embed_soundcloud}
+                className="w-full mt-1 rounded"
+                width="100%"
+                height="200"
+                allow="autoplay"
+              />
+            </div>
+          )}
+
+          {edited.embed_bandcamp && (
+            <div>
+              <label className="text-sm font-medium">Bandcamp Embed</label>
+              <iframe
+                src={edited.embed_bandcamp}
+                className="w-full mt-1 rounded"
+                width="100%"
+                height="200"
+                seamless
+              />
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 justify-end mt-4">
+            {isEditing && (
+              <button
+                onClick={handleSaveClick}
+                className="bg-green-600 text-white px-3 py-1 rounded"
+              >
                 Save
               </button>
-            ) : (
-              <button onClick={() => setIsEditing(true)} className="bg-blue-600 text-white px-3 py-1 rounded">
-                Edit
-              </button>
             )}
-            <button onClick={onApprove} className="bg-emerald-500 text-white px-3 py-1 rounded">
+            <button
+              onClick={onApprove}
+              className="bg-emerald-500 text-white px-3 py-1 rounded"
+            >
               Approve
             </button>
-            <button onClick={onDeny} className="bg-red-600 text-white px-3 py-1 rounded">
+            <button
+              onClick={onDeny}
+              className="bg-red-600 text-white px-3 py-1 rounded"
+            >
               Deny
             </button>
           </div>

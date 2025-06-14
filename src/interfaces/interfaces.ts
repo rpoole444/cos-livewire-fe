@@ -71,16 +71,30 @@ export type Events = Event[];
 
 export interface Artist {
   id: number;
-  display_name: string;
   user_id: number;
+  display_name: string;
   bio: string;
   contact_email: string;
-  profile_image: string | null;
-  website?: string;
+  profile_image: string;
   genres: string[];
   slug: string;
+  website: string;
+  embed_youtube?: string;
+  embed_soundcloud?: string;
+  embed_bandcamp?: string;
+  promo_photo?: string;
+  stage_plot?: string;
+  press_kit?: string;
+  tip_jar_url?: string;
+  is_pro?: boolean;
   is_approved?: boolean;
+  trial_active?: boolean;
+  trial_start_date?: string;
+  deleted_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
+
 
 export type Artists = Artist[];
 
