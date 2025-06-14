@@ -32,7 +32,6 @@ const UserProfile: React.FC = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [hasRefetched, setHasRefetched] = useState(false);
-  const [canRestore, setCanRestore] = useState(false);
   const trialActive = isTrialActive(user?.trial_ends_at);
 
   // If redirected from Stripe, fetch updated user info
@@ -93,26 +92,13 @@ const UserProfile: React.FC = () => {
     checkArtistProfile();
   }, [user]);
 
+  // Clear messages after 3 seconds
   useEffect(() => {
-    const checkDeletedProfile = async () => {
-      if (!user) return;
-  
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/artists/by-user/${user.id}?includeDeleted=true`, {
-          credentials: 'include',
-        });
-  
-        const data = await res.json();
-        if (res.ok && data?.deleted_at) {
-          setCanRestore(true);
-        }
-      } catch (err) {
-        console.error('Check deleted artist profile error:', err);
-      }
-    };
-  
-    checkDeletedProfile();
-  }, [user]);
+    if (!message) return;
+    const timer = setTimeout(() => setMessage(""), 3000);
+    return () => clearTimeout(timer);
+  }, [message]);
+
 
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
@@ -364,8 +350,8 @@ const UserProfile: React.FC = () => {
                   >
                     🎁 Create Pro Artist Profile (Free Trial)
                   </button>
-                  {trialActive && canRestore && (
-                    <button onClick={handleRestoreProfile} className="bg-blue-600 text-white py-2 px-4 rounded">
+                  {trialActive && (
+                    <button onClick={handleRestoreProfile} className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2">
                       Restore Profile
                     </button>
                   )}

@@ -22,7 +22,6 @@ This project was developed using Next.js and is hosted on Vercel.
 - On the command line, type: `$ npm install`
 - On the command line, type: `$ npm run dev`
 - Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-- If your artist profile is soft deleted, visit the dedicated [/artist-restore](/artist-restore) page to recover it.
 - The page will reload if you make edits.\
 You may also see any lint errors in the console.
 
@@ -50,7 +49,6 @@ The Alpine Groove Guide provides a dynamic platform for local artists and event 
 
 - Interactive calendar built with FullCalendar for browsing local events.
 - Admin dashboard to review and manage submitted events.
-- Soft-deleted artist profiles can be recovered via the dedicated [Artist Restore](/artist-restore) page.
 - Responsive interface developed with TypeScript and Tailwind CSS.
 
 ## Learning Goals
