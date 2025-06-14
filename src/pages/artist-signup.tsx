@@ -15,7 +15,7 @@ export default function ArtistSignupPage() {
   const router = useRouter();
 
   const trialActive = isTrialActive(user?.trial_ends_at);
-  const trialExpired = user && !user.is_pro && !trialActive;
+  const trialExpired = user && !user.is_pro && !!user.trial_ends_at && !trialActive;
 
   const [form, setForm] = useState({
     display_name: '',

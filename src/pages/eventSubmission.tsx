@@ -66,7 +66,7 @@ const EventSubmission = () => {
   const isPro = user?.is_pro;
   const trialActive = isTrialActive(user?.trial_ends_at);
   const canAddMultiple = Boolean(isPro || trialActive);
-  const trialExpired = user && !isPro && !trialActive;
+  const trialExpired = user && !isPro && !!user.trial_ends_at && !trialActive;
 
   const addEvent = () => setEvents((prev) => [...prev, { ...initialEvent }]);
   const removeEvent = (index: number) =>
