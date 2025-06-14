@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Image from "next/image";
 import TrialBanner from '@/components/TrialBanner';
+import ActiveTrialNoProfileBanner from '@/components/ActiveTrialNoProfileBanner';
+import { isTrialActive } from '@/util/isTrialActive';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -30,6 +32,7 @@ const UserProfile: React.FC = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [hasRefetched, setHasRefetched] = useState(false);
+  const trialActive = isTrialActive(user?.trial_ends_at);
 
   // If redirected from Stripe, fetch updated user info
   useEffect(() => {
@@ -184,6 +187,7 @@ const UserProfile: React.FC = () => {
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
       <TrialBanner />
+      {trialActive && !hasArtistProfile && <ActiveTrialNoProfileBanner />}
       {showSuccessToast && (
         <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow mb-4 max-w-xl mx-auto">
           ✅ Success! You’ve unlocked Alpine Pro.
@@ -311,6 +315,14 @@ const UserProfile: React.FC = () => {
                   >
                     🎁 Create Pro Artist Profile (Free Trial)
                   </button>
+                  {trialActive && (
+                    <button
+                      onClick={() => router.push("/artist-restore")}
+                      className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2"
+                    >
+                      Restore Profile
+                    </button>
+                  )}
                   <p className="text-xs text-gray-400 mt-1">
                     Get 30 days of free access to Alpine Pro features — no credit card required.
                   </p>
