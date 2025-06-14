@@ -30,7 +30,7 @@ export async function getArtistBySlug(slug: string) {
 }
 
 export async function getPendingArtists() {
-  const res = await fetch(`${API_BASE_URL}/api/artists/review`, {
+  const res = await fetch(`${API_BASE_URL}/api/artists/pending`, {
     credentials: 'include',
   });
   if (!res.ok) {
@@ -40,7 +40,7 @@ export async function getPendingArtists() {
 }
 
 export async function approveArtist(id: number) {
-  const res = await fetch(`${API_BASE_URL}/api/artists/review/${id}`, {
+  const res = await fetch(`${API_BASE_URL}/api/artists/${id}/approve`, {
     method: 'PUT',
     credentials: 'include',
   });
