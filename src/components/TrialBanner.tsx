@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 
 interface TrialBannerProps {
@@ -43,9 +44,9 @@ const TrialBanner: React.FC<TrialBannerProps> = (props) => {
       {isExpired ? (
         <>
           🔒 <span className="font-semibold">Your Alpine Pro trial has expired.</span>{' '}
-          <a href="/upgrade" className="underline text-yellow-300 hover:text-yellow-200">
+          <Link href="/upgrade" className="underline text-yellow-300 hover:text-yellow-200">
             Upgrade now
-          </a>{' '}
+          </Link>{' '}
           to unlock your profile features.
         </>
       ) : (
