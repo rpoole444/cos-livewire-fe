@@ -11,6 +11,7 @@ interface AdminEventCardProps {
 
 const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDeny, onSave }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [editedEvent, setEditedEvent] = useState(event);
   const [formattedDate, setFormattedDate] = useState('');
   const [formattedStartTime, setFormattedStartTime] = useState('');
@@ -34,6 +35,17 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
     }));
   };
 
+  const handlePosterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditedEvent(prev => ({ ...prev, poster: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleApproveClick = async () => {
     setIsApproving(true);
     try {
@@ -51,44 +63,56 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
 
   return (
     <div className="flex flex-col space-y-6 p-6 border border-gray-200 rounded-lg shadow-md bg-white">
-      {/* Submitter Info */}
-      {event.user && (
-        <div>
-          <p className="text-sm text-gray-600">Submitted by:</p>
-          <p className="text-black font-medium">{event.user.first_name} {event.user.last_name}</p>
-          <p className="text-gray-500 text-sm">{event.user.email}</p>
-        </div>
-      )}
-
-      {/* Poster */}
-      {event.poster ? (
-        <div className="w-full">
-          <p className="text-sm font-medium text-gray-700 mb-1">Poster Image</p>
-          <Image
-            src={event.poster}
-            alt="Event Poster"
-            width={400}
-            height={400}
-            className="rounded-md mx-auto"
-          />
-        </div>
-      ) : (
-        <p className="text-center text-gray-400">No poster uploaded.</p>
-      )}
-
-      {/* Title */}
-      <div>
-        <label htmlFor="title" className="text-sm font-medium text-gray-700">Title</label>
-        <input
-          type="text"
-          id="title"
-          name="title"
-          value={editedEvent.title}
-          onChange={handleChange}
-          disabled={!isEditing}
-          className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
-        />
+      <div className="flex justify-between items-start">
+        <h3 className="font-semibold text-black">{event.title}</h3>
+        <button onClick={() => setIsExpanded(!isExpanded)} className="text-blue-600 underline">
+          {isExpanded ? 'Hide' : 'See More'}
+        </button>
       </div>
+      {isExpanded && (
+        <>
+          {/* Submitter Info */}
+          {event.user && (
+            <div>
+              <p className="text-sm text-gray-600">Submitted by:</p>
+              <p className="text-black font-medium">{event.user.first_name} {event.user.last_name}</p>
+              <p className="text-gray-500 text-sm">{event.user.email}</p>
+            </div>
+          )}
+
+          {/* Poster */}
+          {editedEvent.poster ? (
+            <div className="w-full">
+              <p className="text-sm font-medium text-gray-700 mb-1">Poster Image</p>
+              <Image src={editedEvent.poster} alt="Event Poster" width={400} height={400} className="rounded-md mx-auto" />
+              {isEditing && (
+                <button onClick={() => setEditedEvent(prev => ({ ...prev, poster: null }))} className="text-red-600 underline mt-1">
+                  Remove Photo
+                </button>
+              )}
+            </div>
+          ) : (
+            <div>
+              <p className="text-center text-gray-400">No poster uploaded.</p>
+              {isEditing && (
+                <input type="file" accept="image/*" onChange={handlePosterChange} className="mt-2" />
+              )}
+            </div>
+          )}
+
+          {/* Title */}
+          <div>
+            <label htmlFor="title" className="text-sm font-medium text-gray-700">Title</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={editedEvent.title}
+              onChange={handleChange}
+              disabled={!isEditing}
+              className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+            />
+          </div>
 
       {/* Description */}
       <div>
@@ -228,45 +252,47 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex flex-wrap justify-end gap-3 mt-6">
-        {isEditing ? (
-          <button
-            onClick={handleSaveClick}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
-          >
-            Save
-          </button>
-        ) : (
-          <button
-            onClick={handleEditClick}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
-          >
-            Edit
-          </button>
-        )}
-        <button
-          onClick={handleApproveClick}
-          className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md flex items-center justify-center min-w-[100px]"
-          disabled={isApproving}
-        >
-          {isApproving ? (
-            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-            </svg>
-          ) : (
-            "Approve"
-          )}
-        </button>
+          {/* Actions */}
+          <div className="flex flex-wrap justify-end gap-3 mt-6">
+            {isEditing ? (
+              <button
+                onClick={handleSaveClick}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+              >
+                Save
+              </button>
+            ) : (
+              <button
+                onClick={handleEditClick}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md"
+              >
+                Edit
+              </button>
+            )}
+            <button
+              onClick={handleApproveClick}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-md flex items-center justify-center min-w-[100px]"
+              disabled={isApproving}
+            >
+              {isApproving ? (
+                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                </svg>
+              ) : (
+                "Approve"
+              )}
+            </button>
 
-        <button
-          onClick={onDeny}
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
-        >
-          Deny
-        </button>
-      </div>
+            <button
+              onClick={onDeny}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
+            >
+              Deny
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
