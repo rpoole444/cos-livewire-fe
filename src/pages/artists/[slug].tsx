@@ -44,6 +44,7 @@ interface Artist {
   events: Event[];
   trial_expired?: boolean;
   trial_ends_at?: string | null;
+  is_approved?: boolean
 }
 
 interface Props {
@@ -54,6 +55,9 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const { user } = useAuth();
   const canEdit = artist && user && (user.id === artist.user_id || user.is_admin);
   const router = useRouter();
+  const isPending = router.query.pending === 'true';
+  const isOwner = user?.id === artist?.user_id;
+  const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -128,11 +132,17 @@ if (shouldShowUpgradeWall) {
 
       <div className="min-h-screen bg-gray-900 text-white p-6">
         <div className="max-w-4xl mx-auto space-y-6">
+          {showPendingBanner && (
+            <div className="bg-yellow-400 text-black text-sm rounded p-3 shadow text-center font-medium">
+              ⏳ Your artist profile is currently <strong>pending admin approval</strong>. You can still preview it here.
+            </div>
+          )}
           {showTrialToast && (
             <div className="bg-green-600 text-white text-sm rounded p-2 mb-4 text-center shadow-md">
               ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
             </div>
           )}
+
           <Header />
           <TrialBanner trial_ends_at={artist.trial_ends_at} is_pro={artist.is_pro} />
           <div className="flex flex-col md:flex-row gap-6 items-center">

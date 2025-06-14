@@ -35,6 +35,7 @@ const UserProfile: React.FC = () => {
   const trialActive = isTrialActive(user?.trial_ends_at);
   const trialStarted = Boolean(user?.trial_ends_at);
   const [startingTrial, setStartingTrial] = useState(false);
+  const [isApproved, setIsApproved] = useState<boolean | null>(null);
 
   // If redirected from Stripe, fetch updated user info
   useEffect(() => {
@@ -83,6 +84,7 @@ const UserProfile: React.FC = () => {
           const data = await res.json();
           setHasArtistProfile(true);
           setArtistSlug(data.slug);
+          setIsApproved(data.is_approved);
         } else {
           setHasArtistProfile(false);
         }
@@ -403,12 +405,19 @@ const UserProfile: React.FC = () => {
 
               {hasArtistProfile && (
                 <button
-                  onClick={() => router.push(`/artists/${artistSlug}`)}
+                  onClick={() => {
+                    if (isApproved === false) {
+                      router.push(`/artists/${artistSlug}?pending=true`);
+                    } else {
+                      router.push(`/artists/${artistSlug}`);
+                    }
+                  }}
                   className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
                 >
                   Alpine Pro Dashboard
                 </button>
               )}
+
 
               <div className="mt-4 border-t border-gray-700 pt-4">
                 <h3 className="font-semibold mb-2">Support Alpine Groove Guide</h3>
