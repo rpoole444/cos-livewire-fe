@@ -403,20 +403,28 @@ const UserProfile: React.FC = () => {
                 </>
               )}
 
-              {hasArtistProfile && (
-                <button
-                  onClick={() => {
-                    if (isApproved === false) {
-                      router.push(`/artists/${artistSlug}?pending=true`);
-                    } else {
-                      router.push(`/artists/${artistSlug}`);
-                    }
-                  }}
-                  className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
-                >
-                  Alpine Pro Dashboard
-                </button>
-              )}
+{hasArtistProfile && (
+  isApproved ? (
+    <button
+      onClick={() => router.push(`/artists/${artistSlug}`)}
+      className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
+    >
+      Alpine Pro Dashboard
+    </button>
+  ) : (
+    <div className="bg-yellow-100 text-yellow-900 border border-yellow-400 p-4 rounded shadow-md text-sm">
+      <p className="font-semibold mb-2">🎷 Your artist profile is under review</p>
+      <p>Thank you for submitting your Alpine Pro artist page. It’s currently pending approval and will be published soon.</p>
+      <button
+        disabled
+        className="mt-3 w-full bg-gray-400 text-white py-2 rounded font-semibold cursor-not-allowed opacity-70"
+      >
+        🔒 Pending Approval
+      </button>
+    </div>
+  )
+)}
+
 
 
               <div className="mt-4 border-t border-gray-700 pt-4">
