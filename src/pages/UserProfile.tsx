@@ -175,6 +175,32 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  const handleRestoreProfile = async () => {
+    if (!user) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/artists/${user.id}/restore`, {
+        method: 'PUT',
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        const errorMsg = errData?.message || 'Failed to restore profile';
+        setMessage(errorMsg);
+        return;
+      }
+
+      const data = await res.json();
+      setHasArtistProfile(true);
+      setArtistSlug(data.slug);
+      setMessage('Profile restored successfully!');
+    } catch (err) {
+      console.error('Restore profile error:', err);
+      setMessage('An error occurred while restoring your profile.');
+    }
+  };
+
   if (loading || !hasRefetched) {
     return <div className="text-white text-center mt-20">Loading your profile...</div>;
   }
@@ -317,7 +343,7 @@ const UserProfile: React.FC = () => {
                   </button>
                   {trialActive && (
                     <button
-                      onClick={() => router.push("/artist-restore")}
+                      onClick={handleRestoreProfile}
                       className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2"
                     >
                       Restore Profile
