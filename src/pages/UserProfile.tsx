@@ -33,6 +33,8 @@ const UserProfile: React.FC = () => {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [hasRefetched, setHasRefetched] = useState(false);
   const trialActive = isTrialActive(user?.trial_ends_at);
+  const trialStarted = Boolean(user?.trial_ends_at);
+  const [startingTrial, setStartingTrial] = useState(false);
 
   // If redirected from Stripe, fetch updated user info
   useEffect(() => {
@@ -208,6 +210,34 @@ const UserProfile: React.FC = () => {
       setMessage('An error occurred while restoring your profile.');
     }
   };
+
+  const handleStartTrial = async () => {
+    if (!user) return;
+
+    setStartingTrial(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/start-trial`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        const errorMsg = errData?.message || 'Failed to start trial';
+        setMessage(errorMsg);
+        return;
+      }
+
+      const data = await res.json();
+      updateUser({ ...user, trial_ends_at: data.trial_ends_at });
+      await refetchUser();
+    } catch (err) {
+      console.error('Start trial error:', err);
+      setMessage('An error occurred while starting your trial.');
+    } finally {
+      setStartingTrial(false);
+    }
+  };
   
 
   if (loading || !hasRefetched) {
@@ -341,6 +371,16 @@ const UserProfile: React.FC = () => {
               >
                 Back to Home
               </button>
+
+              {!trialStarted && !user.is_pro && (
+                <button
+                  onClick={handleStartTrial}
+                  disabled={startingTrial}
+                  className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold"
+                >
+                  🎁 Start Free Trial
+                </button>
+              )}
 
               {user?.is_admin && !hasArtistProfile && (
                 <>
