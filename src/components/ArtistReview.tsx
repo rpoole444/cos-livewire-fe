@@ -10,7 +10,11 @@ const ArtistReview: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log('📡 Fetching pending artists...');
+
         const data = await getPendingArtists();
+        console.log('✅ Fetched:', data);
+
         setArtists(data);
       } catch (err) {
         console.error('Failed to load artists for review', err);
