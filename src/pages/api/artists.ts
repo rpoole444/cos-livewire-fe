@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 
 export async function createArtistProfile(artistData: any) {
@@ -30,7 +30,7 @@ export async function getArtistBySlug(slug: string) {
 }
 
 export async function getPendingArtists() {
-  const res = await fetch(`${API_BASE_URL}/api/artists/pending`, {
+  const res = await fetch(`${API_BASE_URL}/api/artists/review`, {
     credentials: 'include',
   });
   if (!res.ok) {
@@ -40,7 +40,7 @@ export async function getPendingArtists() {
 }
 
 export async function approveArtist(id: number) {
-  const res = await fetch(`${API_BASE_URL}/api/artists/${id}/approve`, {
+  const res = await fetch(`${API_BASE_URL}/api/artists/review/${id}`, {
     method: 'PUT',
     credentials: 'include',
   });
