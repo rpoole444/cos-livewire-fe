@@ -7,6 +7,7 @@ Alpine Groove Guide is a comprehensive community event calendar designed for the
   - [Technologies](#technologies)
   - [Project Spec](#project-spec)
   - [Abstract](#abstract)
+  - [Features](#features)
   - [Learning Goals](#learning-goals)
   - [Preview](#preview)
   - [Wins + Challenges](#wins-and-challenges)
@@ -21,6 +22,7 @@ This project was developed using Next.js and is hosted on Vercel.
 - On the command line, type: `$ npm install`
 - On the command line, type: `$ npm run dev`
 - Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- If your artist profile is soft deleted, visit the dedicated [/artist-restore](/artist-restore) page to recover it.
 - The page will reload if you make edits.\
 You may also see any lint errors in the console.
 
@@ -43,6 +45,13 @@ Alpine Groove Guide is designed to revitalize the local music and events scene i
 ## Abstract 
 
 The Alpine Groove Guide provides a dynamic platform for local artists and event organizers to share their events with a wide audience. The system supports event submission, which goes through an admin review process where events can be accepted, denied, or edited. Approved events are then displayed on the public-facing calendar. The platform is designed to eventually support streaming of community radio shows, further engaging the local creative community.
+
+## Features
+
+- Interactive calendar built with FullCalendar for browsing local events.
+- Admin dashboard to review and manage submitted events.
+- Soft-deleted artist profiles can be recovered via the dedicated [Artist Restore](/artist-restore) page.
+- Responsive interface developed with TypeScript and Tailwind CSS.
 
 ## Learning Goals
 
@@ -69,6 +78,7 @@ The Alpine Groove Guide provides a dynamic platform for local artists and event 
 
 - Successfully created a full-stack application with user authentication and dynamic content management.
 - Implemented a responsive design using Tailwind CSS that adapts to various device screens.
+- Implemented a robust soft-delete and restore workflow so artist profiles can be safely recovered.
 - Managed complex state and data interactions using Node.js and Express on the server side with a PostgreSQL database.
 
 - Setting up and configuring the authentication flow was challenging but essential for securing user data.
