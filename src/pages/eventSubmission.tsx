@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import Script from "next/script";
 import { slugify } from '@/util/slugify'; // Adjust path if needed
-import dayjs from 'dayjs';
+import { isTrialActive } from '@/util/trial';
 import EventForm from '../components/EventForm';
 
 interface Event {
@@ -63,8 +63,8 @@ const EventSubmission = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const isPro = user?.is_pro;
-  const isTrialActive = user?.trial_ends_at ? dayjs().isBefore(dayjs(user.trial_ends_at)) : false;
-  const canAddMultiple = Boolean(isPro || isTrialActive);
+  const trialActive = isTrialActive(user?.trial_ends_at);
+  const canAddMultiple = Boolean(isPro || trialActive);
 
   const addEvent = () => setEvents((prev) => [...prev, { ...initialEvent }]);
   const removeEvent = (index: number) =>

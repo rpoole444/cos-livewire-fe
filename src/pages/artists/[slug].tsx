@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import Link from 'next/link';
 import TrialBanner from '@/components/TrialBanner'; // adjust path as needed
+import { isTrialActive } from '@/util/trial';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
@@ -91,7 +92,8 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
   if (!artist) return <div className="text-white p-6">Artist not found</div>;
 
-  const shouldShowUpgradeWall = (!artist.is_pro && (artist.trial_expired || !artist.trial_ends_at));
+  const trialActive = isTrialActive(artist.trial_ends_at);
+  const shouldShowUpgradeWall = !artist.is_pro && !trialActive;
 
 if (shouldShowUpgradeWall) {
   return (
