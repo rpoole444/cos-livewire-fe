@@ -344,7 +344,7 @@ const UserProfile: React.FC = () => {
                   </button>
                   {trialActive && (
                     <button
-                      onClick={handleRestoreProfile}
+                      onClick={() => router.push('/artist-restore')}
                       className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2"
                     >
                       Restore Profile
