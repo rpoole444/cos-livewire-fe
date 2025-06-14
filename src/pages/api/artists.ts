@@ -2,11 +2,15 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 
 export async function createArtistProfile(artistData: any) {
+  const payload = {
+    ...artistData,
+    is_approved: false,
+  };
   const response = await fetch(`${API_BASE_URL}/api/artists`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify(artistData),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
