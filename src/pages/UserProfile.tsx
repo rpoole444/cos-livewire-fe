@@ -177,20 +177,20 @@ const UserProfile: React.FC = () => {
 
   const handleRestoreProfile = async () => {
     if (!user) return;
-
+  
     try {
-      const res = await fetch(`${API_BASE_URL}/api/artists/${user.id}/restore`, {
+      const res = await fetch(`${API_BASE_URL}/api/artists/by-user/${user.id}/restore`, {
         method: 'PUT',
         credentials: 'include',
       });
-
+  
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
         const errorMsg = errData?.message || 'Failed to restore profile';
         setMessage(errorMsg);
         return;
       }
-
+  
       const data = await res.json();
       setHasArtistProfile(true);
       setArtistSlug(data.slug);
@@ -200,6 +200,7 @@ const UserProfile: React.FC = () => {
       setMessage('An error occurred while restoring your profile.');
     }
   };
+  
 
   if (loading || !hasRefetched) {
     return <div className="text-white text-center mt-20">Loading your profile...</div>;
