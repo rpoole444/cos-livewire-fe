@@ -6,8 +6,9 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import Script from "next/script";
 import { slugify } from '@/util/slugify'; // Adjust path if needed
-import dayjs from 'dayjs';
 import EventForm from '../components/EventForm';
+import TrialBanner from '@/components/TrialBanner';
+import { isTrialActive } from '@/util/isTrialActive';
 
 interface Event {
   title: string;
@@ -63,8 +64,9 @@ const EventSubmission = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const isPro = user?.is_pro;
-  const isTrialActive = user?.trial_ends_at ? dayjs().isBefore(dayjs(user.trial_ends_at)) : false;
-  const canAddMultiple = Boolean(isPro || isTrialActive);
+  const trialActive = isTrialActive(user?.trial_ends_at);
+  const canAddMultiple = Boolean(isPro || trialActive);
+  const trialExpired = user && !isPro && !trialActive;
 
   const addEvent = () => setEvents((prev) => [...prev, { ...initialEvent }]);
   const removeEvent = (index: number) =>
@@ -277,7 +279,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
 
 
-if (!user) {
+  if (!user) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-700">
       <div className="text-center">
@@ -307,6 +309,18 @@ if (!user) {
   );
 }
 
+  if (trialExpired) {
+    return (
+      <div className="container mx-auto p-4 text-center text-white">
+        <TrialBanner trial_ends_at={user!.trial_ends_at} is_pro={user!.is_pro} />
+        <p className="mb-4">Your free trial has expired. Upgrade to Alpine Pro to submit events.</p>
+        <Link href="/upgrade" className="text-blue-500 underline">
+          Upgrade Now
+        </Link>
+      </div>
+    );
+  }
+
 
   if (submissionSuccess) {
     return (
@@ -322,6 +336,7 @@ if (!user) {
 
   return user ? (
     <div className="container mx-auto p-4">
+      <TrialBanner trial_ends_at={user.trial_ends_at} is_pro={user.is_pro} />
       <Script
         src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
         strategy="lazyOnload"

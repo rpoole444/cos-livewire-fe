@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import TrialBanner from '@/components/TrialBanner';
+import { isTrialActive } from '@/util/isTrialActive';
 
 const topGenres = [
   'Jazz', 'Rock', 'Pop', 'Hip-Hop', 'R&B', 'Electronic',
@@ -10,6 +13,9 @@ const topGenres = [
 export default function ArtistSignupPage() {
   const { user } = useAuth();
   const router = useRouter();
+
+  const trialActive = isTrialActive(user?.trial_ends_at);
+  const trialExpired = user && !user.is_pro && !trialActive;
 
   const [form, setForm] = useState({
     display_name: '',
@@ -117,8 +123,19 @@ export default function ArtistSignupPage() {
     }
   };
 
+  if (trialExpired) {
+    return (
+      <div className="max-w-xl mx-auto p-6 text-white text-center">
+        <TrialBanner trial_ends_at={user!.trial_ends_at} is_pro={user!.is_pro} />
+        <p className="mb-4">Your free trial has expired. Upgrade to Alpine Pro to manage an artist profile.</p>
+        <Link href="/upgrade" className="text-blue-400 underline">Upgrade Now</Link>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-xl mx-auto p-6 text-white">
+      <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.is_pro} />
       <h1 className="text-2xl font-bold mb-2">🎤 Claim Your Artist Profile</h1>
       <p className="text-sm text-gray-300 mb-4">
         Create your public artist profile and enjoy 30 days of Alpine Pro access free.
