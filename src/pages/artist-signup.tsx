@@ -105,6 +105,7 @@ export default function ArtistSignupPage() {
       });
 
       formData.append('is_pro', 'true');
+      formData.append('is_approved', 'false');
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists`, {
         method: 'POST',
