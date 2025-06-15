@@ -134,7 +134,7 @@ if (shouldShowUpgradeWall) {
         <div className="max-w-4xl mx-auto space-y-6">
           {showPendingBanner && (
             <div className="bg-yellow-400 text-black text-sm rounded p-3 shadow text-center font-medium">
-              ⏳ Your artist profile is currently <strong>pending admin approval</strong>. You can still preview it here.
+              ⏳ Your artist profile is currently <strong>pending admin approval</strong>. You’ll be notified when approved.
             </div>
           )}
           {showTrialToast && (

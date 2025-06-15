@@ -6,7 +6,12 @@ import { registerUser } from "@/pages/api/route";
 const genreOptions = ["Jazz", "Blues", "Funk", "Indie", "Dance", "Electronic","Rock", "Alternative", "Country", "Hip-Hop", "Pop", 
   "R&B", "Rap", "Reggae", "Soul", "Techno", "World", "Other"];
 
-const RegistrationForm: React.FC<{ setAuthMode: (mode: string) => void }> = ({ setAuthMode }) => {
+interface RegistrationProps {
+  setAuthMode: (mode: string) => void;
+  onSuccess?: () => void;
+}
+
+const RegistrationForm: React.FC<RegistrationProps> = ({ setAuthMode, onSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -54,12 +59,16 @@ const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
 
       try {
       await registerUser(firstName, lastName, displayName, email, password, description, genres);
-        setRegistrationSuccess(true);
+      setRegistrationSuccess(true);
 
-        setTimeout(() => {
+      setTimeout(() => {
+        if (onSuccess) {
+          onSuccess();
+        } else {
           setAuthMode('login');
-          setRegistrationSuccess(false);
-        }, 3000);
+        }
+        setRegistrationSuccess(false);
+      }, 3000);
       } catch (error: any) {
         setErrorMessage(error.message || "There was an error registering.");
       }
