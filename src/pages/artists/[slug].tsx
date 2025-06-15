@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import Link from 'next/link';
 import TrialBanner from '@/components/TrialBanner'; // adjust path as needed
+import { FaFacebookF, FaTwitter, FaLink, FaShareAlt } from 'react-icons/fa';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
@@ -126,8 +127,11 @@ if (shouldShowUpgradeWall) {
     <>
       <Head>
         <title>{artist.display_name} | Alpine Groove Guide</title>
-        <meta name="description" content={`See upcoming gigs and learn more about ${artist.display_name}`} />
+        <meta name="description" content={artist.bio?.slice(0, 150)} />
+        <meta property="og:title" content={`${artist.display_name} | Alpine Groove Guide`} />
+        <meta property="og:description" content={artist.bio?.slice(0, 150)} />
         <meta property="og:image" content={artist.profile_image} />
+        <meta property="og:url" content={`https://app.alpinegrooveguide.com/artists/${artist.slug}`} />
       </Head>
 
       <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -183,6 +187,46 @@ if (shouldShowUpgradeWall) {
               >
                 {artist.website}
               </a></p>}
+              <div className="flex flex-wrap gap-2 mt-4">
+                <button
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: artist.display_name,
+                        url: window.location.href,
+                      });
+                    }
+                  }}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 rounded shadow flex items-center gap-1"
+                >
+                  <FaShareAlt /> Share
+                </button>
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded shadow flex items-center gap-1"
+                >
+                  <FaFacebookF /> Facebook
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(artist.display_name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1 rounded shadow flex items-center gap-1"
+                >
+                  <FaTwitter /> X
+                </a>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Link copied to clipboard!');
+                  }}
+                  className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded shadow flex items-center gap-1"
+                >
+                  <FaLink /> Copy Link
+                </button>
+              </div>
             </div>
           </div>
 

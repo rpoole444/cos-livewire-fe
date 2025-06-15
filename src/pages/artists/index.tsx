@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import Header from '@/components/Header';
-import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 
 interface Artist {
@@ -17,8 +16,17 @@ interface Artist {
 export default function ArtistDirectoryPage() {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [stateFilter, setStateFilter] = useState('');
+  const [zipFilter, setZipFilter] = useState('');
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+  const filteredArtists = artists.filter((artist) => {
+    const q = searchQuery.toLowerCase();
+    const matchesQuery =
+      artist.display_name.toLowerCase().includes(q) ||
+      artist.genres.join(', ').toLowerCase().includes(q);
+    return matchesQuery;
+  });
 
   useEffect(() => {
     const fetchArtists = async () => {
@@ -36,16 +44,6 @@ export default function ArtistDirectoryPage() {
     fetchArtists();
   }, [API_BASE_URL]);
 
-  // Admin-only gate
-  if (!user?.is_admin) {
-    return (
-      <div className="min-h-screen bg-gray-900 text-white p-6">
-        <Header />
-        <h1 className="text-3xl font-bold mb-6">🔒 Artist Directory</h1>
-        <p className="text-gray-400">This section is currently available to site admins only.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -66,12 +64,35 @@ export default function ArtistDirectoryPage() {
       </div>
 
       <h1 className="text-3xl font-bold mb-6">🎶 Artist Directory</h1>
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Search by name or genre"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="p-2 rounded text-black flex-1"
+        />
+        <input
+          type="text"
+          placeholder="State (coming soon)"
+          value={stateFilter}
+          onChange={(e) => setStateFilter(e.target.value)}
+          className="p-2 rounded text-black md:w-40"
+        />
+        <input
+          type="text"
+          placeholder="Zip (coming soon)"
+          value={zipFilter}
+          onChange={(e) => setZipFilter(e.target.value)}
+          className="p-2 rounded text-black md:w-32"
+        />
+      </div>
 
       {loading ? (
         <p>Loading...</p>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {artists.map((artist) => (
+          {filteredArtists.map((artist) => (
             <Link
               key={artist.slug}
               href={`/artists/${artist.slug}`}
