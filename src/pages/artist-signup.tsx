@@ -116,7 +116,7 @@ export default function ArtistSignupPage() {
       if (!res.ok) throw new Error('Failed to create artist profile');
 
       const data = await res.json();
-      router.push(`/artists/${data.slug}?trial=active`);
+      router.push(`/artists/${data.slug}?pending=true&trial=active`);
     } catch (err: any) {
       setError(err.message);
     } finally {

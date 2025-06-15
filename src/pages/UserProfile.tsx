@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import Image from "next/image";
 import TrialBanner from '@/components/TrialBanner';
@@ -31,6 +31,8 @@ const UserProfile: React.FC = () => {
   const [artistSlug, setArtistSlug] = useState("");
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [showApprovalToast, setShowApprovalToast] = useState(false);
+  const approvalRef = useRef<boolean | null>(null);
   const [hasRefetched, setHasRefetched] = useState(false);
   const trialActive = isTrialActive(user?.trial_ends_at);
   const trialStarted = Boolean(user?.trial_ends_at);
@@ -95,6 +97,24 @@ const UserProfile: React.FC = () => {
 
     checkArtistProfile();
   }, [user]);
+
+  useEffect(() => {
+    if (approvalRef.current === false && isApproved) {
+      setShowApprovalToast(true);
+      setTimeout(() => setShowApprovalToast(false), 5000);
+    }
+    approvalRef.current = isApproved;
+  }, [isApproved]);
+
+  useEffect(() => {
+    if (router.query.approved === 'true') {
+      setShowApprovalToast(true);
+      const cleaned = new URL(window.location.href);
+      cleaned.searchParams.delete('approved');
+      window.history.replaceState({}, document.title, cleaned.toString());
+      setTimeout(() => setShowApprovalToast(false), 5000);
+    }
+  }, [router.query]);
 
   // Clear messages after 3 seconds
   useEffect(() => {
@@ -260,6 +280,11 @@ const UserProfile: React.FC = () => {
           ✅ Success! You’ve unlocked Alpine Pro.
         </div>
       )}
+      {showApprovalToast && (
+        <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow mb-4 max-w-xl mx-auto">
+          🎉 You’re live on the directory!
+        </div>
+      )}
       <div className="max-w-5xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
           🎤 Profile: {user.displayName}
@@ -414,7 +439,7 @@ const UserProfile: React.FC = () => {
   ) : (
     <div className="bg-yellow-100 text-yellow-900 border border-yellow-400 p-4 rounded shadow-md text-sm">
       <p className="font-semibold mb-2">🎷 Your artist profile is under review</p>
-      <p>Thank you for submitting your Alpine Pro artist page. It’s currently pending approval and will be published soon.</p>
+      <p>You’ll be notified when approved.</p>
       <button
         disabled
         className="mt-3 w-full bg-gray-400 text-white py-2 rounded font-semibold cursor-not-allowed opacity-70"

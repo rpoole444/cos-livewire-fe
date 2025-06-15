@@ -36,6 +36,7 @@ const RegisterPage = () => {
             setAuthMode={(mode) => {
               if (mode === 'login') router.push('/LoginPage');
             }}
+            onSuccess={() => router.push('/LoginPage?redirect=/artist-signup')}
           />
         </div>
       </section>
