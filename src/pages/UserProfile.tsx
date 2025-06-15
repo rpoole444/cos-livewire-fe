@@ -32,6 +32,7 @@ const UserProfile: React.FC = () => {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showApprovalToast, setShowApprovalToast] = useState(false);
+  const [showTrialToast, setShowTrialToast] = useState(false);
   const approvalRef = useRef<boolean | null>(null);
   const [hasRefetched, setHasRefetched] = useState(false);
   const trialActive = isTrialActive(user?.trial_ends_at);
@@ -119,6 +120,16 @@ const UserProfile: React.FC = () => {
       cleaned.searchParams.delete('approved');
       window.history.replaceState({}, document.title, cleaned.toString());
       setTimeout(() => setShowApprovalToast(false), 5000);
+    }
+  }, [router.query]);
+
+  useEffect(() => {
+    if (router.query.trial === 'active') {
+      setShowTrialToast(true);
+      const cleaned = new URL(window.location.href);
+      cleaned.searchParams.delete('trial');
+      window.history.replaceState({}, document.title, cleaned.toString());
+      setTimeout(() => setShowTrialToast(false), 5000);
     }
   }, [router.query]);
 
@@ -260,6 +271,11 @@ const UserProfile: React.FC = () => {
       {showApprovalToast && (
         <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow mb-4 max-w-xl mx-auto">
           🎉 You’re live on the directory!
+        </div>
+      )}
+      {showTrialToast && (
+        <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow mb-4 max-w-xl mx-auto">
+          ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
         </div>
       )}
       <div className="max-w-5xl mx-auto p-6">
