@@ -6,6 +6,9 @@ import { Artist, Artists } from '@/interfaces/interfaces';
 
 const ArtistReview: React.FC = () => {
   const [artists, setArtists] = useState<Artists>([]);
+  const [proFilter, setProFilter] = useState<'all' | 'true' | 'false'>('all');
+  const [approvedFilter, setApprovedFilter] = useState<'all' | 'true' | 'false'>('all');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,11 +53,57 @@ const ArtistReview: React.FC = () => {
     }
   };
 
+  const filteredArtists = artists
+    .filter(a => (proFilter === 'all' || String(!!a.is_pro) === proFilter))
+    .filter(a => (approvedFilter === 'all' || String(!!a.is_approved) === approvedFilter))
+    .sort((a, b) => {
+      if (!a.created_at || !b.created_at) return 0;
+      const diff = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      return sortOrder === 'oldest' ? diff : -diff;
+    });
+
   return (
     <div className="mt-8">
-      {artists.length > 0 ? (
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div>
+          <label className="mr-2">Pro</label>
+          <select
+            value={proFilter}
+            onChange={e => setProFilter(e.target.value as 'all' | 'true' | 'false')}
+            className="text-black p-1 rounded"
+          >
+            <option value="all">All</option>
+            <option value="true">Pro</option>
+            <option value="false">Free</option>
+          </select>
+        </div>
+        <div>
+          <label className="mr-2">Approved</label>
+          <select
+            value={approvedFilter}
+            onChange={e => setApprovedFilter(e.target.value as 'all' | 'true' | 'false')}
+            className="text-black p-1 rounded"
+          >
+            <option value="all">All</option>
+            <option value="true">Approved</option>
+            <option value="false">Pending</option>
+          </select>
+        </div>
+        <div>
+          <label className="mr-2">Sort</label>
+          <select
+            value={sortOrder}
+            onChange={e => setSortOrder(e.target.value as 'newest' | 'oldest')}
+            className="text-black p-1 rounded"
+          >
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+          </select>
+        </div>
+      </div>
+      {filteredArtists.length > 0 ? (
         <ul className="space-y-6">
-          {artists.map(a => (
+          {filteredArtists.map(a => (
             <li key={a.id} className="bg-white rounded-md shadow-md p-4">
               <AdminArtistCard
                 artist={a}

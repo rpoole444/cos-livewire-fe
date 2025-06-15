@@ -12,7 +12,7 @@ interface Props {
 const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [edited, setEdited] = useState<Artist>(artist);
+  const [edited, setEdited] = useState<Artist>({ ...artist });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -129,6 +129,17 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
             </div>
           )}
 
+          <div>
+            <label className="block text-sm font-medium">Moderation Notes</label>
+            <textarea
+              name="notes"
+              value={edited.notes || ''}
+              onChange={handleChange}
+              className="mt-1 p-2 border rounded w-full"
+              rows={3}
+            />
+          </div>
+
           {edited.promo_photo && (
             <div>
               <label className="text-sm font-medium">Promo Photo</label>
@@ -190,6 +201,23 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
               />
             </div>
           )}
+
+          <div className="flex gap-2 mt-2">
+            <a
+              href={`/artists/${artist.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline text-sm"
+            >
+              View Public Page
+            </a>
+            <a
+              href={`/artists/edit/${artist.slug}`}
+              className="text-blue-600 underline text-sm"
+            >
+              Edit
+            </a>
+          </div>
 
           {/* Action Buttons */}
           <div className="flex gap-2 justify-end mt-4">

@@ -86,6 +86,7 @@ export interface Artist {
   stage_plot?: string;
   press_kit?: string;
   tip_jar_url?: string;
+  notes?: string;
   is_pro?: boolean;
   is_approved?: boolean;
   trial_active?: boolean;
