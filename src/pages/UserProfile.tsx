@@ -76,27 +76,33 @@ const UserProfile: React.FC = () => {
   useEffect(() => {
     const checkArtistProfile = async () => {
       if (!user?.id) return;
-
+  
       try {
         const res = await fetch(`${API_BASE_URL}/api/artists/user/${user.id}`, {
           credentials: 'include',
         });
-
+  
         if (res.status === 200) {
           const data = await res.json();
           setHasArtistProfile(true);
           setArtistSlug(data.slug);
           setIsApproved(data.is_approved);
-        } else {
+        } else if (res.status === 404) {
+          // No artist profile exists yet
           setHasArtistProfile(false);
+          setArtistSlug("");
+          setIsApproved(null);
+        } else {
+          console.error("Unexpected artist profile fetch error:", res.status);
         }
       } catch (err) {
-        console.error("Artist profile fetch error:", err);
+        console.error("Artist profile fetch failed:", err);
       }
     };
-
+  
     checkArtistProfile();
   }, [user]);
+  
 
   useEffect(() => {
     if (approvalRef.current === false && isApproved) {
