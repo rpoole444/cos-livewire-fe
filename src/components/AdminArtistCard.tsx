@@ -202,23 +202,6 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
             </div>
           )}
 
-          <div className="flex gap-2 mt-2">
-            <a
-              href={`/artists/${artist.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline text-sm"
-            >
-              View Public Page
-            </a>
-            <a
-              href={`/artists/edit/${artist.slug}`}
-              className="text-blue-600 underline text-sm"
-            >
-              Edit
-            </a>
-          </div>
-
           {/* Action Buttons */}
           <div className="flex gap-2 justify-end mt-4">
             {isEditing && (
