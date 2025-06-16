@@ -1,8 +1,28 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import { useState } from 'react';
 
 export default function UpgradePage() {
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (data.session?.url) {
+        window.location.href = data.session.url;
+      }
+    } catch (err) {
+      console.error('Checkout error', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <Head>
@@ -15,18 +35,14 @@ export default function UpgradePage() {
           Alpine Pro members can create public artist profiles, submit unlimited events, and access exclusive features.
         </p>
         <p className="mb-6 max-w-xl">
-          Stripe checkout is coming soon. In the meantime,{' '}
-          <a href="mailto:poole.reid@gmail.com" className="underline text-yellow-300 hover:text-yellow-200">
-            contact us
-          </a>{' '}
-          to upgrade manually.
+          Ready to continue using all Alpine Pro features? Subscribe below and you’ll be redirected to Stripe Checkout.
         </p>
-        {/* TODO: Replace with Stripe checkout button */}
         <button
-          disabled
-          className="bg-gray-700 text-gray-400 px-6 py-3 rounded font-semibold cursor-not-allowed"
+          onClick={handleSubscribe}
+          disabled={loading}
+          className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded font-semibold text-white disabled:opacity-50"
         >
-          Stripe Checkout Coming Soon
+          {loading ? 'Redirecting…' : 'Subscribe'}
         </button>
       </main>
       <footer className="text-center text-sm text-gray-500 py-4">

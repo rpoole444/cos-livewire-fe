@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import React, { useState, useEffect, useRef } from "react";
 import Header from "@/components/Header";
 import Image from "next/image";
+import Link from 'next/link';
 import TrialBanner from '@/components/TrialBanner';
 import ActiveTrialNoProfileBanner from '@/components/ActiveTrialNoProfileBanner';
 import { isTrialActive } from '@/util/isTrialActive';
@@ -37,7 +38,7 @@ const UserProfile: React.FC = () => {
   const [hasRefetched, setHasRefetched] = useState(false);
   const trialActive = isTrialActive(user?.trial_ends_at);
   const trialStarted = Boolean(user?.trial_ends_at);
-  const [startingTrial, setStartingTrial] = useState(false);
+  const trialExpired = user && !user.is_pro && !!user.trial_ends_at && !trialActive;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
 
   // If redirected from Stripe, fetch updated user info
@@ -413,12 +414,18 @@ const UserProfile: React.FC = () => {
 
 {hasArtistProfile && (
   isApproved ? (
-    <button
-      onClick={() => router.push(`/artists/${artistSlug}`)}
-      className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
-    >
-      Alpine Pro Dashboard
-    </button>
+    trialActive || user.is_pro ? (
+      <button
+        onClick={() => router.push(`/artists/${artistSlug}`)}
+        className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
+      >
+        Alpine Pro Dashboard
+      </button>
+    ) : (
+      <Link href="/upgrade" className="underline text-blue-300">
+        Upgrade to Alpine Pro
+      </Link>
+    )
   ) : (
     <div className="bg-yellow-100 text-yellow-900 border border-yellow-400 p-4 rounded shadow-md text-sm">
       <p className="font-semibold mb-2">🎷 Your artist profile is under review</p>
