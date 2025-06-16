@@ -279,6 +279,23 @@ const UserProfile: React.FC = () => {
           ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
         </div>
       )}
+      {!user.is_pro && (
+        <div className="text-center mb-4">
+          {trialActive ? (
+            <Link href="/upgrade">
+              <button className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold">
+                Upgrade early to support us
+              </button>
+            </Link>
+          ) : trialExpired ? (
+            <Link href="/upgrade">
+              <button className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold">
+                Upgrade to continue using Pro features
+              </button>
+            </Link>
+          ) : null}
+        </div>
+      )}
       <div className="max-w-5xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
           🎤 Profile: {user.displayName}
