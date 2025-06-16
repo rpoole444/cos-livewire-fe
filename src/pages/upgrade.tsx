@@ -9,7 +9,7 @@ export default function UpgradePage() {
   const handleSubscribe = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/create-checkout-session', {
+      const res = await fetch('/api/payments/create-checkout-session', {
         method: 'POST',
       });
       const data = await res.json();
