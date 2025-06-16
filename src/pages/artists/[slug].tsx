@@ -134,14 +134,28 @@ if (shouldShowUpgradeWall) {
         <meta property="og:site_name" content="Alpine Groove Guide" />
         <meta property="og:title" content={`${artist.display_name} | Alpine Groove Guide`} />
         <meta property="og:description" content={artist.bio?.slice(0, 150)} />
-        <meta property="og:image" content={`https://app.alpinegrooveguide.com${artist.profile_image}`} />
+        <meta
+          property="og:image"
+          content={
+            artist.profile_image.startsWith('http')
+              ? artist.profile_image
+              : `https://app.alpinegrooveguide.com${artist.profile_image}`
+          }
+        />        
         <meta property="og:url" content={`https://app.alpinegrooveguide.com/artists/${artist.slug}`} />
 
         {/* Twitter Cards */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${artist.display_name} | Alpine Groove Guide`} />
         <meta name="twitter:description" content={artist.bio?.slice(0, 150)} />
-        <meta name="twitter:image" content={`https://app.alpinegrooveguide.com${artist.profile_image}`} />
+        <meta
+          name="twitter:image"
+          content={
+            artist.profile_image.startsWith('http')
+              ? artist.profile_image
+              : `https://app.alpinegrooveguide.com${artist.profile_image}`
+          }
+        />
       </Head>
 
 
