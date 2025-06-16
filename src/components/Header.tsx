@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { AiOutlineMenu, AiOutlineClose } from 'react-icons/ai';
 import Image from 'next/image';
+import { useAuth } from '@/context/AuthContext';
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
@@ -41,6 +43,14 @@ const Header = () => {
           <Link href="/about" className="block lg:inline-block text-white hover:text-gold transition">
             About Us
           </Link>
+          {user && !user.is_pro && (
+            <Link
+              href="/upgrade"
+              className="block lg:inline-block text-white hover:text-gold transition"
+            >
+              Upgrade to Pro
+            </Link>
+          )}
         </nav>
       </div>
     </header>
