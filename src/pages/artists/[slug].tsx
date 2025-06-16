@@ -218,7 +218,7 @@ if (shouldShowUpgradeWall) {
                     if (navigator.share) {
                       navigator.share({
                         title: artist.display_name,
-                        url: window.location.href,
+                        url: `https://app.alpinegrooveguide.com/share/artist/${artist.slug}`,
                       });
                     }
                   }}
@@ -227,7 +227,9 @@ if (shouldShowUpgradeWall) {
                   <FaShareAlt /> Share
                 </button>
                 <a
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                    `https://app.alpinegrooveguide.com/share/artist/${artist.slug}`
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded shadow flex items-center gap-1"
@@ -235,7 +237,9 @@ if (shouldShowUpgradeWall) {
                   <FaFacebookF /> Facebook
                 </a>
                 <a
-                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(artist.display_name)}`}
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                    `https://app.alpinegrooveguide.com/share/artist/${artist.slug}`
+                  )}&text=${encodeURIComponent(artist.display_name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1 rounded shadow flex items-center gap-1"
@@ -244,7 +248,9 @@ if (shouldShowUpgradeWall) {
                 </a>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
+                    navigator.clipboard.writeText(
+                      `https://app.alpinegrooveguide.com/share/artist/${artist.slug}`
+                    );
                     alert('Link copied to clipboard!');
                   }}
                   className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded shadow flex items-center gap-1"
