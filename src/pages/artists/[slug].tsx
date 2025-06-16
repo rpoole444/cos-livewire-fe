@@ -128,11 +128,22 @@ if (shouldShowUpgradeWall) {
       <Head>
         <title>{artist.display_name} | Alpine Groove Guide</title>
         <meta name="description" content={artist.bio?.slice(0, 150)} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Alpine Groove Guide" />
         <meta property="og:title" content={`${artist.display_name} | Alpine Groove Guide`} />
         <meta property="og:description" content={artist.bio?.slice(0, 150)} />
-        <meta property="og:image" content={artist.profile_image} />
+        <meta property="og:image" content={`https://app.alpinegrooveguide.com${artist.profile_image}`} />
         <meta property="og:url" content={`https://app.alpinegrooveguide.com/artists/${artist.slug}`} />
+
+        {/* Twitter Cards */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${artist.display_name} | Alpine Groove Guide`} />
+        <meta name="twitter:description" content={artist.bio?.slice(0, 150)} />
+        <meta name="twitter:image" content={`https://app.alpinegrooveguide.com${artist.profile_image}`} />
       </Head>
+
 
       <div className="min-h-screen bg-gray-900 text-white p-6">
         <div className="max-w-4xl mx-auto space-y-6">
