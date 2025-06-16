@@ -120,14 +120,18 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
             </div>
           )}
 
-          {edited.tip_jar_url && (
-            <div>
-              <label className="text-sm font-medium">Tip Jar URL</label>
-              <a href={edited.tip_jar_url} className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">
-                {edited.tip_jar_url}
-              </a>
-            </div>
-          )}
+          <div>
+            <label className="text-sm font-medium">Tip Jar URL</label>
+            <input
+              type="text"
+              name="tip_jar_url"
+              value={edited.tip_jar_url || ''}
+              onChange={handleChange}
+              disabled={!isEditing}
+              className="mt-1 p-2 border rounded w-full"
+            />
+          </div>
+
 
           <div>
             <label className="block text-sm font-medium">Moderation Notes</label>
@@ -163,9 +167,18 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
             </div>
           )}
 
-          {edited.embed_youtube && (
-            <div>
-              <label className="text-sm font-medium">YouTube Embed</label>
+        <div>
+          <label className="text-sm font-medium">YouTube Embed</label>
+          {isEditing ? (
+            <input
+              type="text"
+              name="embed_youtube"
+              value={edited.embed_youtube || ''}
+              onChange={handleChange}
+              className="mt-1 p-2 border rounded w-full"
+            />
+          ) : (
+            edited.embed_youtube && (
               <iframe
                 src={edited.embed_youtube}
                 className="w-full mt-1 rounded"
@@ -173,34 +186,58 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
                 height="200"
                 allowFullScreen
               />
-            </div>
+            )
           )}
+        </div>
 
-          {edited.embed_soundcloud && (
-            <div>
-              <label className="text-sm font-medium">SoundCloud Embed</label>
+
+        <div>
+          <label className="text-sm font-medium">Soundcloud Embed</label>
+          {isEditing ? (
+            <input
+              type="text"
+              name="embed_soundcloud"
+              value={edited.embed_soundcloud || ''}
+              onChange={handleChange}
+              className="mt-1 p-2 border rounded w-full"
+            />
+          ) : (
+            edited.embed_soundcloud && (
               <iframe
                 src={edited.embed_soundcloud}
                 className="w-full mt-1 rounded"
                 width="100%"
                 height="200"
-                allow="autoplay"
+                allowFullScreen
               />
-            </div>
+            )
           )}
+        </div>
 
-          {edited.embed_bandcamp && (
-            <div>
-              <label className="text-sm font-medium">Bandcamp Embed</label>
-              <iframe
-                src={edited.embed_bandcamp}
-                className="w-full mt-1 rounded"
-                width="100%"
-                height="200"
-                seamless
-              />
-            </div>
-          )}
+
+        <div>
+  <label className="text-sm font-medium">Bandcamp Embed</label>
+  {isEditing ? (
+    <input
+      type="text"
+      name="embed_bandcamp"
+      value={edited.embed_bandcamp || ''}
+      onChange={handleChange}
+      className="mt-1 p-2 border rounded w-full"
+    />
+  ) : (
+    edited.embed_bandcamp && (
+      <iframe
+        src={edited.embed_bandcamp}
+        className="w-full mt-1 rounded"
+        width="100%"
+        height="200"
+        allowFullScreen
+      />
+    )
+  )}
+</div>
+
 
           {/* Action Buttons */}
           <div className="flex gap-2 justify-end mt-4">
