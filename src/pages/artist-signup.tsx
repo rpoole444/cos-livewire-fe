@@ -11,7 +11,7 @@ const topGenres = [
 ];
 
 export default function ArtistSignupPage() {
-  const { user } = useAuth();
+  const { user, refetchUser } = useAuth();
   const router = useRouter();
 
   const trialActive = isTrialActive(user?.trial_ends_at);
@@ -115,7 +115,8 @@ export default function ArtistSignupPage() {
 
       if (!res.ok) throw new Error('Failed to create artist profile');
 
-      const data = await res.json();
+      await res.json();
+      await refetchUser();
       router.push(`/UserProfile?trial=active`);
     } catch (err: any) {
       setError(err.message);
