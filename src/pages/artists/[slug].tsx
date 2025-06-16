@@ -55,6 +55,7 @@ interface Props {
 const ArtistProfilePage = ({ artist }: Props) => {
   const { user } = useAuth();
   const canEdit = artist && user && (user.id === artist.user_id || user.is_admin);
+  const userDeleted = artist?.user_exists === false;
   const router = useRouter();
   const isPending = router.query.pending === 'true';
   const isOwner = user?.id === artist?.user_id;
@@ -171,8 +172,10 @@ if (shouldShowUpgradeWall) {
             <div>
               <h1 className="text-4xl font-bold mb-2">{artist.display_name}</h1>
               <p className="text-gray-300 mb-2">{artist.bio}</p>
-              <p className="text-sm text-gray-400">📧 {artist.contact_email}</p>
-              {artist.tip_jar_url && (
+              {!userDeleted && (
+                <p className="text-sm text-gray-400">📧 {artist.contact_email}</p>
+              )}
+              {!userDeleted && artist.tip_jar_url && (
                 <div className="mt-6 bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-green-500">
                   <h3 className="text-lg font-bold mb-2 text-green-400">Support this artist 🎺</h3>
                   <p className="text-gray-300 text-sm mb-4">
@@ -190,14 +193,16 @@ if (shouldShowUpgradeWall) {
                 </div>
               )}
               <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
-              {artist.website && <p className="text-sm text-blue-400">🔗 <a
-                href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 underline"
-              >
-                {artist.website}
-              </a></p>}
+              {!userDeleted && artist.website && (
+                <p className="text-sm text-blue-400">🔗 <a
+                  href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 underline"
+                >
+                  {artist.website}
+                </a></p>
+              )}
               <div className="flex flex-wrap gap-2 mt-4">
                 <button
                   onClick={() => {

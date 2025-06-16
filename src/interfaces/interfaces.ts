@@ -71,7 +71,7 @@ export type Events = Event[];
 
 export interface Artist {
   id: number;
-  user_id: number;
+  user_id: number | null;
   display_name: string;
   bio: string;
   contact_email: string;
@@ -91,6 +91,11 @@ export interface Artist {
   is_approved?: boolean;
   trial_active?: boolean;
   trial_start_date?: string;
+  /**
+   * Indicates if the associated user account still exists. Some APIs may omit
+   * this property, so undefined should be treated as true (user exists).
+   */
+  user_exists?: boolean;
   deleted_at?: string | null;
   created_at?: string;
   updated_at?: string;
