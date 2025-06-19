@@ -1,9 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 const PLAN_TO_PRICE_ID = {
-  monthly: process.env.STRIPE_MONTHLY_PRICE_ID,
-  annual: process.env.STRIPE_ANNUAL_PRICE_ID,
+  monthly: process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID,
+  annual: process.env.NEXT_PUBLIC_STRIPE_ANNUAL_PRICE_ID,
 };
+
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
