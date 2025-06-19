@@ -43,7 +43,7 @@ const Header = () => {
           <Link href="/about" className="block lg:inline-block text-white hover:text-gold transition">
             About Us
           </Link>
-          {user && !user.is_pro && (
+          {user && !user.is_pro && user.is_admin && (
             <Link
               href="/upgrade"
               className="block lg:inline-block text-white hover:text-gold transition"
