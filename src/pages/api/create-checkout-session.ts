@@ -1,5 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+const PLAN_TO_PRICE_ID = {
+  monthly: process.env.STRIPE_MONTHLY_PRICE_ID,
+  annual: process.env.STRIPE_ANNUAL_PRICE_ID,
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -7,7 +12,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { userId, priceId } = req.body;
+    const { userId, plan } = req.body;
+    const priceId = PLAN_TO_PRICE_ID[plan as keyof typeof PLAN_TO_PRICE_ID];
 
     if (!userId || !priceId) {
       return res.status(400).json({ message: 'Missing userId or priceId' });
@@ -20,17 +26,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         cookie: req.headers.cookie || '',
       },
       body: JSON.stringify({ userId, priceId }),
-
     });
 
     const data = await response.json();
+
     if (!response.ok) {
       return res.status(response.status).json(data);
     }
 
-    res.status(200).json({ url: data.url }); // frontend will redirect to this
+    return res.status(200).json({ url: data.url });
   } catch (err) {
     console.error('Checkout session error:', err);
-    res.status(500).json({ message: 'Failed to create session' });
+    return res.status(500).json({ message: 'Failed to create session' });
   }
 }
