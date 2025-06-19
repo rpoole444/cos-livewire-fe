@@ -5,21 +5,20 @@ const PLAN_TO_PRICE_ID = {
   annual: process.env.NEXT_PUBLIC_STRIPE_ANNUAL_PRICE_ID,
 };
 
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).end('Method Not Allowed');
   }
 
+  const { userId, plan } = req.body;
+  const priceId = PLAN_TO_PRICE_ID[plan as keyof typeof PLAN_TO_PRICE_ID];
+
+  if (!userId || !priceId) {
+    return res.status(400).json({ message: 'Missing required data: userId or priceId' });
+  }
+
   try {
-    const { userId, plan } = req.body;
-    const priceId = PLAN_TO_PRICE_ID[plan as keyof typeof PLAN_TO_PRICE_ID];
-
-    if (!userId || !priceId) {
-      return res.status(400).json({ message: 'Missing userId or priceId' });
-    }
-
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/create-checkout-session`, {
       method: 'POST',
       headers: {
@@ -35,9 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(response.status).json(data);
     }
 
-    return res.status(200).json({ url: data.url });
+    res.status(200).json({ url: data.url });
   } catch (err) {
     console.error('Checkout session error:', err);
-    return res.status(500).json({ message: 'Failed to create session' });
+    res.status(500).json({ message: 'Failed to create session' });
   }
 }
