@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'Content-Type': 'application/json',
         cookie: req.headers.cookie || '',
       },
-      body: JSON.stringify({ userId, priceId }),
+      body: JSON.stringify({ userId, plan }),
     });
 
     const data = await response.json();
