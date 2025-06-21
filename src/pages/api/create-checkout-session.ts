@@ -6,6 +6,9 @@ const PLAN_TO_PRICE_ID = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log('Incoming method:', req.method);
+  console.log('Incoming body:', req.body);
+  
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).end('Method Not Allowed');
@@ -42,3 +45,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(500).json({ message: 'Failed to create session' });
   }
 }
+
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
