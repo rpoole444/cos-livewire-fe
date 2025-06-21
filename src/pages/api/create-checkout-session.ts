@@ -10,9 +10,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.setHeader('Allow', 'POST');
     return res.status(405).end('Method Not Allowed');
   }
+  console.log('BODY RECEIVED:', req.body);
 
   const { userId, plan } = req.body;
-  console.log('BODY RECEIVED:', req.body);
 
   const priceId = PLAN_TO_PRICE_ID[plan as keyof typeof PLAN_TO_PRICE_ID];
 
