@@ -35,6 +35,9 @@ export default function UpgradePage() {
       body: JSON.stringify({ userId: user.id, plan: selectedPlan }),
     });
 
+    console.log('Sending:', { userId: user?.id, plan: selectedPlan });
+//debug
+
     const data = await res.json();
 
     if (res.ok && data.url) {
