@@ -12,6 +12,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const { userId, plan } = req.body;
+  console.log('BODY RECEIVED:', req.body);
+
   const priceId = PLAN_TO_PRICE_ID[plan as keyof typeof PLAN_TO_PRICE_ID];
 
   if (!userId || !priceId) {
