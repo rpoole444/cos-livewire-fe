@@ -43,7 +43,6 @@ interface Artist {
   slug: string;
   tip_jar_url: string;
   events: Event[];
-  trial_expired?: boolean;
   trial_ends_at?: string | null;
   is_approved?: boolean
 }
@@ -58,15 +57,15 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const router = useRouter();
   const isPending = router.query.pending === 'true';
   const isOwner = user?.id === artist?.user_id;
-  const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
+  const showPendingBanner =
+    isPending && isOwner && artist && artist.is_approved === false;
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const today = dayjs(); // make sure dayjs is imported
-  const trialEnded = artist?.trial_ends_at && dayjs(artist?.trial_ends_at).isBefore(today);
-  const isTrialExpired = trialEnded && !artist.is_pro;
-  const isProfileOwner = user?.id === artist?.user_id; // You must pass this in from context or props
+  const isProfileOwner = user?.id === artist?.user_id;
+  const isTrialExpired =
+    !!artist?.trial_ends_at && dayjs().isAfter(dayjs(artist.trial_ends_at));
 
-  const shouldBlur = isTrialExpired && !isProfileOwner;
+  const shouldBlur = isTrialExpired && !artist.is_pro && !isProfileOwner;
 
   useEffect(() => {
     if (router.query.trial === 'active') {
@@ -102,7 +101,8 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
   if (!artist) return <div className="text-white p-6">Artist not found</div>;
 
-  const shouldShowUpgradeWall = (!artist.is_pro && (artist.trial_expired || !artist.trial_ends_at) && user?.id === artist.id);
+  const shouldShowUpgradeWall =
+    !artist.is_pro && (isTrialExpired || !artist.trial_ends_at) && isProfileOwner;
 
   return (
     <>
