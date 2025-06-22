@@ -61,6 +61,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const shouldBlur = !artist?.is_pro && (artist?.trial_expired || !artist?.trial_ends_at);
 
   useEffect(() => {
     if (router.query.trial === 'active') {
@@ -263,62 +264,115 @@ if (shouldShowUpgradeWall) {
 
           {(artist.embed_youtube || artist.embed_soundcloud || artist.embed_bandcamp) && (
             <div className="space-y-6">
-              {artist.embed_youtube && (
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">📺 Video</h3>
-                  <div className="aspect-video">
-                    <iframe src={artist.embed_youtube} className="w-full h-full" allowFullScreen></iframe>
+              <div className={shouldBlur ? 'relative blur-sm pointer-events-none select-none' : ''}>
+                {artist.embed_youtube && (
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">📺 Video</h3>
+                    <div className="aspect-video">
+                      <iframe src={artist.embed_youtube} className="w-full h-full" allowFullScreen />
+                    </div>
                   </div>
-                </div>
-              )}
-              {artist.embed_soundcloud && (
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">🎧 SoundCloud</h3>
-                  <iframe width="100%" height="166" scrolling="no" frameBorder="no" allow="autoplay" src={artist.embed_soundcloud}></iframe>
-                </div>
-              )}
-              {artist.embed_bandcamp && (
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">🎵 Bandcamp</h3>
-                  <iframe style={{ border: 0 }} src={artist.embed_bandcamp} width="100%" height="120" allow="autoplay"></iframe>
+                )}
+                {artist.embed_soundcloud && (
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">🎧 SoundCloud</h3>
+                    <iframe width="100%" height="166" scrolling="no" frameBorder="no" allow="autoplay" src={artist.embed_soundcloud}></iframe>
+                  </div>
+                )}
+                {artist.embed_bandcamp && (
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">🎵 Bandcamp</h3>
+                    <iframe style={{ border: 0 }} src={artist.embed_bandcamp} width="100%" height="120" allow="autoplay" />
+                  </div>
+                )}
+              </div>
+
+              {shouldBlur && (
+                <div className="mt-2 text-center text-sm text-gray-400 italic">
+                  🔒 This artist’s media content is available with Alpine Pro.{' '}
+                  <Link href="/upgrade" className="text-blue-400 underline">Learn more</Link>
                 </div>
               )}
             </div>
           )}
+
 
           {(artist.promo_photo || artist.stage_plot || artist.press_kit) && (
             <div className="space-y-4">
               <h3 className="text-xl font-semibold mt-6">📎 Downloads</h3>
-              {artist.promo_photo && (
-                <p><a href={artist.promo_photo} target="_blank" className="text-blue-400 underline">📸 Promo Photo</a></p>
-              )}
-              {artist.stage_plot && (
-                <p><a href={artist.stage_plot} target="_blank" className="text-blue-400 underline">🎚️ Stage Plot</a></p>
-              )}
-              {artist.press_kit && (
-                <p><a href={artist.press_kit} target="_blank" className="text-blue-400 underline">📄 Press Kit</a></p>
+              <div className={shouldBlur ? 'relative blur-sm pointer-events-none select-none' : ''}>
+                {artist.promo_photo && (
+                  <p><a href={artist.promo_photo} target="_blank" className="text-blue-400 underline">📸 Promo Photo</a></p>
+                )}
+                {artist.stage_plot && (
+                  <p><a href={artist.stage_plot} target="_blank" className="text-blue-400 underline">🎚️ Stage Plot</a></p>
+                )}
+                {artist.press_kit && (
+                  <p><a href={artist.press_kit} target="_blank" className="text-blue-400 underline">📄 Press Kit</a></p>
+                )}
+              </div>
+              {shouldBlur && (
+                <div className="mt-2 text-center text-sm text-gray-400 italic">
+                  🔒 Downloadable content is only available for Pro artists.{' '}
+                  <Link href="/upgrade" className="text-blue-400 underline">Learn more</Link>
+                </div>
               )}
             </div>
           )}
 
-          <div className="mt-8">
-            <h2 className="text-2xl font-semibold mb-4">Upcoming Events</h2>
-            {artist.events && artist.events.length > 0 ? (
-              <ul className="space-y-4">
-                {artist.events.map(event => (
-                  <li key={event.id} className="bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-700 transition">
-                    <Link href={`/eventRouter/${event.slug}`} className="block cursor-pointer">
-                      <h3 className="text-lg font-bold text-gold">{event.title}</h3>
-                      <p className="text-gray-300">📅 {dayjs.utc(event.date).format('MMMM D, YYYY')}</p>
-                      <p className="text-gray-400">📍 {event.venue_name} - {event.location}</p>
-                      <p className="text-gray-400">🎵 {event.genre}</p>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-400">No upcoming events listed.</p>
-            )}
+
+          {shouldBlur ? (
+            <div className="mt-8 bg-gray-800 p-6 rounded-lg blur-sm relative">
+              <div className="absolute inset-0 bg-black/40 rounded-lg z-10 flex flex-col items-center justify-center text-center p-6">
+                <p className="text-white text-lg font-semibold">
+                  🎟️ Upgrade to Alpine Pro to see this artist’s upcoming events.
+                </p>
+                <Link href="/upgrade" className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                  Learn More
+                </Link>
+              </div>
+              {/* The blurred content underneath */}
+              <div className="opacity-30 pointer-events-none">
+                <h2 className="text-2xl font-semibold mb-4">Upcoming Events</h2>
+                {artist.events && artist.events.length > 0 ? (
+                  <ul className="space-y-4">
+                    {artist.events.map(event => (
+                      <li key={event.id} className="bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-700 transition">
+                        <Link href={`/eventRouter/${event.slug}`} className="block cursor-pointer">
+                          <h3 className="text-lg font-bold text-gold">{event.title}</h3>
+                          <p className="text-gray-300">📅 {dayjs.utc(event.date).format('MMMM D, YYYY')}</p>
+                          <p className="text-gray-400">📍 {event.venue_name} - {event.location}</p>
+                          <p className="text-gray-400">🎵 {event.genre}</p>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-400">No upcoming events listed.</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="mt-8">
+              <h2 className="text-2xl font-semibold mb-4">Upcoming Events</h2>
+              {artist.events && artist.events.length > 0 ? (
+                <ul className="space-y-4">
+                  {artist.events.map(event => (
+                    <li key={event.id} className="bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-700 transition">
+                      <Link href={`/eventRouter/${event.slug}`} className="block cursor-pointer">
+                        <h3 className="text-lg font-bold text-gold">{event.title}</h3>
+                        <p className="text-gray-300">📅 {dayjs.utc(event.date).format('MMMM D, YYYY')}</p>
+                        <p className="text-gray-400">📍 {event.venue_name} - {event.location}</p>
+                        <p className="text-gray-400">🎵 {event.genre}</p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-400">No upcoming events listed.</p>
+              )}
+            </div>
+          )}
 
             {canEdit && (
               <div className="flex flex-wrap gap-4 mt-6">
@@ -339,10 +393,10 @@ if (shouldShowUpgradeWall) {
             )}
           </div>
         </div>
-      </div>
     </>
   );
-};
+}
+
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const slug = context.params?.slug;
