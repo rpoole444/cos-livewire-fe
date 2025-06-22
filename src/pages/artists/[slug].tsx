@@ -63,9 +63,10 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const [deleting, setDeleting] = useState(false);
   const isProfileOwner = user?.id === artist?.user_id;
   const isTrialExpired =
-    !!artist?.trial_ends_at && dayjs().isAfter(dayjs(artist.trial_ends_at));
+    !!artist?.trial_ends_at && dayjs().isAfter(dayjs(artist?.trial_ends_at));
 
-  const shouldBlur = isTrialExpired && !artist.is_pro && !isProfileOwner;
+  // const shouldBlur = isTrialExpired && !artist.is_pro && !isProfileOwner;
+  const shouldBlur = !artist?.is_pro && !(isOwner || user?.is_admin);
 
   useEffect(() => {
     if (router.query.trial === 'active') {
