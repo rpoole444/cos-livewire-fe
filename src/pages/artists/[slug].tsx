@@ -187,33 +187,50 @@ const ArtistProfilePage = ({ artist }: Props) => {
             <div>
               <h1 className="text-4xl font-bold mb-2">{artist.display_name}</h1>
               <p className="text-gray-300 mb-2">{artist.bio}</p>
-              <p className="text-sm text-gray-400">📧 {artist.contact_email}</p>
-              {artist.tip_jar_url && (
-                <div className="mt-6 bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-green-500">
-                  <h3 className="text-lg font-bold mb-2 text-green-400">Support this artist 🎺</h3>
-                  <p className="text-gray-300 text-sm mb-4">
-                    Enjoying the music? Send a tip directly to support their work.
-                  </p>
-
-                  <a
-                    href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block bg-green-600 hover:bg-green-700 hover:scale-105 transform transition text-white px-5 py-2 text-lg font-semibold rounded shadow"
-                  >
-                    💸 Tip this artist
-                  </a>
+              <div className="space-y-2">
+                <div className="flex items-center text-sm text-gray-400">
+                  📧
+                  <div className={shouldBlur ? 'ml-1 blur-sm pointer-events-none select-none' : 'ml-1'}>
+                    {artist.contact_email}
+                  </div>
                 </div>
-              )}
-              <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
-              {artist.website && <p className="text-sm text-blue-400">🔗 <a
-                href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 underline"
-              >
-                {artist.website}
-              </a></p>}
+
+                {artist.tip_jar_url && (
+                  <div className="mt-6 bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-green-500">
+                    <h3 className="text-lg font-bold mb-2 text-green-400">Support this artist 🎺</h3>
+                    <div className={shouldBlur ? 'blur-sm pointer-events-none select-none' : ''}>
+                      <p className="text-gray-300 text-sm mb-4">
+                        Enjoying the music? Send a tip directly to support their work.
+                      </p>
+
+                      <a
+                        href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block bg-green-600 hover:bg-green-700 hover:scale-105 transform transition text-white px-5 py-2 text-lg font-semibold rounded shadow"
+                      >
+                        💸 Tip this artist
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
+
+                {artist.website && (
+                  <div className="flex items-center text-sm text-blue-400">
+                    🔗
+                    <a
+                      href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={shouldBlur ? 'ml-1 underline blur-sm pointer-events-none select-none' : 'ml-1 underline'}
+                    >
+                      {artist.website}
+                    </a>
+                  </div>
+                )}
+              </div>
               <div className="flex flex-wrap gap-2 mt-4">
                 <button
                   onClick={() => {
