@@ -61,7 +61,12 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const shouldBlur = !artist?.is_pro && (artist?.trial_expired || !artist?.trial_ends_at);
+  const today = dayjs(); // make sure dayjs is imported
+  const trialEnded = artist?.trial_ends_at && dayjs(artist?.trial_ends_at).isBefore(today);
+  const isTrialExpired = trialEnded && !artist.is_pro;
+  const isProfileOwner = user?.id === artist?.user_id; // You must pass this in from context or props
+
+  const shouldBlur = isTrialExpired && !isProfileOwner;
 
   useEffect(() => {
     if (router.query.trial === 'active') {
@@ -97,32 +102,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
   if (!artist) return <div className="text-white p-6">Artist not found</div>;
 
-  const shouldShowUpgradeWall = (!artist.is_pro && (artist.trial_expired || !artist.trial_ends_at));
-
-if (shouldShowUpgradeWall) {
-  return (
-    <div className="text-white p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">{artist.display_name}</h1>
-      <Image
-        src={artist.profile_image}
-        alt={artist.display_name}
-        width={192}
-        height={192}
-        className="rounded-full shadow mb-4"
-      />
-      <p className="mb-4">
-        Your free trial has expired. To unlock full access to your artist profile (bio, contact, media, and downloads),
-        please upgrade to Alpine Pro.
-      </p>
-      <Link href="/upgrade">
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-          Upgrade to Pro
-        </button>
-      </Link>
-    </div>
-  );
-}
- 
+  const shouldShowUpgradeWall = (!artist.is_pro && (artist.trial_expired || !artist.trial_ends_at) && user?.id === artist.id);
 
   return (
     <>
@@ -158,8 +138,29 @@ if (shouldShowUpgradeWall) {
           }
         />
       </Head>
-
-
+      {shouldShowUpgradeWall && (
+        <div className="text-white p-6 max-w-xl mx-auto">
+          <h1 className="text-2xl font-bold mb-4">{artist.display_name}</h1>
+          <Image
+            src={artist.profile_image}
+            alt={artist.display_name}
+            width={192}
+            height={192}
+            className="rounded-full shadow mb-4"
+          />
+          <p className="mb-4">
+            Your free trial has expired. To unlock full access to your artist profile (bio, contact, media, and downloads),
+            please upgrade to Alpine Pro.
+          </p>
+          <Link href="/upgrade">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+              Upgrade to Pro
+            </button>
+          </Link>
+        </div>
+      )}
+   {!shouldShowUpgradeWall && (
+    <>
       <div className="min-h-screen bg-gray-900 text-white p-6">
         <div className="max-w-4xl mx-auto space-y-6">
           {showPendingBanner && (
@@ -394,9 +395,10 @@ if (shouldShowUpgradeWall) {
           </div>
         </div>
     </>
+      )}
+  </>
   );
 }
-
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const slug = context.params?.slug;
