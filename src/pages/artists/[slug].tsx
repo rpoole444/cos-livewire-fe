@@ -61,12 +61,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const today = dayjs(); // make sure dayjs is imported
-  const trialEnded = artist?.trial_ends_at && dayjs(artist?.trial_ends_at).isBefore(today);
-  const isTrialExpired = trialEnded && !artist.is_pro;
-  const isProfileOwner = user?.id === artist?.user_id; // You must pass this in from context or props
-
-  const shouldBlur = isTrialExpired && !isProfileOwner;
+  const shouldBlur = !artist.is_pro && !(isOwner || user?.is_admin);
 
   useEffect(() => {
     if (router.query.trial === 'active') {
