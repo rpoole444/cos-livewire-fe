@@ -66,7 +66,8 @@ const ArtistProfilePage = ({ artist }: Props) => {
     !!artist?.trial_ends_at && dayjs().isAfter(dayjs(artist?.trial_ends_at));
 
   // const shouldBlur = isTrialExpired && !artist.is_pro && !isProfileOwner;
-  const shouldBlur = !artist?.is_pro && !(isOwner || user?.is_admin);
+  const shouldBlur =
+    isTrialExpired && !artist?.is_pro && !(isOwner || user?.is_admin);
 
   useEffect(() => {
     if (router.query.trial === 'active') {
