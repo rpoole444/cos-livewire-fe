@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     checkAuthStatus();
-  }, []);
+  }, [fetchUserWithExtras]);
 
   const login = async (email: string, password: string) => {
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {

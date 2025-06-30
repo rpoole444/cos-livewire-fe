@@ -135,7 +135,7 @@ export default function UpgradePage() {
           <div className="grid gap-6 md:grid-cols-3">
             {testimonials.map((t) => (
               <blockquote key={t.author} className="bg-gray-800 p-6 rounded-lg text-left">
-                <p className="italic mb-2">"{t.quote}"</p>
+                <p className="italic mb-2">&quot;{t.quote}&quot;</p>
                 <footer className="text-sm text-gray-400">&mdash; {t.author}</footer>
               </blockquote>
             ))}

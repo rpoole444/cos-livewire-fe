@@ -130,7 +130,7 @@ const UserProfile: React.FC = () => {
       setShowTrialToast(true);
       setTimeout(() => setShowTrialToast(false), 5000);
     }
-  }, [router.query.trial]);
+  }, [router.query.trial, router.query]);
   
 
   // Clear messages after 3 seconds
