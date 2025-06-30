@@ -61,7 +61,7 @@ const UserProfile: React.FC = () => {
     } else {
       setHasRefetched(true);
     }
-  }, [success, router.isReady]);
+  }, [success, router.isReady, refetchUser]);
 
   // Once user is available, populate form values
   useEffect(() => {
@@ -125,14 +125,13 @@ const UserProfile: React.FC = () => {
   }, [router.query]);
 
   useEffect(() => {
-    if (router.query.trial === 'active') {
+    const { trial } = router.query;
+    if (trial === 'active') {
       setShowTrialToast(true);
-      const cleaned = new URL(window.location.href);
-      cleaned.searchParams.delete('trial');
-      window.history.replaceState({}, document.title, cleaned.toString());
       setTimeout(() => setShowTrialToast(false), 5000);
     }
-  }, [router.query]);
+  }, [router.query.trial]);
+  
 
   // Clear messages after 3 seconds
   useEffect(() => {
