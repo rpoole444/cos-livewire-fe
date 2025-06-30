@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from 'react';
 import { UserType } from '../types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -43,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return [];
   };
 
-  const fetchUserWithExtras = async (): Promise<UserType | null> => {
+  const fetchUserWithExtras = useCallback(async (): Promise<UserType | null> => {
     const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
       credentials: 'include',
     });
@@ -63,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profile_picture: profilePicData.profile_picture_url || null,
       trial_ends_at: data.user.trial_ends_at || null,
     };
-  };
+  }, []);
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -119,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("setUser payload:", fullUser);
   };
 
-  const refetchUser = async () => {
+  const refetchUser = useCallback(async () => {
     try {
       const userData = await fetchUserWithExtras();
       if (userData) {
@@ -129,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error("Error in refetchUser:", err);
     }
-  };
+  }, [fetchUserWithExtras]);
 
   const logout = async () => {
     try {
