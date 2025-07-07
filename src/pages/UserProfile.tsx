@@ -18,7 +18,6 @@ const genresList = [
 const UserProfile: React.FC = () => {
   const { user, loading, updateUser, refetchUser } = useAuth();
   const router = useRouter();
-  const { success } = router.query;
 
   const [isEditing, setIsEditing] = useState(false);
   const [email, setEmail] = useState("");
@@ -35,33 +34,42 @@ const UserProfile: React.FC = () => {
   const [showApprovalToast, setShowApprovalToast] = useState(false);
   const [showTrialToast, setShowTrialToast] = useState(false);
   const approvalRef = useRef<boolean | null>(null);
+  const refetchedOnce = useRef(false);
   const [hasRefetched, setHasRefetched] = useState(false);
   const trialActive = isTrialActive(user?.trial_ends_at);
   const trialStarted = Boolean(user?.trial_ends_at);
   const trialExpired = user && !user.is_pro && !!user.trial_ends_at && !trialActive;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
 
-  // If redirected from Stripe, fetch updated user info
+  // If redirected from Stripe, fetch updated user info once
   useEffect(() => {
-    if (!router.isReady) return;
+    if (!router.isReady || refetchedOnce.current) return;
 
-    if (success === 'true') {
-      const run = async () => {
+    const { success, trial } = router.query;
+
+    const run = async () => {
+      if (success === 'true' || trial === 'active') {
         await refetchUser();
-        setHasRefetched(true);
-        setShowSuccessToast(true);
 
-        const cleaned = new URL(window.location.href);
-        cleaned.searchParams.delete('success');
-        window.history.replaceState({}, document.title, cleaned.toString());
+        if (success === 'true') {
+          setShowSuccessToast(true);
+          setTimeout(() => setShowSuccessToast(false), 5000);
+        }
 
-        setTimeout(() => setShowSuccessToast(false), 5000);
-      };
-      run();
-    } else {
+        if (trial === 'active') {
+          setShowTrialToast(true);
+          setTimeout(() => setShowTrialToast(false), 5000);
+        }
+
+        router.replace({ pathname: router.pathname, query: {} }, undefined, { shallow: true });
+      }
+
       setHasRefetched(true);
-    }
-  }, [success, router.isReady, refetchUser]);
+      refetchedOnce.current = true;
+    };
+
+    run();
+  }, [router.isReady, refetchUser]);
 
   // Once user is available, populate form values
   useEffect(() => {
@@ -124,13 +132,6 @@ const UserProfile: React.FC = () => {
     }
   }, [router.query]);
 
-  useEffect(() => {
-    const { trial } = router.query;
-    if (trial === 'active') {
-      setShowTrialToast(true);
-      setTimeout(() => setShowTrialToast(false), 5000);
-    }
-  }, [router.query.trial, router.query]);
   
 
   // Clear messages after 3 seconds
