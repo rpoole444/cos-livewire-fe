@@ -140,6 +140,21 @@ const UserProfile: React.FC = () => {
     return () => clearTimeout(timer);
   }, [message]);
 
+  const handleManageBilling = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/payments/billing-portal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user?.id }),
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch (err) {
+      console.error("Error redirecting to billing portal:", err);
+      setMessage("Unable to open billing portal at this time.");
+    }
+  };
 
   const handleGenreChange = (genre: string) => {
     if (genres.includes(genre)) {
@@ -408,7 +423,14 @@ const UserProfile: React.FC = () => {
               >
                 Back to Home
               </button>
-
+              {user?.is_pro && (
+                <button
+                  onClick={handleManageBilling}
+                  className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
+                >
+                  Cancel or Manage Alpine Pro Subscription
+                </button>
+              )}
               {user?.is_admin && !hasArtistProfile && (
                 <>
                   <button
@@ -428,35 +450,33 @@ const UserProfile: React.FC = () => {
                 </>
               )}
 
-{hasArtistProfile && (
-  isApproved ? (
-    trialActive || user.is_pro ? (
-      <button
-        onClick={() => router.push(`/artists/${artistSlug}`)}
-        className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
-      >
-        Alpine Pro Dashboard
-      </button>
-    ) : (
-      <Link href="/upgrade" className="underline text-blue-300">
-        Upgrade to Alpine Pro
-      </Link>
-    )
-  ) : (
-    <div className="bg-yellow-100 text-yellow-900 border border-yellow-400 p-4 rounded shadow-md text-sm">
-      <p className="font-semibold mb-2">🎷 Your artist profile is under review</p>
-      <p>You’ll be notified when approved.</p>
-      <button
-        disabled
-        className="mt-3 w-full bg-gray-400 text-white py-2 rounded font-semibold cursor-not-allowed opacity-70"
-      >
-        🔒 Pending Approval
-      </button>
-    </div>
-  )
-)}
-
-
+              {hasArtistProfile && (
+                isApproved ? (
+                  trialActive || user.is_pro ? (
+                    <button
+                      onClick={() => router.push(`/artists/${artistSlug}`)}
+                      className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
+                    >
+                      Alpine Pro Dashboard
+                    </button>
+                  ) : (
+                    <Link href="/upgrade" className="underline text-blue-300">
+                      Upgrade to Alpine Pro
+                    </Link>
+                  )
+                ) : (
+                  <div className="bg-yellow-100 text-yellow-900 border border-yellow-400 p-4 rounded shadow-md text-sm">
+                    <p className="font-semibold mb-2">🎷 Your artist profile is under review</p>
+                    <p>You’ll be notified when approved.</p>
+                    <button
+                      disabled
+                      className="mt-3 w-full bg-gray-400 text-white py-2 rounded font-semibold cursor-not-allowed opacity-70"
+                    >
+                      🔒 Pending Approval
+                    </button>
+                  </div>
+                )
+              )}
 
               <div className="mt-4 border-t border-gray-700 pt-4">
                 <h3 className="font-semibold mb-2">Support Alpine Groove Guide</h3>
