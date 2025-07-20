@@ -68,6 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       top_music_genres: parseGenres(data.user.top_music_genres),
       profile_picture: profilePicData.profile_picture_url || null,
       trial_ends_at: data.user.trial_ends_at || null,
+      // Parse and include `pro_cancelled_at` in the user context so we can check if Pro access is still valid.
+      pro_cancelled_at: data.user.pro_cancelled_at || null,
     };
   }, []);
 
@@ -119,6 +121,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       top_music_genres: genres,
       profile_picture: profileData.profile_picture_url,
       trial_ends_at: data.user.trial_ends_at || null,
+      // Add `pro_cancelled_at` so we can determine if Pro access is still valid after cancellation.
+      pro_cancelled_at: data.user.pro_cancelled_at || null,
     };
 
     setUser(fullUser);
