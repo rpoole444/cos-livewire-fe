@@ -130,6 +130,18 @@ export default function UpgradePage() {
           </div>
         </section>
 
+        <section className="py-8 text-center">
+          <h3 className="text-xl font-semibold mb-2">Want to try it free first?</h3>
+          <Link
+            href="/artist-signup"
+            className="inline-block mt-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-semibold"
+          >
+            Start 30-Day Free Trial →
+          </Link>
+          <p className="text-sm text-gray-400 mt-2">No credit card required.</p>
+        </section>
+
+
         <section className="py-12 px-6 max-w-5xl mx-auto">
           <h2 className="text-2xl font-semibold text-center mb-6">What Artists Are Saying</h2>
           <div className="grid gap-6 md:grid-cols-3">
@@ -140,6 +152,14 @@ export default function UpgradePage() {
               </blockquote>
             ))}
           </div>
+        </section>
+        <section className="text-center py-4">
+          <p className="text-sm text-gray-400">
+            Already have an account?{' '}
+            <Link href="/LoginPage" className="underline text-blue-300 hover:text-blue-400">
+              Log in here
+            </Link>.
+          </p>
         </section>
       </main>
 

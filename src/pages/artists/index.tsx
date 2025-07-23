@@ -56,7 +56,7 @@ export default function ArtistDirectoryPage() {
       <div className="mb-6 bg-indigo-800 text-white p-4 rounded-xl shadow-xl text-center">
         <h2 className="text-2xl font-bold">🎙️ Discover Local Talent</h2>
         <p className="text-gray-200">Browse Alpine Pro artists and support your local scene.</p>
-        <Link href="/artist-signup">
+        <Link href="/upgrade">
           <button className="mt-3 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-semibold">
             Become an Alpine Pro Artist →
           </button>
