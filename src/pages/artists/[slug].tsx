@@ -140,7 +140,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
           }
         />
       </Head>
-      {shouldShowUpgradeWall && (
+      {shouldShowUpgradeWall ? (
         <div className="text-white p-6 max-w-xl mx-auto">
           <h1 className="text-2xl font-bold mb-4">{artist.display_name}</h1>
           <Image
@@ -151,8 +151,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
             className="rounded-full shadow mb-4"
           />
           <p className="mb-4">
-            Your free trial has expired. To unlock full access to your artist profile (bio, contact, media, and downloads),
-            please upgrade to Alpine Pro.
+            Your free trial has ended. To continue showcasing your full artist profile and unlock premium features, upgrade to Alpine Pro.
           </p>
           <Link href="/upgrade">
             <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
@@ -160,21 +159,31 @@ const ArtistProfilePage = ({ artist }: Props) => {
             </button>
           </Link>
         </div>
-      )}
-   {!shouldShowUpgradeWall && (
-    <>
-      <div className="min-h-screen bg-gray-900 text-white p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {showPendingBanner && (
-            <div className="bg-yellow-400 text-black text-sm rounded p-3 shadow text-center font-medium">
-              ⏳ Your artist profile is currently <strong>pending admin approval</strong>. You’ll be notified when approved.
-            </div>
-          )}
-          {showTrialToast && (
-            <div className="bg-green-600 text-white text-sm rounded p-2 mb-4 text-center shadow-md">
-              ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
-            </div>
-          )}
+      ) : (
+        <div className="min-h-screen bg-gray-900 text-white p-6">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {showPendingBanner && (
+              <div className="bg-yellow-400 text-black text-sm rounded p-3 shadow text-center font-medium">
+                ⏳ Your artist profile is currently <strong>pending admin approval</strong>. You’ll be notified when approved.
+              </div>
+            )}
+            {showTrialToast && isOwner && (
+              <div className="bg-green-600 text-white text-sm rounded p-2 mb-4 text-center shadow-md">
+                ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
+              </div>
+            )}
+            {isOwner && !artist.is_pro && !isTrialExpired && (
+              <TrialBanner trial_ends_at={artist.trial_ends_at} is_pro={artist.is_pro} />
+            )}
+            {!isOwner && !artist.is_pro && isTrialExpired && (
+              <div className="bg-gray-800 text-blue-300 text-sm rounded p-3 shadow text-center">
+                📣 This artist’s Alpine Pro trial has ended.{' '}
+                <Link href="/upgrade" className="underline hover:text-blue-400">
+                  Learn more about upgrading to Pro
+                </Link>
+                .
+              </div>
+            )}
 
           <Header />
           <TrialBanner trial_ends_at={artist.trial_ends_at} is_pro={artist.is_pro} />
@@ -413,7 +422,6 @@ const ArtistProfilePage = ({ artist }: Props) => {
             )}
           </div>
         </div>
-    </>
       )}
   </>
   );
