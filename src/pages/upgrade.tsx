@@ -23,7 +23,7 @@ const features = [
   'Unlimited event submissions with priority placement on the calendar.',
   'Custom artist profile showcasing your music, links and media.',
   'Built‑in tipping so fans can directly support your work.',
-  'Multiple event sumissions at one time.',
+  'Multiple event submissions at one time.',
   'Social Media links for easy marketing.',
   'Early access to upcoming community radio tools and analytics.'
 ];
@@ -34,8 +34,8 @@ const testimonials = [
     author: 'The Summit Trio'
   },
   {
-    quote: 'Our bookings doubled after setting up a Pro profile.',
-    author: 'DJ Mountain Vibes'
+    quote: 'I have discovered new artists and have an easy way to keep track of them as well as support their music!',
+    author: 'Public user'
   },
   {
     quote: 'Fans love being able to tip us right from the event page.',
@@ -46,36 +46,31 @@ const testimonials = [
 export default function UpgradePage() {
   const [selectedPlan, setSelectedPlan] = useState('monthly');
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   const handleSubscribe = async () => {
-  if (!user?.id) return alert('You must be logged in to subscribe.');
+    if (!user?.id) return alert('You must be logged in to subscribe.');
+    setLoading(true);
 
-  setLoading(true);
-  try {
-    const res = await fetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id, plan: selectedPlan }),
-    });
+    try {
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, plan: selectedPlan }),
+      });
 
-    console.log('Sending:', { userId: user?.id, plan: selectedPlan });
-//debug
-
-    const data = await res.json();
-
-    if (res.ok && data.url) {
-      window.location.href = data.url;
-    } else {
-      console.error('Stripe session failed:', data.message);
+      const data = await res.json();
+      if (res.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        console.error('Stripe session failed:', data.message);
+      }
+    } catch (err) {
+      console.error('Checkout error', err);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error('Checkout error', err);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
@@ -83,16 +78,19 @@ export default function UpgradePage() {
         <title>Upgrade to Alpine Pro | Alpine Groove Guide</title>
       </Head>
       <Header />
+
       <main className="flex-grow">
+        {/* HERO */}
         <section className="text-center py-16 px-6 bg-black">
-          <h1 className="text-4xl font-extrabold text-gold mb-4">Go Pro on Alpine Groove Guide</h1>
+          <h1 className="text-4xl font-extrabold text-gold mb-4">Upgrade to Alpine Pro</h1>
           <p className="max-w-2xl mx-auto text-lg text-gray-300">
-            Promote your shows, connect with fans and unlock tools built for Colorado musicians.
+            Reach more fans. Get booked. Build your music brand across the Front Range.
           </p>
         </section>
 
+        {/* VALUE SECTION */}
         <section className="py-12 px-6 max-w-4xl mx-auto">
-          <h2 className="text-2xl font-semibold text-center mb-6">Why Upgrade?</h2>
+          <h2 className="text-2xl font-semibold text-center mb-6">What You Get</h2>
           <ul className="list-disc list-inside space-y-3 text-left md:text-lg">
             {features.map((f) => (
               <li key={f}>{f}</li>
@@ -100,10 +98,11 @@ export default function UpgradePage() {
           </ul>
         </section>
 
+        {/* PLANS SECTION */}
         <section className="bg-gray-800 py-12 px-6 text-center">
           <h2 className="text-2xl font-semibold mb-6">Choose Your Plan</h2>
           <div className="flex flex-col items-center">
-            <div className="flex gap-4 mb-6">
+            <div className="flex gap-4 mb-6 flex-wrap justify-center">
               {plans.map((plan) => (
                 <button
                   key={plan.id}
@@ -132,18 +131,22 @@ export default function UpgradePage() {
           </div>
         </section>
 
-        <section className="py-8 text-center">
-          <h3 className="text-xl font-semibold mb-2">Want to try it free first?</h3>
+        {/* FREE TRIAL CTA */}
+        <section className="py-12 px-6 text-center bg-black">
+          <h2 className="text-xl font-semibold mb-2">Not Ready to Commit?</h2>
+          <p className="text-md text-gray-300 mb-4">
+            Try Alpine Pro free for 30 days — no payment required.
+          </p>
           <Link
             href="/artist-signup"
-            className="inline-block mt-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded font-semibold"
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-semibold"
           >
-            Start 30-Day Free Trial →
+            Start Free Trial →
           </Link>
           <p className="text-sm text-gray-400 mt-2">No credit card required.</p>
         </section>
 
-
+        {/* TESTIMONIALS */}
         <section className="py-12 px-6 max-w-5xl mx-auto">
           <h2 className="text-2xl font-semibold text-center mb-6">What Artists Are Saying</h2>
           <div className="grid gap-6 md:grid-cols-3">
@@ -155,12 +158,18 @@ export default function UpgradePage() {
             ))}
           </div>
         </section>
+
+        {/* LOGIN / HOME */}
         <section className="text-center py-4">
           <p className="text-sm text-gray-400">
             Already have an account?{' '}
             <Link href="/LoginPage" className="underline text-blue-300 hover:text-blue-400">
               Log in here
-            </Link>.
+            </Link>
+            {' '}or{' '}
+            <Link href="/" className="underline text-blue-300 hover:text-blue-400">
+              return home.
+            </Link>
           </p>
         </section>
       </main>

@@ -435,7 +435,7 @@ const UserProfile: React.FC = () => {
               {user?.is_admin && !hasArtistProfile && (
                 <>
                   <button
-                    onClick={() => router.push("/artist-signup")}
+                    onClick={() => router.push("/upgrade")}
                     className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold"
                   >
                     🎁 Create Pro Artist Profile (Free Trial)
