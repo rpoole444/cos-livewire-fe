@@ -62,12 +62,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const isProfileOwner = user?.id === artist?.user_id;
-  const isTrialExpired =
-    !!artist?.trial_ends_at && dayjs().isAfter(dayjs(artist?.trial_ends_at));
-
-  // const shouldBlur = isTrialExpired && !artist.is_pro && !isProfileOwner;
-  const shouldBlur =
-    isTrialExpired && !artist?.is_pro && !(isOwner || user?.is_admin);
+  const isTrialExpired = artist?.trial_ends_at ? dayjs().isAfter(dayjs(artist.trial_ends_at), 'day') : true;
 
   useEffect(() => {
     if (router.query.trial === 'active') {
@@ -105,6 +100,10 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
   const shouldShowUpgradeWall =
     !artist.is_pro && (isTrialExpired || !artist.trial_ends_at) && isProfileOwner;
+    
+  const shouldBlur =
+  !artist.is_pro &&
+  (isTrialExpired || !artist.trial_ends_at); // Applies to both owner and public view
 
   return (
     <>
@@ -171,9 +170,6 @@ const ArtistProfilePage = ({ artist }: Props) => {
               <div className="bg-green-600 text-white text-sm rounded p-2 mb-4 text-center shadow-md">
                 ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
               </div>
-            )}
-            {isOwner && !artist.is_pro && !isTrialExpired && (
-              <TrialBanner trial_ends_at={artist.trial_ends_at} is_pro={artist.is_pro} />
             )}
             {!isOwner && !artist.is_pro && isTrialExpired && (
               <div className="bg-gray-800 text-blue-300 text-sm rounded p-3 shadow text-center">
