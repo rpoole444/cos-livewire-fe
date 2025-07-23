@@ -23,6 +23,8 @@ const features = [
   'Unlimited event submissions with priority placement on the calendar.',
   'Custom artist profile showcasing your music, links and media.',
   'Built‑in tipping so fans can directly support your work.',
+  'Multiple event sumissions at one time.',
+  'Social Media links for easy marketing.',
   'Early access to upcoming community radio tools and analytics.'
 ];
 
