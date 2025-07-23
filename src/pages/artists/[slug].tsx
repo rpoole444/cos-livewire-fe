@@ -139,26 +139,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
           }
         />
       </Head>
-      {shouldShowUpgradeWall ? (
-        <div className="text-white p-6 max-w-xl mx-auto">
-          <h1 className="text-2xl font-bold mb-4">{artist.display_name}</h1>
-          <Image
-            src={artist.profile_image}
-            alt={artist.display_name}
-            width={192}
-            height={192}
-            className="rounded-full shadow mb-4"
-          />
-          <p className="mb-4">
-            Your free trial has ended. To continue showcasing your full artist profile and unlock premium features, upgrade to Alpine Pro.
-          </p>
-          <Link href="/upgrade">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-              Upgrade to Pro
-            </button>
-          </Link>
-        </div>
-      ) : (
+      {shouldShowUpgradeWall && (
         <div className="min-h-screen bg-gray-900 text-white p-6">
           <div className="max-w-4xl mx-auto space-y-6">
             {showPendingBanner && (
