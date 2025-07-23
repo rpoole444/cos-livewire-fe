@@ -36,7 +36,7 @@ const TrialBanner: React.FC<TrialBannerProps> = (props) => {
   // ⛔ Don't show at all unless it's the profile owner
   if (!isProfileOwner || !trialEndStr || isPro || daysLeft === null) return null;
 
-  const isExpired = daysLeft <= 0;
+  const isExpired = dayjs().isAfter(dayjs(trialEndStr), 'day');
 
   return (
     <div
