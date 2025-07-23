@@ -411,15 +411,17 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${slug}`);
     const artist = await res.json();
 
-    if (!res.ok || !artist) {
+    if (!res.ok || !artist || artist.message === 'Artist not found') {
+      console.error('Artist not found or API error:', artist);
       return { notFound: true };
     }
 
     return { props: { artist } };
   } catch (err) {
-    console.error('Error fetching artist:', err);
+    console.error('Error fetching artist in getServerSideProps:', err);
     return { props: { artist: null } };
   }
 };
+
 
 export default ArtistProfilePage;
