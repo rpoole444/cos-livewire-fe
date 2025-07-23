@@ -40,6 +40,7 @@ const UserProfile: React.FC = () => {
   const trialStarted = Boolean(user?.trial_ends_at);
   const trialExpired = user && !user.is_pro && !!user.trial_ends_at && !trialActive;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
+  const [formError, setFormError] = useState("");
 
   // If redirected from Stripe, fetch updated user info once
   useEffect(() => {
@@ -167,6 +168,30 @@ const UserProfile: React.FC = () => {
 
   const handleSave = async () => {
     if (!user) return;
+    // Basic validation
+    if (!displayName.trim()) {
+      setFormError("Display name is required.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setFormError("Please enter a valid email address.");
+      return;
+    }
+
+    if (genres.length > 3) {
+      setFormError("You can select up to 3 genres.");
+      return;
+    }
+
+    if (file && !file.type.startsWith("image/")) {
+      setFormError("Only image files are allowed for profile pictures.");
+      return;
+    }
+
+    // Clear error if validation passed
+    setFormError("");
 
     const formData = new FormData();
     formData.append("first_name", user.first_name || "");
@@ -411,6 +436,9 @@ const UserProfile: React.FC = () => {
                 >
                   Save Changes
                 </button>
+              )}
+              {formError && (
+                <div className="text-red-400 text-sm mt-2">{formError}</div>
               )}
               <button
                 onClick={handleResetPassword}

@@ -52,6 +52,9 @@ const TrialBanner: React.FC<TrialBannerProps> = (props) => {
       ) : (
         <>
           🎁 <span className="font-semibold">Alpine Pro trial:</span> {daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining.
+          <Link href="/upgrade" className="underline font-semibold hover:text-yellow-300">
+            Upgrade early →
+          </Link>
         </>
       )}
     </div>
