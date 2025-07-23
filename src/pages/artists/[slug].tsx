@@ -105,9 +105,6 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
   if (!artist) return <div className="text-white p-6">Artist not found</div>;
 
-  const shouldShowUpgradeWall =
-    !artist.is_pro && (isTrialExpired || !artist.trial_ends_at) && isProfileOwner;
-    
   const shouldBlur =
   !artist.is_pro &&
   (isTrialExpired || !artist.trial_ends_at); // Applies to both owner and public view
@@ -146,13 +143,12 @@ const ArtistProfilePage = ({ artist }: Props) => {
           }
         />
       </Head>
-      {shouldShowUpgradeWall && (
-        <div className="min-h-screen bg-gray-900 text-white p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
-            {showPendingBanner && (
-              <div className="bg-yellow-400 text-black text-sm rounded p-3 shadow text-center font-medium">
-                ⏳ Your artist profile is currently <strong>pending admin approval</strong>. You’ll be notified when approved.
-              </div>
+      <div className="min-h-screen bg-gray-900 text-white p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {showPendingBanner && (
+            <div className="bg-yellow-400 text-black text-sm rounded p-3 shadow text-center font-medium">
+              ⏳ Your artist profile is currently <strong>pending admin approval</strong>. You’ll be notified when approved.
+            </div>
             )}
             {showTrialToast && isOwner && (
               <div className="bg-green-600 text-white text-sm rounded p-2 mb-4 text-center shadow-md">
@@ -406,9 +402,8 @@ const ArtistProfilePage = ({ artist }: Props) => {
             )}
           </div>
         </div>
-      )}
-  </>
-  );
+      </>
+      );
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
