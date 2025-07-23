@@ -65,6 +65,13 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const isTrialExpired = artist?.trial_ends_at ? dayjs().isAfter(dayjs(artist.trial_ends_at), 'day') : true;
 
   useEffect(() => {
+    if (artist) {
+      console.log('Loaded artist:', artist);
+    }
+  }, [artist]);
+  
+
+  useEffect(() => {
     if (router.query.trial === 'active') {
       setShowTrialToast(true);
       setTimeout(() => setShowTrialToast(false), 5000);
