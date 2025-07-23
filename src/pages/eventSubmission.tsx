@@ -9,6 +9,7 @@ import { slugify } from '@/util/slugify'; // Adjust path if needed
 import EventForm from '../components/EventForm';
 import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
+import { isActivePro } from '@/util/isActivePro';
 
 interface Event {
   title: string;
@@ -63,10 +64,10 @@ const EventSubmission = () => {
   const locationInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  const isPro = user?.is_pro;
+  const proActive = isActivePro(user as any);
   const trialActive = isTrialActive(user?.trial_ends_at);
-  const canAddMultiple = Boolean(isPro || trialActive);
-  const trialExpired = user && !isPro && !!user.trial_ends_at && !trialActive;
+  const canAddMultiple = Boolean(proActive || trialActive);
+  const trialExpired = user && !proActive && !!user.trial_ends_at && !trialActive;
 
   const addEvent = () => setEvents((prev) => [...prev, { ...initialEvent }]);
   const removeEvent = (index: number) =>
@@ -312,7 +313,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   if (trialExpired) {
     return (
       <div className="container mx-auto p-4 text-center text-white">
-        <TrialBanner trial_ends_at={user!.trial_ends_at} is_pro={user!.is_pro} />
+        <TrialBanner trial_ends_at={user!.trial_ends_at} />
         <p className="mb-4">Your free trial has expired. Upgrade to Alpine Pro to submit events.</p>
         <Link href="/upgrade" className="text-blue-500 underline">
           Upgrade Now
@@ -336,7 +337,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
   return user ? (
     <div className="container mx-auto p-4">
-      <TrialBanner trial_ends_at={user.trial_ends_at} is_pro={user.is_pro} />
+      <TrialBanner trial_ends_at={user.trial_ends_at} />
       <Script
         src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
         strategy="lazyOnload"

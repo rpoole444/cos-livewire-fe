@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { isActivePro } from '@/util/isActivePro';
 
 interface TrialBannerProps {
   trial_ends_at?: string | null;
@@ -14,7 +15,7 @@ const TrialBanner: React.FC<TrialBannerProps> = (props) => {
   const isProfileOwner = user?.id === props.artist_user_id;
 
   const trialEndStr = props.trial_ends_at ?? user?.trial_ends_at;
-  const isPro = props.is_pro ?? user?.is_pro;
+  const isPro = props.is_pro ?? isActivePro(user as any);
 
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
 

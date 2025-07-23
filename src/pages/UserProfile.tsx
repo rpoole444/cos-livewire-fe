@@ -7,6 +7,7 @@ import Link from 'next/link';
 import TrialBanner from '@/components/TrialBanner';
 import ActiveTrialNoProfileBanner from '@/components/ActiveTrialNoProfileBanner';
 import { isTrialActive } from '@/util/isTrialActive';
+import { isActivePro } from '@/util/isActivePro';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -38,7 +39,8 @@ const UserProfile: React.FC = () => {
   const [hasRefetched, setHasRefetched] = useState(false);
   const trialActive = isTrialActive(user?.trial_ends_at);
   const trialStarted = Boolean(user?.trial_ends_at);
-  const trialExpired = user && !user.is_pro && !!user.trial_ends_at && !trialActive;
+  const proActive = isActivePro(user as any);
+  const trialExpired = user && !proActive && !!user.trial_ends_at && !trialActive;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
   const [formError, setFormError] = useState("");
 
@@ -319,7 +321,7 @@ const UserProfile: React.FC = () => {
           ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
         </div>
       )}
-      {!user.is_pro && (
+      {!proActive && (
         <div className="text-center mb-4">
           {trialActive ? (
             <Link href="/upgrade">
@@ -339,7 +341,7 @@ const UserProfile: React.FC = () => {
       <div className="max-w-5xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
           🎤 Profile: {user.displayName}
-          {user.is_pro && (
+          {proActive && (
             <div className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
               Alpine Pro Member
             </div>
@@ -452,7 +454,7 @@ const UserProfile: React.FC = () => {
               >
                 Back to Home
               </button>
-              {user?.is_pro && (
+              {proActive && (
                 <button
                   onClick={handleManageBilling}
                   className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
@@ -481,7 +483,7 @@ const UserProfile: React.FC = () => {
 
               {hasArtistProfile && (
                 isApproved ? (
-                  trialActive || user.is_pro ? (
+                  trialActive || proActive ? (
                     <button
                       onClick={() => router.push(`/artists/${artistSlug}`)}
                       className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
