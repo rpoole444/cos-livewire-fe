@@ -186,7 +186,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
             )}
 
           <Header />
-          <TrialBanner trial_ends_at={artist.trial_ends_at} is_pro={artist.is_pro} />
+          <TrialBanner artist_user_id={artist.user_id} trial_ends_at={artist.trial_ends_at} is_pro={artist.is_pro} />
           <div className="flex flex-col md:flex-row gap-6 items-center">
             <Image
               src={artist.profile_image}

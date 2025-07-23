@@ -6,10 +6,13 @@ import { useAuth } from '@/context/AuthContext';
 interface TrialBannerProps {
   trial_ends_at?: string | null;
   is_pro?: boolean;
+  artist_user_id?: number; // ✅ add this
+
 }
 
 const TrialBanner: React.FC<TrialBannerProps> = (props) => {
   const { user } = useAuth();
+  const isProfileOwner = user?.id ===  props.artist_user_id;
 
   const trialEndStr = props.trial_ends_at ?? user?.trial_ends_at;
   const isPro = props.is_pro ?? user?.is_pro;
@@ -41,7 +44,7 @@ const TrialBanner: React.FC<TrialBannerProps> = (props) => {
         isExpired ? 'bg-red-700' : 'bg-blue-700'
       }`}
     >
-      {isExpired ? (
+      {isExpired && isProfileOwner ? (
         <>
           🔒 <span className="font-semibold">Your Alpine Pro trial has expired.</span>{' '}
           <Link href="/upgrade" className="underline text-yellow-300 hover:text-yellow-200">
@@ -51,7 +54,7 @@ const TrialBanner: React.FC<TrialBannerProps> = (props) => {
         </>
       ) : (
         <>
-          🎁 <span className="font-semibold">Alpine Pro trial:</span> {daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining.
+          🎁 <span className="font-semibold">Alpine Pro trial:</span> {daysLeft} day{daysLeft !== 1 ? 's' : ''} remaining.{' '}
           <Link href="/upgrade" className="underline font-semibold hover:text-yellow-300">
             Upgrade early →
           </Link>
