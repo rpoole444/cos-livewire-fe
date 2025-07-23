@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Head from 'next/head';
 import Header from '@/components/Header';
 import Image from 'next/image';
+import { isTrialActive } from '@/util/isTrialActive';
+import { useAuth } from '@/context/AuthContext';
 
 interface Artist {
   display_name: string;
@@ -19,6 +21,8 @@ export default function ArtistDirectoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [stateFilter, setStateFilter] = useState('');
   const [zipFilter, setZipFilter] = useState('');
+  const { user } = useAuth()
+  
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   const filteredArtists = artists.filter((artist) => {
     const q = searchQuery.toLowerCase();
@@ -56,11 +60,13 @@ export default function ArtistDirectoryPage() {
       <div className="mb-6 bg-indigo-800 text-white p-4 rounded-xl shadow-xl text-center">
         <h2 className="text-2xl font-bold">🎙️ Discover Local Talent</h2>
         <p className="text-gray-200">Browse Alpine Pro artists and support your local scene.</p>
-        <Link href="/upgrade">
-          <button className="mt-3 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-semibold">
-            Become an Alpine Pro Artist →
-          </button>
-        </Link>
+        {!user?.is_pro && !isTrialActive(user?.trial_ends_at) && (
+          <Link href="/upgrade">
+            <button className="mt-3 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded font-semibold">
+              Become an Alpine Pro Artist →
+            </button>
+          </Link>
+        )}
       </div>
 
       <h1 className="text-3xl font-bold mb-6">🎶 Artist Directory</h1>
