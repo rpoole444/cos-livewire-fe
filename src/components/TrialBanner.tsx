@@ -26,7 +26,7 @@ const TrialBanner: React.FC<TrialBannerProps> = (props) => {
       const now = dayjs();
       const trialEnd = dayjs(trialEndStr);
       const diff = trialEnd.diff(now, 'day');
-      setDaysLeft(diff);
+      setDaysLeft(Math.max(diff, 0)); 
     };
 
     updateDaysLeft();
