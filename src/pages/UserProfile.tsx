@@ -37,9 +37,9 @@ const UserProfile: React.FC = () => {
   const approvalRef = useRef<boolean | null>(null);
   const refetchedOnce = useRef(false);
   const [hasRefetched, setHasRefetched] = useState(false);
-  const trialActive = isTrialActive(user?.trial_ends_at);
+const trialActive   = isTrialActive(user?.trial_ends_at);
   const trialStarted = Boolean(user?.trial_ends_at);
-  const hasProAccess = !!user?.is_pro || !!trialActive; // single source of truth today const trialExpired = !!user && !hasProAccess && !!user.trial_ends_at && !trialActive;
+const hasProAccess = !!user?.is_pro || trialActive;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
   const trialExpired = !!user && !hasProAccess && !!user.trial_ends_at && !trialActive;
 
@@ -302,10 +302,9 @@ useEffect(() => {
     }
   };
 
-  const gotoCreateProfile = () => {
-  if (hasProAccess) router.push('/artist-signup?from=profile');
-  else router.push('/upgrade?reason=create-profile');
-};
+// after
+const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
+
 
   if (loading || !hasRefetched) {
     return <div className="text-white text-center mt-20">Loading your profile...</div>;
@@ -468,7 +467,7 @@ useEffect(() => {
               >
                 Back to Home
               </button>
-              {user?.is_pro && (
+              {hasProAccess && (
                 <button
                   onClick={handleManageBilling}
                   className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
