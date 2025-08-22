@@ -503,7 +503,7 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
                       Alpine Pro Dashboard
                     </button>
                   ) : (
-                    <Link href="/upgrade" className="underline text-blue-300">
+                    <Link href="/artist-signup" className="underline text-blue-300">
                       Upgrade to Alpine Pro
                     </Link>
                   )
