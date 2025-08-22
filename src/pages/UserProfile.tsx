@@ -7,7 +7,7 @@ import Link from 'next/link';
 import TrialBanner from '@/components/TrialBanner';
 import ActiveTrialNoProfileBanner from '@/components/ActiveTrialNoProfileBanner';
 import { isTrialActive } from '@/util/isTrialActive';
-import { isActivePro } from '@/util/isActivePro';
+import { canCreateProfile } from "@/util/canCreateProfile";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -39,9 +39,10 @@ const UserProfile: React.FC = () => {
   const [hasRefetched, setHasRefetched] = useState(false);
   const trialActive = isTrialActive(user?.trial_ends_at);
   const trialStarted = Boolean(user?.trial_ends_at);
-  const proActive = isActivePro(user as any);
-  const trialExpired = user && !proActive && !!user.trial_ends_at && !trialActive;
+  const hasProAccess = !!user?.is_pro || !!trialActive; // single source of truth today const trialExpired = !!user && !hasProAccess && !!user.trial_ends_at && !trialActive;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
+  const trialExpired = !!user && !hasProAccess && !!user.trial_ends_at && !trialActive;
+
   const [formError, setFormError] = useState("");
 
   // If redirected from Stripe, fetch updated user info once
@@ -73,6 +74,7 @@ const UserProfile: React.FC = () => {
 
     run();
   }, [router.isReady, refetchUser]);
+  
 
   // Once user is available, populate form values
   useEffect(() => {
@@ -87,34 +89,41 @@ const UserProfile: React.FC = () => {
 
   // Check for associated artist profile
   useEffect(() => {
-    const checkArtistProfile = async () => {
-      if (!user?.id) return;
-  
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/artists/user/${user.id}`, {
-          credentials: 'include',
-        });
-  
-        if (res.status === 200) {
-          const data = await res.json();
-          setHasArtistProfile(true);
-          setArtistSlug(data.slug);
-          setIsApproved(data.is_approved);
-        } else if (res.status === 404) {
-          // No artist profile exists yet
-          setHasArtistProfile(false);
-          setArtistSlug("");
-          setIsApproved(null);
-        } else {
-          console.error("Unexpected artist profile fetch error:", res.status);
-        }
-      } catch (err) {
-        console.error("Artist profile fetch failed:", err);
+  const checkArtistProfile = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/artists/mine`, { credentials: 'include' });
+      if (!res.ok) {
+        console.error("Artist /mine fetch error:", res.status);
+        setHasArtistProfile(false);
+        setArtistSlug("");
+        setIsApproved(null);
+        return;
       }
-    };
-  
-    checkArtistProfile();
-  }, [user]);
+      const { artist } = await res.json();
+      if (artist) {
+        setHasArtistProfile(true);
+        setArtistSlug(artist.slug);
+        setIsApproved(artist.is_approved);
+      } else {
+        setHasArtistProfile(false);
+        setArtistSlug("");
+        setIsApproved(null);
+      }
+    } catch (err) {
+      console.error("Artist /mine fetch failed:", err);
+    }
+  };
+  checkArtistProfile();
+}, [user]);
+
+// NEW: if user has access but no artist, push to onboarding (after we refetched once)
+useEffect(() => {
+  if (!hasRefetched) return;
+  if (hasProAccess && !hasArtistProfile) {
+    router.replace('/artist-signup?from=profile');
+  }
+}, [hasRefetched, hasProAccess, hasArtistProfile, router]);
   
 
   useEffect(() => {
@@ -293,6 +302,11 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  const gotoCreateProfile = () => {
+  if (hasProAccess) router.push('/artist-signup?from=profile');
+  else router.push('/upgrade?reason=create-profile');
+};
+
   if (loading || !hasRefetched) {
     return <div className="text-white text-center mt-20">Loading your profile...</div>;
   }
@@ -321,7 +335,7 @@ const UserProfile: React.FC = () => {
           ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
         </div>
       )}
-      {!proActive && (
+      {!hasProAccess && (
         <div className="text-center mb-4">
           {trialActive ? (
             <Link href="/upgrade">
@@ -341,7 +355,7 @@ const UserProfile: React.FC = () => {
       <div className="max-w-5xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
           🎤 Profile: {user.displayName}
-          {proActive && (
+          {hasProAccess && (
             <div className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
               Alpine Pro Member
             </div>
@@ -454,7 +468,7 @@ const UserProfile: React.FC = () => {
               >
                 Back to Home
               </button>
-              {proActive && (
+              {user?.is_pro && (
                 <button
                   onClick={handleManageBilling}
                   className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
@@ -462,28 +476,27 @@ const UserProfile: React.FC = () => {
                   Cancel or Manage Alpine Pro Subscription
                 </button>
               )}
-              {user?.is_admin && !hasArtistProfile && (
-                <>
-                  <button
-                    onClick={() => router.push("/upgrade")}
-                    className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold"
-                  >
-                    🎁 Create Pro Artist Profile (Free Trial)
-                  </button>
-                  {trialActive && (
-                    <button onClick={handleRestoreProfile} className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2">
-                      Restore Profile
-                    </button>
-                  )}
-                  <p className="text-xs text-gray-400 mt-1">
-                    Get 30 days of free access to Alpine Pro features — no credit card required.
-                  </p>
-                </>
-              )}
-
+             
+{!hasArtistProfile && (
+<>
+  <button onClick={gotoCreateProfile} className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold">
+    🎁 Create Artist Profile
+  </button>
+  {trialActive && (
+    <button onClick={handleRestoreProfile} className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2">
+      Restore Profile
+    </button>
+  )}
+  {!hasProAccess && (
+    <p className="text-xs text-gray-400 mt-1">
+      Get 30 days of free access to Alpine Pro features — no credit card required.
+    </p>
+  )}
+</>
+)}
               {hasArtistProfile && (
                 isApproved ? (
-                  trialActive || proActive ? (
+                  (trialActive || user?.is_pro) ? (
                     <button
                       onClick={() => router.push(`/artists/${artistSlug}`)}
                       className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
