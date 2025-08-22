@@ -477,23 +477,23 @@ useEffect(() => {
                 </button>
               )}
              
-{!hasArtistProfile && (
-<>
-  <button onClick={gotoCreateProfile} className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold">
-    🎁 Create Artist Profile
-  </button>
-  {trialActive && (
-    <button onClick={handleRestoreProfile} className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2">
-      Restore Profile
-    </button>
-  )}
-  {!hasProAccess && (
-    <p className="text-xs text-gray-400 mt-1">
-      Get 30 days of free access to Alpine Pro features — no credit card required.
-    </p>
-  )}
-</>
-)}
+              {!hasArtistProfile && (
+              <>
+                <button onClick={gotoCreateProfile} className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold">
+                  🎁 Create Artist Profile
+                </button>
+                {trialActive && (
+                  <button onClick={handleRestoreProfile} className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2">
+                    Restore Profile
+                  </button>
+                )}
+                {!hasProAccess && (
+                  <p className="text-xs text-gray-400 mt-1">
+                    Get 30 days of free access to Alpine Pro features — no credit card required.
+                  </p>
+                )}
+              </>
+              )}
               {hasArtistProfile && (
                 isApproved ? (
                   (trialActive || user?.is_pro) ? (
