@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -41,6 +41,20 @@ export default function ArtistSignupPage() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+const [wantsTrial, setWantsTrial] = useState(false);
+const [wantsSubscribe, setWantsSubscribe] = useState(false);
+const [plan, setPlan] = useState<'monthly'|'annual'>('monthly');
+
+
+useEffect(() => {
+  if (wantsTrial) setWantsSubscribe(false);
+}, [wantsTrial]);
+useEffect(() => {
+  if (wantsSubscribe) setWantsTrial(false);
+}, [wantsSubscribe]);
+
+const canStartTrial = !proActive && !trialActive;
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -84,48 +98,71 @@ export default function ArtistSignupPage() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || form.genres.length === 0 || !files.profile_image) {
-      setError("Missing required fields");
+  e.preventDefault();
+  if (!user || form.genres.length === 0 || !files.profile_image) {
+    setError("Missing required fields");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    // 1) create draft
+    const formData = new FormData();
+    Object.entries(form).forEach(([k, v]) => formData.append(k, Array.isArray(v) ? JSON.stringify(v) : String(v || '')));
+    Object.entries(files).forEach(([k, f]) => { if (f) formData.append(k, f); });
+
+    const createRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include'
+    });
+    if (!createRes.ok) throw new Error('Failed to create artist profile');
+    const created = await createRes.json(); // { id, slug, ... }
+
+    // 2) branch
+    if (wantsTrial && canStartTrial) {
+      // start trial → publish → go to page
+      const tRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/trial/start`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      if (!tRes.ok) throw new Error('Could not start trial');
+
+      // publish (requires access)
+      const pubRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${created.id}/publish`, {
+        method: 'PUT',
+        credentials: 'include'
+      });
+      if (!pubRes.ok) throw new Error('Could not publish after trial');
+
+      await refetchUser();
+      router.push(`/artists/${created.slug}?pending=true&trial=active`);
       return;
     }
 
-    setLoading(true);
-    try {
-      const formData = new FormData();
-      Object.entries(form).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, value);
-        }
-      });
-      
-
-      Object.entries(files).forEach(([key, file]) => {
-        if (file) formData.append(key, file);
-      });
-
-      formData.append('is_pro', 'true');
-      formData.append('is_approved', 'false');
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists`, {
+    if (wantsSubscribe && !proActive) {
+      // kick off Stripe checkout; server should embed {intent: 'publish_artist', artist_id}
+      const coRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/create-checkout-session`, {
         method: 'POST',
-        body: formData,
-        credentials: 'include'
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, plan, artistId: created.id, intent: 'publish_artist' })
       });
-
-      if (!res.ok) throw new Error('Failed to create artist profile');
-
-      await res.json();
-      await refetchUser();
-      router.push(`/UserProfile?trial=active`);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      const co = await coRes.json();
+      if (!coRes.ok || !co.url) throw new Error(co.message || 'Checkout failed');
+      window.location.href = co.url;
+      return;
     }
-  };
+
+    // neither selected → stay as draft; owner can see; admin will approve later
+    router.push(`/artists/${created.slug}?pending=true`);
+  } catch (err: any) {
+    setError(err.message || 'Something went wrong');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   if (trialExpired) {
     return (
@@ -239,6 +276,48 @@ export default function ArtistSignupPage() {
 
         <label className="block text-sm font-semibold mt-4">Press Kit</label>
         <input type="file" name="press_kit" accept="application/pdf,image/*" onChange={handleFileChange} className="w-full text-sm" />
+
+        {/* Access choices */}
+        <div className="mt-6 border-t border-gray-700 pt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={wantsTrial}
+                onChange={e => setWantsTrial(e.target.checked)}
+                disabled={!canStartTrial} // already Pro or in a trial? can’t start again
+              />
+              <span>Start 30-day Trial & publish</span>
+            </label>
+            {!canStartTrial && <span className="text-xs text-gray-400">Already Pro or trial active</span>}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={wantsSubscribe}
+                onChange={e => setWantsSubscribe(e.target.checked)}
+                disabled={proActive} // already Pro? no need
+              />
+              <span>Subscribe to Pro & publish</span>
+            </label>
+            <div className="flex items-center gap-3 text-sm">
+              <label className="flex items-center gap-1 opacity-90">
+                <input type="radio" name="plan" checked={plan==='monthly'} onChange={()=>setPlan('monthly')} disabled={!wantsSubscribe || proActive}/>
+                Monthly
+              </label>
+              <label className="flex items-center gap-1 opacity-90">
+                <input type="radio" name="plan" checked={plan==='annual'} onChange={()=>setPlan('annual')} disabled={!wantsSubscribe || proActive}/>
+                Annual
+              </label>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-400">
+            If neither is selected, we’ll create a draft and submit for approval. The public page will appear after approval; Pro-only features will be blurred until trial/subscription is active.
+          </p>
+        </div>
 
         {error && <p className="text-red-500">{error}</p>}
         <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white">
