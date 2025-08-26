@@ -106,62 +106,130 @@ const canStartTrial = !proActive && !trialActive;
 
   setLoading(true);
   try {
-    // 1) create draft
+    // 1) Create (or reuse) a draft
     const formData = new FormData();
-    Object.entries(form).forEach(([k, v]) => formData.append(k, Array.isArray(v) ? JSON.stringify(v) : String(v || '')));
-    Object.entries(files).forEach(([k, f]) => { if (f) formData.append(k, f); });
+    Object.entries(form).forEach(([k, v]) =>
+      formData.append(k, Array.isArray(v) ? JSON.stringify(v) : String(v ?? ""))
+    );
+    Object.entries(files).forEach(([k, f]) => {
+      if (f) formData.append(k, f);
+    });
+
+    let artist: { id: number; slug: string } | null = null;
 
     const createRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists`, {
-      method: 'POST',
+      method: "POST",
       body: formData,
-      credentials: 'include'
+      credentials: "include",
     });
-    if (!createRes.ok) throw new Error('Failed to create artist profile');
-    const created = await createRes.json(); // { id, slug, ... }
 
-    // 2) branch
-    if (wantsTrial && canStartTrial) {
-      // start trial → publish → go to page
+    if (createRes.ok) {
+      artist = await createRes.json();
+    } else if (createRes.status === 409) {
+      // Conflict: either slug taken OR artist already exists for this user
+      let body: any = null;
+      try {
+        body = await createRes.json();
+      } catch (_) {}
+
+      const msg = (body?.message || "").toLowerCase();
+
+      if (msg.includes("slug")) {
+        // slug collision — let the user pick a different one
+        throw new Error(body?.message || "That URL slug is already taken. Please choose another.");
+      }
+
+      // Assume "artist profile already exists" → reuse existing draft
+      const mineRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, {
+        credentials: "include",
+      });
+      if (!mineRes.ok) {
+        throw new Error("You already have an artist profile, but we couldn't load it.");
+      }
+      const mineJson = await mineRes.json();
+      if (!mineJson?.artist?.id || !mineJson?.artist?.slug) {
+        throw new Error("Existing artist found but incomplete data.");
+      }
+      artist = { id: mineJson.artist.id, slug: mineJson.artist.slug };
+    } else {
+      // Other server errors
+      let text = "";
+      try {
+        text = await createRes.text();
+      } catch (_) {}
+      throw new Error(text || "Failed to create artist profile");
+    }
+
+    if (!artist) throw new Error("Could not obtain artist draft.");
+
+    // Helper: am I eligible to start a trial right now?
+    const trialEligible = !user.is_pro && !isTrialActive(user.trial_ends_at);
+
+    // 2) Branch based on the toggles
+    if (wantsTrial && trialEligible) {
+      // start trial
       const tRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/trial/start`, {
-        method: 'POST',
-        credentials: 'include'
+        method: "POST",
+        credentials: "include",
       });
-      if (!tRes.ok) throw new Error('Could not start trial');
 
-      // publish (requires access)
-      const pubRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${created.id}/publish`, {
-        method: 'PUT',
-        credentials: 'include'
-      });
-      if (!pubRes.ok) throw new Error('Could not publish after trial');
+      // treat already-pro / active-trial as success
+      if (!tRes.ok) {
+        const tBody = await tRes.json().catch(() => null);
+        const reason = tBody?.reason;
+        if (!(reason === "already_pro" || reason === "trial_active")) {
+          throw new Error(tBody?.message || "Could not start trial");
+        }
+      }
+
+      // publish (requires access via trial)
+      const pubRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist.id}/publish`,
+        { method: "PUT", credentials: "include" }
+      );
+      if (!pubRes.ok) {
+        const pBody = await pubRes.json().catch(() => null);
+        throw new Error(pBody?.message || "Could not publish after starting trial");
+      }
 
       await refetchUser();
-      router.push(`/artists/${created.slug}?pending=true&trial=active`);
+      router.push(`/artists/${artist.slug}?pending=true&trial=active`);
       return;
     }
 
-    if (wantsSubscribe && !proActive) {
-      // kick off Stripe checkout; server should embed {intent: 'publish_artist', artist_id}
-      const coRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/create-checkout-session`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, plan, artistId: created.id, intent: 'publish_artist' })
-      });
-      const co = await coRes.json();
-      if (!coRes.ok || !co.url) throw new Error(co.message || 'Checkout failed');
+    if (wantsSubscribe && !user.is_pro) {
+      // kick off Stripe checkout (server should set metadata { intent: 'publish_artist', artist_id })
+      const coRes = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/create-checkout-session`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            plan, // 'monthly' | 'annual'
+            artistId: artist.id,
+            intent: "publish_artist",
+          }),
+        }
+      );
+      const co = await coRes.json().catch(() => ({}));
+      if (!coRes.ok || !co?.url) {
+        throw new Error(co?.message || "Checkout failed");
+      }
       window.location.href = co.url;
       return;
     }
 
-    // neither selected → stay as draft; owner can see; admin will approve later
-    router.push(`/artists/${created.slug}?pending=true`);
+    // Neither selected → keep as draft; owner sees pending page (public will appear after approval)
+    router.push(`/artists/${artist.slug}?pending=true`);
   } catch (err: any) {
-    setError(err.message || 'Something went wrong');
+    setError(err.message || "Something went wrong");
   } finally {
     setLoading(false);
   }
 };
+
 
 
   if (trialExpired) {

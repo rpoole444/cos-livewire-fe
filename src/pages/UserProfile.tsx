@@ -37,6 +37,8 @@ const UserProfile: React.FC = () => {
   const approvalRef = useRef<boolean | null>(null);
   const refetchedOnce = useRef(false);
  const [hasRefetched, setHasRefetched] = useState(false);
+const [checkedMine, setCheckedMine] = useState(false);
+
 
  const trialActive =
   (user as any)?.trial_active === true
@@ -95,34 +97,56 @@ const hasProAccess = !!user?.is_pro || trialActive;
   }, [user]);
 
   // Check for associated artist profile
-  useEffect(() => {
+ useEffect(() => {
+  let cancelled = false;
+
   const checkArtistProfile = async () => {
     if (!user?.id) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/artists/mine`, { credentials: 'include' });
+      const res = await fetch(`${API_BASE_URL}/api/artists/mine`, {
+        credentials: 'include',
+      });
+
       if (!res.ok) {
-        console.error("Artist /mine fetch error:", res.status);
-        setHasArtistProfile(false);
-        setArtistSlug("");
-        setIsApproved(null);
-        return;
+        console.error('Artist /mine fetch error:', res.status);
+        if (!cancelled) {
+          setHasArtistProfile(false);
+          setArtistSlug('');
+          setIsApproved(null);
+        }
+        return; // ← important: don't call res.json() on non-OK
       }
-      const { artist } = await res.json();
-      if (artist) {
-        setHasArtistProfile(true);
-        setArtistSlug(artist.slug);
-        setIsApproved(artist.is_approved);
-      } else {
-        setHasArtistProfile(false);
-        setArtistSlug("");
-        setIsApproved(null);
+
+      const data = await res.json().catch(() => null);
+      const artist = data?.artist ?? null;
+
+      if (!cancelled) {
+        if (artist) {
+          setHasArtistProfile(true);
+          setArtistSlug(artist.slug);
+          setIsApproved(artist.is_approved);
+        } else {
+          setHasArtistProfile(false);
+          setArtistSlug('');
+          setIsApproved(null);
+        }
       }
     } catch (err) {
-      console.error("Artist /mine fetch failed:", err);
+      console.error('Artist /mine fetch failed:', err);
+      if (!cancelled) {
+        setHasArtistProfile(false);
+        setArtistSlug('');
+        setIsApproved(null);
+      }
     }
   };
+
   checkArtistProfile();
-}, [user]);
+  return () => {
+    cancelled = true;
+  };
+}, [user?.id]); // only re-run when the user id changes
+
 
 // NEW: if user has access but no artist, push to onboarding (after we refetched once)
 useEffect(() => {
@@ -504,8 +528,7 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
                 )}
               </>
               )}
-              {hasArtistProfile && (
-                isApproved ? (
+              {hasArtistProfile &&  isApproved ? (
                   (trialActive || user?.is_pro) ? (
                     <button
                       onClick={() => router.push(`/artists/${artistSlug}?trial=active`)}
@@ -529,7 +552,6 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
                       🔒 Pending Approval
                     </button>
                   </div>
-                )
               )}
 
               <div className="mt-4 border-t border-gray-700 pt-4">
