@@ -147,16 +147,6 @@ const hasProAccess = !!user?.is_pro || trialActive;
   };
 }, [user?.id]); // only re-run when the user id changes
 
-
-// NEW: if user has access but no artist, push to onboarding (after we refetched once)
-useEffect(() => {
-  if (!hasRefetched) return;
-  if (hasProAccess && !hasArtistProfile) {
-    router.replace('/artist-signup?from=profile');
-  }
-}, [hasRefetched, hasProAccess, hasArtistProfile, router]);
-  
-
   useEffect(() => {
     if (approvalRef.current === false && isApproved) {
       setShowApprovalToast(true);
