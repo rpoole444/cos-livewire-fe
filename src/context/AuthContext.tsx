@@ -68,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       top_music_genres: parseGenres(data.user.top_music_genres),
       profile_picture: profilePicData.profile_picture_url || null,
       trial_ends_at: data.user.trial_ends_at || null,
+      trial_active: data.user.trial_active || null,
       // Parse and include `pro_cancelled_at` in the user context so we can check if Pro access is still valid.
       pro_cancelled_at: data.user.pro_cancelled_at || null,
     };

@@ -36,12 +36,19 @@ const UserProfile: React.FC = () => {
   const [showTrialToast, setShowTrialToast] = useState(false);
   const approvalRef = useRef<boolean | null>(null);
   const refetchedOnce = useRef(false);
-  const [hasRefetched, setHasRefetched] = useState(false);
-const trialActive   = isTrialActive(user?.trial_ends_at);
-  const trialStarted = Boolean(user?.trial_ends_at);
+ const [hasRefetched, setHasRefetched] = useState(false);
+
+ const trialActive =
+  (user as any)?.trial_active === true
+    ? true
+    : isTrialActive(user?.trial_ends_at);  
+
+ const trialStarted =
+  (user as any)?.trial_active === true || Boolean(user?.trial_ends_at);
+    
 const hasProAccess = !!user?.is_pro || trialActive;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
-  const trialExpired = !!user && !hasProAccess && !!user.trial_ends_at && !trialActive;
+  const trialExpired = !!user && !hasProAccess && ((user as any)?.trial_active === false || Boolean(user?.trial_ends_at));
 
   const [formError, setFormError] = useState("");
 
@@ -337,15 +344,15 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
       {!hasProAccess && (
         <div className="text-center mb-4">
           {trialActive ? (
-            <Link href="/upgrade">
+            <Link href="/artist-signup?from=profile">
               <button className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold">
-                Upgrade early to support us
+                Publish now (trial active)
               </button>
             </Link>
           ) : trialExpired ? (
             <Link href="/upgrade">
               <button className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold">
-                Upgrade to continue using Pro features
+                Re-activate to continue
               </button>
             </Link>
           ) : null}
@@ -467,7 +474,7 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
               >
                 Back to Home
               </button>
-              {hasProAccess && (
+              {user?.is_pro && (
                 <button
                   onClick={handleManageBilling}
                   className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
@@ -497,14 +504,14 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
                 isApproved ? (
                   (trialActive || user?.is_pro) ? (
                     <button
-                      onClick={() => router.push(`/artists/${artistSlug}`)}
+                      onClick={() => router.push(`/artists/${artistSlug}?trial=active`)}
                       className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
                     >
-                      Alpine Pro Dashboard
+                      Enter Artist Page
                     </button>
                   ) : (
-                    <Link href="/artist-signup" className="underline text-blue-300">
-                      Upgrade to Alpine Pro
+                    <Link href={trialExpired ? "/upgrade" : "/artist-signup"} className="underline text-blue-300">
+                      Activate Pro / Start Trial
                     </Link>
                   )
                 ) : (

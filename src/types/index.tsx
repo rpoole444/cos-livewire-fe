@@ -11,6 +11,7 @@ export interface UserType {
   // Add `pro_cancelled_at` to track when Pro access expires after cancellation.
   pro_cancelled_at?: string | null;
   trial_ends_at?: string | null;
+  trial_active?: boolean | null;
   top_music_genres: string[];
   user_description?: string;
   profile_picture?: string;
