@@ -406,24 +406,36 @@ const ArtistProfilePage = ({ artist }: Props) => {
       );
 }
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const slug = context.params?.slug;
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const slug = ctx.params?.slug as string;
+  const cookie = ctx.req.headers.cookie ?? ''; // <-- forward session
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${slug}`);
-    const artist = await res.json();
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/artists/${encodeURIComponent(slug)}`,
+      {
+        // credentials: 'include' is a browser thing; on the server just pass the cookie header
+        headers: { cookie },
+      }
+    );
 
-    if (!res.ok || !artist || artist.message === 'Artist not found') {
-      console.error('Artist not found or API error:', artist);
+    // If the artist is unapproved and the viewer is NOT the owner/admin,
+    // your BE returns 403. Treat that as not found for the public.
+    if (res.status === 403) return { notFound: true };
+
+    if (!res.ok) {
+      // e.g. truly missing
       return { notFound: true };
     }
 
+    const artist = await res.json();
     return { props: { artist } };
   } catch (err) {
-    console.error('Error fetching artist in getServerSideProps:', err);
-    return { props: { artist: null } };
+    console.error('SSR artists fetch error:', err);
+    return { notFound: true };
   }
 };
+
 
 
 export default ArtistProfilePage;
