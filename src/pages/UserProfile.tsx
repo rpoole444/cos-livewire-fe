@@ -361,11 +361,15 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
       <div className="max-w-5xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
           🎤 Profile: {user.displayName}
-          {hasProAccess && (
-            <div className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+          {user?.is_pro ? (
+            <span className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
               Alpine Pro Member
-            </div>
-          )}
+            </span>
+          ) : trialActive ? (
+            <span className="inline-block bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+              On Free Trial
+            </span>
+          ) : null}
         </h1>
 
         <div className="flex flex-col md:flex-row gap-8">
