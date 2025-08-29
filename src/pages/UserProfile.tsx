@@ -7,7 +7,6 @@ import Link from 'next/link';
 import TrialBanner from '@/components/TrialBanner';
 import ActiveTrialNoProfileBanner from '@/components/ActiveTrialNoProfileBanner';
 import { isTrialActive } from '@/util/isTrialActive';
-import { canCreateProfile } from "@/util/canCreateProfile";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -37,20 +36,14 @@ const UserProfile: React.FC = () => {
   const approvalRef = useRef<boolean | null>(null);
   const refetchedOnce = useRef(false);
  const [hasRefetched, setHasRefetched] = useState(false);
-const [checkedMine, setCheckedMine] = useState(false);
 
+const trialActive = isTrialActive(user?.trial_ends_at);  // true only if trial_ends_at is in the future
 
- const trialActive =
-  (user as any)?.trial_active === true
-    ? true
-    : isTrialActive(user?.trial_ends_at);  
+const trialStarted = Boolean(user?.trial_ends_at);
 
- const trialStarted =
-  (user as any)?.trial_active === true || Boolean(user?.trial_ends_at);
-    
 const hasProAccess = !!user?.is_pro || trialActive;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
-  const trialExpired = !!user && !hasProAccess && ((user as any)?.trial_active === false || Boolean(user?.trial_ends_at));
+const trialExpired = !!user?.trial_ends_at && !trialActive && !user?.is_pro;
 
   const [formError, setFormError] = useState("");
 
@@ -358,16 +351,12 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
       {!hasProAccess && (
         <div className="text-center mb-4">
           {trialActive ? (
-            <Link href="/artist-signup?from=profile">
-              <button className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold">
+            <Link href="/artist-signup?from=profile" className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold">
                 Publish now (trial active)
-              </button>
             </Link>
           ) : trialExpired ? (
-            <Link href="/upgrade">
-              <button className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold">
+            <Link href="/upgrade" className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold" >
                 Re-activate to continue
-              </button>
             </Link>
           ) : null}
         </div>
