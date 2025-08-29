@@ -406,35 +406,35 @@ const ArtistProfilePage = ({ artist }: Props) => {
       );
 }
 
-export const getServerSideProps: GetServerSideProps = async (ctx) => {
-  const slug = ctx.params?.slug as string;
-  const cookie = ctx.req.headers.cookie ?? ''; // <-- forward session
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const slug = context.params?.slug as string;
+  const cookie = context.req.headers.cookie || '';
 
   try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/artists/${encodeURIComponent(slug)}`,
-      {
-        // credentials: 'include' is a browser thing; on the server just pass the cookie header
-        headers: { cookie },
-      }
-    );
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${slug}`, {
+      // Forward the user’s browser cookies so the API can identify the owner/admin
+      headers: { cookie },
+      // credentials has no effect on Node fetch, but leaving it is fine
+    });
 
-    // If the artist is unapproved and the viewer is NOT the owner/admin,
-    // your BE returns 403. Treat that as not found for the public.
-    if (res.status === 403) return { notFound: true };
-
-    if (!res.ok) {
-      // e.g. truly missing
-      return { notFound: true };
+    // If API says “pending / forbidden” (owner not visible because cookie missing),
+    // punt the user back to their profile where we show the “Pending approval” UI.
+    if (res.status === 403) {
+      return {
+        redirect: { destination: `/UserProfile?pending=true`, permanent: false },
+      };
     }
+
+    if (!res.ok) return { notFound: true };
 
     const artist = await res.json();
     return { props: { artist } };
   } catch (err) {
-    console.error('SSR artists fetch error:', err);
-    return { notFound: true };
+    console.error('GSSP /artists/[slug] error:', err);
+    return { props: { artist: null } };
   }
 };
+
 
 
 

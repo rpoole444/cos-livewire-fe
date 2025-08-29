@@ -193,7 +193,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         throw new Error(pBody?.message || "Could not publish after starting trial");
       }
       await refetchUser();
-      router.push(`/artists/${artist.slug}?pending=true&trial=active`);
+      router.push(`/UserProfile?trial=active&pending=true`);
       return;
     }
 
