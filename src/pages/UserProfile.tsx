@@ -501,24 +501,27 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
                 </button>
               )}
              
+              {/* Actions around the artist profile card */}
               {!hasArtistProfile && (
-              <>
-                <button onClick={gotoCreateProfile} className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold">
-                  🎁 Create Artist Profile
-                </button>
-                {trialActive && (
-                  <button onClick={handleRestoreProfile} className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2">
-                    Restore Profile
+                <>
+                  <button onClick={gotoCreateProfile} className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold">
+                    🎁 Create Artist Profile
                   </button>
-                )}
-                {!hasProAccess && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Get 30 days of free access to Alpine Pro features — no credit card required.
-                  </p>
-                )}
-              </>
+                  {trialActive && (
+                    <button onClick={handleRestoreProfile} className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2">
+                      Restore Profile
+                    </button>
+                  )}
+                  {!hasProAccess && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Get 30 days of free access to Alpine Pro features — no credit card required.
+                    </p>
+                  )}
+                </>
               )}
-              {hasArtistProfile &&  isApproved ? (
+
+              {hasArtistProfile ? (
+                isApproved ? (
                   (trialActive || user?.is_pro) ? (
                     <button
                       onClick={() => router.push(`/artists/${artistSlug}?trial=active`)}
@@ -542,7 +545,8 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
                       🔒 Pending Approval
                     </button>
                   </div>
-              )}
+                )
+              ) : null}
 
               <div className="mt-4 border-t border-gray-700 pt-4">
                 <h3 className="font-semibold mb-2">Support Alpine Groove Guide</h3>
