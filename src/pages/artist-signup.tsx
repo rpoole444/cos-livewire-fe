@@ -165,7 +165,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         credentials: "include",
       });
       await refetchUser();
-      router.push(`/artists/${artist.slug}?pending=true`);
+      router.push('/UserProfile?submitted=true');
       return;
     }
 
