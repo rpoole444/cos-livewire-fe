@@ -498,7 +498,7 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
               )}
              
               {/* Actions around the artist profile card */}
-              {!hasArtistProfile && (
+              {!hasArtistProfile && user.is_admin && (
                 <>
                   <button onClick={gotoCreateProfile} className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold">
                     🎁 Create Artist Profile
