@@ -37,10 +37,8 @@ const UserProfile: React.FC = () => {
   const refetchedOnce = useRef(false);
  const [hasRefetched, setHasRefetched] = useState(false);
 
-const trialActive = isTrialActive(user?.trial_ends_at);  // true only if trial_ends_at is in the future
-
-const trialStarted = Boolean(user?.trial_ends_at);
-
+const trialActive = !!user?.trial_ends_at && isTrialActive(user.trial_ends_at);
+const trialStarted = !!user?.trial_ends_at;
 const hasProAccess = !!user?.is_pro || trialActive;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
 const trialExpired = !!user?.trial_ends_at && !trialActive && !user?.is_pro;
@@ -315,6 +313,15 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !user?.is_pro;
       setMessage('An error occurred while restoring your profile.');
     }
   };
+useEffect(() => {
+  // temporary debug – remove after verifying once
+  console.log('trial_ends_at:', user?.trial_ends_at,
+              'trialActive:', trialActive,
+              'is_pro:', user?.is_pro,
+              'hasArtistProfile:', hasArtistProfile,
+              'isApproved:', isApproved);
+}, [user?.trial_ends_at, trialActive, user?.is_pro, hasArtistProfile, isApproved]);
+
 
 // after
 const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
@@ -331,7 +338,7 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
-      <TrialBanner />
+      <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.is_pro} />
       {trialActive && !hasArtistProfile && <ActiveTrialNoProfileBanner />}
       {showSuccessToast && (
         <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow mb-4 max-w-xl mx-auto">

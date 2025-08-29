@@ -1,8 +1,8 @@
+// components/TrialBanner.tsx
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { isActivePro } from '@/util/isActivePro';
 
 interface TrialBannerProps {
   trial_ends_at?: string | null;
@@ -12,39 +12,33 @@ interface TrialBannerProps {
 
 const TrialBanner: React.FC<TrialBannerProps> = (props) => {
   const { user } = useAuth();
-  const isProfileOwner = user?.id === props.artist_user_id;
 
-  const trialEndStr = props.trial_ends_at ?? user?.trial_ends_at;
-  const isPro = props.is_pro ?? isActivePro(user as any);
+  const isOwner = props.artist_user_id ? user?.id === props.artist_user_id : true;
+  const trialEndStr = props.trial_ends_at ?? user?.trial_ends_at ?? null;
+  const isPro = (props.is_pro ?? user?.is_pro) === true;
 
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
 
   useEffect(() => {
     if (!trialEndStr || isPro) return;
-
-    const updateDaysLeft = () => {
-      const now = dayjs();
-      const trialEnd = dayjs(trialEndStr);
-      const diff = trialEnd.diff(now, 'day');
+    const tick = () => {
+      const diff = dayjs(trialEndStr).diff(dayjs(), 'day');
       setDaysLeft(Math.max(diff, 0));
     };
-
-    updateDaysLeft();
-    const interval = setInterval(updateDaysLeft, 60_000);
-    return () => clearInterval(interval);
+    tick();
+    const id = setInterval(tick, 60_000);
+    return () => clearInterval(id);
   }, [trialEndStr, isPro]);
 
-  // ⛔ Don't show at all unless it's the profile owner
-  if (!isProfileOwner || !trialEndStr || isPro || daysLeft === null) return null;
+  // show only to the profile owner, only if a trial end exists, only if not pro
+  if (!isOwner || !trialEndStr || isPro || daysLeft === null) return null;
 
   const isExpired = dayjs().isAfter(dayjs(trialEndStr), 'day');
 
   return (
-    <div
-      className={`rounded-md p-3 text-white text-center shadow-md mb-4 text-sm font-medium ${
-        isExpired ? 'bg-red-700' : 'bg-blue-700'
-      }`}
-    >
+    <div className={`rounded-md p-3 text-white text-center shadow-md mb-4 text-sm font-medium ${
+      isExpired ? 'bg-red-700' : 'bg-blue-700'
+    }`}>
       {isExpired ? (
         <>
           🔒 <span className="font-semibold">Your Alpine Pro trial has expired.</span>{' '}
