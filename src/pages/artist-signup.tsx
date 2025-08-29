@@ -41,20 +41,11 @@ export default function ArtistSignupPage() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-const [wantsTrial, setWantsTrial] = useState(false);
-const [wantsSubscribe, setWantsSubscribe] = useState(false);
+const [choice, setChoice] = useState<null | 'trial' | 'subscribe'>(null);
 const [plan, setPlan] = useState<'monthly'|'annual'>('monthly');
 
-
-useEffect(() => {
-  if (wantsTrial) setWantsSubscribe(false);
-}, [wantsTrial]);
-useEffect(() => {
-  if (wantsSubscribe) setWantsTrial(false);
-}, [wantsSubscribe]);
-
-const canStartTrial = !proActive && !trialActive;
-
+const hasAccess = !!proActive || !!trialActive;   // already pro or in trial?
+const canStartTrial = !proActive && !trialActive; 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -97,26 +88,48 @@ const canStartTrial = !proActive && !trialActive;
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+useEffect(() => {
+  if (!router.isReady) return;
+  const { success, artist_id } = router.query;
+  (async () => {
+    if (success === 'true' && artist_id) {
+      try {
+        await refetchUser(); // now is_pro should be true
+        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist_id}/publish`, {
+          method: 'PUT',
+          credentials: 'include',
+        });
+        const mine = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, { credentials: 'include' });
+        const { artist } = await mine.json();
+        if (artist?.slug) router.replace(`/artists/${artist.slug}?pending=true`);
+        else router.replace('/UserProfile');
+      } catch {}
+    }
+  })();
+}, [router.isReady]); // eslint-disable-line
+
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (!user || form.genres.length === 0 || !files.profile_image) {
     setError("Missing required fields");
     return;
   }
+  if (!hasAccess && !choice) {
+    setError("Choose Trial or Subscribe to continue.");
+    return;
+  }
 
   setLoading(true);
+  setError('');
   try {
     // 1) Create (or reuse) a draft
     const formData = new FormData();
     Object.entries(form).forEach(([k, v]) =>
       formData.append(k, Array.isArray(v) ? JSON.stringify(v) : String(v ?? ""))
     );
-    Object.entries(files).forEach(([k, f]) => {
-      if (f) formData.append(k, f);
-    });
+    Object.entries(files).forEach(([k, f]) => { if (f) formData.append(k, f); });
 
     let artist: { id: number; slug: string } | null = null;
-
     const createRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists`, {
       method: "POST",
       body: formData,
@@ -126,54 +139,43 @@ const canStartTrial = !proActive && !trialActive;
     if (createRes.ok) {
       artist = await createRes.json();
     } else if (createRes.status === 409) {
-      // Conflict: either slug taken OR artist already exists for this user
       let body: any = null;
-      try {
-        body = await createRes.json();
-      } catch (_) {}
-
+      try { body = await createRes.json(); } catch {}
       const msg = (body?.message || "").toLowerCase();
-
       if (msg.includes("slug")) {
-        // slug collision — let the user pick a different one
         throw new Error(body?.message || "That URL slug is already taken. Please choose another.");
       }
-
-      // Assume "artist profile already exists" → reuse existing draft
-      const mineRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, {
-        credentials: "include",
-      });
-      if (!mineRes.ok) {
-        throw new Error("You already have an artist profile, but we couldn't load it.");
-      }
+      // Reuse existing
+      const mineRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, { credentials: "include" });
+      if (!mineRes.ok) throw new Error("You already have an artist profile, but we couldn't load it.");
       const mineJson = await mineRes.json();
-      if (!mineJson?.artist?.id || !mineJson?.artist?.slug) {
-        throw new Error("Existing artist found but incomplete data.");
-      }
+      if (!mineJson?.artist?.id || !mineJson?.artist?.slug) throw new Error("Existing artist found but incomplete data.");
       artist = { id: mineJson.artist.id, slug: mineJson.artist.slug };
     } else {
-      // Other server errors
-      let text = "";
-      try {
-        text = await createRes.text();
-      } catch (_) {}
+      const text = await createRes.text().catch(() => "");
       throw new Error(text || "Failed to create artist profile");
     }
 
     if (!artist) throw new Error("Could not obtain artist draft.");
 
-    // Helper: am I eligible to start a trial right now?
-    const trialEligible = !user.is_pro && !isTrialActive(user.trial_ends_at);
+    // 2) If they already have access, just publish and route
+    if (hasAccess) {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist.id}/publish`, {
+        method: "PUT",
+        credentials: "include",
+      });
+      await refetchUser();
+      router.push(`/artists/${artist.slug}?pending=true`);
+      return;
+    }
 
-    // 2) Branch based on the toggles
-    if (wantsTrial && trialEligible) {
-      // start trial
+    // 3) Branch by choice
+    if (choice === 'trial') {
+      // Start trial
       const tRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/trial/start`, {
         method: "POST",
         credentials: "include",
       });
-
-      // treat already-pro / active-trial as success
       if (!tRes.ok) {
         const tBody = await tRes.json().catch(() => null);
         const reason = tBody?.reason;
@@ -181,56 +183,48 @@ const canStartTrial = !proActive && !trialActive;
           throw new Error(tBody?.message || "Could not start trial");
         }
       }
-
-      // publish (requires access via trial)
-      const pubRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist.id}/publish`,
-        { method: "PUT", credentials: "include" }
-      );
+      // Publish
+      const pubRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist.id}/publish`, {
+        method: "PUT",
+        credentials: "include",
+      });
       if (!pubRes.ok) {
         const pBody = await pubRes.json().catch(() => null);
         throw new Error(pBody?.message || "Could not publish after starting trial");
       }
-
       await refetchUser();
       router.push(`/artists/${artist.slug}?pending=true&trial=active`);
       return;
     }
 
-    if (wantsSubscribe && !user.is_pro) {
-      // kick off Stripe checkout (server should set metadata { intent: 'publish_artist', artist_id })
-      const coRes = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/payments/create-checkout-session`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user.id,
-            plan, // 'monthly' | 'annual'
-            artistId: artist.id,
-            intent: "publish_artist",
-          }),
-        }
-      );
+    if (choice === 'subscribe') {
+      const coRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments/create-checkout-session`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          plan, // 'monthly' | 'annual'
+          artistId: artist.id,
+          intent: "publish_artist",
+        }),
+      });
       const co = await coRes.json().catch(() => ({}));
       if (!coRes.ok || !co?.url) {
         throw new Error(co?.message || "Checkout failed");
       }
-      window.location.href = co.url;
+      window.location.href = co.url; // to Stripe
       return;
     }
 
-    // Neither selected → keep as draft; owner sees pending page (public will appear after approval)
-    router.push(`/artists/${artist.slug}?pending=true`);
+    // (should never hit here)
+    throw new Error('Please choose Trial or Subscribe.');
   } catch (err: any) {
     setError(err.message || "Something went wrong");
   } finally {
     setLoading(false);
   }
 };
-
-
 
   if (trialExpired) {
     return (
@@ -346,50 +340,71 @@ const canStartTrial = !proActive && !trialActive;
         <input type="file" name="press_kit" accept="application/pdf,image/*" onChange={handleFileChange} className="w-full text-sm" />
 
         {/* Access choices */}
-        <div className="mt-6 border-t border-gray-700 pt-4 space-y-3">
-          <div className="flex items-center justify-between">
+        {!hasAccess && (
+          <div className="mt-6 border-t border-gray-700 pt-4 space-y-3">
+            <p className="font-semibold">Choose how you want to go live:</p>
+
             <label className="flex items-center gap-2">
               <input
-                type="checkbox"
-                checked={wantsTrial}
-                onChange={e => setWantsTrial(e.target.checked)}
-                disabled={!canStartTrial} // already Pro or in a trial? can’t start again
+                type="radio"
+                name="goLiveChoice"
+                checked={choice === 'trial'}
+                onChange={() => setChoice('trial')}
+                disabled={!canStartTrial}
               />
-              <span>Start 30-day Trial & publish</span>
+              <span>Start 30-day Free Trial & publish (no card required)</span>
+              {!canStartTrial && (
+                <span className="ml-2 text-xs text-gray-400">Already Pro or trial active</span>
+              )}
             </label>
-            {!canStartTrial && <span className="text-xs text-gray-400">Already Pro or trial active</span>}
-          </div>
 
-          <div className="flex items-center justify-between">
             <label className="flex items-center gap-2">
               <input
-                type="checkbox"
-                checked={wantsSubscribe}
-                onChange={e => setWantsSubscribe(e.target.checked)}
-                disabled={proActive} // already Pro? no need
+                type="radio"
+                name="goLiveChoice"
+                checked={choice === 'subscribe'}
+                onChange={() => setChoice('subscribe')}
               />
-              <span>Subscribe to Pro & publish</span>
+              <span>Subscribe to Alpine Pro & publish</span>
             </label>
-            <div className="flex items-center gap-3 text-sm">
-              <label className="flex items-center gap-1 opacity-90">
-                <input type="radio" name="plan" checked={plan==='monthly'} onChange={()=>setPlan('monthly')} disabled={!wantsSubscribe || proActive}/>
-                Monthly
-              </label>
-              <label className="flex items-center gap-1 opacity-90">
-                <input type="radio" name="plan" checked={plan==='annual'} onChange={()=>setPlan('annual')} disabled={!wantsSubscribe || proActive}/>
-                Annual
-              </label>
-            </div>
-          </div>
 
-          <p className="text-xs text-gray-400">
-            If neither is selected, we’ll create a draft and submit for approval. The public page will appear after approval; Pro-only features will be blurred until trial/subscription is active.
-          </p>
-        </div>
+            {choice === 'subscribe' && (
+              <div className="flex items-center gap-4 pl-6 text-sm">
+                <label className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    name="plan"
+                    checked={plan === 'monthly'}
+                    onChange={() => setPlan('monthly')}
+                  />
+                  Monthly
+                </label>
+                <label className="flex items-center gap-1">
+                  <input
+                    type="radio"
+                    name="plan"
+                    checked={plan === 'annual'}
+                    onChange={() => setPlan('annual')}
+                  />
+                  Annual
+                </label>
+              </div>
+            )}
+
+            <p className="text-xs text-gray-400">
+              You can switch later. Trial ends automatically unless you subscribe.
+            </p>
+          </div>
+        )}
+
 
         {error && <p className="text-red-500">{error}</p>}
-        <button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white">
-          {loading ? 'Creating…' : 'Create Profile'}
+        <button
+          type="submit"
+          disabled={loading || (!hasAccess && !choice)}
+          className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white disabled:opacity-50"
+        >
+          {loading ? 'Creating…' : 'Create Profile & Continue'}
         </button>
       </form>
     </div>
