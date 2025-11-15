@@ -86,7 +86,7 @@ The Alpine Groove Guide provides a dynamic platform for local artists and event 
 
 <table>
     <tr>
-      <td> Your Name <a href="https://github.com/rpoole444">GH</a></td>
+      <td> Reid Poole <a href="https://github.com/rpoole444">GH</a></td>
     </tr>
 <td><img src="https://github.com/rpoole444/cos-livewire-fe/assets/111818942/018c44e7-bdce-4cde-9573-005d65721152" alt="Reid Poole"
  width="150" height="auto" /></td>
