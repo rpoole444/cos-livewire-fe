@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/router";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Header from "@/components/Header";
 import Image from "next/image";
 import Link from 'next/link';
@@ -14,6 +14,18 @@ const genresList = [
   "Jazz", "Blues", "Funk", "Indie", "Dance", "Electronic", "Rock", "Alternative",
   "Country", "Hip-Hop", "Pop", "R&B", "Rap", "Reggae", "Soul", "Techno", "World", "Other"
 ];
+
+type ArtistProfileStatus = {
+  artist: {
+    slug?: string;
+    is_approved?: boolean;
+    deleted_at?: string | null;
+  } | null;
+  deletedArtist: {
+    slug?: string;
+  } | null;
+  canRestore: boolean;
+};
 
 const UserProfile: React.FC = () => {
   const { user, loading, updateUser, refetchUser } = useAuth();
@@ -29,10 +41,13 @@ const UserProfile: React.FC = () => {
   const [profilePicture, setProfilePicture] = useState("");
   const [hasArtistProfile, setHasArtistProfile] = useState(false);
   const [artistSlug, setArtistSlug] = useState("");
+  const [canRestoreProfile, setCanRestoreProfile] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showApprovalToast, setShowApprovalToast] = useState(false);
   const [showTrialToast, setShowTrialToast] = useState(false);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+  const [restoreError, setRestoreError] = useState("");
   const approvalRef = useRef<boolean | null>(null);
   const refetchedOnce = useRef(false);
  const [hasRefetched, setHasRefetched] = useState(false);
@@ -44,6 +59,62 @@ const hasProAccess = !!user?.is_pro || trialActive;
 const trialExpired = !!user?.trial_ends_at && !trialActive && !user?.is_pro;
 
   const [formError, setFormError] = useState("");
+
+  const applyArtistProfileStatus = useCallback((status: ArtistProfileStatus | null) => {
+    if (!status) {
+      setHasArtistProfile(false);
+      setArtistSlug("");
+      setIsApproved(null);
+      setCanRestoreProfile(false);
+      setRestoreError("");
+      return;
+    }
+
+    const { artist, deletedArtist, canRestore } = status;
+    const hasActiveArtist = !!artist && !artist.deleted_at;
+
+    setHasArtistProfile(hasActiveArtist);
+    setArtistSlug(hasActiveArtist ? artist.slug || "" : "");
+    setIsApproved(
+      hasActiveArtist
+        ? typeof artist.is_approved === "boolean"
+          ? artist.is_approved
+          : true
+        : null
+    );
+
+    const restoreAvailable = !hasActiveArtist && (canRestore || !!deletedArtist);
+    setCanRestoreProfile(restoreAvailable);
+
+    if (hasActiveArtist || !restoreAvailable) {
+      setRestoreError("");
+    }
+  }, []);
+
+  const fetchArtistProfileStatus = useCallback(async (): Promise<ArtistProfileStatus | null> => {
+    if (!user?.id) return null;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/artists/mine`, {
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        console.error('Artist /mine fetch error:', res.status);
+        return { artist: null, deletedArtist: null, canRestore: false };
+      }
+
+      const data = await res.json().catch(() => null);
+      const artist = (data?.artist ?? null) as ArtistProfileStatus["artist"];
+      const deletedArtist = (data?.deletedArtist ?? data?.deleted_artist ?? null) as ArtistProfileStatus["deletedArtist"];
+      const canRestoreFlag = Boolean(data?.canRestore ?? data?.can_restore ?? deletedArtist);
+
+      return { artist, deletedArtist, canRestore: canRestoreFlag };
+    } catch (err) {
+      console.error('Artist /mine fetch failed:', err);
+      return { artist: null, deletedArtist: null, canRestore: false };
+    }
+  }, [user?.id]);
 
   // If redirected from Stripe, fetch updated user info once
   useEffect(() => {
@@ -92,43 +163,14 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !user?.is_pro;
   let cancelled = false;
 
   const checkArtistProfile = async () => {
-    if (!user?.id) return;
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/artists/mine`, {
-        credentials: 'include',
-      });
+    if (!user?.id) {
+      applyArtistProfileStatus(null);
+      return;
+    }
 
-      if (!res.ok) {
-        console.error('Artist /mine fetch error:', res.status);
-        if (!cancelled) {
-          setHasArtistProfile(false);
-          setArtistSlug('');
-          setIsApproved(null);
-        }
-        return; // ← important: don't call res.json() on non-OK
-      }
-
-      const data = await res.json().catch(() => null);
-      const artist = data?.artist ?? null;
-
-      if (!cancelled) {
-        if (artist) {
-          setHasArtistProfile(true);
-          setArtistSlug(artist.slug);
-          setIsApproved(artist.is_approved);
-        } else {
-          setHasArtistProfile(false);
-          setArtistSlug('');
-          setIsApproved(null);
-        }
-      }
-    } catch (err) {
-      console.error('Artist /mine fetch failed:', err);
-      if (!cancelled) {
-        setHasArtistProfile(false);
-        setArtistSlug('');
-        setIsApproved(null);
-      }
+    const status = await fetchArtistProfileStatus();
+    if (!cancelled) {
+      applyArtistProfileStatus(status);
     }
   };
 
@@ -136,7 +178,7 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !user?.is_pro;
   return () => {
     cancelled = true;
   };
-}, [user?.id]); // only re-run when the user id changes
+}, [user?.id, fetchArtistProfileStatus, applyArtistProfileStatus]); // only re-run when the user id changes
 
   useEffect(() => {
     if (approvalRef.current === false && isApproved) {
@@ -290,27 +332,36 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !user?.is_pro;
 
   const handleRestoreProfile = async () => {
     if (!user) return;
+
+    setRestoreError("");
+    setMessage("");
+    setRestoreLoading(true);
   
     try {
       const res = await fetch(`${API_BASE_URL}/api/artists/by-user/${user.id}/restore`, {
         method: 'PUT',
         credentials: 'include',
       });
+
+      const responseBody = await res.json().catch(() => null);
   
       if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        const errorMsg = errData?.message || 'Failed to restore profile';
+        const errorMsg = responseBody?.message || 'Failed to restore profile';
+        setRestoreError(errorMsg);
         setMessage(errorMsg);
         return;
       }
-  
-      const data = await res.json();
-      setHasArtistProfile(true);
-      setArtistSlug(data.slug);
+
       setMessage('Profile restored successfully!');
+      const status = await fetchArtistProfileStatus();
+      applyArtistProfileStatus(status);
     } catch (err) {
       console.error('Restore profile error:', err);
-      setMessage('An error occurred while restoring your profile.');
+      const errorMsg = 'An error occurred while restoring your profile.';
+      setRestoreError(errorMsg);
+      setMessage(errorMsg);
+    } finally {
+      setRestoreLoading(false);
     }
   };
 useEffect(() => {
@@ -498,15 +549,22 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
               )}
              
               {/* Actions around the artist profile card */}
-              {!hasArtistProfile && user.is_admin && (
+              {!hasArtistProfile && (
                 <>
                   <button onClick={gotoCreateProfile} className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold">
                     🎁 Create Artist Profile
                   </button>
-                  {trialActive && (
-                    <button onClick={handleRestoreProfile} className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2">
-                      Restore Profile
+                  {canRestoreProfile && (
+                    <button
+                      onClick={handleRestoreProfile}
+                      disabled={restoreLoading}
+                      className={`bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2 ${restoreLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    >
+                      {restoreLoading ? 'Restoring...' : 'Restore Profile'}
                     </button>
+                  )}
+                  {restoreError && canRestoreProfile && (
+                    <p className="text-xs text-red-400 mt-1">{restoreError}</p>
                   )}
                   {!hasProAccess && (
                     <p className="text-xs text-gray-400 mt-1">
