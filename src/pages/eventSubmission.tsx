@@ -336,8 +336,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   }
 
   return user ? (
-    <div className="container mx-auto p-4">
-      <TrialBanner trial_ends_at={user.trial_ends_at} />
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <Script
         src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
         strategy="lazyOnload"
@@ -345,70 +344,119 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         defer
         onLoad={() => events.forEach((_, idx) => initializeAutocomplete(idx))}
       />
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold">{user.first_name}, Let&apos;s get your event out there!!</h1>
-        <p className="text-md mt-2">Fill out our Submission Form!</p>
-      </div>
-      <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 relative">
-        <p className="text-gray-700 text-base mb-4">
-          Please fill out the form below with your event details.
-          Make sure to include all required fields so we can add your event to our online calendar and help you promote your event!!
-        </p>
-        {isSubmitting && (
-          <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center rounded-md z-10">
-            <svg className="animate-spin h-10 w-10 text-indigo-600"
-                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10"
-                      stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8z"></path>
-            </svg>
-          </div>
-        )}
-        <form onSubmit={handleSubmit} className="mt-6 w-full max-w-2xl mx-auto space-y-6">
-          {events.map((event, idx) => (
-            <EventForm
-              key={idx}
-              event={event}
-              index={idx}
-              locationRef={(el: HTMLInputElement | null) => {
-                locationInputRefs.current[idx] = el;
-              }}
-              onChange={handleChange}
-              onFileChange={handleFileChange}
-              onRemove={removeEvent}
-              canRemove={canAddMultiple && events.length > 1}
-            />
-          ))}
-          {canAddMultiple && (
-            <button
-              type="button"
-              onClick={addEvent}
-              className="text-blue-600 underline"
-            >
-              Add Another Event
-            </button>
-          )}
+      <main className="mx-auto max-w-5xl px-4 py-10 lg:py-14">
+        <header className="space-y-4 text-center">
+          <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">Submit a live music event</p>
+          <h1 className="text-3xl font-semibold text-white sm:text-4xl">
+            {user.first_name}, let&apos;s promote your next show.
+          </h1>
+          <p className="mx-auto max-w-2xl text-sm text-slate-400">
+            Share accurate details so Alpine Groove Guide can feature your event across the calendar and artist pages.
+            Include the essentials: when it starts, where to find it, and how fans can support.
+          </p>
+        </header>
 
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mt-10">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`relative bg-indigo-600 text-white font-semibold py-3 px-6 rounded-md shadow-lg transition ${isSubmitting ? 'opacity-60 cursor-not-allowed' : 'hover:bg-indigo-700'}`}
-            >
-              {isSubmitting ? (
-                <>
-                  <svg
-                    className="animate-spin h-5 w-5 mr-2 inline-block"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none" viewBox="0 0 24 24"
-                  >
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                  </svg>
-                  Submitting…
-                </>
-              ) : (
+        <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
+          <section className="space-y-6">
+            <TrialBanner trial_ends_at={user.trial_ends_at} />
+
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl shadow-slate-950/30">
+              <div className="space-y-2 text-sm text-slate-300">
+                <p className="font-semibold text-white">Event checklist</p>
+                <p className="text-slate-400">
+                  Keep promoter-ready details handy: poster art, venue info, and links to tickets or RSVP.
+                  Approved events usually go live within 24 hours.
+                </p>
+              </div>
+              <div className="relative mt-8">
+                {isSubmitting && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-slate-950/60 backdrop-blur-sm">
+                    <svg
+                      className="h-10 w-10 animate-spin text-emerald-300"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                    </svg>
+                  </div>
+                )}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {events.map((event, idx) => (
+                    <EventForm
+                      key={idx}
+                      event={event}
+                      index={idx}
+                      locationRef={(el: HTMLInputElement | null) => {
+                        locationInputRefs.current[idx] = el;
+                      }}
+                      onChange={handleChange}
+                      onFileChange={handleFileChange}
+                      onRemove={removeEvent}
+                      canRemove={canAddMultiple && events.length > 1}
+                    />
+                  ))}
+
+                  {canAddMultiple && (
+                    <button
+                      type="button"
+                      onClick={addEvent}
+                      className="w-full rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:border-emerald-400 hover:text-white"
+                    >
+                      + Add another event
+                    </button>
+                  )}
+
+                  <div className="sticky bottom-4 mt-8 rounded-2xl border border-slate-800 bg-slate-950/80 p-5 backdrop-blur">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className={`flex w-full items-center justify-center rounded-xl bg-emerald-500 px-4 py-3 text-base font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 transition hover:bg-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400 ${isSubmitting ? 'opacity-70' : ''}`}
+                    >
+                      {isSubmitting ? "Submitting…" : events.length > 1 ? "Submit events" : "Submit event"}
+                    </button>
+                    <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-400">
+                      <Link
+                        href="/"
+                        className={`hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-200 ${isSubmitting ? 'pointer-events-none opacity-50' : ''}`}
+                      >
+                        Cancel &amp; return home
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={handleLogout}
+                        disabled={isSubmitting}
+                        className={`text-red-300 hover:text-red-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400 ${isSubmitting ? 'pointer-events-none opacity-50' : ''}`}
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </section>
+
+          <aside className="rounded-3xl border border-slate-800 bg-slate-900/40 p-6">
+            <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">Submission tips</p>
+            <h2 className="mt-2 text-xl font-semibold text-white">What makes a great listing</h2>
+            <ul className="mt-4 space-y-4 text-sm text-slate-300">
+              <li>• Upload crisp poster art without text cropped off.</li>
+              <li>• Include start and end times so fans can plan the night.</li>
+              <li>• Drop a ticket or RSVP link even if it&apos;s just a Facebook event.</li>
+              <li>• Mention special guests, rotating DJs, or themed nights in the description.</li>
+              <li>• Double-check venue spelling so search works across the site.</li>
+            </ul>
+            <div className="mt-6 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-xs text-emerald-100">
+              Pro or trial members can add up to four recurring dates at a time. Make sure each date is confirmed before submitting.
+            </div>
+          </aside>
+        </div>
+      </main>
+    </div>
+  ) : (
+  ) : (
                 `${events.length > 1 ? 'Submit Events' : 'Submit Event'}`
               )}
             </button>

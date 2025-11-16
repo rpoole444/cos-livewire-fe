@@ -1,6 +1,6 @@
 // pages/artists/[slug].tsx
 import { GetServerSideProps } from 'next';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -64,12 +64,15 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const isProfileOwner = user?.id === artist?.user_id;
   const isTrialExpired = artist?.trial_ends_at ? dayjs().isAfter(dayjs(artist.trial_ends_at), 'day') : true;
 
+  const logRef = useRef(false);
+
   useEffect(() => {
-    if (artist) {
-      console.log('Loaded artist:', artist);
+    if (artist && !logRef.current) {
+      console.log("[ArtistProfilePage] loaded", { artistId: artist.id, slug: artist.slug });
+      logRef.current = true;
     }
   }, [artist]);
-  
+
 
   useEffect(() => {
     if (router.query.trial === 'active') {
