@@ -17,6 +17,7 @@ const genresList = [
 type ArtistProfileStatus = {
   artist: {
     slug?: string;
+    display_name?: string;
     is_approved?: boolean;
     deleted_at?: string | null;
   } | null;
@@ -82,9 +83,10 @@ const canVisitPublicPage = Boolean(isApproved && (trialActive || canUseProFeatur
 
     setHasArtistProfile(hasActiveArtist);
     setArtistSlug(hasActiveArtist ? artist.slug || "" : "");
-    setArtistDisplayName(
-      hasActiveArtist ? (artist.display_name || artist.displayName || "") : ""
-    );
+   setArtistDisplayName(
+  hasActiveArtist ? (artist.display_name || "") : ""
+);
+
     setIsApproved(
       hasActiveArtist
         ? typeof artist.is_approved === "boolean"
@@ -154,7 +156,7 @@ const canVisitPublicPage = Boolean(isApproved && (trialActive || canUseProFeatur
     };
 
     run();
-  }, [router.isReady, router.query, refreshSession]);
+  }, [router.isReady, router.query, router, refreshSession]);
   
   // If Stripe sent the user back with ?billing=..., refresh again for up-to-date status.
   const billingStatus = router.query.billing;
