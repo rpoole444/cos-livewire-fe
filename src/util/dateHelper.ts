@@ -50,7 +50,7 @@ export function parseMSTDate(isoString: string): Date {
 export function parseLocalDayjs(isoString: string): Dayjs {
   const dateOnly = extractDateFromString(isoString);
   if (!dateOnly) {
-    return dayjs.invalid();
+    return dayjs(NaN);
   }
   return dayjs(dateOnly, "YYYY-MM-DD");
 }
