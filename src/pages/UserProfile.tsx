@@ -147,6 +147,21 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !isProActive;
     run();
   }, [router.isReady, router.query, refreshSession]);
   
+  // If Stripe sent the user back with ?billing=..., refresh again for up-to-date status.
+  const billingStatus = router.query.billing;
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (!billingStatus) return;
+
+    const refreshAfterBilling = async () => {
+      await refreshSession();
+      const nextQuery = { ...router.query };
+      delete nextQuery.billing;
+      router.replace({ pathname: router.pathname, query: nextQuery }, undefined, { shallow: true });
+    };
+
+    refreshAfterBilling();
+  }, [router.isReady, billingStatus, router, refreshSession]);
 
   // Once user is available, populate form values
   useEffect(() => {
@@ -188,6 +203,15 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !isProActive;
     }
     approvalRef.current = isApproved;
   }, [isApproved]);
+
+  // Gently nudge brand new users without an artist profile to the welcome flow.
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (loading || !user) return;
+    if (hasArtistProfile || canRestoreProfile) return;
+    if (!hasRefetched) return;
+    router.replace("/welcome");
+  }, [router, loading, user, hasArtistProfile, canRestoreProfile, hasRefetched]);
 
   useEffect(() => {
     if (router.query.approved === 'true') {
@@ -413,7 +437,7 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
           ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
         </div>
       )}
-      {!canUseProFeatures && !trialActive && (
+      {!canUseProFeatures && (
         <div className="text-center mb-4">
           {trialActive ? (
             <Link href="/artist-signup?from=profile" className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold">
@@ -552,6 +576,14 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
                   className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
                 >
                   Cancel or Manage Alpine Pro Subscription
+                </button>
+              )}
+              {hasArtistProfile && !canUseProFeatures && (
+                <button
+                  onClick={() => router.push("/upgrade")}
+                  className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
+                >
+                  Upgrade to Alpine Pro
                 </button>
               )}
              
