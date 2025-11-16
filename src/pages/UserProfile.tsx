@@ -67,13 +67,14 @@ const rawDisplayName = (user?.display_name ?? user?.displayName ?? "").trim();
 const normalizedDisplayName = rawDisplayName.toLowerCase();
 const normalizedEmail = (user?.email ?? "").trim().toLowerCase();
 const isDefaultDisplayName = normalizedDisplayName !== "" && normalizedDisplayName === normalizedEmail;
-const isFirstTimeProfile = rawDisplayName.length === 0 || isDefaultDisplayName;
-const displayNameMissing = isFirstTimeProfile;
+const needsProfileSetup = rawDisplayName.length === 0 || isDefaultDisplayName;
+const displayNameMissing = needsProfileSetup;
 const profileHeadingName = user?.displayName || user?.display_name || user?.email || "Your Profile";
 const canVisitPublicPage = Boolean(isApproved && (trialActive || canUseProFeatures));
-const canShowArtistWelcome = !displayNameMissing && !hasArtistProfile && !isEditing;
-const shouldShowTrialBanner = !canUseProFeatures && trialActive;
-const shouldShowCancelBanner = canUseProFeatures && !!proCancelledAt;
+const [artistCardDismissed, setArtistCardDismissed] = useState(false);
+const canShowArtistWelcome = !needsProfileSetup && !hasArtistProfile && !isEditing && !artistCardDismissed;
+const shouldShowTrialBanner = !needsProfileSetup && !canUseProFeatures && trialActive;
+const shouldShowCancelBanner = !needsProfileSetup && canUseProFeatures && !!proCancelledAt;
 
   const [formError, setFormError] = useState("");
 
@@ -451,16 +452,6 @@ const startAccountSetup = () => {
           </div>
         )}
 
-        {shouldShowTrialBanner && (
-          <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.pro_active} />
-        )}
-        {!shouldShowTrialBanner && shouldShowCancelBanner && proCancelledAt && (
-          <div className="rounded-md border border-yellow-400 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm">
-            Your Alpine Pro subscription is scheduled to end on{" "}
-            <strong>{proCancelledAt.toLocaleDateString()}</strong>. Visit Billing to keep your profile live.
-          </div>
-        )}
-
         <h1 className="text-3xl font-bold flex items-center gap-3">
           🎤 Profile: {profileHeadingName}
           {isProActive ? (
@@ -474,7 +465,7 @@ const startAccountSetup = () => {
           ) : null}
         </h1>
 
-        {isFirstTimeProfile && (
+        {needsProfileSetup && (
           <div className="bg-blue-900/30 border border-blue-600 rounded-xl p-6 space-y-3 shadow">
             <h2 className="text-2xl font-semibold">Finish your account profile</h2>
             <p className="text-gray-200 text-sm">
@@ -489,130 +480,181 @@ const startAccountSetup = () => {
           </div>
         )}
 
-        <section ref={accountSectionRef} className="bg-gray-800 p-6 rounded-2xl shadow space-y-6">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-2xl font-semibold">Your Account Profile</h2>
-            <p className="text-gray-300 text-sm">
-              Update your basic info – this appears on submissions and messages from Alpine Groove Guide.
-            </p>
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-8">
-            <div className="md:w-1/3 flex justify-center">
-              {profilePicture ? (
-                <Image
-                  src={profilePicture}
-                  alt="Profile Picture"
-                  width={200}
-                  height={200}
-                  className="rounded-full w-[200px] h-[200px] object-cover"
-                />
-              ) : (
-                <div className="w-[200px] h-[200px] rounded-full bg-gray-700 flex items-center justify-center text-gray-500">
-                  No photo yet
-                </div>
-              )}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <section ref={accountSectionRef} className="bg-gray-800 p-6 rounded-2xl shadow space-y-6 lg:col-span-2">
+            <div className="flex flex-col gap-2">
+              <h2 className="text-2xl font-semibold">Your Account Profile</h2>
+              <p className="text-gray-300 text-sm">
+                Update your basic info – this appears on submissions and messages from Alpine Groove Guide.
+              </p>
             </div>
 
-            <div className="md:w-2/3">
-              {isEditing ? (
-                <>
-                  <label className="block mb-4">
-                    📧 Email:
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full p-2 mt-1 rounded text-black"
-                    />
-                  </label>
-                  <label className="block mb-4">
-                    Display Name:
-                    <input
-                      type="text"
-                      value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full p-2 mt-1 rounded text-black"
-                    />
-                  </label>
-                  <label className="block mb-4">
-                    📝 Bio / About:
-                    <textarea
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      className="w-full p-2 mt-1 rounded text-black"
-                    />
-                  </label>
-                  <label className="block mb-4 font-semibold">🎶 Favorite Genres (pick up to 3):</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                    {genresList.map((genre) => (
-                      <label key={genre} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          value={genre}
-                          checked={genres.includes(genre)}
-                          onChange={() => handleGenreChange(genre)}
-                          className="mr-2"
-                        />
-                        {genre}
-                      </label>
-                    ))}
+            <div className="flex flex-col md:flex-row gap-8">
+              <div className="md:w-1/3 flex justify-center">
+                {profilePicture ? (
+                  <Image
+                    src={profilePicture}
+                    alt="Profile Picture"
+                    width={200}
+                    height={200}
+                    className="rounded-full w-[200px] h-[200px] object-cover"
+                  />
+                ) : (
+                  <div className="w-[200px] h-[200px] rounded-full bg-gray-700 flex items-center justify-center text-gray-500 text-4xl font-semibold">
+                    {rawDisplayName ? rawDisplayName.charAt(0).toUpperCase() : "?"}
                   </div>
-                  <label className="block mb-4">
-                    📷 Upload New Picture:
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="block w-full mt-1 text-sm text-gray-300"
-                    />
-                  </label>
-                </>
-              ) : (
-                <>
-                  <p className="mb-3"><strong>Email:</strong> {email}</p>
-                  <p className="mb-3"><strong>Name:</strong> {displayName || "N/A"}</p>
-                  <p className="mb-3"><strong>About:</strong> {description || "No description"}</p>
-                  <p className="mb-3"><strong>Genres:</strong> {genres.length > 0 ? genres.join(", ") : "None selected"}</p>
-                </>
-              )}
+                )}
+              </div>
 
-              <div className="flex flex-col gap-2 mt-4">
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold"
-                >
-                  {isEditing ? "Cancel" : "Edit Profile"}
-                </button>
-                {isEditing && (
+              <div className="md:w-2/3">
+                {isEditing ? (
+                  <>
+                    <label className="block mb-4">
+                      📧 Email:
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full p-2 mt-1 rounded text-black"
+                      />
+                    </label>
+                    <label className="block mb-4">
+                      Display Name:
+                      <input
+                        type="text"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        className="w-full p-2 mt-1 rounded text-black"
+                      />
+                    </label>
+                    <label className="block mb-4">
+                      📝 Bio / About:
+                      <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        className="w-full p-2 mt-1 rounded text-black"
+                      />
+                    </label>
+                    <label className="block mb-4 font-semibold">🎶 Favorite Genres (pick up to 3):</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                      {genresList.map((genre) => (
+                        <label key={genre} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            value={genre}
+                            checked={genres.includes(genre)}
+                            onChange={() => handleGenreChange(genre)}
+                            className="mr-2"
+                          />
+                          {genre}
+                        </label>
+                      ))}
+                    </div>
+                    <label className="block mb-4">
+                      📷 Upload New Picture:
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="block w-full mt-1 text-sm text-gray-300"
+                      />
+                    </label>
+                  </>
+                ) : (
+                  <>
+                    <p className="mb-3 text-lg font-semibold">{displayName || "No display name yet"}</p>
+                    <p className="mb-2 text-sm text-gray-300">{email}</p>
+                    <p className="mb-3"><strong>About:</strong> {description || "No description"}</p>
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      {genres.length > 0 ? (
+                        genres.map((genre) => (
+                          <span key={genre} className="px-3 py-1 rounded-full bg-gray-700 text-xs uppercase tracking-wide">
+                            {genre}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-sm text-gray-400">No genres selected</span>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                <div className="flex flex-col gap-2 mt-4">
                   <button
-                    onClick={handleSave}
-                    className="bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold"
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold"
                   >
-                    Save Changes
+                    {isEditing ? "Cancel" : "Edit Profile"}
                   </button>
-                )}
-                {formError && (
-                  <div className="text-red-400 text-sm mt-2">{formError}</div>
-                )}
-                <button
-                  onClick={handleResetPassword}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded font-semibold"
-                >
-                  Reset Password
-                </button>
-                <button
-                  onClick={() => router.push("/")}
-                  className="bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold"
-                >
-                  Back to Home
-                </button>
+                  {isEditing && (
+                    <button
+                      onClick={handleSave}
+                      className="bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold"
+                    >
+                      Save Changes
+                    </button>
+                  )}
+                  {formError && (
+                    <div className="text-red-400 text-sm mt-2">{formError}</div>
+                  )}
+                  <button
+                    onClick={handleResetPassword}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded font-semibold"
+                  >
+                    Reset Password
+                  </button>
+                  <button
+                    onClick={() => router.push("/")}
+                    className="bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold"
+                  >
+                    Back to Home
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {!isFirstTimeProfile && (
+          {!needsProfileSetup && (
+            <section className="bg-gray-800 p-6 rounded-2xl shadow space-y-4 h-fit">
+              <div>
+                <h2 className="text-2xl font-semibold">Status & Actions</h2>
+                <p className="text-sm text-gray-400">Manage your Alpine Pro access and billing.</p>
+              </div>
+              {shouldShowTrialBanner && (
+                <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.pro_active} />
+              )}
+              {!shouldShowTrialBanner && shouldShowCancelBanner && proCancelledAt && (
+                <div className="rounded-md border border-yellow-400 bg-yellow-50/90 text-yellow-900 px-3 py-2 text-sm">
+                  Your Alpine Pro subscription is scheduled to end on{" "}
+                  <strong>{proCancelledAt.toLocaleDateString()}</strong>.{" "}
+                  To keep your profile public and listed, renew your subscription in Billing.
+                </div>
+              )}
+              {canUseProFeatures ? (
+                <button
+                  onClick={handleManageBilling}
+                  className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold w-full"
+                >
+                  Manage Subscription
+                </button>
+              ) : (
+                <button
+                  onClick={() => router.push("/upgrade")}
+                  className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold w-full"
+                >
+                  Upgrade to Alpine Pro
+                </button>
+              )}
+              {!canUseProFeatures && trialActive && (
+                <p className="text-xs text-gray-400">
+                  Upgrade before your trial ends to keep your artist tools active.
+                </p>
+              )}
+            </section>
+          )}
+        </div>
+
+        {!needsProfileSetup && (
           <section className="bg-gray-800 p-6 rounded-2xl shadow space-y-4">
             <div className="flex flex-col gap-2">
               <h2 className="text-2xl font-semibold">Artist / Venue</h2>
@@ -652,10 +694,10 @@ const startAccountSetup = () => {
                       )}
                       <button
                         type="button"
-                        onClick={() => accountSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                        onClick={() => setArtistCardDismissed(true)}
                         className="text-sm text-gray-300 underline hover:text-white text-left"
                       >
-                        Skip for now, go to your dashboard →
+                        Maybe later
                       </button>
                     </div>
                   </div>
