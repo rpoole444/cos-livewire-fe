@@ -3,7 +3,6 @@ import { useRouter } from "next/router";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Header from "@/components/Header";
 import Image from "next/image";
-import Link from 'next/link';
 import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 
@@ -30,6 +29,10 @@ type ArtistProfileStatus = {
 const UserProfile: React.FC = () => {
   const { user, loading, updateUser, refreshSession } = useAuth();
   const router = useRouter();
+  const { isReady: routerReady, pathname, replace, query } = router;
+  const successParam = query?.success;
+  const trialParam = query?.trial;
+  const billingParam = query?.billing;
 
   const [isEditing, setIsEditing] = useState(false);
   const [email, setEmail] = useState("");
@@ -61,11 +64,16 @@ const proCancelledAt = user?.pro_cancelled_at ? new Date(user.pro_cancelled_at) 
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
 const trialExpired = !!user?.trial_ends_at && !trialActive && !isProActive;
 const rawDisplayName = (user?.display_name ?? user?.displayName ?? "").trim();
-const isFirstTimeProfile = rawDisplayName.length === 0;
+const normalizedDisplayName = rawDisplayName.toLowerCase();
+const normalizedEmail = (user?.email ?? "").trim().toLowerCase();
+const isDefaultDisplayName = normalizedDisplayName !== "" && normalizedDisplayName === normalizedEmail;
+const isFirstTimeProfile = rawDisplayName.length === 0 || isDefaultDisplayName;
 const displayNameMissing = isFirstTimeProfile;
 const profileHeadingName = user?.displayName || user?.display_name || user?.email || "Your Profile";
 const canVisitPublicPage = Boolean(isApproved && (trialActive || canUseProFeatures));
 const canShowArtistWelcome = !displayNameMissing && !hasArtistProfile && !isEditing;
+const shouldShowTrialBanner = !canUseProFeatures && trialActive;
+const shouldShowCancelBanner = canUseProFeatures && !!proCancelledAt;
 
   const [formError, setFormError] = useState("");
 
@@ -132,25 +140,23 @@ const canShowArtistWelcome = !displayNameMissing && !hasArtistProfile && !isEdit
 
   // Refresh auth/session info once per mount (and surface Stripe toasts if query flags exist)
   useEffect(() => {
-    if (!router.isReady || refetchedOnce.current) return;
-
-    const { success, trial } = router.query;
+    if (!routerReady || refetchedOnce.current) return;
 
     const run = async () => {
       await refreshSession();
 
-      if (success === 'true') {
+      if (successParam === 'true') {
         setShowSuccessToast(true);
         setTimeout(() => setShowSuccessToast(false), 5000);
       }
 
-      if (trial === 'active') {
+      if (trialParam === 'active') {
         setShowTrialToast(true);
         setTimeout(() => setShowTrialToast(false), 5000);
       }
 
-      if (success === 'true' || trial === 'active') {
-        router.replace({ pathname: router.pathname, query: {} }, undefined, { shallow: true });
+      if (successParam === 'true' || trialParam === 'active') {
+        replace({ pathname, query: {} }, undefined, { shallow: true });
       }
 
       setHasRefetched(true);
@@ -158,23 +164,22 @@ const canShowArtistWelcome = !displayNameMissing && !hasArtistProfile && !isEdit
     };
 
     run();
-  }, [router.isReady, router.query, router, refreshSession]);
+  }, [routerReady, successParam, trialParam, pathname, replace, refreshSession]);
   
   // If Stripe sent the user back with ?billing=..., refresh again for up-to-date status.
-  const billingStatus = router.query.billing;
   useEffect(() => {
-    if (!router.isReady) return;
-    if (!billingStatus) return;
+    if (!routerReady) return;
+    if (!billingParam) return;
 
     const refreshAfterBilling = async () => {
       await refreshSession();
-      const nextQuery = { ...router.query };
+      const nextQuery = { ...query };
       delete nextQuery.billing;
-      router.replace({ pathname: router.pathname, query: nextQuery }, undefined, { shallow: true });
+      replace({ pathname, query: nextQuery }, undefined, { shallow: true });
     };
 
     refreshAfterBilling();
-  }, [router.isReady, billingStatus, router, refreshSession]);
+  }, [routerReady, billingParam, query, replace, pathname, refreshSession]);
 
   // Once user is available, populate form values
   useEffect(() => {
@@ -224,14 +229,14 @@ const canShowArtistWelcome = !displayNameMissing && !hasArtistProfile && !isEdit
   }, [isApproved]);
 
   useEffect(() => {
-    if (router.query.approved === 'true') {
+    if (query?.approved === 'true') {
       setShowApprovalToast(true);
       const cleaned = new URL(window.location.href);
       cleaned.searchParams.delete('approved');
       window.history.replaceState({}, document.title, cleaned.toString());
       setTimeout(() => setShowApprovalToast(false), 5000);
     }
-  }, [router.query]);
+  }, [query]);
 
   
 
@@ -443,6 +448,16 @@ const startAccountSetup = () => {
         {showTrialToast && (
           <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow">
             ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
+          </div>
+        )}
+
+        {shouldShowTrialBanner && (
+          <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.pro_active} />
+        )}
+        {!shouldShowTrialBanner && shouldShowCancelBanner && proCancelledAt && (
+          <div className="rounded-md border border-yellow-400 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm">
+            Your Alpine Pro subscription is scheduled to end on{" "}
+            <strong>{proCancelledAt.toLocaleDateString()}</strong>. Visit Billing to keep your profile live.
           </div>
         )}
 
@@ -680,40 +695,45 @@ const startAccountSetup = () => {
                     </div>
                   )}
 
-                  <div className="space-y-4">
-                    <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.pro_active} />
-                    {isProActive && proCancelledAt && (
-                      <div className="rounded-md border border-yellow-400 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm">
-                        Your Alpine Pro subscription is scheduled to end on{" "}
-                        <strong>{proCancelledAt.toLocaleDateString()}</strong>. Visit Billing to keep your profile live.
-                      </div>
-                    )}
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      {canUseProFeatures ? (
-                        <button
-                          onClick={handleManageBilling}
-                          className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
-                        >
-                          Cancel or Manage Alpine Pro Subscription
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => router.push("/upgrade")}
-                          className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
-                        >
-                          Upgrade to Alpine Pro
-                        </button>
-                      )}
-                    </div>
-                    {!canUseProFeatures && !trialActive && (
-                      <p className="text-sm text-gray-400">
-                        Upgrade to Alpine Pro to make your artist page public again.
-                      </p>
-                    )}
-                  </div>
                 </div>
               </>
             )}
+
+            <div className="border-t border-gray-700 pt-4 mt-6 space-y-3">
+              <h3 className="text-lg font-semibold">Alpine Pro access</h3>
+              {canUseProFeatures ? (
+                <>
+                  <p className="text-sm text-gray-300">
+                    You currently have Alpine Pro access. Manage your subscription any time.
+                  </p>
+                  <button
+                    onClick={handleManageBilling}
+                    className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
+                  >
+                    Manage Subscription
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-300">
+                    {trialActive
+                      ? "Your free trial is active. Upgrade now to keep your artist tools after it ends."
+                      : "Unlock Alpine Pro to publish and promote your artist page."}
+                  </p>
+                  <button
+                    onClick={() => router.push("/upgrade")}
+                    className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
+                  >
+                    Upgrade to Alpine Pro
+                  </button>
+                  {!trialActive && hasArtistProfile && (
+                    <p className="text-xs text-gray-400">
+                      Upgrade to Alpine Pro to make your artist page public again.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           </section>
         )}
 
