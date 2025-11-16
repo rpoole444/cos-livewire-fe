@@ -65,6 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return {
       ...data.user,
       displayName: data.user.displayName ?? data.user.display_name ?? '',
+      display_name: data.user.display_name ?? data.user.displayName ?? '',
       top_music_genres: parseGenres(data.user.top_music_genres),
       profile_picture: profilePicData.profile_picture_url || null,
       trial_ends_at: data.user.trial_ends_at || null,
@@ -120,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const fullUser: UserType = {
       ...data.user,
       displayName: data.user.displayName ?? data.user.display_name ?? '',
+      display_name: data.user.display_name ?? data.user.displayName ?? '',
       top_music_genres: genres,
       profile_picture: profileData.profile_picture_url,
       trial_ends_at: data.user.trial_ends_at || null,

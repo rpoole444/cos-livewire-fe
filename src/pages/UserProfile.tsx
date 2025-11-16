@@ -5,7 +5,6 @@ import Header from "@/components/Header";
 import Image from "next/image";
 import Link from 'next/link';
 import TrialBanner from '@/components/TrialBanner';
-import ActiveTrialNoProfileBanner from '@/components/ActiveTrialNoProfileBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -41,6 +40,7 @@ const UserProfile: React.FC = () => {
   const [profilePicture, setProfilePicture] = useState("");
   const [hasArtistProfile, setHasArtistProfile] = useState(false);
   const [artistSlug, setArtistSlug] = useState("");
+  const [artistDisplayName, setArtistDisplayName] = useState("");
   const [canRestoreProfile, setCanRestoreProfile] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
@@ -50,6 +50,7 @@ const UserProfile: React.FC = () => {
   const [restoreError, setRestoreError] = useState("");
   const approvalRef = useRef<boolean | null>(null);
   const refetchedOnce = useRef(false);
+  const accountSectionRef = useRef<HTMLDivElement | null>(null);
  const [hasRefetched, setHasRefetched] = useState(false);
 
 const trialActive = !!user?.trial_ends_at && isTrialActive(user.trial_ends_at);
@@ -58,6 +59,10 @@ const canUseProFeatures = isProActive;
 const proCancelledAt = user?.pro_cancelled_at ? new Date(user.pro_cancelled_at) : null;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
 const trialExpired = !!user?.trial_ends_at && !trialActive && !isProActive;
+const rawDisplayName = (user?.display_name ?? user?.displayName ?? "").trim();
+const isFirstTimeProfile = rawDisplayName.length === 0;
+const profileHeadingName = user?.displayName || user?.display_name || user?.email || "Your Profile";
+const canVisitPublicPage = Boolean(isApproved && (trialActive || canUseProFeatures));
 
   const [formError, setFormError] = useState("");
 
@@ -65,6 +70,7 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !isProActive;
     if (!status) {
       setHasArtistProfile(false);
       setArtistSlug("");
+      setArtistDisplayName("");
       setIsApproved(null);
       setCanRestoreProfile(false);
       setRestoreError("");
@@ -76,6 +82,9 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !isProActive;
 
     setHasArtistProfile(hasActiveArtist);
     setArtistSlug(hasActiveArtist ? artist.slug || "" : "");
+    setArtistDisplayName(
+      hasActiveArtist ? (artist.display_name || artist.displayName || "") : ""
+    );
     setIsApproved(
       hasActiveArtist
         ? typeof artist.is_approved === "boolean"
@@ -204,15 +213,6 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !isProActive;
     approvalRef.current = isApproved;
   }, [isApproved]);
 
-  // Gently nudge brand new users without an artist profile to the welcome flow.
-  useEffect(() => {
-    if (!router.isReady) return;
-    if (loading || !user) return;
-    if (hasArtistProfile || canRestoreProfile) return;
-    if (!hasRefetched) return;
-    router.replace("/welcome");
-  }, [router, loading, user, hasArtistProfile, canRestoreProfile, hasRefetched]);
-
   useEffect(() => {
     if (router.query.approved === 'true') {
       setShowApprovalToast(true);
@@ -305,6 +305,7 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !isProActive;
         email,
         user_description: description,
         displayName,
+        display_name: displayName,
         top_music_genres: genres,
         profile_picture: data.profile_picture,
       });
@@ -401,6 +402,10 @@ useEffect(() => {
 
 // after
 const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
+const startAccountSetup = () => {
+  setIsEditing(true);
+  accountSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 
 
   if (loading || !hasRefetched) {
@@ -414,45 +419,25 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
-      <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.pro_active} />
-      {isProActive && proCancelledAt && (
-        <div className="rounded-md border border-yellow-400 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm mb-3 max-w-xl mx-auto">
-          Your Alpine Pro subscription is scheduled to end on{' '}
-          <strong>{proCancelledAt.toLocaleDateString()}</strong>. To keep your profile public and listed, renew your subscription in Billing.
-        </div>
-      )}
-      {trialActive && !hasArtistProfile && <ActiveTrialNoProfileBanner />}
-      {showSuccessToast && (
-        <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow mb-4 max-w-xl mx-auto">
-          ✅ Success! You’ve unlocked Alpine Pro.
-        </div>
-      )}
-      {showApprovalToast && (
-        <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow mb-4 max-w-xl mx-auto">
-          🎉 You’re live on the directory!
-        </div>
-      )}
-      {showTrialToast && (
-        <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow mb-4 max-w-xl mx-auto">
-          ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
-        </div>
-      )}
-      {!canUseProFeatures && (
-        <div className="text-center mb-4">
-          {trialActive ? (
-            <Link href="/artist-signup?from=profile" className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold">
-                Publish now (trial active)
-            </Link>
-          ) : trialExpired ? (
-            <Link href="/upgrade" className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold" >
-                Re-activate to continue
-            </Link>
-          ) : null}
-        </div>
-      )}
-      <div className="max-w-5xl mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
-          🎤 Profile: {user.displayName}
+      <div className="max-w-5xl mx-auto px-6 py-10 space-y-6">
+        {showSuccessToast && (
+          <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow">
+            ✅ Success! You’ve unlocked Alpine Pro.
+          </div>
+        )}
+        {showApprovalToast && (
+          <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow">
+            🎉 You’re live on the directory!
+          </div>
+        )}
+        {showTrialToast && (
+          <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow">
+            ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
+          </div>
+        )}
+
+        <h1 className="text-3xl font-bold flex items-center gap-3">
+          🎤 Profile: {profileHeadingName}
           {isProActive ? (
             <span className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
               Alpine Pro Member
@@ -464,205 +449,273 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
           ) : null}
         </h1>
 
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="md:w-1/3 flex justify-center">
-            {profilePicture && (
-              <Image
-                src={profilePicture}
-                alt="Profile Picture"
-                width={200}
-                height={200}
-                className="rounded-full w-[200px] h-[200px] object-cover"
-              />
-            )}
+        {isFirstTimeProfile && (
+          <div className="bg-blue-900/30 border border-blue-600 rounded-xl p-6 space-y-3 shadow">
+            <h2 className="text-2xl font-semibold">Finish your account profile</h2>
+            <p className="text-gray-200 text-sm">
+              Welcome to Alpine Groove Guide! Add a display name, short bio, and your favorite genres so venues know who you are.
+            </p>
+            <button
+              onClick={startAccountSetup}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-2 rounded font-semibold transition"
+            >
+              Set up my profile
+            </button>
+          </div>
+        )}
+
+        <section ref={accountSectionRef} className="bg-gray-800 p-6 rounded-2xl shadow space-y-6">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-2xl font-semibold">Your Account Profile</h2>
+            <p className="text-gray-300 text-sm">
+              Update your basic info – this appears on submissions and messages from Alpine Groove Guide.
+            </p>
           </div>
 
-          <div className="md:w-2/3 bg-gray-800 p-6 rounded-lg shadow-md">
-            {isEditing ? (
-              <>
-                <label className="block mb-4">
-                  📧 Email:
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full p-2 mt-1 rounded text-black"
-                  />
-                </label>
-                <label className="block mb-4">
-                  Display Name:
-                  <input
-                    type="text"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full p-2 mt-1 rounded text-black"
-                  />
-                </label>
-                <label className="block mb-4">
-                  📝 Bio / About:
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="w-full p-2 mt-1 rounded text-black"
-                  />
-                </label>
-                <label className="block mb-4 font-semibold">🎶 Favorite Genres (pick up to 3):</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                  {genresList.map((genre) => (
-                    <label key={genre} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        value={genre}
-                        checked={genres.includes(genre)}
-                        onChange={() => handleGenreChange(genre)}
-                        className="mr-2"
-                      />
-                      {genre}
-                    </label>
-                  ))}
+          <div className="flex flex-col md:flex-row gap-8">
+            <div className="md:w-1/3 flex justify-center">
+              {profilePicture ? (
+                <Image
+                  src={profilePicture}
+                  alt="Profile Picture"
+                  width={200}
+                  height={200}
+                  className="rounded-full w-[200px] h-[200px] object-cover"
+                />
+              ) : (
+                <div className="w-[200px] h-[200px] rounded-full bg-gray-700 flex items-center justify-center text-gray-500">
+                  No photo yet
                 </div>
-                <label className="block mb-4">
-                  📷 Upload New Picture:
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="block w-full mt-1 text-sm text-gray-300"
-                  />
-                </label>
-              </>
-            ) : (
-              <>
-                <p className="mb-3"><strong>Email:</strong> {email}</p>
-                <p className="mb-3"><strong>Artist, Band, or Venue Name:</strong> {displayName || "N/A"}</p>
-                <p className="mb-3"><strong>About:</strong> {description || "No description"}</p>
-                <p className="mb-3"><strong>Genres:</strong> {genres.length > 0 ? genres.join(", ") : "None selected"}</p>
-              </>
-            )}
+              )}
+            </div>
 
-            <div className="flex flex-col gap-2 mt-4">
-              <button
-                onClick={() => setIsEditing(!isEditing)}
-                className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold"
-              >
-                {isEditing ? "Cancel" : "Edit Profile"}
-              </button>
-              {isEditing && (
-                <button
-                  onClick={handleSave}
-                  className="bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold"
-                >
-                  Save Changes
-                </button>
-              )}
-              {formError && (
-                <div className="text-red-400 text-sm mt-2">{formError}</div>
-              )}
-              <button
-                onClick={handleResetPassword}
-                className="bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded font-semibold"
-              >
-                Reset Password
-              </button>
-              <button
-                onClick={() => router.push("/")}
-                className="bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold"
-              >
-                Back to Home
-              </button>
-              {canUseProFeatures && (
-                <button
-                  onClick={handleManageBilling}
-                  className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
-                >
-                  Cancel or Manage Alpine Pro Subscription
-                </button>
-              )}
-              {hasArtistProfile && !canUseProFeatures && (
-                <button
-                  onClick={() => router.push("/upgrade")}
-                  className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
-                >
-                  Upgrade to Alpine Pro
-                </button>
-              )}
-             
-              {/* Actions around the artist profile card */}
-              {!hasArtistProfile && (
+            <div className="md:w-2/3">
+              {isEditing ? (
                 <>
-                  <button onClick={gotoCreateProfile} className="bg-teal-600 hover:bg-teal-700 text-white py-2 rounded font-semibold">
-                    🎁 Create Artist Profile
+                  <label className="block mb-4">
+                    📧 Email:
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full p-2 mt-1 rounded text-black"
+                    />
+                  </label>
+                  <label className="block mb-4">
+                    Display Name:
+                    <input
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="w-full p-2 mt-1 rounded text-black"
+                    />
+                  </label>
+                  <label className="block mb-4">
+                    📝 Bio / About:
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full p-2 mt-1 rounded text-black"
+                    />
+                  </label>
+                  <label className="block mb-4 font-semibold">🎶 Favorite Genres (pick up to 3):</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                    {genresList.map((genre) => (
+                      <label key={genre} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          value={genre}
+                          checked={genres.includes(genre)}
+                          onChange={() => handleGenreChange(genre)}
+                          className="mr-2"
+                        />
+                        {genre}
+                      </label>
+                    ))}
+                  </div>
+                  <label className="block mb-4">
+                    📷 Upload New Picture:
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="block w-full mt-1 text-sm text-gray-300"
+                    />
+                  </label>
+                </>
+              ) : (
+                <>
+                  <p className="mb-3"><strong>Email:</strong> {email}</p>
+                  <p className="mb-3"><strong>Name:</strong> {displayName || "N/A"}</p>
+                  <p className="mb-3"><strong>About:</strong> {description || "No description"}</p>
+                  <p className="mb-3"><strong>Genres:</strong> {genres.length > 0 ? genres.join(", ") : "None selected"}</p>
+                </>
+              )}
+
+              <div className="flex flex-col gap-2 mt-4">
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold"
+                >
+                  {isEditing ? "Cancel" : "Edit Profile"}
+                </button>
+                {isEditing && (
+                  <button
+                    onClick={handleSave}
+                    className="bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold"
+                  >
+                    Save Changes
+                  </button>
+                )}
+                {formError && (
+                  <div className="text-red-400 text-sm mt-2">{formError}</div>
+                )}
+                <button
+                  onClick={handleResetPassword}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded font-semibold"
+                >
+                  Reset Password
+                </button>
+                <button
+                  onClick={() => router.push("/")}
+                  className="bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold"
+                >
+                  Back to Home
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {!isFirstTimeProfile && (
+          <section className="bg-gray-800 p-6 rounded-2xl shadow space-y-4">
+            <div className="flex flex-col gap-2">
+              <h2 className="text-2xl font-semibold">Artist / Venue</h2>
+              <p className="text-gray-300 text-sm">
+                Manage your public listing for fans, venues, and promoters.
+              </p>
+            </div>
+
+            {!hasArtistProfile ? (
+              <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-5 space-y-3">
+                <h3 className="text-xl font-semibold">Create your artist or venue page</h3>
+                <p className="text-gray-300 text-sm">
+                  Claim your public page to share events, media, and contact info. You can upgrade to Alpine Pro whenever you’re ready.
+                </p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={gotoCreateProfile}
+                    className="bg-teal-500 hover:bg-teal-600 text-white py-2 rounded font-semibold"
+                  >
+                    Create Artist / Venue Page
                   </button>
                   {canRestoreProfile && (
                     <button
                       onClick={handleRestoreProfile}
                       disabled={restoreLoading}
-                      className={`bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold mt-2 ${restoreLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                      className={`bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold ${restoreLoading ? "opacity-70 cursor-not-allowed" : ""}`}
                     >
-                      {restoreLoading ? 'Restoring...' : 'Restore Profile'}
+                      {restoreLoading ? "Restoring…" : "Restore Previous Page"}
                     </button>
                   )}
                   {restoreError && canRestoreProfile && (
-                    <p className="text-xs text-red-400 mt-1">{restoreError}</p>
+                    <p className="text-xs text-red-400">{restoreError}</p>
                   )}
-                  {!canUseProFeatures && !trialActive && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      Get 30 days of free access to Alpine Pro features — no credit card required.
-                    </p>
-                  )}
-                </>
-              )}
-
-              {hasArtistProfile ? (
-                isApproved ? (
-                  (trialActive || canUseProFeatures) ? (
-                    <button
-                      onClick={() => router.push(`/artists/${artistSlug}?trial=active`)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
-                    >
-                      Enter Artist Page
-                    </button>
-                  ) : (
-                    <Link href={trialExpired ? "/upgrade" : "/artist-signup"} className="underline text-blue-300">
-                      Activate Pro / Start Trial
-                    </Link>
-                  )
-                ) : (
-                  <div className="bg-yellow-100 text-yellow-900 border border-yellow-400 p-4 rounded shadow-md text-sm">
-                    <p className="font-semibold mb-2">🎷 Your artist profile is under review</p>
-                    <p>You’ll be notified when approved.</p>
-                    <button
-                      disabled
-                      className="mt-3 w-full bg-gray-400 text-white py-2 rounded font-semibold cursor-not-allowed opacity-70"
-                    >
-                      🔒 Pending Approval
-                    </button>
-                  </div>
-                )
-              ) : null}
-
-              <div className="mt-4 border-t border-gray-700 pt-4">
-                <h3 className="font-semibold mb-2">Support Alpine Groove Guide</h3>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={() => handleDonate("payment")}
-                    className="bg-pink-600 hover:bg-pink-700 text-white py-2 rounded font-semibold"
-                  >
-                    💵 Send a $7 Tip
-                  </button>
-                  <button
-                    onClick={() => handleDonate("subscription")}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-semibold"
-                  >
-                    💫 $7/Month Membership
-                  </button>
                 </div>
               </div>
+            ) : (
+              <>
+                <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-5 space-y-4">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                      <p className="text-xl font-semibold">{artistDisplayName || "Your artist profile"}</p>
+                      <p className="text-sm text-gray-400">
+                        Status: {isApproved ? "Approved" : "Pending review"}
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => router.push(`/artists/${artistSlug}`)}
+                        disabled={!canVisitPublicPage}
+                        title={canVisitPublicPage ? "View your public page" : "Your page is offline until your trial or subscription is active"}
+                        className={`py-2 px-4 rounded font-semibold ${canVisitPublicPage ? "bg-purple-600 hover:bg-purple-700 text-white" : "bg-purple-900/50 text-purple-200 cursor-not-allowed"}`}
+                      >
+                        View Public Page
+                      </button>
+                      <button
+                        onClick={() => router.push(`/artists/edit/${artistSlug}`)}
+                        className="py-2 px-4 rounded font-semibold bg-gray-700 hover:bg-gray-600 text-white"
+                      >
+                        Edit Artist Profile
+                      </button>
+                    </div>
+                  </div>
 
-              {message && <div className="text-center text-sm text-red-400 mt-2">{message}</div>}
-            </div>
+                  {!isApproved && (
+                    <div className="bg-yellow-100 text-yellow-900 border border-yellow-400 p-4 rounded text-sm">
+                      🎷 Your artist profile is under review. You’ll be notified when it’s approved.
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.pro_active} />
+                    {isProActive && proCancelledAt && (
+                      <div className="rounded-md border border-yellow-400 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm">
+                        Your Alpine Pro subscription is scheduled to end on{" "}
+                        <strong>{proCancelledAt.toLocaleDateString()}</strong>. Visit Billing to keep your profile live.
+                      </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      {canUseProFeatures ? (
+                        <button
+                          onClick={handleManageBilling}
+                          className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
+                        >
+                          Cancel or Manage Alpine Pro Subscription
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => router.push("/upgrade")}
+                          className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
+                        >
+                          Upgrade to Alpine Pro
+                        </button>
+                      )}
+                    </div>
+                    {!canUseProFeatures && !trialActive && (
+                      <p className="text-sm text-gray-400">
+                        Upgrade to Alpine Pro to make your artist page public again.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </section>
+        )}
+
+        <section className="bg-gray-800 p-6 rounded-2xl shadow space-y-4">
+          <h3 className="font-semibold text-xl">Support Alpine Groove Guide</h3>
+          <p className="text-sm text-gray-300">
+            Help keep the directory running and discoverable for local artists.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={() => handleDonate("payment")}
+              className="bg-pink-600 hover:bg-pink-700 text-white py-2 rounded font-semibold"
+            >
+              💵 Send a $7 Tip
+            </button>
+            <button
+              onClick={() => handleDonate("subscription")}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-semibold"
+            >
+              💫 $7/Month Membership
+            </button>
           </div>
-        </div>
+        </section>
+
+        {message && <div className="text-center text-sm text-red-400">{message}</div>}
       </div>
     </div>
   );

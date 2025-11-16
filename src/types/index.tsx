@@ -3,6 +3,7 @@ export interface UserType {
   first_name: string;
   last_name: string;
   displayName?: string;
+  display_name?: string;
   email: string;
   password?: string;
   is_admin: boolean;
