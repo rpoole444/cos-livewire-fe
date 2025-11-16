@@ -1,18 +1,14 @@
-import Header from '@/components/Header';
-
 const TermsPage = () => {
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      <Header />
-      <main className="flex-1 px-6 py-12">
-        <div className="max-w-4xl mx-auto space-y-6">
+    <div className="px-6 py-12 text-white">
+      <div className="max-w-4xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold">Terms of Service</h1>
           <p className="text-gray-300">
             Welcome to Alpine Groove Guide. We connect musicians, venues, and the community with show listings, artist profiles, and Alpine Pro subscriptions. By using the site you agree to these terms.
           </p>
 
-          <section className="space-y-3">
-            <h2 className="text-2xl font-semibold">Accounts &amp; Responsibilities</h2>
+        <section className="space-y-3">
+          <h2 className="text-2xl font-semibold">Accounts &amp; Responsibilities</h2>
             <p className="text-gray-300">
               Keep your login secure and only provide accurate information. You are responsible for everything posted from your account and for complying with local laws.
             </p>
@@ -45,8 +41,7 @@ const TermsPage = () => {
               Questions? Reach us at <a href="mailto:support@alpinegrooveguide.com" className="underline text-blue-300">support@alpinegrooveguide.com</a>.
             </p>
           </section>
-        </div>
-      </main>
+      </div>
     </div>
   );
 };

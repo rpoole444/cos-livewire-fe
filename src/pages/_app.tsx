@@ -2,8 +2,8 @@ import React            from 'react';
 import type { AppProps } from 'next/app';
 
 import { AuthProvider } from '@/context/AuthContext';
-import SiteFooter from '@/components/SiteFooter';
 import ClientOnly       from '@/components/ClientOnly';
+import Layout from '@/components/Layout';
 import Router from 'next/router';
 import NProgress from 'nprogress';
 import '@/styles/globals.css';
@@ -24,10 +24,9 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ClientOnly>
       <AuthProvider>
-        <>
+        <Layout>
           <Component {...pageProps} />
-          <SiteFooter />
-        </>
+        </Layout>
       </AuthProvider>
     </ClientOnly>
   );

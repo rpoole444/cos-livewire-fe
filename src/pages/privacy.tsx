@@ -1,11 +1,7 @@
-import Header from '@/components/Header';
-
 const PrivacyPage = () => {
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
-      <Header />
-      <main className="flex-1 px-6 py-12">
-        <div className="max-w-4xl mx-auto space-y-6">
+    <div className="px-6 py-12 text-white">
+      <div className="max-w-4xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold">Privacy Policy</h1>
           <p className="text-gray-300">
             This policy explains how Alpine Groove Guide collects, uses, and protects your information when you create an account, publish an artist profile, or subscribe to Alpine Pro.
@@ -54,8 +50,7 @@ const PrivacyPage = () => {
               Reach us at <a href="mailto:support@alpinegrooveguide.com" className="underline text-blue-300">support@alpinegrooveguide.com</a> with privacy questions.
             </p>
           </section>
-        </div>
-      </main>
+      </div>
     </div>
   );
 };
