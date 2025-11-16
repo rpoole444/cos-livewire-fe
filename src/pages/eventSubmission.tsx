@@ -456,32 +456,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       </main>
     </div>
   ) : (
-  ) : (
-                `${events.length > 1 ? 'Submit Events' : 'Submit Event'}`
-              )}
-            </button>
-
-            <Link
-              href="/"
-              className={`text-indigo-600 font-medium underline ${isSubmitting ? 'pointer-events-none opacity-40' : 'hover:text-indigo-800'}`}
-            >
-              Back to Homepage
-            </Link>
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isSubmitting}
-              className={`text-red-500 hover:underline mt-2 sm:mt-0 ${isSubmitting && 'opacity-40 cursor-not-allowed'}`}
-            >
-              Logout
-            </button>
-          </div>
-        </form>
-
-      </div>
-    </div>
-  ) : (
     <>
       <h1>Please Sign In or Go Back!</h1>
       <Link href='/' className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Go Back</Link>
