@@ -3,13 +3,12 @@ import React, { useState, useEffect } from "react";
 import { generateDate, months } from "../util/calendar";
 import cn from "../util/cn";
 import { GrFormNext, GrFormPrevious } from "react-icons/gr";
-import { Event } from "@/interfaces/interfaces";
-import { parseLocalDayjs } from "@/util/dateHelper";
+import { CustomEvent } from "@/interfaces/interfaces";
 
 interface CalendarProps {
   currentDate: Dayjs;
   onDateSelect: (date: Dayjs) => void;
-  events: Event[];
+  events: CustomEvent[];
 }
 
 export default function Calendar({
@@ -17,6 +16,13 @@ export default function Calendar({
   onDateSelect,
   events,
 }: CalendarProps) {
+  console.log(
+    "[EventsCalendar] render",
+    "currentDate=",
+    currentDate.format("YYYY-MM-DD"),
+    "events.length=",
+    events?.length ?? 0
+  );
   const days = ["S", "M", "T", "W", "T", "F", "S"];
   const [viewDate, setViewDate] = useState<Dayjs>(currentDate);
 
@@ -40,8 +46,24 @@ export default function Calendar({
     onDateSelect(now);
   };
 
-  const getEventsForDate = (date: Dayjs) =>
-    events.filter((event) => parseLocalDayjs(event.date).isSame(date, "day"));
+  const getEventsForDate = (date: Dayjs) => {
+    if (!events || events.length === 0) return [];
+
+    const matches = events.filter((event) => dayjs(event.date).isSame(date, "day"));
+
+    if (matches.length > 0) {
+      console.log(
+        "[EventsCalendar] getEventsForDate matched",
+        matches.length,
+        "event(s) for",
+        date.format("YYYY-MM-DD"),
+        "titles=",
+        matches.map((e) => e.title)
+      );
+    }
+
+    return matches;
+  };
 
   return (
     <div className="text-white">

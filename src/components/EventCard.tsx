@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import React from "react";
 
 type EventCardProps = {
@@ -39,8 +40,8 @@ const EventCard: React.FC<EventCardProps> = ({
     <Wrapper {...wrapperProps} className={slug ? "group block" : undefined}>
       <article className="flex gap-3 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow-sm transition hover:border-emerald-400/80 hover:bg-slate-900 hover:shadow-emerald-500/25">
         {imageUrl && (
-          <div className="hidden h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border border-slate-800 sm:block">
-            <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
+          <div className="hidden h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border border-slate-800 sm:block relative">
+            <Image src={imageUrl} alt={title} fill className="object-cover" />
           </div>
         )}
 

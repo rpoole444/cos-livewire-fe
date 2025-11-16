@@ -17,7 +17,7 @@ import { Event } from '@/interfaces/interfaces';
 import { parseMSTDate, parseLocalDayjs } from '@/util/dateHelper';
 import EventCard from '@/components/EventCard';
 
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 
 dayjs.extend(isSameOrAfter);
@@ -69,6 +69,7 @@ export default function Home() {
     (async () => {
       try {
         const data = await getEvents();
+        console.log("[Home] fetched events from API:", data.length);
         const approved = data
           .filter((e: any) => e.is_approved)
           .sort((a: any, b: any) =>
@@ -103,6 +104,32 @@ export default function Home() {
       resultsRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [events, selectedDate, searchQuery, searchAllUpcoming]);
+
+  console.log(
+    "[Home] events from props:",
+    events.length,
+    "first3=",
+    events.slice(0, 3).map((e) => ({
+      id: e.id,
+      title: e.title,
+      date: e.date,
+      start_time: e.start_time,
+    }))
+  );
+
+  console.log(
+    "[Home] filteredEvents:",
+    filteredEvents.length,
+    "currentDate=",
+    selectedDate.format("YYYY-MM-DD")
+  );
+
+  const handleDateSelect = (date: Dayjs) => {
+    console.log("[Home] handleDateSelect", date.format("YYYY-MM-DD"));
+    setSelectedDate(date);
+    setSearchQuery('');
+    setSearchAllUpcoming(false);
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
@@ -145,11 +172,7 @@ export default function Home() {
               <EventsCalendar
                 currentDate={selectedDate}
                 events={events}
-                onDateSelect={(date) => {
-                  setSelectedDate(date);
-                  setSearchQuery('');
-                  setSearchAllUpcoming(false);
-                }}
+                onDateSelect={handleDateSelect}
               />
             </aside>
 
@@ -219,6 +242,13 @@ export default function Home() {
                         const startTimeISO = event.start_time
                           ? `${event.date}T${event.start_time}`
                           : event.date;
+                        console.log("[Home] rendering EventCard", {
+                          id: event.id,
+                          title: event.title,
+                          date: event.date,
+                          start_time: event.start_time,
+                          startTimeISO,
+                        });
                         return (
                           <EventCard
                             key={event.id}

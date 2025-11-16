@@ -20,6 +20,11 @@ const res = await fetch(`${API_BASE_URL}/api/events`, {
   const sortedEvents = data.sort((a :any, b :any) => {
     return parseMSTDate(b.date).getTime() - parseMSTDate(a.date).getTime()
   })
+  console.log("[API:getEvents] responding with", sortedEvents.length, "event(s). date range:",
+    sortedEvents.length
+      ? { min: sortedEvents[sortedEvents.length - 1].date, max: sortedEvents[0].date }
+      : "none"
+  );
   return sortedEvents
 }
 
