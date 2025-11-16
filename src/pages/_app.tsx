@@ -2,6 +2,7 @@ import React            from 'react';
 import type { AppProps } from 'next/app';
 
 import { AuthProvider } from '@/context/AuthContext';
+import SiteFooter from '@/components/SiteFooter';
 import ClientOnly       from '@/components/ClientOnly';
 import Router from 'next/router';
 import NProgress from 'nprogress';
@@ -23,7 +24,10 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   return (
     <ClientOnly>
       <AuthProvider>
-        <Component {...pageProps} />
+        <>
+          <Component {...pageProps} />
+          <SiteFooter />
+        </>
       </AuthProvider>
     </ClientOnly>
   );

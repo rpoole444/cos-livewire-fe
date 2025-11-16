@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Header from "@/components/Header";
 import Image from "next/image";
+import Link from "next/link";
 import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 
@@ -631,24 +632,37 @@ const startAccountSetup = () => {
                 </div>
               )}
               {canUseProFeatures ? (
-                <button
-                  onClick={handleManageBilling}
-                  className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold w-full"
-                >
-                  Manage Subscription
-                </button>
+                <>
+                  <button
+                    onClick={handleManageBilling}
+                    className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold w-full"
+                  >
+                    Manage Subscription
+                  </button>
+                  <p className="mt-2 text-xs text-gray-400">
+                    You can manage or cancel your subscription anytime in the Billing Portal. Pro access continues until the end of your current billing period.
+                  </p>
+                </>
               ) : (
-                <button
-                  onClick={() => router.push("/upgrade")}
-                  className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold w-full"
-                >
-                  Upgrade to Alpine Pro
-                </button>
-              )}
-              {!canUseProFeatures && trialActive && (
-                <p className="text-xs text-gray-400">
-                  Upgrade before your trial ends to keep your artist tools active.
-                </p>
+                <>
+                  <button
+                    onClick={() => router.push("/upgrade")}
+                    className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold w-full"
+                  >
+                    Upgrade to Alpine Pro
+                  </button>
+                  <p className="mt-2 text-xs text-gray-400">
+                    By upgrading, you agree to our{" "}
+                    <Link href="/terms" className="underline hover:text-gray-200">
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/privacy" className="underline hover:text-gray-200">
+                      Privacy Policy
+                    </Link>
+                    . You can cancel anytime in the Billing Portal; Pro access continues until the end of your current billing period.
+                  </p>
+                </>
               )}
             </section>
           )}
