@@ -15,7 +15,7 @@ const TrialBanner: React.FC<TrialBannerProps> = (props) => {
 
   const isOwner = props.artist_user_id ? user?.id === props.artist_user_id : true;
   const trialEndStr = props.trial_ends_at ?? user?.trial_ends_at ?? null;
-  const isPro = (props.is_pro ?? user?.is_pro) === true;
+  const isPro = (props.is_pro ?? user?.pro_active) === true;
 
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
 

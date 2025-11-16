@@ -15,7 +15,7 @@ interface AuthContextType {
   logout: () => void;
   updateUser: (updatedUser: UserType) => void;
   loading: boolean;
-  refetchUser: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 }
 
 const defaultContext: AuthContextType = {
@@ -24,7 +24,7 @@ const defaultContext: AuthContextType = {
   logout: () => {},
   updateUser: () => {},
   loading: true,
-  refetchUser: async () => {},
+  refreshSession: async () => {},
 };
 
 const AuthContext = createContext<AuthContextType>(defaultContext);
@@ -69,8 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profile_picture: profilePicData.profile_picture_url || null,
       trial_ends_at: data.user.trial_ends_at || null,
       trial_active: data.user.trial_active || null,
-      // Parse and include `pro_cancelled_at` in the user context so we can check if Pro access is still valid.
-      pro_cancelled_at: data.user.pro_cancelled_at || null,
+      pro_active: data.user.pro_active ?? false,
+      pro_cancelled_at: data.user.pro_cancelled_at ?? null,
     };
   }, []);
 
@@ -79,8 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const userData = await fetchUserWithExtras();
         if (userData) {
-          setUser(userData);
-          console.log("setUser payload:", userData);
+          const payload = userData;
+          setUser(payload);
+          console.log('setUser payload:', payload);
         }
       } catch (err) {
         console.error('Error fetching auth status:', err);
@@ -122,23 +123,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       top_music_genres: genres,
       profile_picture: profileData.profile_picture_url,
       trial_ends_at: data.user.trial_ends_at || null,
-      // Add `pro_cancelled_at` so we can determine if Pro access is still valid after cancellation.
-      pro_cancelled_at: data.user.pro_cancelled_at || null,
+      pro_active: data.user.pro_active ?? false,
+      pro_cancelled_at: data.user.pro_cancelled_at ?? null,
     };
 
-    setUser(fullUser);
-    console.log("setUser payload:", fullUser);
+    const payload = fullUser;
+    setUser(payload);
+    console.log('setUser payload:', payload);
   };
 
-  const refetchUser = useCallback(async () => {
+  const refreshSession = useCallback(async () => {
     try {
       const userData = await fetchUserWithExtras();
       if (userData) {
-        setUser(userData);
-        console.log("✅ refetchUser payload:", userData);
+        const payload = userData;
+        setUser(payload);
+        console.log('setUser payload:', payload);
       }
     } catch (err) {
-      console.error("Error in refetchUser:", err);
+      console.error('Error in refreshSession:', err);
     }
   }, [fetchUserWithExtras]);
 
@@ -164,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, updateUser, refetchUser, loading }}
+      value={{ user, login, logout, updateUser, refreshSession, loading }}
     >
       {children}
     </AuthContext.Provider>

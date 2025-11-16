@@ -12,7 +12,7 @@ const topGenres = [
 ];
 
 export default function ArtistSignupPage() {
-  const { user, refetchUser } = useAuth();
+  const { user, refreshSession } = useAuth();
   const router = useRouter();
 
   const trialActive = isTrialActive(user?.trial_ends_at);
@@ -94,7 +94,7 @@ useEffect(() => {
   (async () => {
     if (success === 'true' && artist_id) {
       try {
-        await refetchUser(); // now is_pro should be true
+        await refreshSession(); // now is_pro should be true
         await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist_id}/publish`, {
           method: 'PUT',
           credentials: 'include',
@@ -164,7 +164,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         method: "PUT",
         credentials: "include",
       });
-      await refetchUser();
+      await refreshSession();
       router.push('/UserProfile?submitted=true');
       return;
     }
@@ -192,7 +192,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         const pBody = await pubRes.json().catch(() => null);
         throw new Error(pBody?.message || "Could not publish after starting trial");
       }
-      await refetchUser();
+      await refreshSession();
       router.push(`/UserProfile?trial=active&pending=true`);
       return;
     }

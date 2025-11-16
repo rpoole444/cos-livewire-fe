@@ -28,7 +28,7 @@ type ArtistProfileStatus = {
 };
 
 const UserProfile: React.FC = () => {
-  const { user, loading, updateUser, refetchUser } = useAuth();
+  const { user, loading, updateUser, refreshSession } = useAuth();
   const router = useRouter();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -53,10 +53,11 @@ const UserProfile: React.FC = () => {
  const [hasRefetched, setHasRefetched] = useState(false);
 
 const trialActive = !!user?.trial_ends_at && isTrialActive(user.trial_ends_at);
-const trialStarted = !!user?.trial_ends_at;
-const hasProAccess = !!user?.is_pro || trialActive;
+const isProActive = !!user?.pro_active;
+const canUseProFeatures = isProActive;
+const proCancelledAt = user?.pro_cancelled_at ? new Date(user.pro_cancelled_at) : null;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
-const trialExpired = !!user?.trial_ends_at && !trialActive && !user?.is_pro;
+const trialExpired = !!user?.trial_ends_at && !trialActive && !isProActive;
 
   const [formError, setFormError] = useState("");
 
@@ -116,26 +117,26 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !user?.is_pro;
     }
   }, [user?.id]);
 
-  // If redirected from Stripe, fetch updated user info once
+  // Refresh auth/session info once per mount (and surface Stripe toasts if query flags exist)
   useEffect(() => {
     if (!router.isReady || refetchedOnce.current) return;
 
     const { success, trial } = router.query;
 
     const run = async () => {
+      await refreshSession();
+
+      if (success === 'true') {
+        setShowSuccessToast(true);
+        setTimeout(() => setShowSuccessToast(false), 5000);
+      }
+
+      if (trial === 'active') {
+        setShowTrialToast(true);
+        setTimeout(() => setShowTrialToast(false), 5000);
+      }
+
       if (success === 'true' || trial === 'active') {
-        await refetchUser();
-
-        if (success === 'true') {
-          setShowSuccessToast(true);
-          setTimeout(() => setShowSuccessToast(false), 5000);
-        }
-
-        if (trial === 'active') {
-          setShowTrialToast(true);
-          setTimeout(() => setShowTrialToast(false), 5000);
-        }
-
         router.replace({ pathname: router.pathname, query: {} }, undefined, { shallow: true });
       }
 
@@ -144,7 +145,7 @@ const trialExpired = !!user?.trial_ends_at && !trialActive && !user?.is_pro;
     };
 
     run();
-  }, [router.isReady, refetchUser]);
+  }, [router.isReady, router.query, refreshSession]);
   
 
   // Once user is available, populate form values
@@ -368,10 +369,10 @@ useEffect(() => {
   // temporary debug – remove after verifying once
   console.log('trial_ends_at:', user?.trial_ends_at,
               'trialActive:', trialActive,
-              'is_pro:', user?.is_pro,
+              'pro_active:', user?.pro_active,
               'hasArtistProfile:', hasArtistProfile,
               'isApproved:', isApproved);
-}, [user?.trial_ends_at, trialActive, user?.is_pro, hasArtistProfile, isApproved]);
+}, [user?.trial_ends_at, trialActive, user?.pro_active, hasArtistProfile, isApproved]);
 
 
 // after
@@ -389,7 +390,13 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
-      <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.is_pro} />
+      <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.pro_active} />
+      {isProActive && proCancelledAt && (
+        <div className="rounded-md border border-yellow-400 bg-yellow-50 text-yellow-900 px-3 py-2 text-sm mb-3 max-w-xl mx-auto">
+          Your Alpine Pro subscription is scheduled to end on{' '}
+          <strong>{proCancelledAt.toLocaleDateString()}</strong>. To keep your profile public and listed, renew your subscription in Billing.
+        </div>
+      )}
       {trialActive && !hasArtistProfile && <ActiveTrialNoProfileBanner />}
       {showSuccessToast && (
         <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow mb-4 max-w-xl mx-auto">
@@ -406,7 +413,7 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
           ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
         </div>
       )}
-      {!hasProAccess && (
+      {!canUseProFeatures && !trialActive && (
         <div className="text-center mb-4">
           {trialActive ? (
             <Link href="/artist-signup?from=profile" className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded font-semibold">
@@ -422,7 +429,7 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
       <div className="max-w-5xl mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
           🎤 Profile: {user.displayName}
-          {user?.is_pro ? (
+          {isProActive ? (
             <span className="inline-block bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
               Alpine Pro Member
             </span>
@@ -539,7 +546,7 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
               >
                 Back to Home
               </button>
-              {user?.is_pro && (
+              {canUseProFeatures && (
                 <button
                   onClick={handleManageBilling}
                   className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
@@ -566,7 +573,7 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
                   {restoreError && canRestoreProfile && (
                     <p className="text-xs text-red-400 mt-1">{restoreError}</p>
                   )}
-                  {!hasProAccess && (
+                  {!canUseProFeatures && !trialActive && (
                     <p className="text-xs text-gray-400 mt-1">
                       Get 30 days of free access to Alpine Pro features — no credit card required.
                     </p>
@@ -576,7 +583,7 @@ const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
 
               {hasArtistProfile ? (
                 isApproved ? (
-                  (trialActive || user?.is_pro) ? (
+                  (trialActive || canUseProFeatures) ? (
                     <button
                       onClick={() => router.push(`/artists/${artistSlug}?trial=active`)}
                       className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
