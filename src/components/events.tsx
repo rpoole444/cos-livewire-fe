@@ -1,5 +1,5 @@
 import React from 'react';
-import EventCard from './EventCard';
+import EventDetailCard from './EventDetailCard';
 import { CustomEvent } from '@/interfaces/interfaces';
 import { AiOutlineCalendar } from 'react-icons/ai';
 import Image from 'next/image';
@@ -44,7 +44,7 @@ const Events: React.FC<EventsProps> = ({ events }) => {
           <ul className="space-y-6">
           {events.map(event => (
             <li key={event.id}>
-                <EventCard
+                <EventDetailCard
                   event={event}
                   handleCardClick={(id) => router.push(`/eventRouter/${event.slug}`)}
                   handleDelete={isAdmin ? handleDelete : undefined}

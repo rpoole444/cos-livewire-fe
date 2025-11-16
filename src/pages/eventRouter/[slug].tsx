@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { fetchEventDetails, getEvents } from '../api/route';
 import Header from '@/components/Header';
-import EventCard from '@/components/EventCard';
+import EventDetailCard from '@/components/EventDetailCard';
 import WelcomeUser from '@/components/WelcomeUser';
 import UpcomingShows from '@/components/UpcomingShows';
 import LoginForm from '@/components/login';
@@ -55,7 +55,7 @@ const EventDetailPage = ({ event, events }: Props) => {
         </div>
         <main className="container mx-auto p-6 lg:flex gap-8">
           <section className="flex-1">
-            <EventCard event={event} />
+            <EventDetailCard event={event} />
              {/* edit-button for owner or admin */}
             {user && (user.id === event.user_id || user.is_admin) && (
               <Link href={`/events/edit/${event.id}`} passHref>

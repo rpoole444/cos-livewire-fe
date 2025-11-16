@@ -4,19 +4,18 @@ import Image from 'next/image';
 import { Switch } from '@headlessui/react';
 import { Search, CalendarSearch } from 'lucide-react';
 import Link from 'next/link';
-import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import LoginForm from '@/components/login';
 import RegistrationForm from '@/components/registration';
 import WelcomeUser from '@/components/WelcomeUser';
 import EventsCalendar from '@/components/EventsCalendar';
-import Events from '@/components/events';
 import UpcomingShows from '@/components/UpcomingShows';
 import { useAuth } from '@/context/AuthContext';
 import { useHomeState } from '@/hooks/useHomeState';
 import { getEvents } from './api/route';
 import { Event } from '@/interfaces/interfaces';
 import { parseMSTDate, parseLocalDayjs } from '@/util/dateHelper';
+import EventCard from '@/components/EventCard';
 
 import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
@@ -107,7 +106,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
-      <Header />
       {showHero && (
         <div className="animate-fadeIn transition-opacity duration-700 ease-in-out">
           <HeroSection user={user} setAuthMode={switchAuthMode} />
@@ -198,12 +196,44 @@ export default function Home() {
                 </p>
               )}
 
-              <div className={classNames(
-                'transition-opacity duration-500',
-                searchAllUpcoming && searchQuery ? 'opacity-100' : 'opacity-90'
-              )}>
+              <div
+                className={classNames(
+                  "transition-opacity duration-500",
+                  searchAllUpcoming && searchQuery ? "opacity-100" : "opacity-90"
+                )}
+              >
                 {filteredEvents.length ? (
-                  <Events events={filteredEvents} />
+                  <section className="mx-auto max-w-6xl px-0 pb-10">
+                    <header className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <h2 className="text-2xl font-semibold text-slate-50">
+                          Live Music Calendar
+                        </h2>
+                        <p className="text-sm text-slate-400">
+                          Discover shows across Colorado Springs and the Front Range.
+                        </p>
+                      </div>
+                    </header>
+                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                      {filteredEvents.map((event) => {
+                        const startTimeISO = event.start_time
+                          ? `${event.date}T${event.start_time}`
+                          : event.date;
+                        return (
+                          <EventCard
+                            key={event.id}
+                            title={event.title}
+                            slug={event.slug}
+                            startTime={startTimeISO}
+                            city={event.location || undefined}
+                            venueName={event.venue_name}
+                            imageUrl={event.poster || undefined}
+                            isFeatured={(event as any).is_featured}
+                          />
+                        );
+                      })}
+                    </div>
+                  </section>
                 ) : (
                   <div className="text-center mt-12 flex flex-col items-center gap-6">
                     <Image

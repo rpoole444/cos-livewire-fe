@@ -18,25 +18,25 @@ export default function Calendar({
   events,
 }: CalendarProps) {
   const days = ["S", "M", "T", "W", "T", "F", "S"];
-  const [today, setToday] = useState<Dayjs>(currentDate);
+  const [viewDate, setViewDate] = useState<Dayjs>(currentDate);
 
   useEffect(() => {
-    setToday(currentDate);
+    setViewDate(currentDate);
   }, [currentDate]);
 
   const handleNext = () => {
-    const newDate = today.add(1, "month");
-    setToday(newDate);
+    const newDate = viewDate.add(1, "month");
+    setViewDate(newDate);
   };
 
   const handlePrevious = () => {
-    const newDate = today.subtract(1, "month");
-    setToday(newDate);
+    const newDate = viewDate.subtract(1, "month");
+    setViewDate(newDate);
   };
 
   const handleToday = () => {
     const now = dayjs();
-    setToday(now);
+    setViewDate(now);
     onDateSelect(now);
   };
 
@@ -46,11 +46,11 @@ export default function Calendar({
   return (
     <div className="text-white">
       {/* Header & Navigation */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">
-          {months[today.month()]} {today.year()}
+      <div className="flex justify-between items-center mb-3">
+        <h1 className="text-xl font-semibold">
+          {months[viewDate.month()]} {viewDate.year()}
         </h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 text-slate-200">
           <GrFormPrevious
             className="w-6 h-6 cursor-pointer hover:scale-110 transition"
             onClick={handlePrevious}
@@ -58,7 +58,7 @@ export default function Calendar({
           />
           <button
             onClick={handleToday}
-            className="text-sm px-3 py-1 border border-gray-500 rounded hover:bg-blue-500 hover:text-white transition"
+            className="rounded-full border border-slate-700 px-3 py-1 text-xs font-medium text-slate-200 hover:border-emerald-400 hover:text-white transition"
           >
             Today
           </button>
@@ -78,24 +78,27 @@ export default function Calendar({
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-sm">
-        {generateDate(today.month(), today.year()).map(({ date, currentMonth }, index) => {
+        {generateDate(viewDate.month(), viewDate.year()).map(({ date, currentMonth }, index) => {
           const eventsForDate = getEventsForDate(date);
           const hasEvents = eventsForDate.length > 0;
           const title = hasEvents
             ? eventsForDate.map((e) => e.title).join(", ")
             : undefined;
+          const isSelected = currentDate.isSame(date, "day");
+          const isToday = dayjs().isSame(date, "day");
 
           return (
             <div key={index} className="p-2 text-center">
               <button
                 onClick={() => onDateSelect(date)}
                 className={cn(
-                  "rounded-full w-10 h-10 flex items-center justify-center transition select-none",
-                  currentMonth ? "text-white" : "text-gray-400",
-                  today.isSame(date, "day") && "bg-blue-600 text-white",
-                  currentDate.isSame(date, "day") &&
-                    "ring ring-blue-400 bg-blue-100 text-black hover:text-black hover:bg-blue-100",
-                  hasEvents && "border-2 border-yellow-400"
+                  "rounded-full w-10 h-10 flex items-center justify-center transition select-none border border-transparent",
+                  currentMonth ? "text-slate-200" : "text-slate-600",
+                  isToday && "border border-emerald-400/60",
+                  isSelected
+                    ? "bg-emerald-500 text-slate-950 font-semibold shadow shadow-emerald-500/30"
+                    : "hover:border-emerald-400/60",
+                  hasEvents && !isSelected && "border border-purple-400/40"
                 )}
                 aria-label={
                   hasEvents
@@ -111,18 +114,24 @@ export default function Calendar({
         })}
       </div>
 
-      {/* Legend */}
+      <div className="mt-3 text-xs text-slate-400">
+        Showing events for{" "}
+        <span className="font-semibold text-slate-100">
+          {currentDate.format("dddd, MMM D, YYYY")}
+        </span>
+      </div>
+
       <div className="mt-4 text-sm text-gray-300 space-y-1">
         <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full bg-blue-600"></span>
+          <span className="inline-block w-3 h-3 rounded-full border border-emerald-400"></span>
           <span>Today</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full border-2 border-yellow-400"></span>
+          <span className="inline-block w-3 h-3 rounded-full border-2 border-purple-400/70"></span>
           <span>Has events</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full bg-blue-100 border border-blue-400"></span>
+          <span className="inline-block w-3 h-3 rounded-full bg-emerald-500"></span>
           <span>Selected</span>
         </div>
       </div>

@@ -1,214 +1,69 @@
 import Link from "next/link";
-import React, { useState } from "react";
-import Image from "next/image";
-import { Event } from "@/interfaces/interfaces";
-import { useRouter } from "next/router";
-import { UserType } from "@/types";
 
-interface EventCardProps {
-  event: Event;
-  handleCardClick?: (id: number) => void;
-  handleDelete?: (id: number) => void;
-  user?: UserType | null;
-}
-
-const formatDate = (dateString: string) => {
-  try {
-    const [yyyy, mm, dd] = dateString.split("T")[0].split("-");
-    const localDate = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-    return localDate.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      timeZone: "America/Denver",
-    });
-  } catch (error) {
-    console.error("Error formatting date:", error);
-    return "";
-  }
-};
-
-const formatTime = (timeString: string) => {
-  try {
-    return new Date(`1970-01-01T${timeString}`).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  } catch (error) {
-    console.error("Error formatting time:", error);
-    return timeString;
-  }
+type EventCardProps = {
+  id?: number | string;
+  title: string;
+  slug?: string | null;
+  startTime: string;
+  city?: string | null;
+  venueName?: string | null;
+  imageUrl?: string | null;
+  isFeatured?: boolean;
 };
 
 const EventCard: React.FC<EventCardProps> = ({
-  event,
-  handleCardClick,
-  handleDelete,
-  user,
+  title,
+  slug,
+  startTime,
+  city,
+  venueName,
+  imageUrl,
+  isFeatured,
 }) => {
-  const [showFullDescription, setShowFullDescription] = useState(false);
-  const toggleDescription = () => setShowFullDescription(!showFullDescription);
-  const router = useRouter();
+  const date = new Date(startTime);
+  const dow = date.toLocaleDateString(undefined, { weekday: "short" }).toUpperCase();
+  const month = date.toLocaleDateString(undefined, { month: "short" });
+  const day = date.toLocaleDateString(undefined, { day: "numeric" });
+  const time = date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 
-  const descriptionTooLong =
-    event.description && event.description.length > 140;
+  const Wrapper: any = slug ? Link : "div";
+  const wrapperProps = slug ? { href: `/eventRouter/${slug}` } : {};
 
   return (
-    <div
-      onClick={() => handleCardClick?.(event.id)}
-      className="bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition duration-300 cursor-pointer p-4"
-    >
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* Poster */}
-        {event.poster ? (
-          <div className="flex-shrink-0 w-full sm:w-[150px] h-[150px] relative">
-            <Image
-              src={event.poster}
-              alt={`${event.title} Poster`}
-              fill
-              className="object-cover rounded-md"
-            />
-          </div>
-        ) : (
-          <div className="w-full sm:w-[150px] h-[150px] bg-gray-800 flex flex-col items-center justify-center rounded-md text-center p-2">
-            <Image
-              src="/alpine_groove_guide_icon.png"
-              alt="Alpine Groove Guide Logo"
-              width={48}
-              height={48}
-              className="mb-2"
-            />
-          <p className="text-xs text-white leading-tight">
-              Go check out <strong>{event.title}</strong>!
-            </p>
+    <Wrapper {...wrapperProps} className={slug ? "group block" : undefined}>
+      <article className="flex gap-3 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow-sm transition hover:border-emerald-400/80 hover:bg-slate-900 hover:shadow-emerald-500/25">
+        {imageUrl && (
+          <div className="hidden h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border border-slate-800 sm:block">
+            <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
           </div>
         )}
-
-
-        {/* Details */}
-        <div className="flex-1 text-sm text-gray-300 space-y-1">
-          <h2 className="text-lg font-bold text-gold">{event.title}</h2>
-          <p>
-            <span className="font-semibold text-white">Date:</span>{" "}
-            {formatDate(event.date)}
-          </p>
-          {event.start_time && (
-            <p>
-              <span className="font-semibold text-white">Start:</span>{" "}
-              {formatTime(event.start_time)}
-            </p>
-          )}
-          {event.end_time && (
-            <p>
-              <span className="font-semibold text-white">End:</span>{" "}
-              {formatTime(event.end_time)}
-            </p>
-          )}
-          {event.venue_name && (
-            <p>
-              <span className="font-semibold text-white">Venue:</span>{" "}
-              {event.venue_name}
-            </p>
-          )}
-          {event.address && (
-            <p>
-              <span className="font-semibold text-white">Address:</span>{" "}
-              {event.address}
-            </p>
-          )}
-          {event.genre && (
-            <p>
-              <span className="font-semibold text-white">Genre:</span>{" "}
-              {event.genre}
-            </p>
-          )}
-          {event.ticket_price && (
-            <p>
-              <span className="font-semibold text-white">Price:</span> $
-              {event.ticket_price}
-            </p>
-          )}
-          {event.age_restriction && (
-            <p>
-              <span className="font-semibold text-white">Age:</span>{" "}
-              {event.age_restriction}
-            </p>
-          )}
-
-          {/* Description */}
-          {event.description && (
-            <div className="text-gray-400">
-              {descriptionTooLong && !showFullDescription
-                ? `${event.description.slice(0, 140)}...`
-                : event.description}
-              {descriptionTooLong && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleDescription();
-                  }}
-                  className="ml-2 text-blue-400 hover:text-blue-200 underline text-xs"
-                >
-                  {showFullDescription ? "See less" : "See more"}
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Links */}
-          <div className="mt-2 flex flex-col gap-1 text-xs">
-            {event.website && (
-              <Link
-                href={event.website}
-                target="_blank"
-                className="text-blue-400 hover:text-blue-200 underline break-words"
-              >
-                Venue Website
-              </Link>
-            )}
-            {event.website_link &&
-              event.website_link !== "http://" && (
-                <Link
-                  href={event.website_link}
-                  target="_blank"
-                  className="text-blue-400 hover:text-blue-200 underline break-words"
-                >
-                  Tickets / Event Website
-                </Link>
-              )}
-          </div>
-
-          {/* Buttons */}
-          <div className="mt-3 flex gap-2 flex-wrap">
-            {handleDelete && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm("Are you sure you want to delete this event?")) {
-                    handleDelete(event.id);
-                  }
-                }}
-                className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded text-xs"
-              >
-                Delete
-              </button>
-            )}
-            {user && (user.id === event.user_id || user.is_admin) && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  router.push(`/events/edit/${event.id}`);
-                }}
-                className="bg-blue-600 hover:bg-blue-700 text-white py-1 px-3 rounded text-xs"
-              >
-                Edit
-              </button>
+        <div className="flex flex-1 flex-col justify-between">
+          <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/80 px-2 py-0.5">
+              <span>{dow}</span>
+              <span className="h-1 w-1 rounded-full bg-slate-600" />
+              <span>
+                {month} {day}
+              </span>
+            </span>
+            <span className="text-slate-500">· {time}</span>
+            {isFeatured && (
+              <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] text-emerald-300">
+                Featured
+              </span>
             )}
           </div>
+          <h3 className="text-sm font-semibold text-slate-50 group-hover:text-white">{title}</h3>
+          {(venueName || city) && (
+            <p className="mt-1 text-xs text-slate-400">
+              {venueName && <span>{venueName}</span>}
+              {venueName && city && <span className="mx-1">•</span>}
+              {city && <span>{city}</span>}
+            </p>
+          )}
         </div>
-      </div>
-    </div>
+      </article>
+    </Wrapper>
   );
 };
 
