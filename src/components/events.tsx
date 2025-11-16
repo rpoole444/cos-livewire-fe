@@ -6,26 +6,15 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { deleteEvent } from '@/pages/api/route';
-import Link from 'next/link'; // ← Add this
 
 interface EventsProps {
   events: CustomEvent[];
-  handleCardClick?: (id: number) => void;
-  handleDelete?: (id: number) => void;
-  user?: {
-    id: number;
-    is_admin: boolean;
-  };
 }
 
 const Events: React.FC<EventsProps> = ({ events }) => {
   const router = useRouter();
   const { user } = useAuth();
   const isAdmin = user?.is_admin;
-
-  const handleCardClick = (id: number) => {
-    router.push(`/eventRouter/${id}`);
-  };
 
   const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this event?')) {
@@ -38,29 +27,29 @@ const Events: React.FC<EventsProps> = ({ events }) => {
     }
   };
 
+  if (!events || events.length === 0) {
+    return (
+      <div className="text-center text-white flex flex-col items-center justify-center py-10">
+        <AiOutlineCalendar size={48} className="mb-4" />
+        <p className="mb-4">No Events Today. Please search for more or log in to submit your event!</p>
+        <Image src="/trumpet.png" alt="Trumpet" width={200} height={200} priority />
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-gray-900 p-6 rounded-lg shadow-lg min-h-screen flex flex-col">
-        {events && events.length > 0 ? (
-          <ul className="space-y-6">
-          {events.map(event => (
-            <li key={event.id}>
-                <EventDetailCard
-                  event={event}
-                  handleCardClick={(id) => router.push(`/eventRouter/${event.slug}`)}
-                  handleDelete={isAdmin ? handleDelete : undefined}
-                  user={user}
-                />
-            </li>
-          ))}
-        </ul>
-        ) : (
-          <div className="text-center text-white flex flex-col items-center justify-center py-10">
-            <AiOutlineCalendar size={48} className="mb-4" />
-            <p className="mb-4">No Events Today. Please search for more or log in to submit your event!</p>
-            <Image src="/trumpet.png" alt="Trumpet" width={200} height={200} priority />
-          </div>
-        )}
-    </div>
+    <ul className="space-y-6">
+      {events.map(event => (
+        <li key={event.id}>
+          <EventDetailCard
+            event={event}
+            user={user}
+            handleCardClick={() => router.push(`/eventRouter/${event.slug}`)}
+            handleDelete={isAdmin ? handleDelete : undefined}
+          />
+        </li>
+      ))}
+    </ul>
   );
 };
 

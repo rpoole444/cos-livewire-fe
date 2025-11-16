@@ -1,10 +1,11 @@
 import Link from "next/link";
+import React from "react";
 
 type EventCardProps = {
   id?: number | string;
   title: string;
   slug?: string | null;
-  startTime: string;
+  startTime: string;          // ISO string: `${event.date}T${event.start_time}` or `event.date`
   city?: string | null;
   venueName?: string | null;
   imageUrl?: string | null;
@@ -21,10 +22,15 @@ const EventCard: React.FC<EventCardProps> = ({
   isFeatured,
 }) => {
   const date = new Date(startTime);
-  const dow = date.toLocaleDateString(undefined, { weekday: "short" }).toUpperCase();
+  const dow = date.toLocaleDateString(undefined, {
+    weekday: "short",
+  }).toUpperCase();
   const month = date.toLocaleDateString(undefined, { month: "short" });
   const day = date.toLocaleDateString(undefined, { day: "numeric" });
-  const time = date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  const time = date.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+  });
 
   const Wrapper: any = slug ? Link : "div";
   const wrapperProps = slug ? { href: `/eventRouter/${slug}` } : {};
@@ -37,6 +43,7 @@ const EventCard: React.FC<EventCardProps> = ({
             <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
           </div>
         )}
+
         <div className="flex flex-1 flex-col justify-between">
           <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
             <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/80 px-2 py-0.5">
@@ -53,7 +60,11 @@ const EventCard: React.FC<EventCardProps> = ({
               </span>
             )}
           </div>
-          <h3 className="text-sm font-semibold text-slate-50 group-hover:text-white">{title}</h3>
+
+          <h3 className="text-sm font-semibold text-slate-50 group-hover:text-white">
+            {title}
+          </h3>
+
           {(venueName || city) && (
             <p className="mt-1 text-xs text-slate-400">
               {venueName && <span>{venueName}</span>}

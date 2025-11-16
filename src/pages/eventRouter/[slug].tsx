@@ -55,7 +55,7 @@ const EventDetailPage = ({ event, events }: Props) => {
         </div>
         <main className="container mx-auto p-6 lg:flex gap-8">
           <section className="flex-1">
-            <EventDetailCard event={event} />
+            <EventDetailCard event={event} user={user} />
              {/* edit-button for owner or admin */}
             {user && (user.id === event.user_id || user.is_admin) && (
               <Link href={`/events/edit/${event.id}`} passHref>
