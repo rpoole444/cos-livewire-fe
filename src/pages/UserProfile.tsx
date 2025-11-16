@@ -62,8 +62,10 @@ const proCancelledAt = user?.pro_cancelled_at ? new Date(user.pro_cancelled_at) 
 const trialExpired = !!user?.trial_ends_at && !trialActive && !isProActive;
 const rawDisplayName = (user?.display_name ?? user?.displayName ?? "").trim();
 const isFirstTimeProfile = rawDisplayName.length === 0;
+const displayNameMissing = isFirstTimeProfile;
 const profileHeadingName = user?.displayName || user?.display_name || user?.email || "Your Profile";
 const canVisitPublicPage = Boolean(isApproved && (trialActive || canUseProFeatures));
+const canShowArtistWelcome = !displayNameMissing && !hasArtistProfile && !isEditing;
 
   const [formError, setFormError] = useState("");
 
@@ -184,6 +186,12 @@ const canVisitPublicPage = Boolean(isApproved && (trialActive || canUseProFeatur
       setProfilePicture(user.profile_picture || "");
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user && displayNameMissing) {
+      setIsEditing(true);
+    }
+  }, [user, displayNameMissing]);
 
   // Check for associated artist profile
  useEffect(() => {
@@ -599,32 +607,45 @@ const startAccountSetup = () => {
             </div>
 
             {!hasArtistProfile ? (
-              <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-5 space-y-3">
-                <h3 className="text-xl font-semibold">Create your artist or venue page</h3>
-                <p className="text-gray-300 text-sm">
-                  Claim your public page to share events, media, and contact info. You can upgrade to Alpine Pro whenever you’re ready.
-                </p>
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={gotoCreateProfile}
-                    className="bg-teal-500 hover:bg-teal-600 text-white py-2 rounded font-semibold"
-                  >
-                    Create Artist / Venue Page
-                  </button>
-                  {canRestoreProfile && (
-                    <button
-                      onClick={handleRestoreProfile}
-                      disabled={restoreLoading}
-                      className={`bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold ${restoreLoading ? "opacity-70 cursor-not-allowed" : ""}`}
-                    >
-                      {restoreLoading ? "Restoring…" : "Restore Previous Page"}
-                    </button>
-                  )}
-                  {restoreError && canRestoreProfile && (
-                    <p className="text-xs text-red-400">{restoreError}</p>
-                  )}
-                </div>
-              </div>
+              <>
+                {canShowArtistWelcome && (
+                  <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-5 space-y-4">
+                    <div>
+                      <h3 className="text-xl font-semibold">Welcome to Alpine Groove Guide</h3>
+                      <p className="text-gray-300 text-sm">
+                        Create your artist or venue page so fans, venues, and promoters can discover you.
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={gotoCreateProfile}
+                        className="bg-teal-500 hover:bg-teal-600 text-white py-2 rounded font-semibold"
+                      >
+                        Create Artist / Venue Page
+                      </button>
+                      {canRestoreProfile && (
+                        <button
+                          onClick={handleRestoreProfile}
+                          disabled={restoreLoading}
+                          className={`bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold ${restoreLoading ? "opacity-70 cursor-not-allowed" : ""}`}
+                        >
+                          {restoreLoading ? "Restoring…" : "Restore Previous Page"}
+                        </button>
+                      )}
+                      {restoreError && canRestoreProfile && (
+                        <p className="text-xs text-red-400">{restoreError}</p>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => accountSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                        className="text-sm text-gray-300 underline hover:text-white text-left"
+                      >
+                        Skip for now, go to your dashboard →
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <>
                 <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-5 space-y-4">
