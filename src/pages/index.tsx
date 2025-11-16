@@ -189,8 +189,8 @@ export default function Home() {
       )}
 
 
-      <div className="flex flex-1 flex-col md:flex-row gap-4 px-2 sm:px-4 lg:px-8">
-        <main className="container mx-auto px-4 md:px-8 py-6">
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-10 pt-6 lg:flex-row lg:items-start lg:gap-8">
+        <section className="flex-1 min-w-0">
           <div className="flex flex-col gap-6">
             <aside className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-700">
               <EventsCalendar
@@ -305,32 +305,33 @@ export default function Home() {
               </div>
             </section>
           </div>
-        </main>
+        </section>
 
-        <aside
-          id="auth-section"
-          className="w-full md:w-[40%] lg:w-[30%] xl:w-1/4 max-w-md bg-white p-6 shadow-xl text-black rounded-lg overflow-auto"
-        >
-          {user ? (
-            <>
-              <WelcomeUser />
-              <UpcomingShows
-                user={user}
-                userGenres={
-                  Array.isArray(user.top_music_genres)
-                    ? user.top_music_genres
-                    : JSON.parse(user.top_music_genres || '[]')
-                }
-                events={events}
-              />
-            </>
-          ) : authMode === 'login' ? (
-            <LoginForm setAuthMode={switchAuthMode} />
-          ) : (
-            <RegistrationForm setAuthMode={switchAuthMode} />
-          )}
+        <aside id="auth-section" className="w-full lg:w-[320px] xl:w-[360px] lg:flex-shrink-0">
+          <div className="lg:sticky lg:top-24">
+            <div className="bg-white p-6 shadow-xl text-black rounded-3xl">
+              {user ? (
+                <div className="flex flex-col gap-6">
+                  <WelcomeUser />
+                  <UpcomingShows
+                    user={user}
+                    userGenres={
+                      Array.isArray(user.top_music_genres)
+                        ? user.top_music_genres
+                        : JSON.parse(user.top_music_genres || '[]')
+                    }
+                    events={events}
+                  />
+                </div>
+              ) : authMode === 'login' ? (
+                <LoginForm setAuthMode={switchAuthMode} />
+              ) : (
+                <RegistrationForm setAuthMode={switchAuthMode} />
+              )}
+            </div>
+          </div>
         </aside>
-      </div>
+      </main>
     </div>
   );
 }
