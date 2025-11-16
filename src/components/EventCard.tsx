@@ -1,12 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
+import dayjs from "dayjs";
 import React from "react";
 
 type EventCardProps = {
   id?: number | string;
   title: string;
   slug?: string | null;
-  startTime: string;          // ISO string: `${event.date}T${event.start_time}` or `event.date`
+  startTime?: string | null;
   city?: string | null;
   venueName?: string | null;
   imageUrl?: string | null;
@@ -22,16 +23,17 @@ const EventCard: React.FC<EventCardProps> = ({
   imageUrl,
   isFeatured,
 }) => {
-  const date = new Date(startTime);
-  const dow = date.toLocaleDateString(undefined, {
-    weekday: "short",
-  }).toUpperCase();
-  const month = date.toLocaleDateString(undefined, { month: "short" });
-  const day = date.toLocaleDateString(undefined, { day: "numeric" });
-  const time = date.toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  const parsed = startTime ? dayjs(startTime) : null;
+  const isValidDate = parsed?.isValid() ?? false;
+
+  if (!isValidDate) {
+    console.warn("[EventCard] invalid or missing startTime", { title, startTime });
+  }
+
+  const dow = isValidDate ? parsed!.format("ddd").toUpperCase() : "";
+  const month = isValidDate ? parsed!.format("MMM") : "";
+  const day = isValidDate ? parsed!.format("D") : "";
+  const time = isValidDate ? parsed!.format("h:mm A") : "";
 
   const Wrapper: any = slug ? Link : "div";
   const wrapperProps = slug ? { href: `/eventRouter/${slug}` } : {};
@@ -47,14 +49,22 @@ const EventCard: React.FC<EventCardProps> = ({
 
         <div className="flex flex-1 flex-col justify-between">
           <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-            <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/80 px-2 py-0.5">
-              <span>{dow}</span>
-              <span className="h-1 w-1 rounded-full bg-slate-600" />
-              <span>
-                {month} {day}
+            {isValidDate ? (
+              <>
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/80 px-2 py-0.5">
+                  <span>{dow}</span>
+                  <span className="h-1 w-1 rounded-full bg-slate-600" />
+                  <span>
+                    {month} {day}
+                  </span>
+                </span>
+                <span className="text-slate-500">· {time}</span>
+              </>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/80 px-2 py-0.5 text-[10px] text-slate-400">
+                Date TBA
               </span>
-            </span>
-            <span className="text-slate-500">· {time}</span>
+            )}
             {isFeatured && (
               <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] text-emerald-300">
                 Featured

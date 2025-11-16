@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import Fuse from 'fuse.js';
 import Image from 'next/image';
 import { Switch } from '@headlessui/react';
 import { Search, CalendarSearch } from 'lucide-react';
@@ -14,7 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useHomeState } from '@/hooks/useHomeState';
 import { getEvents } from './api/route';
 import { Event } from '@/interfaces/interfaces';
-import { parseMSTDate, parseLocalDayjs } from '@/util/dateHelper';
+import { parseMSTDate } from '@/util/dateHelper';
 import EventCard from '@/components/EventCard';
 
 import dayjs, { Dayjs } from 'dayjs';
@@ -30,8 +29,8 @@ type AuthMode = 'login' | 'register';
 
 export default function Home() {
   const {
-    selectedDate,
-    setSelectedDate,
+    selectedDate: currentDate,
+    setSelectedDate: setCurrentDate,
     searchQuery,
     setSearchQuery,
   } = useHomeState();
@@ -86,24 +85,44 @@ export default function Home() {
     localStorage.setItem('searchAllUpcoming', String(searchAllUpcoming));
 
     const today = dayjs().startOf('day');
-    let targetEvents = searchAllUpcoming
-      ? events.filter((e) => parseLocalDayjs(e.date).isSameOrAfter(today))
-      : events.filter((e) => parseLocalDayjs(e.date).isSame(selectedDate, 'day'));
 
-    if (searchQuery.trim()) {
-      const fuse = new Fuse(targetEvents, {
-        keys: ['title', 'genre', 'venue_name', 'description'],
-        threshold: 0.3,
-      });
-      targetEvents = fuse.search(searchQuery).map((r) => r.item);
-    }
+    const matchesSearch = (event: Event) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        event.title.toLowerCase().includes(q) ||
+        (event.genre && event.genre.toLowerCase().includes(q)) ||
+        (event.venue_name && event.venue_name.toLowerCase().includes(q)) ||
+        (event.location && event.location.toLowerCase().includes(q))
+      );
+    };
 
-    setFilteredEvents(targetEvents);
+    const filtered = events.filter((event) => {
+      if (!matchesSearch(event)) return false;
+
+      const eventDate = dayjs(event.date);
+      if (!eventDate.isValid()) {
+        console.warn("[Home] filteredEvents: invalid event.date", {
+          id: event.id,
+          title: event.title,
+          date: event.date,
+        });
+        return false;
+      }
+
+      if (searchAllUpcoming) {
+        return eventDate.isSame(today, "day") || eventDate.isAfter(today, "day");
+      }
+
+      return eventDate.isSame(currentDate, "day");
+    });
+
+    setFilteredEvents(filtered);
 
     if (searchAllUpcoming && searchQuery && resultsRef.current) {
       resultsRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [events, selectedDate, searchQuery, searchAllUpcoming]);
+  }, [events, currentDate, searchQuery, searchAllUpcoming]);
 
   console.log(
     "[Home] events from props:",
@@ -121,12 +140,16 @@ export default function Home() {
     "[Home] filteredEvents:",
     filteredEvents.length,
     "currentDate=",
-    selectedDate.format("YYYY-MM-DD")
+    currentDate.format("YYYY-MM-DD"),
+    "searchAllUpcoming=",
+    searchAllUpcoming,
+    "searchQuery=",
+    searchQuery
   );
 
   const handleDateSelect = (date: Dayjs) => {
     console.log("[Home] handleDateSelect", date.format("YYYY-MM-DD"));
-    setSelectedDate(date);
+    setCurrentDate(date);
     setSearchQuery('');
     setSearchAllUpcoming(false);
   };
@@ -170,7 +193,7 @@ export default function Home() {
           <div className="flex flex-col gap-6">
             <aside className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-700">
               <EventsCalendar
-                currentDate={selectedDate}
+                currentDate={currentDate}
                 events={events}
                 onDateSelect={handleDateSelect}
               />
