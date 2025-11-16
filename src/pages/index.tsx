@@ -13,7 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useHomeState } from '@/hooks/useHomeState';
 import { getEvents } from './api/route';
 import { Event } from '@/interfaces/interfaces';
-import { parseMSTDate } from '@/util/dateHelper';
+import { parseLocalDayjs, parseMSTDate } from '@/util/dateHelper';
 import EventCard from '@/components/EventCard';
 
 import dayjs, { Dayjs } from 'dayjs';
@@ -100,7 +100,7 @@ export default function Home() {
     const filtered = events.filter((event) => {
       if (!matchesSearch(event)) return false;
 
-      const eventDate = dayjs(event.date);
+      const eventDate = parseLocalDayjs(event.date);
       if (!eventDate.isValid()) {
         console.warn("[Home] filteredEvents: invalid event.date", {
           id: event.id,
@@ -146,6 +146,7 @@ export default function Home() {
     "searchQuery=",
     searchQuery
   );
+
 
   const handleDateSelect = (date: Dayjs) => {
     console.log("[Home] handleDateSelect", date.format("YYYY-MM-DD"));

@@ -4,6 +4,7 @@ import { generateDate, months } from "../util/calendar";
 import cn from "../util/cn";
 import { GrFormNext, GrFormPrevious } from "react-icons/gr";
 import { CustomEvent } from "@/interfaces/interfaces";
+import { parseLocalDayjs } from "@/util/dateHelper";
 
 interface CalendarProps {
   currentDate: Dayjs;
@@ -49,7 +50,9 @@ export default function Calendar({
   const getEventsForDate = (date: Dayjs) => {
     if (!events || events.length === 0) return [];
 
-    const matches = events.filter((event) => dayjs(event.date).isSame(date, "day"));
+    const matches = events.filter((event) =>
+      parseLocalDayjs(event.date).isSame(date, "day")
+    );
 
     if (matches.length > 0) {
       console.log(
