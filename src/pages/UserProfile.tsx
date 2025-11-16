@@ -74,8 +74,26 @@ const profileHeadingName = user?.displayName || user?.display_name || user?.emai
 const canVisitPublicPage = Boolean(isApproved && (trialActive || canUseProFeatures));
 const [artistCardDismissed, setArtistCardDismissed] = useState(false);
 const canShowArtistWelcome = !needsProfileSetup && !hasArtistProfile && !isEditing && !artistCardDismissed;
-const shouldShowTrialBanner = !needsProfileSetup && !canUseProFeatures && trialActive;
-const shouldShowCancelBanner = !needsProfileSetup && canUseProFeatures && !!proCancelledAt;
+const shouldShowTrialBanner = !canUseProFeatures && trialActive;
+const shouldShowCancelBanner = canUseProFeatures && !!proCancelledAt;
+const trialEndDate = user?.trial_ends_at ? new Date(user.trial_ends_at).toLocaleDateString() : null;
+let artistStatusLabel = "No artist page";
+let artistStatusClass = "bg-gray-700 text-gray-200";
+if (hasArtistProfile) {
+  if (!isApproved) {
+    artistStatusLabel = "Pending approval";
+    artistStatusClass = "bg-yellow-200 text-yellow-900";
+  } else if (canUseProFeatures) {
+    artistStatusLabel = "Live";
+    artistStatusClass = "bg-green-200 text-green-900";
+  } else if (trialActive) {
+    artistStatusLabel = "Live (trial)";
+    artistStatusClass = "bg-blue-200 text-blue-900";
+  } else {
+    artistStatusLabel = "Hidden";
+    artistStatusClass = "bg-gray-300 text-gray-900";
+  }
+}
 
   const [formError, setFormError] = useState("");
 
@@ -481,317 +499,311 @@ const startAccountSetup = () => {
           </div>
         )}
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <section ref={accountSectionRef} className="bg-gray-800 p-6 rounded-2xl shadow space-y-6 lg:col-span-2">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-2xl font-semibold">Your Account Profile</h2>
-              <p className="text-gray-300 text-sm">
-                Update your basic info – this appears on submissions and messages from Alpine Groove Guide.
-              </p>
+        <section ref={accountSectionRef} className="bg-gray-800 p-6 rounded-2xl shadow space-y-6">
+          <div className="flex flex-col gap-1">
+            <p className="text-xs uppercase tracking-wide text-gray-400">My Account</p>
+            <h2 className="text-2xl font-semibold">Your Profile</h2>
+            <p className="text-gray-300 text-sm">
+              Update your basic info – this appears on submissions and messages from Alpine Groove Guide.
+            </p>
+            {needsProfileSetup && (
+              <span className="text-sm text-blue-200 font-semibold">Step 1: Set up your profile</span>
+            )}
+          </div>
+
+          <div className="flex flex-col md:flex-row gap-8">
+            <div className="md:w-1/3 flex justify-center">
+              {profilePicture ? (
+                <Image
+                  src={profilePicture}
+                  alt="Profile Picture"
+                  width={200}
+                  height={200}
+                  className="rounded-full w-[200px] h-[200px] object-cover"
+                />
+              ) : (
+                <div className="w-[200px] h-[200px] rounded-full bg-gray-700 flex items-center justify-center text-gray-500 text-4xl font-semibold">
+                  {rawDisplayName ? rawDisplayName.charAt(0).toUpperCase() : "?"}
+                </div>
+              )}
             </div>
 
-            <div className="flex flex-col md:flex-row gap-8">
-              <div className="md:w-1/3 flex justify-center">
-                {profilePicture ? (
-                  <Image
-                    src={profilePicture}
-                    alt="Profile Picture"
-                    width={200}
-                    height={200}
-                    className="rounded-full w-[200px] h-[200px] object-cover"
-                  />
-                ) : (
-                  <div className="w-[200px] h-[200px] rounded-full bg-gray-700 flex items-center justify-center text-gray-500 text-4xl font-semibold">
-                    {rawDisplayName ? rawDisplayName.charAt(0).toUpperCase() : "?"}
+            <div className="md:w-2/3">
+              {isEditing ? (
+                <>
+                  <label className="block mb-4">
+                    📧 Email:
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full p-2 mt-1 rounded text-black"
+                    />
+                  </label>
+                  <label className="block mb-4">
+                    Display Name:
+                    <input
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="w-full p-2 mt-1 rounded text-black"
+                    />
+                  </label>
+                  <label className="block mb-4">
+                    📝 Bio / About:
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="w-full p-2 mt-1 rounded text-black"
+                    />
+                  </label>
+                  <label className="block mb-4 font-semibold">🎶 Favorite Genres (pick up to 3):</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+                    {genresList.map((genre) => (
+                      <label key={genre} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          value={genre}
+                          checked={genres.includes(genre)}
+                          onChange={() => handleGenreChange(genre)}
+                          className="mr-2"
+                        />
+                        {genre}
+                      </label>
+                    ))}
                   </div>
-                )}
-              </div>
-
-              <div className="md:w-2/3">
-                {isEditing ? (
-                  <>
-                    <label className="block mb-4">
-                      📧 Email:
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full p-2 mt-1 rounded text-black"
-                      />
-                    </label>
-                    <label className="block mb-4">
-                      Display Name:
-                      <input
-                        type="text"
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        className="w-full p-2 mt-1 rounded text-black"
-                      />
-                    </label>
-                    <label className="block mb-4">
-                      📝 Bio / About:
-                      <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        className="w-full p-2 mt-1 rounded text-black"
-                      />
-                    </label>
-                    <label className="block mb-4 font-semibold">🎶 Favorite Genres (pick up to 3):</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
-                      {genresList.map((genre) => (
-                        <label key={genre} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            value={genre}
-                            checked={genres.includes(genre)}
-                            onChange={() => handleGenreChange(genre)}
-                            className="mr-2"
-                          />
+                  <label className="block mb-4">
+                    📷 Upload New Picture:
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="block w-full mt-1 text-sm text-gray-300"
+                    />
+                  </label>
+                </>
+              ) : (
+                <>
+                  <p className="mb-3 text-lg font-semibold">{displayName || "No display name yet"}</p>
+                  <p className="mb-2 text-sm text-gray-300">{email}</p>
+                  <p className="mb-3"><strong>About:</strong> {description || "No description"}</p>
+                  <div className="mb-4 flex flex-wrap gap-2">
+                    {genres.length > 0 ? (
+                      genres.map((genre) => (
+                        <span key={genre} className="px-3 py-1 rounded-full bg-gray-700 text-xs uppercase tracking-wide">
                           {genre}
-                        </label>
-                      ))}
-                    </div>
-                    <label className="block mb-4">
-                      📷 Upload New Picture:
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        className="block w-full mt-1 text-sm text-gray-300"
-                      />
-                    </label>
-                  </>
-                ) : (
-                  <>
-                    <p className="mb-3 text-lg font-semibold">{displayName || "No display name yet"}</p>
-                    <p className="mb-2 text-sm text-gray-300">{email}</p>
-                    <p className="mb-3"><strong>About:</strong> {description || "No description"}</p>
-                    <div className="mb-4 flex flex-wrap gap-2">
-                      {genres.length > 0 ? (
-                        genres.map((genre) => (
-                          <span key={genre} className="px-3 py-1 rounded-full bg-gray-700 text-xs uppercase tracking-wide">
-                            {genre}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-sm text-gray-400">No genres selected</span>
-                      )}
-                    </div>
-                  </>
-                )}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400">No genres selected</span>
+                    )}
+                  </div>
+                </>
+              )}
 
-                <div className="flex flex-col gap-2 mt-4">
+              <div className="flex flex-col gap-2 mt-4">
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold"
+                >
+                  {isEditing ? "Cancel" : "Edit Profile"}
+                </button>
+                {isEditing && (
                   <button
-                    onClick={() => setIsEditing(!isEditing)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold"
+                    onClick={handleSave}
+                    className="bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold"
                   >
-                    {isEditing ? "Cancel" : "Edit Profile"}
+                    Save Changes
                   </button>
-                  {isEditing && (
+                )}
+                {formError && (
+                  <div className="text-red-400 text-sm mt-2">{formError}</div>
+                )}
+                <button
+                  onClick={handleResetPassword}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded font-semibold"
+                >
+                  Reset Password
+                </button>
+                <button
+                  onClick={() => router.push("/")}
+                  className="bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold"
+                >
+                  Back to Home
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-gray-800 p-6 rounded-2xl shadow space-y-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <p className="text-xs uppercase tracking-wide text-gray-400">My Artist Presence</p>
+                <h2 className="text-2xl font-semibold">Artist Page</h2>
+              </div>
+              {needsProfileSetup && !hasArtistProfile && (
+                <span className="text-sm text-blue-200">Step 2: Create your artist page (optional)</span>
+              )}
+            </div>
+            <p className="text-gray-300 text-sm">
+              Share a public page with your shows, contact info, and media so venues and fans can find you.
+            </p>
+          </div>
+
+          {!hasArtistProfile ? (
+            canShowArtistWelcome ? (
+              <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-5 space-y-4">
+                <p className="text-gray-300 text-sm">
+                  Create your artist or venue page to showcase your work on Alpine Groove Guide.
+                </p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={gotoCreateProfile}
+                    className="bg-teal-500 hover:bg-teal-600 text-white py-2 rounded font-semibold"
+                  >
+                    Create my artist page
+                  </button>
+                  {canRestoreProfile && (
                     <button
-                      onClick={handleSave}
-                      className="bg-green-600 hover:bg-green-700 text-white py-2 rounded font-semibold"
+                      onClick={handleRestoreProfile}
+                      disabled={restoreLoading}
+                      className={`bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold ${restoreLoading ? "opacity-70 cursor-not-allowed" : ""}`}
                     >
-                      Save Changes
+                      {restoreLoading ? "Restoring…" : "Restore previous page"}
                     </button>
                   )}
-                  {formError && (
-                    <div className="text-red-400 text-sm mt-2">{formError}</div>
+                  {restoreError && canRestoreProfile && (
+                    <p className="text-xs text-red-400">{restoreError}</p>
                   )}
                   <button
-                    onClick={handleResetPassword}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-black py-2 rounded font-semibold"
+                    type="button"
+                    onClick={() => setArtistCardDismissed(true)}
+                    className="text-sm text-gray-300 underline hover:text-white text-left"
                   >
-                    Reset Password
-                  </button>
-                  <button
-                    onClick={() => router.push("/")}
-                    className="bg-gray-600 hover:bg-gray-700 text-white py-2 rounded font-semibold"
-                  >
-                    Back to Home
+                    Maybe later
                   </button>
                 </div>
               </div>
-            </div>
-          </section>
-
-          {!needsProfileSetup && (
-            <section className="bg-gray-800 p-6 rounded-2xl shadow space-y-4 h-fit">
-              <div>
-                <h2 className="text-2xl font-semibold">Status & Actions</h2>
-                <p className="text-sm text-gray-400">Manage your Alpine Pro access and billing.</p>
-              </div>
-              {shouldShowTrialBanner && (
-                <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.pro_active} />
-              )}
-              {!shouldShowTrialBanner && shouldShowCancelBanner && proCancelledAt && (
-                <div className="rounded-md border border-yellow-400 bg-yellow-50/90 text-yellow-900 px-3 py-2 text-sm">
-                  Your Alpine Pro subscription is scheduled to end on{" "}
-                  <strong>{proCancelledAt.toLocaleDateString()}</strong>.{" "}
-                  To keep your profile public and listed, renew your subscription in Billing.
-                </div>
-              )}
-              {canUseProFeatures ? (
-                <>
-                  <button
-                    onClick={handleManageBilling}
-                    className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold w-full"
-                  >
-                    Manage Subscription
-                  </button>
-                  <p className="mt-2 text-xs text-gray-400">
-                    You can manage or cancel your subscription anytime in the Billing Portal. Pro access continues until the end of your current billing period.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => router.push("/upgrade")}
-                    className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold w-full"
-                  >
-                    Upgrade to Alpine Pro
-                  </button>
-                  <p className="mt-2 text-xs text-gray-400">
-                    By upgrading, you agree to our{" "}
-                    <Link href="/terms" className="underline hover:text-gray-200">
-                      Terms of Service
-                    </Link>{" "}
-                    and{" "}
-                    <Link href="/privacy" className="underline hover:text-gray-200">
-                      Privacy Policy
-                    </Link>
-                    . You can cancel anytime in the Billing Portal; Pro access continues until the end of your current billing period.
-                  </p>
-                </>
-              )}
-            </section>
-          )}
-        </div>
-
-        {!needsProfileSetup && (
-          <section className="bg-gray-800 p-6 rounded-2xl shadow space-y-4">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-2xl font-semibold">Artist / Venue</h2>
-              <p className="text-gray-300 text-sm">
-                Manage your public listing for fans, venues, and promoters.
-              </p>
-            </div>
-
-            {!hasArtistProfile ? (
-              <>
-                {canShowArtistWelcome && (
-                  <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-5 space-y-4">
-                    <div>
-                      <h3 className="text-xl font-semibold">Welcome to Alpine Groove Guide</h3>
-                      <p className="text-gray-300 text-sm">
-                        Create your artist or venue page so fans, venues, and promoters can discover you.
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <button
-                        onClick={gotoCreateProfile}
-                        className="bg-teal-500 hover:bg-teal-600 text-white py-2 rounded font-semibold"
-                      >
-                        Create Artist / Venue Page
-                      </button>
-                      {canRestoreProfile && (
-                        <button
-                          onClick={handleRestoreProfile}
-                          disabled={restoreLoading}
-                          className={`bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-semibold ${restoreLoading ? "opacity-70 cursor-not-allowed" : ""}`}
-                        >
-                          {restoreLoading ? "Restoring…" : "Restore Previous Page"}
-                        </button>
-                      )}
-                      {restoreError && canRestoreProfile && (
-                        <p className="text-xs text-red-400">{restoreError}</p>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => setArtistCardDismissed(true)}
-                        className="text-sm text-gray-300 underline hover:text-white text-left"
-                      >
-                        Maybe later
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
             ) : (
-              <>
-                <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-5 space-y-4">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                      <p className="text-xl font-semibold">{artistDisplayName || "Your artist profile"}</p>
-                      <p className="text-sm text-gray-400">
-                        Status: {isApproved ? "Approved" : "Pending review"}
-                      </p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <button
-                        onClick={() => router.push(`/artists/${artistSlug}`)}
-                        disabled={!canVisitPublicPage}
-                        title={canVisitPublicPage ? "View your public page" : "Your page is offline until your trial or subscription is active"}
-                        className={`py-2 px-4 rounded font-semibold ${canVisitPublicPage ? "bg-purple-600 hover:bg-purple-700 text-white" : "bg-purple-900/50 text-purple-200 cursor-not-allowed"}`}
-                      >
-                        View Public Page
-                      </button>
-                      <button
-                        onClick={() => router.push(`/artists/edit/${artistSlug}`)}
-                        className="py-2 px-4 rounded font-semibold bg-gray-700 hover:bg-gray-600 text-white"
-                      >
-                        Edit Artist Profile
-                      </button>
-                    </div>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gray-900/20 border border-gray-700 rounded-xl p-4">
+                <p className="text-sm text-gray-300">
+                  Ready later? You can create your artist page whenever you like.
+                </p>
+                <button
+                  onClick={gotoCreateProfile}
+                  className="bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded font-semibold"
+                >
+                  Create my artist page
+                </button>
+              </div>
+            )
+          ) : (
+            <div className="bg-gray-900/40 border border-gray-700 rounded-xl p-5 space-y-4">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <p className="text-xl font-semibold">{artistDisplayName || "Your artist profile"}</p>
+                  <div className="mt-1">
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${artistStatusClass}`}>
+                      {artistStatusLabel}
+                    </span>
                   </div>
-
-                  {!isApproved && (
-                    <div className="bg-yellow-100 text-yellow-900 border border-yellow-400 p-4 rounded text-sm">
-                      🎷 Your artist profile is under review. You’ll be notified when it’s approved.
-                    </div>
-                  )}
-
                 </div>
-              </>
-            )}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    onClick={() => router.push(`/artists/${artistSlug}`)}
+                    disabled={!canVisitPublicPage}
+                    title={canVisitPublicPage ? "View your public page" : "Your page is offline until your trial or subscription is active"}
+                    className={`py-2 px-4 rounded font-semibold ${canVisitPublicPage ? "bg-purple-600 hover:bg-purple-700 text-white" : "bg-purple-900/50 text-purple-200 cursor-not-allowed"}`}
+                  >
+                    View public page
+                  </button>
+                  <button
+                    onClick={() => router.push(`/artists/edit/${artistSlug}`)}
+                    className="py-2 px-4 rounded font-semibold bg-gray-700 hover:bg-gray-600 text-white"
+                  >
+                    Edit artist page
+                  </button>
+                </div>
+              </div>
 
-            <div className="border-t border-gray-700 pt-4 mt-6 space-y-3">
-              <h3 className="text-lg font-semibold">Alpine Pro access</h3>
-              {canUseProFeatures ? (
-                <>
-                  <p className="text-sm text-gray-300">
-                    You currently have Alpine Pro access. Manage your subscription any time.
-                  </p>
-                  <button
-                    onClick={handleManageBilling}
-                    className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold"
-                  >
-                    Manage Subscription
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm text-gray-300">
-                    {trialActive
-                      ? "Your free trial is active. Upgrade now to keep your artist tools after it ends."
-                      : "Unlock Alpine Pro to publish and promote your artist page."}
-                  </p>
-                  <button
-                    onClick={() => router.push("/upgrade")}
-                    className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold"
-                  >
-                    Upgrade to Alpine Pro
-                  </button>
-                  {!trialActive && hasArtistProfile && (
-                    <p className="text-xs text-gray-400">
-                      Upgrade to Alpine Pro to make your artist page public again.
-                    </p>
-                  )}
-                </>
+              {!isApproved && (
+                <div className="bg-yellow-100 text-yellow-900 border border-yellow-400 p-4 rounded text-sm">
+                  🎷 Your artist profile is under review. You’ll be notified when it’s approved.
+                </div>
               )}
             </div>
-          </section>
-        )}
+          )}
+        </section>
+
+        <section className="bg-gray-800 p-6 rounded-2xl shadow space-y-4">
+            <div className="flex flex-col gap-1">
+              <p className="text-xs uppercase tracking-wide text-gray-400">Alpine Pro Status</p>
+            <h2 className="text-2xl font-semibold">Subscription</h2>
+            <p className="text-gray-300 text-sm">
+              Your access to Alpine Pro tools, billing state, and trial info.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            {shouldShowTrialBanner && (
+              <TrialBanner trial_ends_at={user?.trial_ends_at} is_pro={user?.pro_active} />
+            )}
+            {!shouldShowTrialBanner && shouldShowCancelBanner && proCancelledAt && (
+              <div className="rounded-md border border-yellow-400 bg-yellow-50/90 text-yellow-900 px-3 py-2 text-sm">
+                Your Alpine Pro subscription is scheduled to end on{" "}
+                <strong>{proCancelledAt.toLocaleDateString()}</strong>.{" "}
+                To keep your profile public and listed, renew your subscription in Billing.
+              </div>
+            )}
+            {canUseProFeatures ? (
+              <p className="text-gray-300 text-sm">Alpine Pro is active on your account.</p>
+            ) : shouldShowTrialBanner ? (
+              <p className="text-gray-300 text-sm">
+                Your free trial is active{trialEndDate ? ` until ${trialEndDate}` : ""}. Upgrade to keep your tools after the trial.
+              </p>
+            ) : (
+              <p className="text-gray-300 text-sm">
+                You are not currently subscribed to Alpine Pro.
+              </p>
+            )}
+          </div>
+
+          {canUseProFeatures ? (
+            <>
+              <button
+                onClick={handleManageBilling}
+                className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-semibold w-full"
+              >
+                Manage subscription
+              </button>
+              <p className="mt-2 text-xs text-gray-400">
+                You can manage or cancel your subscription anytime in the Billing Portal. Pro access continues until the end of your current billing period.
+              </p>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => router.push("/upgrade")}
+                className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-semibold w-full"
+              >
+                Upgrade to Alpine Pro
+              </button>
+              <p className="mt-2 text-xs text-gray-400">
+                By upgrading, you agree to our{" "}
+                <Link href="/terms" className="underline hover:text-gray-200">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="underline hover:text-gray-200">
+                  Privacy Policy
+                </Link>
+                . You can cancel anytime in the Billing Portal; Pro access continues until the end of your current billing period.
+              </p>
+            </>
+          )}
+        </section>
 
         <section className="bg-gray-800 p-6 rounded-2xl shadow space-y-4">
           <h3 className="font-semibold text-xl">Support Alpine Groove Guide</h3>
