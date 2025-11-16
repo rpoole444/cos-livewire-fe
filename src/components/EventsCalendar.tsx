@@ -119,13 +119,15 @@ export default function Calendar({
               <button
                 onClick={() => onDateSelect(date)}
                 className={cn(
-                  "rounded-full w-10 h-10 flex items-center justify-center transition select-none border border-transparent",
+                  "relative rounded-full w-10 h-10 flex items-center justify-center transition select-none border border-transparent text-sm font-semibold",
                   currentMonth ? "text-slate-200" : "text-slate-600",
-                  isToday && "border border-emerald-400/60",
                   isSelected
-                    ? "bg-emerald-500 text-slate-950 font-semibold shadow shadow-emerald-500/30"
+                    ? "bg-emerald-500 text-slate-950 shadow shadow-emerald-500/30"
                     : "hover:border-emerald-400/60",
-                  hasEvents && !isSelected && "border border-purple-400/40"
+                  hasEvents &&
+                    "ring-2 ring-purple-400/70 ring-offset-2 ring-offset-slate-900",
+                  isToday &&
+                    "outline outline-2 outline-emerald-400/70 outline-offset-2"
                 )}
                 aria-label={
                   hasEvents
