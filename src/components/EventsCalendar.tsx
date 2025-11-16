@@ -42,7 +42,7 @@ export default function Calendar({
   };
 
   const handleToday = () => {
-    const now = dayjs();
+    const now = dayjs().startOf("day");
     setViewDate(now);
     onDateSelect(now);
   };
@@ -50,9 +50,11 @@ export default function Calendar({
   const getEventsForDate = (date: Dayjs) => {
     if (!events || events.length === 0) return [];
 
-    const matches = events.filter((event) =>
-      parseLocalDayjs(event.date).isSame(date, "day")
-    );
+    const matches = events.filter((event) => {
+      const eventDate = parseLocalDayjs(event.date);
+      if (!eventDate.isValid()) return false;
+      return eventDate.isSame(date, "day");
+    });
 
     if (matches.length > 0) {
       console.log(
@@ -110,7 +112,7 @@ export default function Calendar({
             ? eventsForDate.map((e) => e.title).join(", ")
             : undefined;
           const isSelected = currentDate.isSame(date, "day");
-          const isToday = dayjs().isSame(date, "day");
+          const isToday = dayjs().startOf("day").isSame(date, "day");
 
           return (
             <div key={index} className="p-2 text-center">

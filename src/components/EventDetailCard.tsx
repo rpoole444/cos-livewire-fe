@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { Event } from "@/interfaces/interfaces";
 import { UserType } from "@/types";
+import { parseLocalDayjs } from "@/util/dateHelper";
 
 interface EventDetailCardProps {
   event: Event;
@@ -12,19 +13,13 @@ interface EventDetailCardProps {
 }
 
 const formatDate = (dateString: string) => {
-  try {
-    const [yyyy, mm, dd] = dateString.split("T")[0].split("-");
-    const localDate = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-    return localDate.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      timeZone: "America/Denver",
-    });
-  } catch (error) {
-    console.error("Error formatting date:", error);
-    return "";
+  const parsed = parseLocalDayjs(dateString);
+  if (!parsed.isValid()) {
+    console.warn("[EventDetailCard] invalid date", dateString);
+    return "Date TBA";
   }
+
+  return parsed.format("MMMM D, YYYY");
 };
 
 const formatTime = (timeString: string) => {

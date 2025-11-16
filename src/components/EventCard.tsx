@@ -6,7 +6,7 @@ import React from "react";
 type EventCardProps = {
   title: string;
   slug?: string | null;
-  startTime: string;
+  startTime?: string | null;
   city?: string | null;
   venueName?: string | null;
   imageUrl?: string | null;
@@ -24,17 +24,17 @@ const EventCard: React.FC<EventCardProps> = ({
   isFeatured,
   handleCardClick,
 }) => {
-  const parsed = dayjs(startTime);
-  const isValidDate = parsed.isValid();
+  const parsed = startTime ? dayjs(startTime) : null;
+  const isValidDate = parsed?.isValid() ?? false;
 
-  if (!isValidDate) {
+  if (startTime && !isValidDate) {
     console.warn("[EventCard] invalid or missing startTime", { title, startTime });
   }
 
-  const dow = isValidDate ? parsed.format("ddd").toUpperCase() : "";
-  const month = isValidDate ? parsed.format("MMM") : "";
-  const day = isValidDate ? parsed.format("D") : "";
-  const time = isValidDate ? parsed.format("h:mm A") : "";
+  const dow = isValidDate ? parsed!.format("ddd").toUpperCase() : "";
+  const month = isValidDate ? parsed!.format("MMM") : "";
+  const day = isValidDate ? parsed!.format("D") : "";
+  const time = isValidDate ? parsed!.format("h:mm A") : "";
 
   const handleClick = () => {
     handleCardClick?.();
