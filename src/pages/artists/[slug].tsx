@@ -113,38 +113,37 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
   if (!artist) return <div className="p-6 text-white">Artist not found</div>;
 
-  const shareUrl = `https://app.alpinegrooveguide.com/share/artist/${artist.slug}`;
+  const siteBaseUrl = 'https://app.alpinegrooveguide.com';
+  const shareUrl = `${siteBaseUrl}/share/artist/${artist.slug}`;
+  const artistUrl = `${siteBaseUrl}/artists/${artist.slug}`;
+  const description = artist.bio
+    ? artist.bio.length > 150
+      ? `${artist.bio.slice(0, 147).trim()}…`
+      : artist.bio
+    : `${artist.display_name} is featured on Alpine Groove Guide. Discover their upcoming shows.`;
+  const ogImage =
+    artist.profile_image && artist.profile_image.trim().length > 0
+      ? artist.profile_image.startsWith('http')
+        ? artist.profile_image
+        : `${siteBaseUrl}${artist.profile_image}`
+      : `${siteBaseUrl}/alpine_groove_guide_icon.png`;
   const shouldBlur = !artist.is_pro && (isTrialExpired || !artist.trial_ends_at);
 
   return (
     <>
       <Head>
-        <title>{artist.display_name} | Alpine Groove Guide</title>
-        <meta name="description" content={artist.bio?.slice(0, 150)} />
-        <meta property="og:type" content="website" />
+        <title>{artist.display_name} – Live Music on Alpine Groove Guide</title>
+        <meta name="description" content={description} />
         <meta property="og:site_name" content="Alpine Groove Guide" />
-        <meta property="og:title" content={`${artist.display_name} | Alpine Groove Guide`} />
-        <meta property="og:description" content={artist.bio?.slice(0, 150)} />
-        <meta
-          property="og:image"
-          content={
-            artist.profile_image.startsWith('http')
-              ? artist.profile_image
-              : `https://app.alpinegrooveguide.com${artist.profile_image}`
-          }
-        />
-        <meta property="og:url" content={`https://app.alpinegrooveguide.com/artists/${artist.slug}`} />
+        <meta property="og:title" content={`${artist.display_name} – Live Music on Alpine Groove Guide`} />
+        <meta property="og:description" content={description} />
+        <meta property="og:type" content="profile" />
+        <meta property="og:url" content={artistUrl} />
+        <meta property="og:image" content={ogImage} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${artist.display_name} | Alpine Groove Guide`} />
-        <meta name="twitter:description" content={artist.bio?.slice(0, 150)} />
-        <meta
-          name="twitter:image"
-          content={
-            artist.profile_image.startsWith('http')
-              ? artist.profile_image
-              : `https://app.alpinegrooveguide.com${artist.profile_image}`
-          }
-        />
+        <meta name="twitter:title" content={`${artist.display_name} – Live Music on Alpine Groove Guide`} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={ogImage} />
       </Head>
 
       <div className="min-h-screen bg-slate-950 px-4 py-8 text-slate-50">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Head from 'next/head';
 import Image from 'next/image';
 import { Switch } from '@headlessui/react';
 import { Search, CalendarSearch } from 'lucide-react';
@@ -155,8 +156,26 @@ export default function Home() {
     setSearchAllUpcoming(false);
   };
 
+  const siteUrl = 'https://app.alpinegrooveguide.com';
+  const homeDescription =
+    'Alpine Groove Guide is the Colorado Front Range live music calendar—discover concerts, browse artist pages, and share your own events in one premium feed.';
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
+    <>
+      <Head>
+        <title>Alpine Groove Guide – Live Music on the Colorado Front Range</title>
+        <meta name="description" content={homeDescription} />
+        <meta property="og:title" content="Alpine Groove Guide – Live Music on the Colorado Front Range" />
+        <meta property="og:description" content={homeDescription} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={siteUrl} />
+        <meta property="og:image" content={`${siteUrl}/alpine_groove_guide_icon.png`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Alpine Groove Guide – Live Music on the Colorado Front Range" />
+        <meta name="twitter:description" content={homeDescription} />
+        <meta name="twitter:image" content={`${siteUrl}/alpine_groove_guide_icon.png`} />
+      </Head>
+      <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
       {showHero && (
         <div className="animate-fadeIn transition-opacity duration-700 ease-in-out">
           <HeroSection user={user} setAuthMode={switchAuthMode} />
@@ -333,5 +352,6 @@ export default function Home() {
         </aside>
       </main>
     </div>
+    </>
   );
 }
