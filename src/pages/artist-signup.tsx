@@ -11,6 +11,12 @@ const topGenres = [
   'Country', 'Reggae', 'Soul', 'Funk', 'Blues', 'Indie'
 ];
 
+interface ExistingArtist {
+  slug?: string;
+  display_name?: string;
+  deleted_at?: string | null;
+}
+
 export default function ArtistSignupPage() {
   const { user, refreshSession } = useAuth();
   const router = useRouter();
@@ -46,6 +52,8 @@ const [plan, setPlan] = useState<'monthly'|'annual'>('monthly');
 
 const hasAccess = !!proActive || !!trialActive;   // already pro or in trial?
 const canStartTrial = !proActive && !trialActive; 
+const [existingArtist, setExistingArtist] = useState<ExistingArtist | null>(null);
+const [checkingExisting, setCheckingExisting] = useState(true);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -108,8 +116,34 @@ useEffect(() => {
   })();
 }, [router.isReady]); // eslint-disable-line
 
+useEffect(() => {
+  if (!user) {
+    setCheckingExisting(false);
+    return;
+  }
+  (async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, { credentials: "include" });
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data?.artist && !data.artist.deleted_at) {
+          setExistingArtist(data.artist);
+        }
+      }
+    } catch (err) {
+      console.error("[artist-signup] existing artist check failed", err);
+    } finally {
+      setCheckingExisting(false);
+    }
+  })();
+}, [user]);
+
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
+  if (existingArtist) {
+    setError("You already have an artist profile. Manage it instead.");
+    return;
+  }
   if (!user || form.genres.length === 0 || !files.profile_image) {
     setError("Missing required fields");
     return;
@@ -232,6 +266,43 @@ const handleSubmit = async (e: React.FormEvent) => {
         <TrialBanner trial_ends_at={user!.trial_ends_at} />
         <p className="mb-4">Your free trial has expired. Upgrade to Alpine Pro to manage an artist profile.</p>
         <Link href="/upgrade" className="text-blue-400 underline">Upgrade Now</Link>
+      </div>
+    );
+  }
+
+  if (checkingExisting) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
+        <p className="text-sm text-slate-400">Preparing artist signup…</p>
+      </div>
+    );
+  }
+
+  if (existingArtist?.slug) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4">
+        <div className="max-w-md rounded-3xl border border-slate-800 bg-slate-900/70 p-6 text-center space-y-4">
+          <p className="text-sm text-slate-300">
+            You already have an artist profile: <span className="font-semibold text-slate-50">{existingArtist.display_name}</span>
+          </p>
+          <div className="flex flex-col gap-2">
+            <Link
+              href={`/artists/edit/${existingArtist.slug}`}
+              className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+            >
+              Manage Artist Profile
+            </Link>
+            <Link
+              href={`/artists/${existingArtist.slug}`}
+              className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-emerald-300 hover:text-white"
+            >
+              View Public Page
+            </Link>
+            <Link href="/UserProfile" className="text-xs text-slate-400 hover:text-slate-200">
+              Return to dashboard
+            </Link>
+          </div>
+        </div>
       </div>
     );
   }

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import dayjs from 'dayjs';
 import { Event } from '@/interfaces/interfaces';
 import { UserType } from '@/types';
 import { parseLocalDayjs } from '../util/dateHelper';
-import Link from 'next/link';
 
 interface UpcomingShowsProps {
   user: UserType;

@@ -188,7 +188,11 @@ const ArtistProfilePage = ({ artist }: Props) => {
                       </span>
                     )}
                   </div>
-                  {artist.bio && <p className="text-sm text-slate-200 line-clamp-3">{artist.bio}</p>}
+                  {artist.bio ? (
+                    <p className="mt-4 mb-6 text-sm leading-relaxed text-slate-300">{artist.bio}</p>
+                  ) : (
+                    <p className="mt-4 mb-6 text-sm text-slate-400">This artist hasn’t added a bio yet.</p>
+                  )}
                   {artist.genres.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {artist.genres.map((genre) => (
@@ -298,7 +302,6 @@ const ArtistProfilePage = ({ artist }: Props) => {
               <h2 className="text-2xl font-semibold text-white">About</h2>
               {artist.is_pro && <span className="text-xs uppercase tracking-[0.3em] text-emerald-300">PRO ARTIST</span>}
             </div>
-            <p className="mt-4 whitespace-pre-line text-sm text-slate-100">{artist.bio || "This artist hasn’t added a bio yet."}</p>
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-slate-300">
               <span className="flex items-center gap-1">
                 📧
@@ -411,14 +414,14 @@ const ArtistProfilePage = ({ artist }: Props) => {
                     <Link
                       key={event.id}
                       href={`/eventRouter/${event.slug}`}
-                      className="mb-4 flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 last:mb-0 transition hover:border-emerald-400/60 hover:bg-slate-950"
+                      className="mb-4 flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/60 p-4 last:mb-0 transition hover:scale-[1.01] hover:border-emerald-400/60 hover:bg-slate-900"
                     >
                       {event.poster ? (
-                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-slate-800">
+                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-slate-800 sm:h-20 sm:w-20">
                           <Image src={event.poster} alt={event.title} fill className="object-cover" />
                         </div>
                       ) : (
-                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl border border-slate-800 bg-gradient-to-br from-slate-800 to-slate-900 text-[10px] uppercase tracking-[0.2em] text-slate-400 sm:h-20 sm:w-20">
                           No poster
                         </div>
                       )}

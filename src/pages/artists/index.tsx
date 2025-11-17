@@ -114,7 +114,7 @@ export default function ArtistDirectoryPage() {
                   key={artist.slug}
                   href={`/artists/${artist.slug}`}
                   aria-label={`View artist profile for ${artist.display_name}`}
-                  className="flex gap-4 rounded-3xl border border-slate-800/80 bg-slate-900/80 p-4 text-left transition hover:border-emerald-400/70 hover:bg-slate-900 hover:shadow-emerald-500/25"
+                  className="flex gap-4 rounded-3xl border border-slate-800/80 bg-slate-900/80 p-4 text-left transition transform hover:scale-[1.02] hover:border-emerald-400/70 hover:bg-slate-900 hover:shadow-emerald-500/25"
                 >
                   <div className="relative h-16 w-16 flex-shrink-0 rounded-2xl border border-slate-700/80 bg-slate-800/80 sm:h-20 sm:w-20">
                     {hasImage ? (

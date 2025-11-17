@@ -715,13 +715,13 @@ const startAccountSetup = () => {
                     title={canVisitPublicPage ? "View your public page" : "Your page is offline until your trial or subscription is active"}
                     className={`py-2 px-4 rounded font-semibold ${canVisitPublicPage ? "bg-purple-600 hover:bg-purple-700 text-white" : "bg-purple-900/50 text-purple-200 cursor-not-allowed"}`}
                   >
-                    View public page
+                    View Public Page
                   </button>
                   <button
                     onClick={() => router.push(`/artists/edit/${artistSlug}`)}
                     className="py-2 px-4 rounded font-semibold bg-gray-700 hover:bg-gray-600 text-white"
                   >
-                    Edit artist page
+                    Manage Artist Profile
                   </button>
                 </div>
               </div>

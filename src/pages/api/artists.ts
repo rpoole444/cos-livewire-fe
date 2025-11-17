@@ -2,6 +2,20 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 
 export async function createArtistProfile(artistData: any) {
+  try {
+    const mineRes = await fetch(`${API_BASE_URL}/api/artists/mine`, {
+      credentials: 'include',
+    });
+    if (mineRes.ok) {
+      const mine = await mineRes.json().catch(() => null);
+      if (mine?.artist && !mine.artist.deleted_at) {
+        throw new Error('You already have an artist profile. Manage it from your dashboard.');
+      }
+    }
+  } catch (err) {
+    console.error('[createArtistProfile] pre-check failed', err);
+  }
+
   const payload = {
     ...artistData,
     is_approved: false,
@@ -14,8 +28,8 @@ export async function createArtistProfile(artistData: any) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to create artist profile');
+    const error = await response.json().catch(() => null);
+    throw new Error(error?.message || 'Failed to create artist profile');
   }
 
   return response.json();
