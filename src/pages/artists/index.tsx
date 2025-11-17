@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-import Header from '@/components/Header';
 import Image from 'next/image';
 import { isTrialActive } from '@/util/isTrialActive';
 import { isActivePro } from '@/util/isActivePro';
@@ -56,7 +55,6 @@ export default function ArtistDirectoryPage() {
         <title>Artist Directory | Alpine Groove Guide</title>
         <meta name="description" content="Browse all Alpine Pro artist profiles" />
       </Head>
-      <Header />
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 sm:py-10">
         <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 text-center shadow-2xl ring-1 ring-slate-800">
           <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">Artist Directory</h1>

@@ -3,7 +3,6 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
 import { fetchEventDetails, getEvents } from '../api/route';
-import Header from '@/components/Header';
 import EventDetailCard from '@/components/EventDetailCard';
 import WelcomeUser from '@/components/WelcomeUser';
 import UpcomingShows from '@/components/UpcomingShows';
@@ -47,7 +46,6 @@ const EventDetailPage = ({ event, events }: Props) => {
 
 
       <div className="min-h-screen bg-gray-900 text-white font-sans">
-        <Header />
         <div className="px-6 pt-2">
           <Link href="/" passHref>
             <span className="text-sm text-yellow-300 hover:underline">← Back to All Events</span>

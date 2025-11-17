@@ -1,85 +1,101 @@
-import Header from '@/components/Header';
 import Image from 'next/image';
 import Link from 'next/link';
 
 const About = () => {
   return (
-    <div className="flex min-h-screen flex-col bg-gray-900 text-white">
-      <Header />
-      <main className="flex-grow p-8">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-6">About Alpine Groove Guide</h1>
-
-          <p className="text-lg mb-6">
-            Welcome to <span className="text-yellow-400 font-semibold">Alpine Groove Guide</span> — a grassroots, community-powered calendar designed to showcase and support live music across Colorado Springs, Denver, and the greater Front Range.
+    <div className="bg-slate-950 text-slate-50">
+      <main className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
+        <section className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-8 text-center shadow-2xl ring-1 ring-slate-800">
+          <h1 className="text-4xl font-bold sm:text-5xl">About Alpine Groove Guide</h1>
+          <p className="mt-4 text-sm text-slate-300 sm:text-base">
+            Alpine Groove Guide is a community-powered calendar and artist platform dedicated to live music across the
+            Colorado Front Range.
           </p>
-
-          <p className="text-lg mb-6">
-            This platform was built by and for musicians, venues, and fans. Artists can submit gigs, venues can promote their shows, and locals can find live music that fits their vibe. Every submission is reviewed before going live to maintain accuracy and keep the calendar trustworthy.
-          </p>
-
-          <p className="text-lg mb-6">
-            I’m <span className="text-yellow-400 font-semibold">Reid Poole</span> — a trumpet player, bandleader, and software engineer. After two decades performing across the country and teaching music at Dillard University in New Orleans, I moved back to Colorado with a mission: build tools that make it easier for artists to connect with their audiences and thrive.
-          </p>
-
-          <p className="text-lg mb-6">
-            Alpine Groove Guide is my love letter to this community. Whether you’re a jazz cat, a punk rocker, a soulful singer, or a fan of good tunes — there’s space for you here.
-          </p>
-
-          <div className="flex items-center mt-10">
-            <Image
-              src="/reid_poole.jpeg"
-              alt="Reid Poole"
-              className="w-44 h-44 rounded-full mr-6 shadow-xl object-cover"
-              width={176}
-              height={176}
-            />
-            <div>
-              <h2 className="text-2xl font-semibold">Reid Poole</h2>
-              <p className="text-gray-400">Musician • Bandleader • Software Engineer</p>
-              <p className="text-sm text-gray-500 mt-1">Founder, Alpine Groove Guide</p>
-            </div>
+          <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/eventSubmission"
+              className="rounded-full bg-emerald-500 px-6 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+            >
+              Submit your first show
+            </Link>
+            <Link
+              href="/artist-signup"
+              className="rounded-full border border-slate-800 px-6 py-2 text-sm font-semibold text-slate-200 transition hover:border-emerald-300 hover:text-white"
+            >
+              Create an artist profile
+            </Link>
           </div>
+        </section>
 
-          {/* Call to Action */}
-          <div className="mt-12 bg-gray-800 p-6 rounded-lg shadow-md">
-            <h3 className="text-2xl font-semibold mb-3">🎶 Get Involved</h3>
-            <p className="text-md mb-4">
-              Want to promote your event? Just register and submit your show. Got feedback or ideas? I’d love to hear from you.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/RegisterPage" className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded text-center">
-                Create an Account
-              </Link>
-              <Link href="/eventSubmission" className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded text-center">
-                Submit an Event
-              </Link>
-              <a
-                href="mailto:poole.reid@gmail.com"
-                target="_blank"
-                className="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded text-center"
-              >
-                Contact Me
-              </a>
-            </div>
-          </div>
+        <section className="space-y-6 text-slate-200">
+          <p>
+            Welcome to <span className="text-emerald-300 font-semibold">Alpine Groove Guide</span> — a grassroots, curated
+            feed of Colorado Springs, Denver, and Front Range gigs. Artists submit events, venues highlight their stages,
+            and locals find shows that fit their vibe. Every listing is reviewed to keep the calendar accurate and trusted.
+          </p>
+          <p>
+            I&apos;m <span className="text-emerald-300 font-semibold">Reid Poole</span> — trumpet player, bandleader, and
+            software engineer. After two decades performing and teaching, I returned home to build tools that help working
+            musicians connect with fans, venues, and each other in a single elevated experience.
+          </p>
+          <p>
+            Alpine Groove Guide is my love letter to this community. Whether you&apos;re spinning jazz, experimenting with
+            electronic textures, or fronting a punk outfit, there&apos;s space for you here.
+          </p>
+        </section>
 
-          {/* Social Links */}
-          <div className="mt-10 border-t border-gray-700 pt-6 text-sm text-gray-400">
-            <p>Follow Alpine Groove Guide:</p>
-            <div className="flex gap-4 mt-2">
-              <a href="https://www.instagram.com/reid_poole_music/" target="_blank" rel="noopener noreferrer" className="hover:underline">
-                Instagram
-              </a>
-              <a href="https://www.facebook.com/reidpoole" target="_blank" rel="noopener noreferrer" className="hover:underline">
-                Facebook
-              </a>
-              <a href="https://www.linkedin.com/in/reid-poole/" target="_blank" rel="noopener noreferrer" className="hover:underline">
-                LinkedIn
-              </a>
-            </div>
+        <section className="flex flex-col items-center gap-6 rounded-3xl border border-slate-800 bg-slate-900/80 p-6 sm:flex-row sm:items-center sm:gap-8">
+          <Image
+            src="/reid_poole.jpeg"
+            alt="Reid Poole"
+            width={176}
+            height={176}
+            className="h-40 w-40 rounded-2xl object-cover shadow-2xl ring-1 ring-slate-700"
+          />
+          <div>
+            <h2 className="text-2xl font-semibold text-white">Reid Poole</h2>
+            <p className="text-slate-400">Musician • Bandleader • Software Engineer</p>
+            <p className="mt-1 text-sm text-slate-500">Founder, Alpine Groove Guide</p>
           </div>
-        </div>
+        </section>
+
+        <section className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-lg">
+          <h3 className="text-2xl font-semibold text-white">🎶 Get Involved</h3>
+          <p className="mt-2 text-sm text-slate-300">
+            Promote events, build an artist profile, or drop me a note if you have ideas to grow the scene.
+          </p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+            <Link href="/RegisterPage" className="rounded-full bg-indigo-500 px-5 py-2 text-center text-sm font-semibold text-white transition hover:bg-indigo-400">
+              Create an account
+            </Link>
+            <Link href="/eventSubmission" className="rounded-full bg-emerald-500 px-5 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">
+              Submit an event
+            </Link>
+            <a
+              href="mailto:poole.reid@gmail.com"
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full border border-slate-700 px-5 py-2 text-center text-sm font-semibold text-slate-200 transition hover:border-emerald-300 hover:text-white"
+            >
+              Contact me
+            </a>
+          </div>
+        </section>
+
+        <section className="border-t border-slate-800 pt-6 text-sm text-slate-400">
+          <p>Follow Alpine Groove Guide:</p>
+          <div className="mt-2 flex gap-4">
+            <a href="https://www.instagram.com/reid_poole_music/" target="_blank" rel="noreferrer" className="hover:text-slate-100">
+              Instagram
+            </a>
+            <a href="https://www.facebook.com/reidpoole" target="_blank" rel="noreferrer" className="hover:text-slate-100">
+              Facebook
+            </a>
+            <a href="https://www.linkedin.com/in/reid-poole/" target="_blank" rel="noreferrer" className="hover:text-slate-100">
+              LinkedIn
+            </a>
+          </div>
+        </section>
       </main>
     </div>
   );

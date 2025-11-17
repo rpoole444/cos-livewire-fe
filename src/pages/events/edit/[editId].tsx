@@ -2,7 +2,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Event } from '@/interfaces/interfaces';
-import Header from '@/components/Header';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
@@ -106,7 +105,6 @@ const EditEventPage = () => {
   return (
     <div className="p-6 max-w-2xl mx-auto text-white">
       <div className="min-h-screen bg-gray-900 text-white">
-        <Header />
 
       <div className="px-6 pt-2">
         <Link href="/" passHref>

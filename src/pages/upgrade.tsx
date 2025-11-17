@@ -1,6 +1,5 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import Header from '@/components/Header';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -77,7 +76,6 @@ export default function UpgradePage() {
       <Head>
         <title>Upgrade to Alpine Pro | Alpine Groove Guide</title>
       </Head>
-      <Header />
 
       <main className="flex-grow">
         {/* HERO */}

@@ -5,7 +5,6 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
-import Header from '@/components/Header';
 import Link from 'next/link';
 import TrialBanner from '@/components/TrialBanner';
 import { FaFacebookF, FaTwitter, FaLink, FaShareAlt } from 'react-icons/fa';
@@ -166,7 +165,6 @@ const ArtistProfilePage = ({ artist }: Props) => {
             </div>
           )}
 
-          <Header />
           <TrialBanner artist_user_id={artist.user_id} trial_ends_at={artist.trial_ends_at} is_pro={artist.is_pro} />
 
           <section className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 ring-1 ring-slate-800 shadow-2xl shadow-black/30">

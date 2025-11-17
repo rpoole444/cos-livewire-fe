@@ -1,7 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import RegistrationForm from '@/components/registration';
-import Header from '@/components/Header';
 import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 
@@ -18,7 +17,6 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <Header />
       <section className="flex flex-col items-center justify-center px-4 py-20">
         <div className="text-center mb-8">
           <Image

@@ -4,7 +4,6 @@ import { fetchAllUsers } from './api/route';
 import { User, Users } from '../interfaces/interfaces';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
-import Header from '@/components/Header';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 const ITEMS_PER_PAGE = 10;
@@ -95,7 +94,6 @@ const AdminUsersPage = () => {
 
   return (
     <>
-    <Header />
     <div className="min-h-screen bg-gray-900 text-white px-4 py-10">
       <div className="max-w-5xl mx-auto space-y-8">
         <h1 className="text-3xl font-bold text-center">Admin: User Management</h1>

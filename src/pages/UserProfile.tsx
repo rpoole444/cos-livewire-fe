@@ -1,7 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/router";
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import Header from "@/components/Header";
 import Image from "next/image";
 import Link from "next/link";
 import TrialBanner from '@/components/TrialBanner';
@@ -453,7 +452,6 @@ const startAccountSetup = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <Header />
       <div className="max-w-5xl mx-auto px-6 py-10 space-y-6">
         {showSuccessToast && (
           <div className="bg-green-600 text-white text-sm text-center px-4 py-2 rounded shadow">
