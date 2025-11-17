@@ -335,6 +335,29 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     );
   }
 
+  const [greetingLogged, setGreetingLogged] = useState(false);
+
+  useEffect(() => {
+    if (!greetingLogged) {
+      console.log("[SubmitEvent] user for greeting", {
+        id: user?.id,
+        displayName: user?.displayName,
+        display_name: (user as any)?.display_name,
+      });
+      setGreetingLogged(true);
+    }
+  }, [user, greetingLogged]);
+
+  const greetingName =
+    user?.displayName?.trim() ||
+    (user as any)?.display_name?.trim() ||
+    user?.first_name?.trim() ||
+    null;
+
+  const greetingHeading = greetingName
+    ? `${greetingName}, let’s promote your next show.`
+    : "Let’s promote your next show.";
+
   return user ? (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <Script
@@ -347,9 +370,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       <main className="mx-auto max-w-5xl px-4 py-10 lg:py-14">
         <header className="space-y-4 text-center">
           <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">Submit a live music event</p>
-          <h1 className="text-3xl font-semibold text-white sm:text-4xl">
-            {user.first_name}, let&apos;s promote your next show.
-          </h1>
+          <h1 className="text-3xl font-semibold text-white sm:text-4xl">{greetingHeading}</h1>
           <p className="mx-auto max-w-2xl text-sm text-slate-400">
             Share accurate details so Alpine Groove Guide can feature your event across the calendar and artist pages.
             Include the essentials: when it starts, where to find it, and how fans can support.
