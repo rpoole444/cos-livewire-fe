@@ -21,6 +21,7 @@ interface Event {
   location: string;
   genre: string;
   slug: string;
+  poster?: string | null;
 }
 
 interface Artist {
@@ -61,11 +62,22 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const isTrialExpired = artist?.trial_ends_at ? dayjs().isAfter(dayjs(artist.trial_ends_at), 'day') : true;
   const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
   const logRef = useRef(false);
+  const eventsLoggedRef = useRef(false);
 
   useEffect(() => {
     if (artist && !logRef.current) {
       console.log('[ArtistProfilePage] loaded', { artistId: artist.id, slug: artist.slug });
       logRef.current = true;
+    }
+  }, [artist]);
+
+  useEffect(() => {
+    if (artist && !eventsLoggedRef.current) {
+      console.log('[ArtistProfilePage] upcomingEvents', {
+        count: artist.events?.length ?? 0,
+        sample: artist.events?.slice(0, 2) ?? [],
+      });
+      eventsLoggedRef.current = true;
     }
   }, [artist]);
 
@@ -159,7 +171,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
           <TrialBanner artist_user_id={artist.user_id} trial_ends_at={artist.trial_ends_at} is_pro={artist.is_pro} />
 
           <section className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 ring-1 ring-slate-800 shadow-2xl shadow-black/30">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
               <div className="flex flex-1 flex-col gap-5 sm:flex-row sm:items-center">
                 <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-3xl bg-slate-900 shadow-xl ring-1 ring-slate-700 sm:mx-0">
                   {artist.profile_image ? (
@@ -191,83 +203,94 @@ const ArtistProfilePage = ({ artist }: Props) => {
                   )}
                 </div>
               </div>
-              <div className="w-full space-y-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-5 lg:max-w-sm">
-                {artist.contact_email &&
-                  (shouldBlur ? (
-                    <div className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-slate-300 opacity-60">
-                      Contact / Book
-                    </div>
-                  ) : (
+              <div className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 p-5 lg:max-w-sm">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
+                  Contact / Book
+                </h3>
+                <div className="mt-3 space-y-3">
+                  {artist.contact_email &&
+                    (shouldBlur ? (
+                      <div className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-slate-300 opacity-60">
+                        Contact / Book
+                      </div>
+                    ) : (
+                      <a
+                        href={`mailto:${artist.contact_email}`}
+                        className="inline-flex w-full items-center justify-center rounded-2xl border border-emerald-400/60 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20"
+                      >
+                        Contact / Book
+                      </a>
+                    ))}
+
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <a
-                      href={`mailto:${artist.contact_email}`}
-                      className="inline-flex w-full items-center justify-center rounded-2xl border border-emerald-400/60 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20"
+                      href={artist.website?.startsWith('http') ? artist.website : `https://${artist.website ?? ''}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`rounded-2xl border border-slate-700 px-4 py-3 text-center text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white ${
+                        shouldBlur || !artist.website ? 'pointer-events-none opacity-60 blur-[1px]' : ''
+                      }`}
                     >
-                      Contact / Book
+                      Official Website →
                     </a>
-                  ))}
-                {artist.website && (
-                  <a
-                    href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:text-white ${
-                      shouldBlur ? 'pointer-events-none opacity-60 blur-[1px]' : ''
-                    }`}
-                  >
-                    Official Website →
-                  </a>
-                )}
-                {artist.tip_jar_url && (
-                  <a
-                    href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-200 transition hover:border-amber-300 hover:bg-amber-500/20 ${
-                      shouldBlur ? 'pointer-events-none opacity-60 blur-[1px]' : ''
-                    }`}
-                  >
-                    Send a Tip 💸
-                  </a>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: artist.display_name,
-                          url: shareUrl,
-                        });
+                    <a
+                      href={
+                        artist.tip_jar_url?.startsWith('http')
+                          ? artist.tip_jar_url
+                          : artist.tip_jar_url
+                          ? `https://${artist.tip_jar_url}`
+                          : '#'
                       }
-                    }}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-full border border-yellow-400/40 px-3 py-1 text-xs font-semibold text-yellow-200 transition hover:border-yellow-300 hover:text-white"
-                  >
-                    <FaShareAlt /> Share
-                  </button>
-                  <a
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-1 items-center justify-center gap-1 rounded-full border border-blue-500/40 px-3 py-1 text-xs font-semibold text-blue-200 transition hover:border-blue-400 hover:text-white"
-                  >
-                    <FaFacebookF /> Facebook
-                  </a>
-                  <a
-                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(artist.display_name)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex flex-1 items-center justify-center gap-1 rounded-full border border-sky-500/40 px-3 py-1 text-xs font-semibold text-sky-200 transition hover:border-sky-400 hover:text-white"
-                  >
-                    <FaTwitter /> X
-                  </a>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(shareUrl);
-                      alert('Link copied to clipboard!');
-                    }}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-full border border-slate-600 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-white hover:text-white"
-                  >
-                    <FaLink /> Copy
-                  </button>
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-200 transition hover:border-amber-300 hover:bg-amber-500/20 ${
+                        shouldBlur || !artist.tip_jar_url ? 'pointer-events-none opacity-60 blur-[1px]' : ''
+                      }`}
+                    >
+                      Send a Tip 💐
+                    </a>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => {
+                        if (navigator.share) {
+                          navigator.share({
+                            title: artist.display_name,
+                            url: shareUrl,
+                          });
+                        }
+                      }}
+                      className="flex flex-1 min-w-[120px] items-center justify-center gap-1 rounded-full border border-yellow-400/40 px-3 py-1 text-xs font-semibold text-yellow-200 transition hover:border-yellow-300 hover:text-white"
+                    >
+                      <FaShareAlt /> Share
+                    </button>
+                    <a
+                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-1 min-w-[120px] items-center justify-center gap-1 rounded-full border border-blue-500/40 px-3 py-1 text-xs font-semibold text-blue-200 transition hover:border-blue-400 hover:text-white"
+                    >
+                      <FaFacebookF /> Facebook
+                    </a>
+                    <a
+                      href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(artist.display_name)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex flex-1 min-w-[120px] items-center justify-center gap-1 rounded-full border border-sky-500/40 px-3 py-1 text-xs font-semibold text-sky-200 transition hover:border-sky-400 hover:text-white"
+                    >
+                      <FaTwitter /> X
+                    </a>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(shareUrl);
+                        alert('Link copied to clipboard!');
+                      }}
+                      className="flex flex-1 min-w-[120px] items-center justify-center gap-1 rounded-full border border-slate-600 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-white hover:text-white"
+                    >
+                      <FaLink /> Copy
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -391,16 +414,27 @@ const ArtistProfilePage = ({ artist }: Props) => {
                     <Link
                       key={event.id}
                       href={`/eventRouter/${event.slug}`}
-                      className="mb-4 block rounded-2xl border border-slate-800 bg-slate-950/60 p-4 last:mb-0 transition hover:border-emerald-400/60 hover:bg-slate-950"
+                      className="mb-4 flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 last:mb-0 transition hover:border-emerald-400/60 hover:bg-slate-950"
                     >
-                      <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
-                        {dayjs.utc(event.date).format('ddd, MMM D')}
-                      </p>
-                      <h3 className="mt-1 text-lg font-semibold text-white">{event.title}</h3>
-                      <p className="text-sm text-slate-300">
-                        📍 {event.venue_name} • {event.location}
-                      </p>
-                      <p className="text-xs text-slate-400">🎵 {event.genre}</p>
+                      {event.poster ? (
+                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-slate-800">
+                          <Image src={event.poster} alt={event.title} fill className="object-cover" />
+                        </div>
+                      ) : (
+                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                          No poster
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                          {dayjs.utc(event.date).format('ddd, MMM D')}
+                        </p>
+                        <h3 className="mt-1 text-lg font-semibold text-white">{event.title}</h3>
+                        <p className="text-sm text-slate-300">
+                          📍 {event.venue_name} • {event.location}
+                        </p>
+                        <p className="text-xs text-slate-400">🎵 {event.genre}</p>
+                      </div>
                     </Link>
                   ))}
                 </div>
