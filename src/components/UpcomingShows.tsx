@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Event, User } from '@/interfaces/interfaces';
-import FaveEventCard from './FaveEventCard';
+import Image from 'next/image';
+import dayjs from 'dayjs';
+import { Event } from '@/interfaces/interfaces';
 import { UserType } from '@/types';
 import { parseLocalDayjs } from '../util/dateHelper';
 
@@ -31,20 +32,6 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
       setFilteredEvents(filtered);
     }
   }, [userGenres, events]);
-
-  const formatTime = (timeString: string) => {
-    try {
-      const options: Intl.DateTimeFormatOptions = {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      };
-      return new Date(`1970-01-01T${timeString}`).toLocaleTimeString('en-US', options);
-    } catch (error) {
-      console.error('Error formatting time:', error);
-      return timeString;
-    }
-  };
 
   const eventsToDisplay = showAll ? filteredEvents : filteredEvents.slice(0, MAX_RECOMMENDATIONS);
 

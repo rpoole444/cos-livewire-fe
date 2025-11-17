@@ -63,11 +63,23 @@ const EventSubmission = () => {
   const router = useRouter();
   const locationInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [greetingLogged, setGreetingLogged] = useState(false);
 
   const proActive = isActivePro(user as any);
   const trialActive = isTrialActive(user?.trial_ends_at);
   const canAddMultiple = Boolean(proActive || trialActive);
   const trialExpired = user && !proActive && !!user.trial_ends_at && !trialActive;
+
+  useEffect(() => {
+    if (!greetingLogged) {
+      console.log("[SubmitEvent] user for greeting", {
+        id: user?.id,
+        displayName: user?.displayName,
+        display_name: (user as any)?.display_name,
+      });
+      setGreetingLogged(true);
+    }
+  }, [user, greetingLogged]);
 
   const addEvent = () => setEvents((prev) => [...prev, { ...initialEvent }]);
   const removeEvent = (index: number) =>
@@ -334,19 +346,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       </div>
     );
   }
-
-  const [greetingLogged, setGreetingLogged] = useState(false);
-
-  useEffect(() => {
-    if (!greetingLogged) {
-      console.log("[SubmitEvent] user for greeting", {
-        id: user?.id,
-        displayName: user?.displayName,
-        display_name: (user as any)?.display_name,
-      });
-      setGreetingLogged(true);
-    }
-  }, [user, greetingLogged]);
 
   const greetingName =
     user?.displayName?.trim() ||
