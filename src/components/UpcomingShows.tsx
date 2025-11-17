@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import dayjs from 'dayjs';
-import { Event } from '@/interfaces/interfaces';
-import { UserType } from '@/types';
-import { parseLocalDayjs } from '../util/dateHelper';
+import React, { useEffect, useState } from "react";
+import NextImage from "next/image";
+import Link from "next/link";
+import dayjs from "dayjs";
+import { Event } from "@/interfaces/interfaces";
+import { UserType } from "@/types";
+import { parseLocalDayjs } from "../util/dateHelper";
 
 interface UpcomingShowsProps {
   user: UserType;
@@ -53,7 +53,7 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
                 >
                   {event.poster ? (
                     <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-slate-800 sm:h-20 sm:w-20">
-                      <Image src={event.poster} alt={event.title} fill className="object-cover" />
+                      <NextImage src={event.poster} alt={event.title} fill className="object-cover" />
                     </div>
                   ) : (
                     <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl border border-slate-800 bg-gradient-to-br from-slate-900 to-slate-800 text-[10px] uppercase tracking-[0.2em] text-slate-400 sm:h-20 sm:w-20">

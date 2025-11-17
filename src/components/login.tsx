@@ -46,85 +46,84 @@ const LoginForm: React.FC<LoginFormProps> = ({
 };
 
   return (
-    <div className="min-h-screen flex justify-center bg-white py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-9">
-        <h2 className="text-center text-lg font-semibold text-black">
-          Login to Submit an<br />event to the<br />Groove Guide!
-        </h2>
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label htmlFor="email" className="sr-only">Email address</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold transition duration-150"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="relative">
-              <label htmlFor="password" className="sr-only">Password</label>
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                required
-                className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-gold pr-10"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-sm text-blue-600 hover:underline focus:outline-none"
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-          </div>
-
-          {errorMessage && (
-            <div className="mt-2 text-center text-sm text-red-600">
-              {errorMessage}
-            </div>
-          )}
-
-          <div>
+    <div className="space-y-4">
+      {errorMessage && (
+        <div className="rounded-lg border border-rose-500/60 bg-rose-950/40 px-3 py-2 text-xs text-rose-100">
+          {errorMessage}
+        </div>
+      )}
+      <form className="space-y-4" onSubmit={handleLogin}>
+        <div className="space-y-2">
+          <label htmlFor="email" className="text-xs font-medium uppercase tracking-[0.12em] text-slate-300">
+            Email
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            className="w-full rounded-lg border border-slate-700/80 bg-slate-900/70 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/80 focus:outline-none focus:ring-2 focus:ring-emerald-400/70"
+            placeholder="you@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <label htmlFor="password" className="text-xs font-medium uppercase tracking-[0.12em] text-slate-300">
+            Password
+          </label>
+          <div className="relative">
+            <input
+              id="password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              className="w-full rounded-lg border border-slate-700/80 bg-slate-900/70 px-3 py-2.5 pr-12 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/80 focus:outline-none focus:ring-2 focus:ring-emerald-400/70"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
             <button
-              type="submit"
-              className="bg-gold text-black px-4 py-2 rounded-md hover:bg-yellow-400 font-semibold w-full transition duration-200 ease-in-out"
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-emerald-300 hover:text-emerald-200"
             >
-              Login
+              {showPassword ? "Hide" : "Show"}
             </button>
-
-            <Link
-              href="/forgot-password"
-              className="block text-center mt-4 text-sm text-black hover:underline transition"
-            >
-              Forget your password? Click Here!
-            </Link>
-
-            {setAuthMode && (
-              <p className="mt-4 text-center text-sm text-black">
-                Need an account?{" "}
-                <span
-                  onClick={() => setAuthMode("register")}
-                  className="text-gold font-semibold cursor-pointer hover:underline"
-                >
-                  Register
-                </span>
-              </p>
-            )}
           </div>
-        </form>
+        </div>
+        <button
+          type="submit"
+          className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-500 px-3 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
+        >
+          Sign in
+        </button>
+      </form>
+      <div className="text-right">
+        <Link href="/forgot-password" className="text-xs text-emerald-400 underline-offset-2 hover:text-emerald-300 hover:underline">
+          Forgot your password?
+        </Link>
       </div>
+      {setAuthMode ? (
+        <p className="text-center text-xs text-slate-400">
+          Need an account?{" "}
+          <button
+            onClick={() => setAuthMode("register")}
+            className="text-emerald-400 underline-offset-2 hover:text-emerald-300 hover:underline"
+          >
+            Register
+          </button>
+        </p>
+      ) : (
+        <p className="text-center text-xs text-slate-400">
+          Don&apos;t have an account?{" "}
+          <Link href="/RegisterPage" className="text-emerald-400 underline-offset-2 hover:text-emerald-300 hover:underline">
+            Create one
+          </Link>
+        </p>
+      )}
     </div>
   );
 };

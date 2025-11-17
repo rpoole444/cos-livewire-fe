@@ -357,7 +357,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     ? `${greetingName}, let’s promote your next show.`
     : "Let’s promote your next show.";
 
-  return user ? (
+  return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <Script
         src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
@@ -475,11 +475,6 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         </div>
       </main>
     </div>
-  ) : (
-    <>
-      <h1>Please Sign In or Go Back!</h1>
-      <Link href='/' className="bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Go Back</Link>
-    </>
   );
 };
 
