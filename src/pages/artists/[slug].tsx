@@ -7,12 +7,11 @@ import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import Link from 'next/link';
-import TrialBanner from '@/components/TrialBanner'; // adjust path as needed
+import TrialBanner from '@/components/TrialBanner';
 import { FaFacebookF, FaTwitter, FaLink, FaShareAlt } from 'react-icons/fa';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
-
 
 interface Event {
   id: number;
@@ -44,7 +43,7 @@ interface Artist {
   tip_jar_url: string;
   events: Event[];
   trial_ends_at?: string | null;
-  is_approved?: boolean
+  is_approved?: boolean;
 }
 
 interface Props {
@@ -53,26 +52,22 @@ interface Props {
 
 const ArtistProfilePage = ({ artist }: Props) => {
   const { user } = useAuth();
-  const canEdit = artist && user && (user.id === artist.user_id || user.is_admin);
   const router = useRouter();
   const isPending = router.query.pending === 'true';
   const isOwner = user?.id === artist?.user_id;
-  const showPendingBanner =
-    isPending && isOwner && artist && artist.is_approved === false;
+  const canEdit = artist && user && (user.id === artist.user_id || user.is_admin);
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const isProfileOwner = user?.id === artist?.user_id;
   const isTrialExpired = artist?.trial_ends_at ? dayjs().isAfter(dayjs(artist.trial_ends_at), 'day') : true;
-
+  const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
   const logRef = useRef(false);
 
   useEffect(() => {
     if (artist && !logRef.current) {
-      console.log("[ArtistProfilePage] loaded", { artistId: artist.id, slug: artist.slug });
+      console.log('[ArtistProfilePage] loaded', { artistId: artist.id, slug: artist.slug });
       logRef.current = true;
     }
   }, [artist]);
-
 
   useEffect(() => {
     if (router.query.trial === 'active') {
@@ -83,14 +78,12 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to permanently delete this artist profile?')) return;
-
     setDeleting(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist?.slug}`, {
         method: 'DELETE',
         credentials: 'include',
       });
-
       if (res.ok) {
         alert('Artist profile deleted successfully.');
         router.push('/');
@@ -106,19 +99,16 @@ const ArtistProfilePage = ({ artist }: Props) => {
     }
   };
 
-  if (!artist) return <div className="text-white p-6">Artist not found</div>;
+  if (!artist) return <div className="p-6 text-white">Artist not found</div>;
 
-  const shouldBlur =
-  !artist.is_pro &&
-  (isTrialExpired || !artist.trial_ends_at); // Applies to both owner and public view
+  const shareUrl = `https://app.alpinegrooveguide.com/share/artist/${artist.slug}`;
+  const shouldBlur = !artist.is_pro && (isTrialExpired || !artist.trial_ends_at);
 
   return (
     <>
       <Head>
         <title>{artist.display_name} | Alpine Groove Guide</title>
         <meta name="description" content={artist.bio?.slice(0, 150)} />
-
-        {/* Open Graph */}
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Alpine Groove Guide" />
         <meta property="og:title" content={`${artist.display_name} | Alpine Groove Guide`} />
@@ -130,10 +120,8 @@ const ArtistProfilePage = ({ artist }: Props) => {
               ? artist.profile_image
               : `https://app.alpinegrooveguide.com${artist.profile_image}`
           }
-        />        
+        />
         <meta property="og:url" content={`https://app.alpinegrooveguide.com/artists/${artist.slug}`} />
-
-        {/* Twitter Cards */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${artist.display_name} | Alpine Groove Guide`} />
         <meta name="twitter:description" content={artist.bio?.slice(0, 150)} />
@@ -146,267 +134,311 @@ const ArtistProfilePage = ({ artist }: Props) => {
           }
         />
       </Head>
-      <div className="min-h-screen bg-gray-900 text-white p-6">
-        <div className="max-w-4xl mx-auto space-y-6">
+
+      <div className="min-h-screen bg-slate-950 px-4 py-8 text-slate-50">
+        <div className="mx-auto flex max-w-5xl flex-col gap-8">
           {showPendingBanner && (
-            <div className="bg-yellow-400 text-black text-sm rounded p-3 shadow text-center font-medium">
+            <div className="rounded bg-yellow-400 p-3 text-center text-sm font-medium text-black shadow">
               ⏳ Your artist profile is currently <strong>pending admin approval</strong>. You’ll be notified when approved.
             </div>
-            )}
-            {showTrialToast && isOwner && (
-              <div className="bg-green-600 text-white text-sm rounded p-2 mb-4 text-center shadow-md">
-                ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
-              </div>
-            )}
-            {!isOwner && !artist.is_pro && isTrialExpired && (
-              <div className="bg-gray-800 text-blue-300 text-sm rounded p-3 shadow text-center">
-                📣 This artist’s Alpine Pro trial has ended.{' '}
-                <Link href="/upgrade" className="underline hover:text-blue-400">
-                  Learn more about upgrading to Pro
-                </Link>
-                .
-              </div>
-            )}
+          )}
+          {showTrialToast && isOwner && (
+            <div className="rounded bg-green-600 p-2 text-center text-sm text-white shadow">✅ Your Alpine Pro trial is active.</div>
+          )}
+          {!isOwner && !artist.is_pro && isTrialExpired && (
+            <div className="rounded bg-slate-800 p-3 text-center text-sm text-blue-300 shadow">
+              📣 This artist’s Alpine Pro trial has ended.{' '}
+              <Link href="/upgrade" className="underline hover:text-blue-200">
+                Learn more about upgrading to Pro
+              </Link>
+              .
+            </div>
+          )}
 
           <Header />
           <TrialBanner artist_user_id={artist.user_id} trial_ends_at={artist.trial_ends_at} is_pro={artist.is_pro} />
-          <div className="flex flex-col md:flex-row gap-6 items-center">
-            <Image
-              src={artist.profile_image}
-              alt={artist.display_name}
-              width={192}
-              height={192}
-              className="rounded-full shadow"
-            />
-            <div>
-              <h1 className="text-4xl font-bold mb-2">{artist.display_name}</h1>
-              <p className="text-gray-300 mb-2">{artist.bio}</p>
-              <div className="space-y-2">
-                <div className="flex items-center text-sm text-gray-400">
-                  📧
-                  <div className={shouldBlur ? 'ml-1 blur-sm pointer-events-none select-none' : 'ml-1'}>
-                    {artist.contact_email}
-                  </div>
+
+          <section className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 ring-1 ring-slate-800 shadow-2xl shadow-black/30">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
+              <div className="flex flex-1 flex-col gap-5 sm:flex-row sm:items-center">
+                <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-3xl bg-slate-900 shadow-xl ring-1 ring-slate-700 sm:mx-0">
+                  {artist.profile_image ? (
+                    <Image src={artist.profile_image} alt={artist.display_name} width={128} height={128} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-4xl font-bold text-emerald-200">
+                      {artist.display_name.slice(0, 1).toUpperCase()}
+                    </span>
+                  )}
                 </div>
-
-                {artist.tip_jar_url && (
-                  <div className="mt-6 bg-gray-800 p-4 rounded-lg shadow-md border-l-4 border-green-500">
-                    <h3 className="text-lg font-bold mb-2 text-green-400">Support this artist 🎺</h3>
-                    <div className={shouldBlur ? 'blur-sm pointer-events-none select-none' : ''}>
-                      <p className="text-gray-300 text-sm mb-4">
-                        Enjoying the music? Send a tip directly to support their work.
-                      </p>
-
-                      <a
-                        href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block bg-green-600 hover:bg-green-700 hover:scale-105 transform transition text-white px-5 py-2 text-lg font-semibold rounded shadow"
-                      >
-                        💸 Tip this artist
-                      </a>
+                <div className="flex-1 space-y-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h1 className="text-3xl font-bold text-white sm:text-4xl">{artist.display_name}</h1>
+                    {artist.is_pro && (
+                      <span className="rounded-full border border-emerald-400/70 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+                        Alpine Pro
+                      </span>
+                    )}
+                  </div>
+                  {artist.bio && <p className="text-sm text-slate-200 line-clamp-3">{artist.bio}</p>}
+                  {artist.genres.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {artist.genres.map((genre) => (
+                        <span key={genre} className="rounded-full border border-slate-700/80 px-3 py-1 text-xs font-medium text-slate-100">
+                          {genre}
+                        </span>
+                      ))}
                     </div>
-                  </div>
-                )}
-
-                <p className="text-sm text-gray-400">🎶 {artist.genres.join(', ')}</p>
-
-                {artist.website && (
-                  <div className="flex items-center text-sm text-blue-400">
-                    🔗
-                    <a
-                      href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={shouldBlur ? 'ml-1 underline blur-sm pointer-events-none select-none' : 'ml-1 underline'}
-                    >
-                      {artist.website}
-                    </a>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 mt-4">
-                <button
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({
-                        title: artist.display_name,
-                        url: `https://app.alpinegrooveguide.com/share/artist/${artist.slug}`,
-                      });
-                    }
-                  }}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 rounded shadow flex items-center gap-1"
-                >
-                  <FaShareAlt /> Share
-                </button>
-                <a
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                    `https://app.alpinegrooveguide.com/share/artist/${artist.slug}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded shadow flex items-center gap-1"
-                >
-                  <FaFacebookF /> Facebook
-                </a>
-                <a
-                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                    `https://app.alpinegrooveguide.com/share/artist/${artist.slug}`
-                  )}&text=${encodeURIComponent(artist.display_name)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1 rounded shadow flex items-center gap-1"
-                >
-                  <FaTwitter /> X
-                </a>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      `https://app.alpinegrooveguide.com/share/artist/${artist.slug}`
-                    );
-                    alert('Link copied to clipboard!');
-                  }}
-                  className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded shadow flex items-center gap-1"
-                >
-                  <FaLink /> Copy Link
-                </button>
+              <div className="w-full space-y-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-5 lg:max-w-sm">
+                {artist.contact_email &&
+                  (shouldBlur ? (
+                    <div className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-slate-300 opacity-60">
+                      Contact / Book
+                    </div>
+                  ) : (
+                    <a
+                      href={`mailto:${artist.contact_email}`}
+                      className="inline-flex w-full items-center justify-center rounded-2xl border border-emerald-400/60 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20"
+                    >
+                      Contact / Book
+                    </a>
+                  ))}
+                {artist.website && (
+                  <a
+                    href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`rounded-2xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:text-white ${
+                      shouldBlur ? 'pointer-events-none opacity-60 blur-[1px]' : ''
+                    }`}
+                  >
+                    Official Website →
+                  </a>
+                )}
+                {artist.tip_jar_url && (
+                  <a
+                    href={artist.tip_jar_url.startsWith('http') ? artist.tip_jar_url : `https://${artist.tip_jar_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-200 transition hover:border-amber-300 hover:bg-amber-500/20 ${
+                      shouldBlur ? 'pointer-events-none opacity-60 blur-[1px]' : ''
+                    }`}
+                  >
+                    Send a Tip 💸
+                  </a>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: artist.display_name,
+                          url: shareUrl,
+                        });
+                      }
+                    }}
+                    className="flex flex-1 items-center justify-center gap-1 rounded-full border border-yellow-400/40 px-3 py-1 text-xs font-semibold text-yellow-200 transition hover:border-yellow-300 hover:text-white"
+                  >
+                    <FaShareAlt /> Share
+                  </button>
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-1 items-center justify-center gap-1 rounded-full border border-blue-500/40 px-3 py-1 text-xs font-semibold text-blue-200 transition hover:border-blue-400 hover:text-white"
+                  >
+                    <FaFacebookF /> Facebook
+                  </a>
+                  <a
+                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(artist.display_name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex flex-1 items-center justify-center gap-1 rounded-full border border-sky-500/40 px-3 py-1 text-xs font-semibold text-sky-200 transition hover:border-sky-400 hover:text-white"
+                  >
+                    <FaTwitter /> X
+                  </a>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(shareUrl);
+                      alert('Link copied to clipboard!');
+                    }}
+                    className="flex flex-1 items-center justify-center gap-1 rounded-full border border-slate-600 px-3 py-1 text-xs font-semibold text-slate-200 transition hover:border-white hover:text-white"
+                  >
+                    <FaLink /> Copy
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-semibold text-white">About</h2>
+              {artist.is_pro && <span className="text-xs uppercase tracking-[0.3em] text-emerald-300">PRO ARTIST</span>}
+            </div>
+            <p className="mt-4 whitespace-pre-line text-sm text-slate-100">{artist.bio || "This artist hasn’t added a bio yet."}</p>
+            <div className="mt-6 flex flex-wrap gap-3 text-sm text-slate-300">
+              <span className="flex items-center gap-1">
+                📧
+                <span className={shouldBlur ? 'blur-sm select-none' : ''}>{artist.contact_email}</span>
+              </span>
+              {artist.website && (
+                <span className="flex items-center gap-1">
+                  🔗
+                  <a
+                    href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={shouldBlur ? 'blur-sm pointer-events-none select-none' : 'underline'}
+                  >
+                    {artist.website}
+                  </a>
+                </span>
+              )}
+            </div>
+          </section>
 
           {(artist.embed_youtube || artist.embed_soundcloud || artist.embed_bandcamp) && (
-            <div className="space-y-6">
-              <div className={shouldBlur ? 'relative blur-sm pointer-events-none select-none' : ''}>
+            <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+              <h2 className="text-2xl font-semibold text-white">Media &amp; Links</h2>
+              <div className={`mt-4 space-y-6 ${shouldBlur ? 'blur-sm pointer-events-none select-none' : ''}`}>
                 {artist.embed_youtube && (
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">📺 Video</h3>
-                    <div className="aspect-video">
-                      <iframe src={artist.embed_youtube} className="w-full h-full" allowFullScreen />
+                    <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Video</h3>
+                    <div className="mt-2 aspect-video overflow-hidden rounded-xl border border-slate-800">
+                      <iframe src={artist.embed_youtube} className="h-full w-full" allowFullScreen />
                     </div>
                   </div>
                 )}
                 {artist.embed_soundcloud && (
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">🎧 SoundCloud</h3>
-                    <iframe width="100%" height="166" scrolling="no" frameBorder="no" allow="autoplay" src={artist.embed_soundcloud}></iframe>
+                    <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">SoundCloud</h3>
+                    <iframe
+                      width="100%"
+                      height="166"
+                      scrolling="no"
+                      frameBorder="no"
+                      allow="autoplay"
+                      src={artist.embed_soundcloud}
+                      className="mt-2 rounded-xl border border-slate-800"
+                    ></iframe>
                   </div>
                 )}
                 {artist.embed_bandcamp && (
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">🎵 Bandcamp</h3>
-                    <iframe style={{ border: 0 }} src={artist.embed_bandcamp} width="100%" height="120" allow="autoplay" />
+                    <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Bandcamp</h3>
+                    <iframe
+                      style={{ border: 0 }}
+                      src={artist.embed_bandcamp}
+                      width="100%"
+                      height="160"
+                      allow="autoplay"
+                      className="mt-2 rounded-xl border border-slate-800"
+                    />
                   </div>
                 )}
               </div>
-
               {shouldBlur && (
-                <div className="mt-2 text-center text-sm text-gray-400 italic">
-                  🔒 This artist’s media content is available with Alpine Pro.{' '}
-                  <Link href="/upgrade" className="text-blue-400 underline">Learn more</Link>
+                <div className="mt-3 text-center text-xs text-slate-400">
+                  🔒 Media is limited to Alpine Pro.{' '}
+                  <Link href="/upgrade" className="text-emerald-300 underline">
+                    Upgrade
+                  </Link>
                 </div>
               )}
-            </div>
+            </section>
           )}
-
 
           {(artist.promo_photo || artist.stage_plot || artist.press_kit) && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold mt-6">📎 Downloads</h3>
-              <div className={shouldBlur ? 'relative blur-sm pointer-events-none select-none' : ''}>
+            <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+              <h2 className="text-2xl font-semibold text-white">Downloads</h2>
+              <div className={`mt-4 space-y-2 text-sm ${shouldBlur ? 'blur-sm pointer-events-none select-none' : ''}`}>
                 {artist.promo_photo && (
-                  <p><a href={artist.promo_photo} target="_blank" className="text-blue-400 underline">📸 Promo Photo</a></p>
+                  <a href={artist.promo_photo} target="_blank" rel="noopener noreferrer" className="text-emerald-300 underline">
+                    📸 Promo Photo
+                  </a>
                 )}
                 {artist.stage_plot && (
-                  <p><a href={artist.stage_plot} target="_blank" className="text-blue-400 underline">🎚️ Stage Plot</a></p>
+                  <a href={artist.stage_plot} target="_blank" rel="noopener noreferrer" className="text-emerald-300 underline">
+                    🎚️ Stage Plot
+                  </a>
                 )}
                 {artist.press_kit && (
-                  <p><a href={artist.press_kit} target="_blank" className="text-blue-400 underline">📄 Press Kit</a></p>
+                  <a href={artist.press_kit} target="_blank" rel="noopener noreferrer" className="text-emerald-300 underline">
+                    📄 Press Kit
+                  </a>
                 )}
               </div>
               {shouldBlur && (
-                <div className="mt-2 text-center text-sm text-gray-400 italic">
-                  🔒 Downloadable content is only available for Pro artists.{' '}
-                  <Link href="/upgrade" className="text-blue-400 underline">Learn more</Link>
+                <div className="mt-3 text-center text-xs text-slate-400">
+                  🔒 Downloads are reserved for Alpine Pro listeners.{' '}
+                  <Link href="/upgrade" className="text-emerald-300 underline">
+                    Learn more
+                  </Link>
+                </div>
+              )}
+            </section>
+          )}
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
+            <h2 className="text-2xl font-semibold text-white">Upcoming Shows</h2>
+            <div className="mt-4">
+              {artist.events && artist.events.length > 0 ? (
+                <div className={shouldBlur ? 'relative blur-sm pointer-events-none select-none' : ''}>
+                  {artist.events.map((event) => (
+                    <Link
+                      key={event.id}
+                      href={`/eventRouter/${event.slug}`}
+                      className="mb-4 block rounded-2xl border border-slate-800 bg-slate-950/60 p-4 last:mb-0 transition hover:border-emerald-400/60 hover:bg-slate-950"
+                    >
+                      <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
+                        {dayjs.utc(event.date).format('ddd, MMM D')}
+                      </p>
+                      <h3 className="mt-1 text-lg font-semibold text-white">{event.title}</h3>
+                      <p className="text-sm text-slate-300">
+                        📍 {event.venue_name} • {event.location}
+                      </p>
+                      <p className="text-xs text-slate-400">🎵 {event.genre}</p>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400">No upcoming events listed.</p>
+              )}
+              {shouldBlur && (
+                <div className="mt-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-center text-sm text-slate-300">
+                  🎟️ Upgrade to Alpine Pro to unlock this artist’s full calendar.{' '}
+                  <Link href="/upgrade" className="text-emerald-300 underline">
+                    Upgrade
+                  </Link>
                 </div>
               )}
             </div>
-          )}
+          </section>
 
-
-          {shouldBlur ? (
-            <div className="mt-8 bg-gray-800 p-6 rounded-lg blur-sm relative">
-              <div className="absolute inset-0 bg-black/40 rounded-lg z-10 flex flex-col items-center justify-center text-center p-6">
-                <p className="text-white text-lg font-semibold">
-                  🎟️ Upgrade to Alpine Pro to see this artist’s upcoming events.
-                </p>
-                <Link href="/upgrade" className="mt-3 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                  Learn More
-                </Link>
-              </div>
-              {/* The blurred content underneath */}
-              <div className="opacity-30 pointer-events-none">
-                <h2 className="text-2xl font-semibold mb-4">Upcoming Events</h2>
-                {artist.events && artist.events.length > 0 ? (
-                  <ul className="space-y-4">
-                    {artist.events.map(event => (
-                      <li key={event.id} className="bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-700 transition">
-                        <Link href={`/eventRouter/${event.slug}`} className="block cursor-pointer">
-                          <h3 className="text-lg font-bold text-gold">{event.title}</h3>
-                          <p className="text-gray-300">📅 {dayjs.utc(event.date).format('MMMM D, YYYY')}</p>
-                          <p className="text-gray-400">📍 {event.venue_name} - {event.location}</p>
-                          <p className="text-gray-400">🎵 {event.genre}</p>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-400">No upcoming events listed.</p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="mt-8">
-              <h2 className="text-2xl font-semibold mb-4">Upcoming Events</h2>
-              {artist.events && artist.events.length > 0 ? (
-                <ul className="space-y-4">
-                  {artist.events.map(event => (
-                    <li key={event.id} className="bg-gray-800 p-4 rounded-lg shadow hover:bg-gray-700 transition">
-                      <Link href={`/eventRouter/${event.slug}`} className="block cursor-pointer">
-                        <h3 className="text-lg font-bold text-gold">{event.title}</h3>
-                        <p className="text-gray-300">📅 {dayjs.utc(event.date).format('MMMM D, YYYY')}</p>
-                        <p className="text-gray-400">📍 {event.venue_name} - {event.location}</p>
-                        <p className="text-gray-400">🎵 {event.genre}</p>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-400">No upcoming events listed.</p>
-              )}
+          {canEdit && (
+            <div className="flex flex-wrap gap-4">
+              <button
+                onClick={() => router.push(`/artists/edit/${artist.slug}`)}
+                className="flex-1 rounded-2xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-blue-100 transition hover:border-blue-300 hover:text-white"
+              >
+                ✏️ Edit Profile
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200 transition hover:border-red-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                🗑️ Delete Profile
+              </button>
             </div>
           )}
-
-            {canEdit && (
-              <div className="flex flex-wrap gap-4 mt-6">
-                <button
-                  onClick={() => router.push(`/artists/edit/${artist.slug}`)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-                >
-                  ✏️ Edit Profile
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-                >
-                  🗑️ Delete Profile
-                </button>
-              </div>
-            )}
-          </div>
         </div>
-      </>
-      );
+      </div>
+    </>
+  );
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
@@ -415,13 +447,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${slug}`, {
-      // Forward the user’s browser cookies so the API can identify the owner/admin
       headers: { cookie },
-      // credentials has no effect on Node fetch, but leaving it is fine
     });
 
-    // If API says “pending / forbidden” (owner not visible because cookie missing),
-    // punt the user back to their profile where we show the “Pending approval” UI.
     if (res.status === 403) {
       return {
         redirect: { destination: `/UserProfile?pending=true`, permanent: false },
@@ -437,8 +465,5 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     return { props: { artist: null } };
   }
 };
-
-
-
 
 export default ArtistProfilePage;
