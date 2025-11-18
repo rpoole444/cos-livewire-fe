@@ -1,7 +1,61 @@
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const About = () => {
+  const { user } = useAuth();
+  const [artistSlug, setArtistSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchArtistProfile = async () => {
+      if (!user) {
+        if (isMounted) {
+          setArtistSlug(null);
+        }
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/artists/mine`, {
+          credentials: "include",
+        });
+        if (!isMounted) return;
+        if (res.ok) {
+          const data = await res.json().catch(() => null);
+          if (data?.artist && !data.artist.deleted_at) {
+            setArtistSlug(data.artist.slug ?? null);
+          } else {
+            setArtistSlug(null);
+          }
+        } else {
+          setArtistSlug(null);
+        }
+      } catch (error) {
+        console.error("[About] artist check failed", error);
+        if (isMounted) setArtistSlug(null);
+      }
+    };
+
+    fetchArtistProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
+  const loggedIn = Boolean(user);
+  const hasArtistProfile = loggedIn && Boolean(artistSlug);
+
+  const ctaHref = !loggedIn
+    ? "/login?next=/artist-signup"
+    : hasArtistProfile
+      ? `/artists/${artistSlug}`
+      : "/artist-signup";
+
+  const ctaLabel = hasArtistProfile ? "Go to Artist Page" : "Create an artist profile";
+
   return (
     <div className="bg-slate-950 text-slate-50">
       <main className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
@@ -19,10 +73,10 @@ const About = () => {
               Submit your first show
             </Link>
             <Link
-              href="/artist-signup"
+              href={ctaHref}
               className="rounded-full border border-slate-800 px-6 py-2 text-sm font-semibold text-slate-200 transition hover:border-emerald-300 hover:text-white"
             >
-              Create an artist profile
+              {ctaLabel}
             </Link>
           </div>
         </section>
