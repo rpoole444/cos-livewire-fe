@@ -40,11 +40,11 @@ const WelcomeUser = () => {
   }, [user?.top_music_genres]);
 
   return (
-    <section className="flex h-full flex-col rounded-3xl bg-slate-950 px-6 py-6 text-slate-50 shadow-2xl shadow-black/40 ring-1 ring-slate-800">
-      <div className="flex h-full flex-col gap-5 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+    <section className="flex h-full flex-col rounded-3xl border border-slate-800/80 bg-slate-950/80 px-6 py-6 text-slate-50 shadow-2xl shadow-black/40 backdrop-blur lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+      <div className="flex h-full flex-col gap-5">
         <header className="flex flex-col gap-2">
-          <p className="text-xs font-semibold tracking-[0.2em] text-emerald-400">WELCOME BACK</p>
-          <h2 className="text-xl font-bold leading-tight text-slate-50 sm:text-2xl">
+          <p className="text-[11px] font-semibold tracking-[0.28em] text-emerald-400">WELCOME BACK</p>
+          <h2 className="text-xl font-semibold leading-tight text-slate-50 sm:text-2xl">
             Hey {greetingName}, let&apos;s get your music in front of fans.
           </h2>
           <p className="text-sm text-slate-400">

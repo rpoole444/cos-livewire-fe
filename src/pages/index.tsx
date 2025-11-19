@@ -328,9 +328,9 @@ export default function Home() {
 
         <aside id="auth-section" className="w-full lg:w-[320px] xl:w-[360px] lg:flex-shrink-0">
           <div className="lg:sticky lg:top-24">
-            <div className="bg-white p-6 shadow-xl text-black rounded-3xl">
+            <div className="rounded-3xl border border-slate-800/80 bg-slate-950/70 p-6 shadow-2xl shadow-black/50 backdrop-blur-md sm:p-8 space-y-6">
               {user ? (
-                <div className="flex flex-col gap-6">
+                <div className="space-y-6">
                   <WelcomeUser />
                   <UpcomingShows
                     user={user}
@@ -342,10 +342,27 @@ export default function Home() {
                     events={events}
                   />
                 </div>
-              ) : authMode === 'login' ? (
-                <LoginForm setAuthMode={switchAuthMode} />
               ) : (
-                <RegistrationForm setAuthMode={switchAuthMode} />
+                <>
+                  <div className="text-center space-y-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-400">
+                      Alpine Groove Guide
+                    </p>
+                    <h2 className="text-xl font-semibold tracking-tight text-slate-50">
+                      {authMode === 'login' ? 'Sign in' : 'Create your account'}
+                    </h2>
+                    <p className="text-sm text-slate-400">
+                      {authMode === 'login'
+                        ? 'Log in to manage your shows and stay in sync with the calendar.'
+                        : 'Sign up to start showcasing your events and artist presence.'}
+                    </p>
+                  </div>
+                  {authMode === 'login' ? (
+                    <LoginForm setAuthMode={switchAuthMode} />
+                  ) : (
+                    <RegistrationForm setAuthMode={switchAuthMode} />
+                  )}
+                </>
               )}
             </div>
           </div>
