@@ -1,5 +1,5 @@
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import { Event } from "@/interfaces/interfaces";
 import { UserType } from "@/types";
@@ -10,6 +10,7 @@ interface EventDetailCardProps {
   handleCardClick?: (id: number) => void;
   handleDelete?: (id: number) => void;
   user?: UserType | null;
+  expandDescription?: boolean;
 }
 
 const formatDate = (dateString: string) => {
@@ -40,103 +41,87 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
   handleCardClick,
   handleDelete,
   user,
+  expandDescription = false,
 }) => {
-  const [showFullDescription, setShowFullDescription] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(expandDescription);
   const toggleDescription = () => setShowFullDescription(!showFullDescription);
-  const descriptionTooLong =
-    event.description && event.description.length > 140;
+  const descriptionTooLong = event.description && event.description.length > 160;
+
+  const formattedPrice = useMemo(() => {
+    if (!event.ticket_price) return null;
+    const price = event.ticket_price.trim();
+    if (!price) return null;
+    if (/^(free|donation)/i.test(price)) return price;
+    if (price.startsWith("$")) return price;
+    return `$${price}`;
+  }, [event.ticket_price]);
+
+  const infoPill = (label: string) => (
+    <span className="rounded-full border border-slate-700/70 px-2.5 py-0.5 text-[11px] uppercase tracking-[0.16em] text-slate-300">
+      {label}
+    </span>
+  );
 
   return (
     <div
       onClick={() => handleCardClick?.(event.id)}
-      className="bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition duration-300 cursor-pointer p-4"
+      className={`rounded-3xl border border-slate-800/80 bg-slate-950/70 p-6 shadow-xl shadow-black/40 transition duration-300 sm:p-8 ${
+        handleCardClick ? "cursor-pointer hover:border-emerald-400/70 hover:-translate-y-0.5" : ""
+      }`}
     >
-      <div className="flex flex-col sm:flex-row gap-4">
-        {event.poster ? (
-          <div className="flex-shrink-0 w-full sm:w-[150px] h-[150px] relative">
-            <Image
-              src={event.poster}
-              alt={`${event.title} Poster`}
-              fill
-              className="object-cover rounded-md"
-            />
-          </div>
-        ) : (
-          <div className="w-full sm:w-[150px] h-[150px] bg-gray-800 flex flex-col items-center justify-center rounded-md text-center p-2">
-            <Image
-              src="/alpine_groove_guide_icon.png"
-              alt="Alpine Groove Guide Logo"
-              width={48}
-              height={48}
-              className="mb-2"
-            />
-            <p className="text-xs text-white leading-tight">
-              Go check out <strong>{event.title}</strong>!
-            </p>
-          </div>
-        )}
-
-        <div className="flex-1 text-sm text-gray-300 space-y-1">
-          <h2 className="text-lg font-bold text-gold">{event.title}</h2>
-          <p>
-            <span className="font-semibold text-white">Date:</span>{" "}
-            {formatDate(event.date)}
-          </p>
-          {event.start_time && (
-            <p>
-              <span className="font-semibold text-white">Start:</span>{" "}
-              {formatTime(event.start_time)}
-            </p>
+      <div className="flex flex-col gap-6 sm:flex-row">
+        <div className="relative w-full overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 sm:w-52">
+          {event.poster ? (
+            <Image src={event.poster} alt={`${event.title} Poster`} width={400} height={520} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full min-h-[260px] items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 text-center text-xs uppercase tracking-[0.3em] text-slate-500">
+              Alpine Groove Guide
+            </div>
           )}
+        </div>
+
+        <div className="flex-1 space-y-3 text-sm text-slate-300">
+          <div className="flex flex-wrap items-center gap-2">
+            {event.genre ? infoPill(event.genre) : null}
+            {event.eventType ? infoPill(event.eventType) : null}
+            {event.age_restriction ? infoPill(event.age_restriction) : null}
+          </div>
+          <h2 className="text-2xl font-semibold text-slate-50 sm:text-3xl">{event.title}</h2>
+          <p className="text-sm font-semibold text-emerald-300">
+            {formatDate(event.date)}
+            {event.start_time ? ` • ${formatTime(event.start_time)}` : ""}
+          </p>
           {event.end_time && (
-            <p>
-              <span className="font-semibold text-white">End:</span>{" "}
-              {formatTime(event.end_time)}
+            <p className="text-xs text-slate-400">
+              Ends at {formatTime(event.end_time)}
             </p>
           )}
           {event.venue_name && (
-            <p>
-              <span className="font-semibold text-white">Venue:</span>{" "}
-              {event.venue_name}
+            <p className="text-sm text-slate-200">
+              <span className="text-slate-400">Venue:</span> {event.venue_name}
             </p>
           )}
           {event.address && (
-            <p>
-              <span className="font-semibold text-white">Address:</span>{" "}
-              {event.address}
-            </p>
+            <p className="text-sm text-slate-400">{event.address}</p>
           )}
-          {event.genre && (
-            <p>
-              <span className="font-semibold text-white">Genre:</span>{" "}
-              {event.genre}
-            </p>
-          )}
-          {event.ticket_price && (
-            <p>
-              <span className="font-semibold text-white">Price:</span> $
-              {event.ticket_price}
-            </p>
-          )}
-          {event.age_restriction && (
-            <p>
-              <span className="font-semibold text-white">Age:</span>{" "}
-              {event.age_restriction}
+          {formattedPrice && (
+            <p className="text-sm text-slate-200">
+              <span className="text-slate-400">Price:</span> {formattedPrice}
             </p>
           )}
 
           {event.description && (
-            <div className="text-gray-400">
+            <div className="text-sm leading-relaxed text-slate-300">
               {descriptionTooLong && !showFullDescription
-                ? `${event.description.slice(0, 140)}...`
+                ? `${event.description.slice(0, 200)}…`
                 : event.description}
-              {descriptionTooLong && (
+              {descriptionTooLong && !expandDescription && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleDescription();
                   }}
-                  className="ml-2 text-blue-400 hover:text-blue-200 underline text-xs"
+                  className="ml-2 text-xs font-semibold text-emerald-300 underline-offset-4 hover:text-emerald-200"
                 >
                   {showFullDescription ? "See less" : "See more"}
                 </button>
@@ -144,30 +129,29 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
             </div>
           )}
 
-          <div className="mt-2 flex flex-col gap-1 text-xs">
+          <div className="flex flex-wrap gap-2 pt-2 text-xs">
             {event.website && (
               <Link
                 href={event.website}
                 target="_blank"
-                className="text-blue-400 hover:text-blue-200 underline break-words"
+                className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-slate-100 hover:border-emerald-300 hover:text-emerald-200"
               >
-                Venue Website
+                Venue website →
               </Link>
             )}
-            {event.website_link &&
-              event.website_link !== "http://" && (
-                <Link
-                  href={event.website_link}
-                  target="_blank"
-                  className="text-blue-400 hover:text-blue-200 underline break-words"
-                >
-                  Tickets / Event Website
-                </Link>
-              )}
+            {event.website_link && event.website_link !== "http://" && (
+              <Link
+                href={event.website_link}
+                target="_blank"
+                className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-slate-100 hover:border-emerald-300 hover:text-emerald-200"
+              >
+                Tickets / RSVP →
+              </Link>
+            )}
           </div>
 
           {handleDelete && (
-            <div className="mt-3 flex gap-2 flex-wrap">
+            <div className="flex flex-wrap gap-2 pt-3">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -175,9 +159,9 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
                     handleDelete(event.id);
                   }
                 }}
-                className="bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded text-xs"
+                className="inline-flex items-center rounded-lg border border-rose-500/60 px-4 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-500/10"
               >
-                Delete
+                Delete event
               </button>
             </div>
           )}
