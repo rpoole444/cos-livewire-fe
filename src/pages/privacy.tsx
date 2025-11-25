@@ -4,7 +4,7 @@ const PrivacyPage = () => {
       <div className="max-w-4xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold">Privacy Policy</h1>
           <p className="text-gray-300">
-            This policy explains how Alpine Groove Guide collects, uses, and protects your information when you create an account, publish an artist profile, or subscribe to Alpine Pro.
+            This policy explains how Alpine Groove Guide collects, uses, and protects your information when you create an account, publish a Pro page for your artist, venue, or promoter series, or subscribe to Alpine Pro.
           </p>
 
           <section className="space-y-3">

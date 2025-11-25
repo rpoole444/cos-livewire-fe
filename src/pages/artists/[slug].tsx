@@ -88,7 +88,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   }, [router.query]);
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to permanently delete this artist profile?')) return;
+    if (!confirm('Are you sure you want to permanently delete this Pro page?')) return;
     setDeleting(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist?.slug}`, {
@@ -114,10 +114,10 @@ const ArtistProfilePage = ({ artist }: Props) => {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-16 text-slate-200">
         <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center shadow-2xl shadow-black/40">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-400">Artist Profile</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Artist not found</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-400">Pro Page</p>
+          <h1 className="mt-2 text-3xl font-semibold text-white">Profile not found</h1>
           <p className="mt-3 text-sm text-slate-400">
-            This artist page isn&apos;t available. Browse the directory to discover Alpine Groove Guide artists.
+            This Pro page isn&apos;t available. Browse the directory to discover Alpine Groove Guide artists, venues, and promoters.
           </p>
           <Link
             href="/artists"
@@ -146,11 +146,11 @@ const ArtistProfilePage = ({ artist }: Props) => {
       : `${siteBaseUrl}/alpine_groove_guide_icon.png`;
   const shouldBlur = !artist.is_pro && (isTrialExpired || !artist.trial_ends_at);
   const limitedHeadline = isOwner
-    ? "Upgrade your Alpine Pro to unlock your full public page."
-    : "This artist hasn’t unlocked their full page yet.";
+    ? "Upgrade your Alpine Pro page to unlock your full public profile."
+    : "This Alpine Pro page hasn’t been fully unlocked yet.";
   const limitedBody = isOwner
-    ? "Fans currently see a limited preview of your profile. Upgrade to Alpine Pro to reveal your full bio, media, downloads, and upcoming shows."
-    : "You’re seeing a limited preview because this artist is on the free version of Alpine Groove Guide. When they upgrade to Alpine Pro their full media, downloads, and events will appear here.";
+    ? "Fans currently see a limited preview of your profile. Upgrade to Alpine Pro to reveal your full bio, media, downloads, and upcoming shows—perfect for artists, venues, and promoters."
+    : "You’re seeing a limited preview because this artist, venue, or promoter hasn’t upgraded to Alpine Pro yet. When they do, their full media, downloads, and events will appear here.";
 
   return (
     <>
@@ -173,7 +173,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
         <div className="mx-auto flex max-w-5xl flex-col gap-8">
           {showPendingBanner && (
             <div className="rounded bg-yellow-400 p-3 text-center text-sm font-medium text-black shadow">
-              ⏳ Your artist profile is currently <strong>pending admin approval</strong>. You’ll be notified when approved.
+              ⏳ Your Pro page is currently <strong>pending admin approval</strong>. You’ll be notified when approved.
             </div>
           )}
           {showTrialToast && isOwner && (
@@ -181,7 +181,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
           )}
           {!isOwner && !artist.is_pro && isTrialExpired && (
             <div className="rounded bg-slate-800 p-3 text-center text-sm text-blue-300 shadow">
-              📣 This artist’s Alpine Pro trial has ended.{' '}
+              📣 This Pro page’s Alpine Pro trial has ended.{' '}
               <Link href="/upgrade" className="underline hover:text-blue-200">
                 Learn more about upgrading to Pro
               </Link>
@@ -408,7 +408,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 <div className="mt-3 text-center text-xs text-slate-400">
                   {isOwner
                     ? "Media embeds stay hidden from fans until you upgrade to Alpine Pro."
-                    : "This artist’s media stays hidden until they upgrade to Alpine Pro."}
+                    : "This page’s media stays hidden until they upgrade to Alpine Pro."}
                   {isOwner && (
                     <>
                       {" "}
@@ -446,7 +446,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 <div className="mt-3 text-center text-xs text-slate-400">
                   {isOwner
                     ? "Downloads unlock for everyone once you upgrade to Alpine Pro."
-                    : "Downloads are hidden because this artist hasn’t upgraded to Alpine Pro yet."}
+                    : "Downloads are hidden because this page hasn’t upgraded to Alpine Pro yet."}
                   {isOwner && (
                     <>
                       {" "}
@@ -500,7 +500,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 <div className="mt-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-center text-sm text-slate-300">
                   {isOwner
                     ? "Your full calendar will appear here once you upgrade to Alpine Pro."
-                    : "This artist’s full calendar will appear once they upgrade to Alpine Pro."}
+                    : "This page’s full calendar will appear once they upgrade to Alpine Pro."}
                   {isOwner && (
                     <>
                       {" "}

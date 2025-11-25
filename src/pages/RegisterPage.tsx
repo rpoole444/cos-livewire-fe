@@ -26,7 +26,7 @@ const RegisterPage = () => {
             </p>
             <h1 className="text-3xl font-semibold tracking-tight text-slate-50">Create your account</h1>
             <p className="text-sm text-slate-400">
-              Sign up to save shows, manage your artist profile, and unlock Alpine Pro perks.
+              Sign up to save shows and build a Pro page for your artist, venue, or promoter series—plus unlock Alpine Pro perks.
             </p>
           </div>
           <div className="rounded-2xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-xl shadow-black/40 backdrop-blur sm:p-8">

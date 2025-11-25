@@ -169,7 +169,7 @@ useEffect(() => {
   if (existingArtist?.slug) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-200">
-        You already have an artist profile. Redirecting to your page…
+        You already have a Pro page. Redirecting to your page…
       </div>
     );
   }
@@ -177,7 +177,7 @@ useEffect(() => {
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (existingArtist) {
-    setError("You already have an artist profile. Manage it instead.");
+    setError("You already have a Pro page. Manage it instead.");
     return;
   }
   if (!user || form.genres.length === 0 || !files.profile_image) {
@@ -217,9 +217,9 @@ const handleSubmit = async (e: React.FormEvent) => {
       }
       // Reuse existing
       const mineRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, { credentials: "include" });
-      if (!mineRes.ok) throw new Error("You already have an artist profile, but we couldn't load it.");
+      if (!mineRes.ok) throw new Error("You already have a Pro page, but we couldn't load it.");
       const mineJson = await mineRes.json();
-      if (!mineJson?.artist?.id || !mineJson?.artist?.slug) throw new Error("Existing artist found but incomplete data.");
+      if (!mineJson?.artist?.id || !mineJson?.artist?.slug) throw new Error("Existing Pro page found but incomplete data.");
       artist = { id: mineJson.artist.id, slug: mineJson.artist.slug };
     } else {
       const text = await createRes.text().catch(() => "");
@@ -300,7 +300,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     return (
       <div className="max-w-xl mx-auto p-6 text-white text-center">
         <TrialBanner trial_ends_at={user!.trial_ends_at} />
-        <p className="mb-4">Your free trial has expired. Upgrade to Alpine Pro to manage an artist profile.</p>
+        <p className="mb-4">Your free trial has expired. Upgrade to Alpine Pro to manage your Pro page.</p>
         <Link href="/upgrade" className="text-blue-400 underline">Upgrade Now</Link>
       </div>
     );
@@ -309,7 +309,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   if (checkingExisting) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
-        <p className="text-sm text-slate-400">Preparing artist signup…</p>
+        <p className="text-sm text-slate-400">Preparing Pro signup…</p>
       </div>
     );
   }
@@ -318,15 +318,15 @@ const handleSubmit = async (e: React.FormEvent) => {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4">
         <div className="max-w-md rounded-3xl border border-slate-800 bg-slate-900/70 p-6 text-center space-y-4">
-          <p className="text-sm text-slate-300">
-            You already have an artist profile: <span className="font-semibold text-slate-50">{existingArtist.display_name}</span>
+        <p className="text-sm text-slate-300">
+            You already have a Pro page: <span className="font-semibold text-slate-50">{existingArtist.display_name}</span>
           </p>
           <div className="flex flex-col gap-2">
             <Link
               href={`/artists/edit/${existingArtist.slug}`}
               className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
             >
-              Manage Artist Profile
+              Manage Pro Page
             </Link>
             <Link
               href={`/artists/${existingArtist.slug}`}
@@ -348,7 +348,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       <TrialBanner trial_ends_at={user?.trial_ends_at} />
       <h1 className="text-2xl font-bold mb-2">🎤 Claim Your Artist Profile</h1>
       <p className="text-sm text-gray-300 mb-4">
-        Create your public artist profile and enjoy 30 days of Alpine Pro access free.
+        Create your public Pro page for your artist, venue, or promoter series and enjoy 30 days of Alpine Pro access free.
         Add your music, bio, media kit, and upcoming shows — no credit card required!
       </p>      
       <form onSubmit={handleSubmit} className="space-y-4">

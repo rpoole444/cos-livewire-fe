@@ -53,18 +53,18 @@ export default function ArtistDirectoryPage() {
     <div className="min-h-screen bg-slate-950 text-white">
       <Head>
         <title>Artist Directory | Alpine Groove Guide</title>
-        <meta name="description" content="Browse all Alpine Pro artist profiles" />
+        <meta name="description" content="Browse Alpine Pro pages for artists, venues, and promoters across Colorado" />
       </Head>
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 sm:py-10">
         <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 text-center shadow-2xl ring-1 ring-slate-800">
-          <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">Artist Directory</h1>
+          <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">Artist, Venue &amp; Promoter Directory</h1>
           <p className="mt-2 text-sm text-slate-400 sm:text-base">
-            Discover Alpine Groove Guide artists and explore their live music profiles across the Colorado Front Range.
+            Discover Alpine Groove Guide Pro pages for artists, venues, and promoters across the Colorado Front Range.
           </p>
           {!isActivePro(user as any) && !isTrialActive(user?.trial_ends_at) && (
             <Link href="/upgrade">
               <button className="mt-4 rounded-full border border-emerald-400/50 bg-emerald-500/10 px-5 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20">
-                Become an Alpine Pro Artist →
+                Put your artist, venue, or series on Alpine Pro →
               </button>
             </Link>
           )}
@@ -88,11 +88,11 @@ export default function ArtistDirectoryPage() {
         ) : filteredArtists.length === 0 ? (
           <div className="mt-6 rounded-3xl border border-slate-800 bg-slate-900/80 p-6 text-center">
             <p className="text-sm text-slate-300">
-              No artists listed yet. Be the first to create a profile and put your music on the map.
+              No Pro pages yet. Be the first to create a profile for your artist, venue, or promoter series.
             </p>
             <Link href="/artist-signup">
               <button className="mt-4 rounded-full border border-emerald-400/50 bg-emerald-500/10 px-5 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20">
-                Create an artist profile
+                Create Your Pro Page
               </button>
             </Link>
           </div>

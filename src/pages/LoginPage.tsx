@@ -26,7 +26,7 @@ const LoginPage = () => {
             </p>
             <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Welcome back</h1>
             <p className="text-sm text-slate-400">
-              Sign in to manage shows, artist pages, and your Alpine Pro perks.
+              Sign in to manage shows and Pro pages for your artist, venue, or promoter series—plus all your Alpine Pro perks.
             </p>
           </div>
           <div className="rounded-2xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-xl shadow-black/40 backdrop-blur-sm sm:p-8">

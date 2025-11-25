@@ -149,7 +149,7 @@ const EventDetailPage = ({ event, events }: Props) => {
                       </p>
                       <h2 className="text-xl font-semibold text-slate-50">Welcome back</h2>
                       <p className="text-sm text-slate-400">
-                        Sign in to RSVP, save shows, and submit your events.
+                        Sign in to RSVP, save shows, and manage Pro pages for your artist, venue, or promoter series.
                       </p>
                     </div>
                     <LoginForm setAuthMode={switchAuthMode} />
@@ -162,7 +162,7 @@ const EventDetailPage = ({ event, events }: Props) => {
                       </p>
                       <h2 className="text-xl font-semibold text-slate-50">Create an account</h2>
                       <p className="text-sm text-slate-400">
-                        Build your artist profile and see your shows featured.
+                        Build your Pro page as an artist, venue, or promoter and see your shows featured.
                       </p>
                     </div>
                     <RegistrationForm setAuthMode={switchAuthMode} />

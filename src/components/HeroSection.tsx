@@ -25,7 +25,7 @@ const HeroSection = ({ user }: { user: any; setAuthMode: (mode: string) => void 
             Live music, <span className="text-emerald-300">on one stage.</span>
           </h1>
           <p className="max-w-2xl text-base text-slate-200 sm:text-lg">
-            Discover Colorado Front Range shows, and give artists and venues a home for their gigs. Alpine Groove Guide
+            Discover Colorado Front Range shows, and give artists, venues, and promoters a home for their gigs. Alpine Groove Guide
             keeps every set time, ticket link, and local lineup in one elevated feed.
           </p>
 

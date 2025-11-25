@@ -371,7 +371,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           <p className="text-sm uppercase tracking-[0.3em] text-emerald-300">Submit a live music event</p>
           <h1 className="text-3xl font-semibold text-white sm:text-4xl">{greetingHeading}</h1>
           <p className="mx-auto max-w-2xl text-sm text-slate-400">
-            Share accurate details so Alpine Groove Guide can feature your event across the calendar and artist pages.
+            Share accurate details so Alpine Groove Guide can feature your event across the calendar and Pro pages for artists, venues, and promoters.
             Include the essentials: when it starts, where to find it, and how fans can support.
           </p>
         </header>

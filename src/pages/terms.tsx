@@ -4,7 +4,7 @@ const TermsPage = () => {
       <div className="max-w-4xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold">Terms of Service</h1>
           <p className="text-gray-300">
-            Welcome to Alpine Groove Guide. We connect musicians, venues, and the community with show listings, artist profiles, and Alpine Pro subscriptions. By using the site you agree to these terms.
+            Welcome to Alpine Groove Guide. We connect musicians, venues, promoters, and the community with show listings, Pro pages, and Alpine Pro subscriptions. By using the site you agree to these terms.
           </p>
 
         <section className="space-y-3">

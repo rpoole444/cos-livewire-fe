@@ -54,7 +54,7 @@ const About = () => {
       ? `/artists/${artistSlug}`
       : "/artist-signup";
 
-  const ctaLabel = hasArtistProfile ? "Go to Artist Page" : "Create an artist profile";
+  const ctaLabel = hasArtistProfile ? "Go to Pro Page" : "Create Your Pro Page";
 
   return (
     <div className="bg-slate-950 text-slate-50">
@@ -116,7 +116,7 @@ const About = () => {
         <section className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-lg">
           <h3 className="text-2xl font-semibold text-white">🎶 Get Involved</h3>
           <p className="mt-2 text-sm text-slate-300">
-            Promote events, build an artist profile, or drop me a note if you have ideas to grow the scene.
+            Promote events, build a Pro page for your artist, venue, or series, or drop me a note if you have ideas to grow the scene.
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <Link href="/RegisterPage" className="rounded-full bg-indigo-500 px-5 py-2 text-center text-sm font-semibold text-white transition hover:bg-indigo-400">

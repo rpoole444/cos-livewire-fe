@@ -143,7 +143,7 @@ export default function EditArtistProfilePage() {
     return (
       <div className="max-w-xl mx-auto p-6 text-white text-center">
         <TrialBanner trial_ends_at={user!.trial_ends_at} />
-        <p className="mb-4">Your free trial has expired. Upgrade to Alpine Pro to edit your artist profile.</p>
+        <p className="mb-4">Your free trial has expired. Upgrade to Alpine Pro to edit your Pro page.</p>
         <Link href="/upgrade" className="text-blue-400 underline">Upgrade Now</Link>
       </div>
     );

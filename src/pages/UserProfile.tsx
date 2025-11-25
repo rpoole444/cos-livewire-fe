@@ -80,7 +80,7 @@ const canShowArtistWelcome = !needsProfileSetup && !hasArtistProfile && !isEditi
 const shouldShowTrialBanner = !canUseProFeatures && trialActive;
 const shouldShowCancelBanner = canUseProFeatures && !!proCancelledAt;
 const trialEndDate = user?.trial_ends_at ? new Date(user.trial_ends_at).toLocaleDateString() : null;
-let artistStatusLabel = "No artist page";
+let artistStatusLabel = "No Pro page";
 let artistStatusClass = "border border-slate-600 bg-slate-800 text-slate-200";
 if (hasArtistProfile) {
   if (!isApproved) {
@@ -665,15 +665,15 @@ const textareaClasses =
           <div className="flex flex-col gap-1">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
-                <p className="text-xs uppercase tracking-wide text-slate-500">My Artist Presence</p>
-                <h2 className="text-2xl font-semibold text-white">Artist Page</h2>
+                <p className="text-xs uppercase tracking-wide text-slate-500">My Pro Presence</p>
+                <h2 className="text-2xl font-semibold text-white">Pro Page</h2>
               </div>
               {needsProfileSetup && !hasArtistProfile && (
-                <span className="text-sm text-emerald-200">Step 2: Create your artist page (optional)</span>
+                <span className="text-sm text-emerald-200">Step 2: Create your Pro page (optional)</span>
               )}
             </div>
             <p className="text-slate-300 text-sm">
-              Share a public page with your shows, contact info, and media so venues and fans can find you.
+              Share a public page with your shows, contact info, and media so fans, venues, and presenters can find you.
             </p>
           </div>
 
@@ -681,14 +681,14 @@ const textareaClasses =
             canShowArtistWelcome ? (
               <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
                 <p className="text-slate-300 text-sm">
-                  Create your artist or venue page to showcase your work on Alpine Groove Guide.
+                  Create your Pro page for your artist, venue, or promoter project to showcase your work on Alpine Groove Guide.
                 </p>
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={gotoCreateProfile}
                     className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
                   >
-                    Create my artist page
+                    Create Your Pro Page
                   </button>
                   {canRestoreProfile && (
                     <button
@@ -716,13 +716,13 @@ const textareaClasses =
             ) : (
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gray-900/20 border border-gray-700 rounded-xl p-4">
                 <p className="text-sm text-slate-300">
-                  Ready later? You can create your artist page whenever you like.
+                  Ready later? You can create your Pro page whenever you like.
                 </p>
                 <button
                   onClick={gotoCreateProfile}
                   className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
                 >
-                  Create my artist page
+                  Create Your Pro Page
                 </button>
               </div>
             )
@@ -730,7 +730,7 @@ const textareaClasses =
             <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-xl font-semibold text-white">{artistDisplayName || "Your artist profile"}</p>
+                  <p className="text-xl font-semibold text-white">{artistDisplayName || "Your Pro page"}</p>
                   <div className="mt-1">
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${artistStatusClass}`}>
                       {artistStatusLabel}
@@ -754,14 +754,14 @@ const textareaClasses =
                     onClick={() => router.push(`/artists/edit/${artistSlug}`)}
                     className="inline-flex items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/60"
                   >
-                    Manage Artist Profile
+                    Manage Pro Page
                   </button>
                 </div>
               </div>
 
               {!isApproved && (
                 <div className="rounded-lg border border-amber-400/60 bg-amber-500/10 p-4 text-sm text-amber-100">
-                  🎷 Your artist profile is under review. You’ll be notified when it’s approved.
+                  🎷 Your Pro page is under review. You’ll be notified when it’s approved.
                 </div>
               )}
             </div>

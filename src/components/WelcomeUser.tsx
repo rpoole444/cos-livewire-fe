@@ -85,7 +85,7 @@ const WelcomeUser = () => {
           <div className="text-sm text-slate-300">
             <p className="font-semibold text-slate-50">Next up</p>
             <p className="mt-1 text-slate-400">
-              Share your next gig or polish your artist page so bookers know exactly what you bring to the stage.
+              Share your next gig or polish your Pro page so bookers know exactly what you bring to the stage.
             </p>
           </div>
         </div>
@@ -101,7 +101,7 @@ const WelcomeUser = () => {
             href="/UserProfile"
             className="rounded-full border border-slate-700 bg-slate-900 px-4 py-3 text-center text-sm font-medium text-slate-200 transition hover:border-slate-500 hover:text-white"
           >
-            Manage profile &amp; artist pages →
+            Manage profile &amp; Pro pages →
           </Link>
         </div>
 

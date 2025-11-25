@@ -20,10 +20,10 @@ const plans = [
 
 const features = [
   'Unlimited event submissions with priority placement on the calendar.',
-  'Custom artist profile showcasing your music, links and media.',
+  'A custom Alpine Pro page for your artist, venue, or promoter series with music, links, and media.',
   'Built‑in tipping so fans can directly support your work.',
   'Multiple event submissions at one time.',
-  'Social Media links for easy marketing.',
+  'Social media links for easy marketing.',
   'Early access to upcoming community radio tools and analytics.'
 ];
 
@@ -82,7 +82,7 @@ export default function UpgradePage() {
         <section className="text-center py-16 px-6 bg-black">
           <h1 className="text-4xl font-extrabold text-gold mb-4">Upgrade to Alpine Pro</h1>
           <p className="max-w-2xl mx-auto text-lg text-gray-300">
-            Reach more fans. Get booked. Build your music brand across the Front Range.
+            Reach more fans, book more rooms, and give your artist, venue, or promoter brand a premium home across the Front Range.
           </p>
         </section>
 
@@ -146,7 +146,7 @@ export default function UpgradePage() {
 
         {/* TESTIMONIALS */}
         <section className="py-12 px-6 max-w-5xl mx-auto">
-          <h2 className="text-2xl font-semibold text-center mb-6">What Artists Are Saying</h2>
+          <h2 className="text-2xl font-semibold text-center mb-6">What Alpine Pro members are saying</h2>
           <div className="grid gap-6 md:grid-cols-3">
             {testimonials.map((t) => (
               <blockquote key={t.author} className="bg-gray-800 p-6 rounded-lg text-left">
