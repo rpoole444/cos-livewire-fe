@@ -29,6 +29,17 @@ body {
     
 }
 
+/* Keep native date/time picker icons high-contrast so users know they can click them. */
+.agg-date-time-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.9;
+  cursor: pointer;
+}
+
+.agg-date-time-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

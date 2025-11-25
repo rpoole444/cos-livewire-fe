@@ -37,6 +37,8 @@ interface Props {
 
 const inputClass =
   "w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/30";
+// Dedicated class keeps the date/time picker icon bright so users know it opens the native picker.
+const dateTimeInputClass = `${inputClass} agg-date-time-input`;
 const labelClass = "text-xs font-semibold uppercase tracking-widest text-slate-400";
 const helperClass = "mt-1 text-xs text-slate-500";
 
@@ -226,7 +228,7 @@ const EventForm: React.FC<Props> = ({
               required
               value={event.date}
               onChange={(e) => onChange(index, e)}
-              className={inputClass}
+              className={dateTimeInputClass}
             />
             <p className={helperClass}>Dates publish in Mountain Time.</p>
           </div>
@@ -280,7 +282,7 @@ const EventForm: React.FC<Props> = ({
               required
               value={event.start_time}
               onChange={(e) => onChange(index, e)}
-              className={inputClass}
+              className={dateTimeInputClass}
             />
           </div>
           <div>
@@ -294,7 +296,7 @@ const EventForm: React.FC<Props> = ({
               required
               value={event.end_time}
               onChange={(e) => onChange(index, e)}
-              className={inputClass}
+              className={dateTimeInputClass}
             />
           </div>
         </div>
