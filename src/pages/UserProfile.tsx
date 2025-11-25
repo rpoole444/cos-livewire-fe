@@ -41,6 +41,9 @@ const UserProfile: React.FC = () => {
   const [description, setDescription] = useState("");
   const [genres, setGenres] = useState<string[]>([]);
   const [message, setMessage] = useState("");
+  const [resetSuccessMessage, setResetSuccessMessage] = useState("");
+  const [resetErrorMessage, setResetErrorMessage] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [profilePicture, setProfilePicture] = useState("");
   const [artistImage, setArtistImage] = useState<string | null>(null);
@@ -57,6 +60,7 @@ const UserProfile: React.FC = () => {
   const approvalRef = useRef<boolean | null>(null);
   const refetchedOnce = useRef(false);
   const accountSectionRef = useRef<HTMLDivElement | null>(null);
+  const resetAlertRef = useRef<HTMLDivElement | null>(null);
  const [hasRefetched, setHasRefetched] = useState(false);
 
 const trialActive = !!user?.trial_ends_at && isTrialActive(user.trial_ends_at);
@@ -260,7 +264,13 @@ if (hasArtistProfile) {
     }
   }, [query]);
 
-  
+  useEffect(() => {
+    if ((resetSuccessMessage || resetErrorMessage) && resetAlertRef.current) {
+      resetAlertRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [resetSuccessMessage, resetErrorMessage]);
+
+
 
   // Clear messages after 3 seconds
   useEffect(() => {
@@ -356,6 +366,10 @@ if (hasArtistProfile) {
   };
 
   const handleResetPassword = async () => {
+    setResetSuccessMessage("");
+    setResetErrorMessage("");
+    setIsResettingPassword(true);
+
     try {
       const res = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
         method: "POST",
@@ -363,10 +377,22 @@ if (hasArtistProfile) {
         body: JSON.stringify({ email }),
         credentials: "include",
       });
-      const data = await res.json();
-      setMessage(data.message);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to send reset email.");
+      }
+
+      const confirmation =
+        data?.message ||
+        "If an account exists for that email, we've sent a password reset link.";
+      setResetSuccessMessage(confirmation);
     } catch (err) {
-      setMessage("Failed to send reset email.");
+      const friendlyMessage =
+        err instanceof Error ? err.message : "Failed to send reset email.";
+      console.error("Reset password request failed:", err);
+      setResetErrorMessage(friendlyMessage);
+    } finally {
+      setIsResettingPassword(false);
     }
   };
 
@@ -532,6 +558,21 @@ const textareaClasses =
             )}
           </div>
 
+          {(resetSuccessMessage || resetErrorMessage) && (
+            <div
+              ref={resetAlertRef}
+              role={resetSuccessMessage ? "status" : "alert"}
+              aria-live={resetSuccessMessage ? "polite" : "assertive"}
+              className={`rounded-2xl border px-4 py-3 text-sm ${
+                resetSuccessMessage
+                  ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-50"
+                  : "border-rose-500/60 bg-rose-950/40 text-rose-100"
+              }`}
+            >
+              {resetSuccessMessage || resetErrorMessage}
+            </div>
+          )}
+
           <div className="flex flex-col gap-8 md:flex-row">
             <div className="flex justify-center md:w-1/3">
               {profilePicture ? (
@@ -646,9 +687,10 @@ const textareaClasses =
                 )}
                 <button
                   onClick={handleResetPassword}
-                  className="inline-flex items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/60"
+                  disabled={isResettingPassword}
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-60 hover:bg-slate-800/60"
                 >
-                  Reset Password
+                  {isResettingPassword ? "Sending reset link..." : "Reset Password"}
                 </button>
                 <button
                   onClick={() => router.push("/")}
