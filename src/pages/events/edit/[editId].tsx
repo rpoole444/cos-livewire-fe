@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import Head from 'next/head';
 import Image from 'next/image';
 import { Event } from '@/interfaces/interfaces';
 import Link from 'next/link';
@@ -52,12 +53,32 @@ const EditEventPage = () => {
     })();
   }, [router.isReady, editId]);
 
-  /* ── early-return placeholders (after hooks) ───────── */
-  if (!router.isReady || typeof editId !== 'string')
-    return <div className="text-white p-6">Loading event data…</div>;
+  const pageTitle = eventData?.title
+    ? `Edit ${eventData.title} – Alpine Groove Guide`
+    : 'Edit Event – Alpine Groove Guide';
 
-  if (!eventData)
-    return <div className="text-white p-6">Loading event…</div>;
+  /* ── early-return placeholders (after hooks) ───────── */
+  if (!router.isReady || typeof editId !== 'string') {
+    return (
+      <>
+        <Head>
+          <title>{pageTitle}</title>
+        </Head>
+        <div className="text-white p-6">Loading event data…</div>
+      </>
+    );
+  }
+
+  if (!eventData) {
+    return (
+      <>
+        <Head>
+          <title>{pageTitle}</title>
+        </Head>
+        <div className="text-white p-6">Loading event…</div>
+      </>
+    );
+  }
 
   /* ── helpers ───────────────────────────────────────── */
   const handleChange = (
@@ -103,6 +124,10 @@ const EditEventPage = () => {
 
   /* ── render form ───────────────────────────────────── */
   return (
+    <>
+      <Head>
+        <title>{pageTitle}</title>
+      </Head>
     <div className="p-6 max-w-2xl mx-auto text-white">
       <div className="min-h-screen bg-gray-900 text-white">
 
@@ -245,6 +270,7 @@ const EditEventPage = () => {
       </form>
       </div>
     </div>
+    </>
   );
 };
 

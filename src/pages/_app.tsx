@@ -1,4 +1,5 @@
 import React            from 'react';
+import Head from 'next/head';
 import type { AppProps } from 'next/app';
 
 import { AuthProvider } from '@/context/AuthContext';
@@ -25,6 +26,9 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     <ClientOnly>
       <AuthProvider>
         <Layout>
+          <Head>
+            <title>Alpine Groove Guide</title>
+          </Head>
           <Component {...pageProps} />
         </Layout>
       </AuthProvider>

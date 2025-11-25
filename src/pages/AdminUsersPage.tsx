@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import Head from 'next/head';
 import Link from 'next/link';
 import { fetchAllUsers } from './api/route';
 import { User, Users } from '../interfaces/interfaces';
@@ -94,6 +95,9 @@ const AdminUsersPage = () => {
 
   return (
     <>
+      <Head>
+        <title>Alpine Groove Guide – User Management</title>
+      </Head>
     <div className="min-h-screen bg-gray-900 text-white px-4 py-10">
       <div className="max-w-5xl mx-auto space-y-8">
         <h1 className="text-3xl font-bold text-center">Admin: User Management</h1>

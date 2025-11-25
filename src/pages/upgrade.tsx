@@ -74,7 +74,7 @@ export default function UpgradePage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <Head>
-        <title>Upgrade to Alpine Pro | Alpine Groove Guide</title>
+        <title>Upgrade to Alpine Pro – Alpine Groove Guide</title>
       </Head>
 
       <main className="flex-grow">

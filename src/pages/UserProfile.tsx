@@ -1,6 +1,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/router";
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import TrialBanner from '@/components/TrialBanner';
@@ -76,6 +77,9 @@ const isDefaultDisplayName = normalizedDisplayName !== "" && normalizedDisplayNa
 const needsProfileSetup = rawDisplayName.length === 0 || isDefaultDisplayName;
 const displayNameMissing = needsProfileSetup;
 const profileHeadingName = user?.displayName || user?.display_name || user?.email || "Your Profile";
+const pageTitle = profileHeadingName
+  ? `${profileHeadingName} – Alpine Pro Dashboard`
+  : "Alpine Pro Dashboard – Alpine Groove Guide";
 const avatarSource = artistImage || profilePicture || null;
 const avatarInitial = (artistDisplayName || profileHeadingName)?.charAt(0)?.toUpperCase() || "?";
 const canVisitPublicPage = Boolean(isApproved && (trialActive || canUseProFeatures));
@@ -474,6 +478,10 @@ const textareaClasses =
   }
 
   return (
+    <>
+      <Head>
+        <title>{pageTitle}</title>
+      </Head>
     <div className="relative min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.15),_transparent_60%)]" />
       <div className="relative z-10 mx-auto max-w-5xl px-4 py-10 space-y-6 sm:px-6 lg:px-0 lg:py-16">
@@ -902,6 +910,7 @@ const textareaClasses =
         {message && <div className="text-center text-sm text-red-400">{message}</div>}
       </div>
     </div>
+    </>
   );
 };
 

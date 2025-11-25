@@ -1,5 +1,11 @@
+import Head from "next/head";
+
 const PrivacyPage = () => {
   return (
+    <>
+      <Head>
+        <title>Privacy Policy – Alpine Groove Guide</title>
+      </Head>
     <div className="px-6 py-12 text-white">
       <div className="max-w-4xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold">Privacy Policy</h1>
@@ -52,6 +58,7 @@ const PrivacyPage = () => {
           </section>
       </div>
     </div>
+    </>
   );
 };
 

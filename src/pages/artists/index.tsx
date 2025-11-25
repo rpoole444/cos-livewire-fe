@@ -52,7 +52,7 @@ export default function ArtistDirectoryPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <Head>
-        <title>Artist Directory | Alpine Groove Guide</title>
+        <title>Artist Directory – Alpine Groove Guide</title>
         <meta name="description" content="Browse Alpine Pro pages for artists, venues, and promoters across Colorado" />
       </Head>
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 sm:py-10">

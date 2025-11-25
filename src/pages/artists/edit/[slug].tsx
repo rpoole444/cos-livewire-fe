@@ -1,5 +1,6 @@
 // pages/artists/edit/[slug].tsx
 import { useEffect, useState } from 'react';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -150,10 +151,18 @@ export default function EditArtistProfilePage() {
   }
   
 
+  const pageTitle = form.display_name
+    ? `Edit ${form.display_name} – Alpine Groove Guide`
+    : 'Edit Artist Profile – Alpine Groove Guide';
+
   return (
-    <div className="max-w-xl mx-auto p-6 text-white">
-      <TrialBanner trial_ends_at={user?.trial_ends_at} />
-      <h1 className="text-2xl font-bold mb-4">Edit Artist Profile</h1>
+    <>
+      <Head>
+        <title>{pageTitle}</title>
+      </Head>
+      <div className="max-w-xl mx-auto p-6 text-white">
+        <TrialBanner trial_ends_at={user?.trial_ends_at} />
+        <h1 className="text-2xl font-bold mb-4">Edit Artist Profile</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input name="display_name" value={form.display_name} onChange={handleChange} placeholder="Display Name" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <input name="contact_email" value={form.contact_email} onChange={handleChange} placeholder="Contact Email" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
@@ -209,5 +218,6 @@ export default function EditArtistProfilePage() {
         </button>
       </form>
     </div>
+    </>
   );
 }

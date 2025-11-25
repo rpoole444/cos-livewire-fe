@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
@@ -68,6 +69,10 @@ const ForgotPassword: React.FC = () => {
   }, [successMessage]);
 
   return (
+    <>
+      <Head>
+        <title>Forgot Password – Alpine Groove Guide</title>
+      </Head>
     <div className="flex flex-col min-h-screen bg-gray-100">
       <div
         className="flex-grow flex items-center justify-center flex-col px-4 text-center"
@@ -120,6 +125,7 @@ const ForgotPassword: React.FC = () => {
             </button>
           </div>
     </div>
+    </>
   );
 };
 

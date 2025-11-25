@@ -1,5 +1,6 @@
 import "../styles/globals.css";
 import React, { useState, useEffect, useRef } from "react";
+import Head from "next/head";
 import { submitEvent, logoutUser } from "./api/route";
 import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
@@ -35,6 +36,7 @@ interface Event {
 
 
 const EventSubmission = () => {
+  const pageTitle = "Submit Your Event – Alpine Groove Guide";
   const initialEvent: Event = {
     title: '',
     description: '',
@@ -294,6 +296,10 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
   if (!user) {
   return (
+    <>
+      <Head>
+        <title>{pageTitle}</title>
+      </Head>
     <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-700">
       <div className="text-center">
         <svg
@@ -319,11 +325,16 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         <p className="text-lg font-medium">Checking authentication...</p>
       </div>
     </div>
+    </>
   );
 }
 
   if (trialExpired) {
     return (
+      <>
+        <Head>
+          <title>{pageTitle}</title>
+        </Head>
       <div className="container mx-auto p-4 text-center text-white">
         <TrialBanner trial_ends_at={user!.trial_ends_at} />
         <p className="mb-4">Your free trial has expired. Upgrade to Alpine Pro to submit events.</p>
@@ -331,12 +342,17 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           Upgrade Now
         </Link>
       </div>
+      </>
     );
   }
 
 
   if (submissionSuccess) {
     return (
+      <>
+        <Head>
+          <title>{pageTitle}</title>
+        </Head>
       <div className="container mx-auto p-4">
         <h1 className="text-center text-2xl font-bold mb-6">
         ✅ Your event has been submitted!
@@ -344,6 +360,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         You&apos;ll receive an email when it&apos;s approved and live on the calendar.
         </h1>
       </div>
+      </>
     );
   }
 
@@ -358,6 +375,10 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     : "Let’s promote your next show.";
 
   return (
+    <>
+      <Head>
+        <title>{pageTitle}</title>
+      </Head>
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <Script
         src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
@@ -475,6 +496,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         </div>
       </main>
     </div>
+    </>
   );
 };
 

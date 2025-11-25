@@ -62,6 +62,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
   const logRef = useRef(false);
   const eventsLoggedRef = useRef(false);
+  const pageTitle = artist?.display_name ? `${artist.display_name} – Profile` : 'Artist Profile – Alpine Groove Guide';
 
   useEffect(() => {
     if (artist && !logRef.current) {
@@ -112,21 +113,26 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
   if (!artist) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-16 text-slate-200">
-        <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center shadow-2xl shadow-black/40">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-400">Pro Page</p>
-          <h1 className="mt-2 text-3xl font-semibold text-white">Profile not found</h1>
-          <p className="mt-3 text-sm text-slate-400">
-            This Pro page isn&apos;t available. Browse the directory to discover Alpine Groove Guide artists, venues, and promoters.
-          </p>
-          <Link
-            href="/artists"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
-          >
-            View artist directory
-          </Link>
+      <>
+        <Head>
+          <title>{pageTitle}</title>
+        </Head>
+        <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-16 text-slate-200">
+          <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center shadow-2xl shadow-black/40">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-400">Pro Page</p>
+            <h1 className="mt-2 text-3xl font-semibold text-white">Profile not found</h1>
+            <p className="mt-3 text-sm text-slate-400">
+              This Pro page isn&apos;t available. Browse the directory to discover Alpine Groove Guide artists, venues, and promoters.
+            </p>
+            <Link
+              href="/artists"
+              className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
+            >
+              View artist directory
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -155,16 +161,16 @@ const ArtistProfilePage = ({ artist }: Props) => {
   return (
     <>
       <Head>
-        <title>{artist.display_name} – Live Music on Alpine Groove Guide</title>
+        <title>{pageTitle}</title>
         <meta name="description" content={description} />
         <meta property="og:site_name" content="Alpine Groove Guide" />
-        <meta property="og:title" content={`${artist.display_name} – Live Music on Alpine Groove Guide`} />
+        <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={description} />
         <meta property="og:type" content="profile" />
         <meta property="og:url" content={artistUrl} />
         <meta property="og:image" content={ogImage} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${artist.display_name} – Live Music on Alpine Groove Guide`} />
+        <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={ogImage} />
       </Head>

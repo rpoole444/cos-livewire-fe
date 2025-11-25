@@ -163,7 +163,7 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Alpine Groove Guide – Live Music on the Colorado Front Range</title>
+        <title>Alpine Groove Guide – Home</title>
         <meta name="description" content={homeDescription} />
         <meta property="og:title" content="Alpine Groove Guide – Live Music on the Colorado Front Range" />
         <meta property="og:description" content={homeDescription} />

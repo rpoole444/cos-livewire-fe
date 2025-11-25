@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -43,6 +44,10 @@ const ResetPassword: React.FC = () => {
   };
 
   return (
+    <>
+      <Head>
+        <title>Reset Password – Alpine Groove Guide</title>
+      </Head>
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <form onSubmit={handleSubmit} className="bg-white p-8 shadow rounded">
         <label htmlFor="email" className="text-sm font-bold text-gray-600 block">User Email</label>
@@ -69,6 +74,7 @@ const ResetPassword: React.FC = () => {
         </button>
       </form>
     </div>
+    </>
   );
 };
 

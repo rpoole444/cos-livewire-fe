@@ -24,6 +24,9 @@ const EventDetailPage = ({ event, events }: Props) => {
   const { user } = useAuth();
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const router = useRouter();
+  const pageTitle = event?.title
+    ? `${event.title} – Event Details – Alpine Groove Guide`
+    : "Event Details – Alpine Groove Guide";
 
   const switchAuthMode = () => {
     setAuthMode((prev) => (prev === "login" ? "register" : "login"));
@@ -38,7 +41,7 @@ const EventDetailPage = ({ event, events }: Props) => {
   return (
     <>
       <Head>
-        <title>{event.title} | Alpine Groove Guide</title>
+        <title>{pageTitle}</title>
         <meta name="description" content={event.description?.slice(0, 150)} />
         <link rel="canonical" href={`https://app.alpinegrooveguide.com/eventRouter/${event.slug}`} />
       </Head>

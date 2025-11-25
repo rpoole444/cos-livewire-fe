@@ -1,3 +1,4 @@
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -21,9 +22,14 @@ const EditEventPage = () => {
   if (!event) return <div>Loading...</div>;
 
   return (
-    <div>
-      {/* Your form here, pre-populated with event data */}
-    </div>
+    <>
+      <Head>
+        <title>Edit Event – Alpine Groove Guide</title>
+      </Head>
+      <div>
+        {/* Your form here, pre-populated with event data */}
+      </div>
+    </>
   );
 };
 

@@ -1,4 +1,5 @@
 import { useState,useEffect } from 'react';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -344,9 +345,13 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
 
   return (
-    <div className="max-w-xl mx-auto p-6 text-white">
-      <TrialBanner trial_ends_at={user?.trial_ends_at} />
-      <h1 className="text-2xl font-bold mb-2">🎤 Claim Your Artist Profile</h1>
+    <>
+      <Head>
+        <title>Artist Signup – Alpine Groove Guide</title>
+      </Head>
+      <div className="max-w-xl mx-auto p-6 text-white">
+        <TrialBanner trial_ends_at={user?.trial_ends_at} />
+        <h1 className="text-2xl font-bold mb-2">🎤 Claim Your Artist Profile</h1>
       <p className="text-sm text-gray-300 mb-4">
         Create your public Pro page for your artist, venue, or promoter series and enjoy 30 days of Alpine Pro access free.
         Add your music, bio, media kit, and upcoming shows — no credit card required!
@@ -515,5 +520,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         </button>
       </form>
     </div>
+    </>
   );
 }

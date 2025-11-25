@@ -1,3 +1,4 @@
+import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -57,6 +58,10 @@ const About = () => {
   const ctaLabel = hasArtistProfile ? "Go to Pro Page" : "Create Your Pro Page";
 
   return (
+    <>
+      <Head>
+        <title>About – Alpine Groove Guide</title>
+      </Head>
     <div className="bg-slate-950 text-slate-50">
       <main className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
         <section className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-8 text-center shadow-2xl ring-1 ring-slate-800">
@@ -152,6 +157,7 @@ const About = () => {
         </section>
       </main>
     </div>
+    </>
   );
 };
 

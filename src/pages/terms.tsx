@@ -1,5 +1,11 @@
+import Head from "next/head";
+
 const TermsPage = () => {
   return (
+    <>
+      <Head>
+        <title>Terms of Service – Alpine Groove Guide</title>
+      </Head>
     <div className="px-6 py-12 text-white">
       <div className="max-w-4xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold">Terms of Service</h1>
@@ -43,6 +49,7 @@ const TermsPage = () => {
           </section>
       </div>
     </div>
+    </>
   );
 };
 

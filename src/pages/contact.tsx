@@ -1,5 +1,11 @@
+import Head from "next/head";
+
 const ContactPage = () => {
   return (
+    <>
+      <Head>
+        <title>Contact – Alpine Groove Guide</title>
+      </Head>
     <div className="px-6 py-12">
       <div className="max-w-3xl mx-auto space-y-4">
         <h1 className="text-3xl font-bold">Contact</h1>
@@ -12,6 +18,7 @@ const ContactPage = () => {
         </p>
       </div>
     </div>
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 import '../styles/globals.css';
 import React, { useEffect } from "react";
+import Head from "next/head";
 import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -32,7 +33,11 @@ const AdminService: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white py-10 px-4">
+    <>
+      <Head>
+        <title>Alpine Groove Guide – Admin Review</title>
+      </Head>
+      <div className="min-h-screen bg-gray-900 text-white py-10 px-4">
       <div className="max-w-5xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold text-center">
           Welcome, {user?.displayName}! 🎧
@@ -68,6 +73,7 @@ const AdminService: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
