@@ -18,7 +18,7 @@ interface ExistingArtist {
 }
 
 export default function ArtistSignupPage() {
-  const { user, refreshSession } = useAuth();
+  const { user, refreshSession, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const trialActive = isTrialActive(user?.trial_ends_at);
@@ -46,7 +46,7 @@ export default function ArtistSignupPage() {
   });
 
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 const [choice, setChoice] = useState<null | 'trial' | 'subscribe'>(null);
 const [plan, setPlan] = useState<'monthly'|'annual'>('monthly');
 
@@ -55,7 +55,13 @@ const canStartTrial = !proActive && !trialActive;
 const [existingArtist, setExistingArtist] = useState<ExistingArtist | null>(null);
 const [checkingExisting, setCheckingExisting] = useState(true);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/login?next=/artist-signup");
+    }
+  }, [authLoading, user, router]);
+
+const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
   
     let cleanValue = value;
@@ -138,6 +144,36 @@ useEffect(() => {
   })();
 }, [user]);
 
+useEffect(() => {
+  if (!checkingExisting && existingArtist?.slug) {
+    router.replace(`/artists/${existingArtist.slug}`);
+  }
+}, [checkingExisting, existingArtist?.slug, router]);
+
+  if (authLoading || checkingExisting) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-200">
+        Checking your artist access…
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-200">
+        Redirecting to login…
+      </div>
+    );
+  }
+
+  if (existingArtist?.slug) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-200">
+        You already have an artist profile. Redirecting to your page…
+      </div>
+    );
+  }
+
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (existingArtist) {
@@ -153,7 +189,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     return;
   }
 
-  setLoading(true);
+  setIsSubmitting(true);
   setError('');
   try {
     // 1) Create (or reuse) a draft
@@ -256,7 +292,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   } catch (err: any) {
     setError(err.message || "Something went wrong");
   } finally {
-    setLoading(false);
+    setIsSubmitting(false);
   }
 };
 
@@ -472,10 +508,10 @@ const handleSubmit = async (e: React.FormEvent) => {
         {error && <p className="text-red-500">{error}</p>}
         <button
           type="submit"
-          disabled={loading || (!hasAccess && !choice)}
+          disabled={isSubmitting || (!hasAccess && !choice)}
           className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white disabled:opacity-50"
         >
-          {loading ? 'Creating…' : 'Create Profile & Continue'}
+          {isSubmitting ? 'Creating…' : 'Create Profile & Continue'}
         </button>
       </form>
     </div>

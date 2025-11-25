@@ -110,7 +110,25 @@ const ArtistProfilePage = ({ artist }: Props) => {
     }
   };
 
-  if (!artist) return <div className="p-6 text-white">Artist not found</div>;
+  if (!artist) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-16 text-slate-200">
+        <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900/70 p-8 text-center shadow-2xl shadow-black/40">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-400">Artist Profile</p>
+          <h1 className="mt-2 text-3xl font-semibold text-white">Artist not found</h1>
+          <p className="mt-3 text-sm text-slate-400">
+            This artist page isn&apos;t available. Browse the directory to discover Alpine Groove Guide artists.
+          </p>
+          <Link
+            href="/artists"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
+          >
+            View artist directory
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const siteBaseUrl = 'https://app.alpinegrooveguide.com';
   const shareUrl = `${siteBaseUrl}/share/artist/${artist.slug}`;
@@ -127,6 +145,12 @@ const ArtistProfilePage = ({ artist }: Props) => {
         : `${siteBaseUrl}${artist.profile_image}`
       : `${siteBaseUrl}/alpine_groove_guide_icon.png`;
   const shouldBlur = !artist.is_pro && (isTrialExpired || !artist.trial_ends_at);
+  const limitedHeadline = isOwner
+    ? "Upgrade your Alpine Pro to unlock your full public page."
+    : "This artist hasn’t unlocked their full page yet.";
+  const limitedBody = isOwner
+    ? "Fans currently see a limited preview of your profile. Upgrade to Alpine Pro to reveal your full bio, media, downloads, and upcoming shows."
+    : "You’re seeing a limited preview because this artist is on the free version of Alpine Groove Guide. When they upgrade to Alpine Pro their full media, downloads, and events will appear here.";
 
   return (
     <>
@@ -292,10 +316,27 @@ const ArtistProfilePage = ({ artist }: Props) => {
                       <FaLink /> Copy
                     </button>
                   </div>
+                  </div>
                 </div>
               </div>
+            </section>
+
+          {shouldBlur && (
+            <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-5 text-center text-sm text-emerald-100">
+              <p className="text-base font-semibold text-slate-50">{limitedHeadline}</p>
+              <p className="mt-2 text-sm text-slate-100">{limitedBody}</p>
+              {isOwner && (
+                <div className="mt-3 flex flex-wrap justify-center gap-3">
+                  <Link
+                    href="/upgrade"
+                    className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
+                  >
+                    Upgrade to Alpine Pro
+                  </Link>
+                </div>
+              )}
             </div>
-          </section>
+          )}
 
           <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
             <div className="flex items-center justify-between">
@@ -365,10 +406,17 @@ const ArtistProfilePage = ({ artist }: Props) => {
               </div>
               {shouldBlur && (
                 <div className="mt-3 text-center text-xs text-slate-400">
-                  🔒 Media is limited to Alpine Pro.{' '}
-                  <Link href="/upgrade" className="text-emerald-300 underline">
-                    Upgrade
-                  </Link>
+                  {isOwner
+                    ? "Media embeds stay hidden from fans until you upgrade to Alpine Pro."
+                    : "This artist’s media stays hidden until they upgrade to Alpine Pro."}
+                  {isOwner && (
+                    <>
+                      {" "}
+                      <Link href="/upgrade" className="text-emerald-300 underline">
+                        Upgrade now
+                      </Link>
+                    </>
+                  )}
                 </div>
               )}
             </section>
@@ -396,10 +444,17 @@ const ArtistProfilePage = ({ artist }: Props) => {
               </div>
               {shouldBlur && (
                 <div className="mt-3 text-center text-xs text-slate-400">
-                  🔒 Downloads are reserved for Alpine Pro listeners.{' '}
-                  <Link href="/upgrade" className="text-emerald-300 underline">
-                    Learn more
-                  </Link>
+                  {isOwner
+                    ? "Downloads unlock for everyone once you upgrade to Alpine Pro."
+                    : "Downloads are hidden because this artist hasn’t upgraded to Alpine Pro yet."}
+                  {isOwner && (
+                    <>
+                      {" "}
+                      <Link href="/upgrade" className="text-emerald-300 underline">
+                        Manage plan
+                      </Link>
+                    </>
+                  )}
                 </div>
               )}
             </section>
@@ -443,10 +498,17 @@ const ArtistProfilePage = ({ artist }: Props) => {
               )}
               {shouldBlur && (
                 <div className="mt-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-center text-sm text-slate-300">
-                  🎟️ Upgrade to Alpine Pro to unlock this artist’s full calendar.{' '}
-                  <Link href="/upgrade" className="text-emerald-300 underline">
-                    Upgrade
-                  </Link>
+                  {isOwner
+                    ? "Your full calendar will appear here once you upgrade to Alpine Pro."
+                    : "This artist’s full calendar will appear once they upgrade to Alpine Pro."}
+                  {isOwner && (
+                    <>
+                      {" "}
+                      <Link href="/upgrade" className="text-emerald-300 underline">
+                        Upgrade
+                      </Link>
+                    </>
+                  )}
                 </div>
               )}
             </div>
