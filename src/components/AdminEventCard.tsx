@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Event } from '../interfaces/interfaces';
-import Image from "next/image";
+import EventPoster from "./EventPoster";
 
 interface AdminEventCardProps {
   event: Event;
@@ -81,24 +81,27 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
           )}
 
           {/* Poster */}
-          {editedEvent.poster ? (
-            <div className="w-full">
-              <p className="text-sm font-medium text-gray-700 mb-1">Poster Image</p>
-              <Image src={editedEvent.poster} alt="Event Poster" width={400} height={400} className="rounded-md mx-auto" />
-              {isEditing && (
-                <button onClick={() => setEditedEvent(prev => ({ ...prev, poster: null }))} className="text-red-600 underline mt-1">
-                  Remove Photo
-                </button>
-              )}
-            </div>
-          ) : (
-            <div>
-              <p className="text-center text-gray-400">No poster uploaded.</p>
-              {isEditing && (
-                <input type="file" accept="image/*" onChange={handlePosterChange} className="mt-2" />
-              )}
-            </div>
-          )}
+          <div className="w-full">
+            <p className="text-sm font-medium text-gray-700 mb-1">Poster Image</p>
+            <EventPoster
+              posterUrl={editedEvent.poster}
+              title={event.title}
+              className="mx-auto h-72 w-full max-w-xs"
+            />
+            {isEditing && (
+              <div className="mt-2 flex flex-col items-center gap-2">
+                {editedEvent.poster && (
+                  <button
+                    onClick={() => setEditedEvent(prev => ({ ...prev, poster: null }))}
+                    className="text-red-600 underline"
+                  >
+                    Remove Photo
+                  </button>
+                )}
+                <input type="file" accept="image/*" onChange={handlePosterChange} />
+              </div>
+            )}
+          </div>
 
           {/* Title */}
           <div>

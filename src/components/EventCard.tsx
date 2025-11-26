@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import dayjs from "dayjs";
 import React from "react";
+import EventPoster from "./EventPoster";
 
 type EventCardProps = {
   title: string;
@@ -45,11 +45,11 @@ const EventCard: React.FC<EventCardProps> = ({
       className="flex gap-3 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow-sm transition hover:border-emerald-400/80 hover:bg-slate-900 hover:shadow-emerald-500/25"
       onClick={handleClick}
     >
-      {imageUrl && (
-        <div className="hidden h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border border-slate-800 sm:block relative">
-          <Image src={imageUrl} alt={title} fill className="object-cover" />
-        </div>
-      )}
+      <EventPoster
+        posterUrl={imageUrl}
+        title={title}
+        className="hidden h-20 w-20 flex-shrink-0 sm:block"
+      />
 
       <div className="flex flex-1 flex-col justify-between">
         <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">

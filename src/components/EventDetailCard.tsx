@@ -1,9 +1,9 @@
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
-import Image from "next/image";
 import { Event } from "@/interfaces/interfaces";
 import { UserType } from "@/types";
 import { parseLocalDayjs } from "@/util/dateHelper";
+import EventPoster from "./EventPoster";
 
 interface EventDetailCardProps {
   event: Event;
@@ -70,15 +70,11 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
       }`}
     >
       <div className="flex flex-col gap-6 sm:flex-row">
-        <div className="relative w-full overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 sm:w-52">
-          {event.poster ? (
-            <Image src={event.poster} alt={`${event.title} Poster`} width={400} height={520} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full min-h-[260px] items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 text-center text-xs uppercase tracking-[0.3em] text-slate-500">
-              Alpine Groove Guide
-            </div>
-          )}
-        </div>
+        <EventPoster
+          posterUrl={event.poster}
+          title={event.title}
+          className="w-full sm:w-52 aspect-[3/4]"
+        />
 
         <div className="flex-1 space-y-3 text-sm text-slate-300">
           <div className="flex flex-wrap items-center gap-2">

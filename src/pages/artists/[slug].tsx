@@ -10,6 +10,7 @@ import TrialBanner from '@/components/TrialBanner';
 import { FaFacebookF, FaTwitter, FaLink, FaShareAlt } from 'react-icons/fa';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import EventPoster from '@/components/EventPoster';
 dayjs.extend(utc);
 
 interface Event {
@@ -505,15 +506,11 @@ const ArtistProfilePage = ({ artist }: Props) => {
                       href={`/eventRouter/${event.slug}`}
                       className="mb-4 flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/60 p-4 last:mb-0 transition hover:scale-[1.01] hover:border-emerald-400/60 hover:bg-slate-900"
                     >
-                      {event.poster ? (
-                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl border border-slate-800 sm:h-20 sm:w-20">
-                          <Image src={event.poster} alt={event.title} fill className="object-cover" />
-                        </div>
-                      ) : (
-                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-xl border border-slate-800 bg-gradient-to-br from-slate-800 to-slate-900 text-[10px] uppercase tracking-[0.2em] text-slate-400 sm:h-20 sm:w-20">
-                          No poster
-                        </div>
-                      )}
+                      <EventPoster
+                        posterUrl={event.poster}
+                        title={event.title}
+                        className="h-16 w-16 flex-shrink-0 sm:h-20 sm:w-20"
+                      />
                       <div className="flex-1">
                         <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
                           {dayjs.utc(event.date).format('ddd, MMM D')}
