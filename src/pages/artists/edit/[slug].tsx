@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 import { isActivePro } from '@/util/isActivePro';
+import { parseMediaInput } from '@/util/parseMediaInput';
 
 const topGenres = [
   'Jazz', 'Rock', 'Pop', 'Hip-Hop', 'R&B', 'Electronic',
@@ -44,6 +45,16 @@ export default function EditArtistProfilePage() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mediaInputs, setMediaInputs] = useState({
+    youtube: '',
+    soundcloud: '',
+    bandcamp: '',
+  });
+  const [mediaErrors, setMediaErrors] = useState({
+    youtube: '',
+    soundcloud: '',
+    bandcamp: '',
+  });
 
   useEffect(() => {
     if (!slug) return;
@@ -51,7 +62,7 @@ export default function EditArtistProfilePage() {
       try {
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${slug}`);
         const data = await res.json();
-        setForm({
+        const nextForm = {
           display_name: data.display_name,
           bio: data.bio,
           contact_email: data.contact_email,
@@ -62,7 +73,14 @@ export default function EditArtistProfilePage() {
           embed_soundcloud: data.embed_soundcloud || '',
           embed_bandcamp: data.embed_bandcamp || '',
           tip_jar_url: '',
+        };
+        setForm(nextForm);
+        setMediaInputs({
+          youtube: nextForm.embed_youtube,
+          soundcloud: nextForm.embed_soundcloud,
+          bandcamp: nextForm.embed_bandcamp,
         });
+        setMediaErrors({ youtube: '', soundcloud: '', bandcamp: '' });
       } catch (err) {
         setError('Error loading artist profile');
       }
@@ -81,6 +99,24 @@ export default function EditArtistProfilePage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleMediaInputChange = (
+    provider: 'youtube' | 'bandcamp' | 'soundcloud',
+    value: string
+  ) => {
+    const fieldMap = {
+      youtube: 'embed_youtube',
+      soundcloud: 'embed_soundcloud',
+      bandcamp: 'embed_bandcamp',
+    } as const;
+    setMediaInputs((prev) => ({ ...prev, [provider]: value }));
+    const { embedUrl, error } = parseMediaInput(value, provider);
+    setMediaErrors((prev) => ({ ...prev, [provider]: error }));
+    setForm((prev) => ({
+      ...prev,
+      [fieldMap[provider]]: embedUrl,
+    }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,6 +143,11 @@ export default function EditArtistProfilePage() {
       return;
     }
   
+    if (Object.values(mediaErrors).some(Boolean)) {
+      setError("Fix the highlighted media links before saving.");
+      return;
+    }
+
     setLoading(true);
     const formData = new FormData();
   
@@ -180,9 +221,78 @@ export default function EditArtistProfilePage() {
           />
         </label>
 
-        <input name="embed_youtube" value={form.embed_youtube} onChange={handleChange} placeholder="YouTube Embed Link" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        <input name="embed_soundcloud" value={form.embed_soundcloud} onChange={handleChange} placeholder="SoundCloud Embed Link" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        <input name="embed_bandcamp" value={form.embed_bandcamp} onChange={handleChange} placeholder="Bandcamp Embed Link" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+        <label className="block text-sm font-semibold text-gray-200 mb-1">YouTube (paste a link or embed code)</label>
+        <input
+          name="embed_youtube"
+          value={mediaInputs.youtube}
+          onChange={(e) => handleMediaInputChange('youtube', e.target.value)}
+          placeholder="https://www.youtube.com/watch?v=… or the full embed snippet"
+          className="w-full p-2 rounded bg-gray-800 border border-gray-600"
+        />
+        <p className="text-xs text-gray-400 mt-1">Paste any YouTube link—we’ll convert it to the embed player.</p>
+        {mediaErrors.youtube && <p className="text-xs text-red-400">{mediaErrors.youtube}</p>}
+        {form.embed_youtube && !mediaErrors.youtube && (
+          <div className="mt-2">
+            <p className="text-xs text-gray-400 mb-1">Preview:</p>
+            <div className="aspect-video w-full overflow-hidden rounded border border-gray-600">
+              <iframe
+                src={form.embed_youtube}
+                title="YouTube Preview"
+                className="h-full w-full"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        )}
+
+        <label className="block text-sm font-semibold text-gray-200 mt-4 mb-1">SoundCloud (paste a link or embed code)</label>
+        <input
+          name="embed_soundcloud"
+          value={mediaInputs.soundcloud}
+          onChange={(e) => handleMediaInputChange('soundcloud', e.target.value)}
+          placeholder="https://soundcloud.com/... or embed snippet"
+          className="w-full p-2 rounded bg-gray-800 border border-gray-600"
+        />
+        <p className="text-xs text-gray-400 mt-1">Drop a SoundCloud link and we’ll render the player below.</p>
+        {mediaErrors.soundcloud && <p className="text-xs text-red-400">{mediaErrors.soundcloud}</p>}
+        {form.embed_soundcloud && !mediaErrors.soundcloud && (
+          <div className="mt-2">
+            <p className="text-xs text-gray-400 mb-1">Preview:</p>
+            <iframe
+              width="100%"
+              height="166"
+              scrolling="no"
+              frameBorder="no"
+              allow="autoplay"
+              src={form.embed_soundcloud}
+              className="rounded border border-gray-600 w-full"
+            />
+          </div>
+        )}
+
+        <label className="block text-sm font-semibold text-gray-200 mt-4 mb-1">Bandcamp (paste a link or embed code)</label>
+        <input
+          name="embed_bandcamp"
+          value={mediaInputs.bandcamp}
+          onChange={(e) => handleMediaInputChange('bandcamp', e.target.value)}
+          placeholder="https://artist.bandcamp.com/... or embed snippet"
+          className="w-full p-2 rounded bg-gray-800 border border-gray-600"
+        />
+        <p className="text-xs text-gray-400 mt-1">We’ll extract the embedded player automatically.</p>
+        {mediaErrors.bandcamp && <p className="text-xs text-red-400">{mediaErrors.bandcamp}</p>}
+        {form.embed_bandcamp && !mediaErrors.bandcamp && (
+          <div className="mt-2">
+            <p className="text-xs text-gray-400 mb-1">Preview:</p>
+            <iframe
+              style={{ border: '0', width: '100%', height: '160px' }}
+              src={form.embed_bandcamp}
+              seamless
+              className="rounded border border-gray-600 w-full"
+            />
+          </div>
+        )}
 
         <label className="block">Upload New Profile Image:
           <input type="file" accept="image/*" name="profile_image" onChange={handleFileChange} className="w-full text-sm mt-1" />

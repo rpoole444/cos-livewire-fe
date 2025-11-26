@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 import { isActivePro } from '@/util/isActivePro';
+import { parseMediaInput } from '@/util/parseMediaInput';
 
 const topGenres = [
   'Jazz', 'Rock', 'Pop', 'Hip-Hop', 'R&B', 'Electronic',
@@ -55,6 +56,16 @@ const hasAccess = !!proActive || !!trialActive;   // already pro or in trial?
 const canStartTrial = !proActive && !trialActive; 
 const [existingArtist, setExistingArtist] = useState<ExistingArtist | null>(null);
 const [checkingExisting, setCheckingExisting] = useState(true);
+const [mediaInputs, setMediaInputs] = useState({
+  youtube: '',
+  soundcloud: '',
+  bandcamp: '',
+});
+const [mediaErrors, setMediaErrors] = useState({
+  youtube: '',
+  soundcloud: '',
+  bandcamp: '',
+});
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -64,16 +75,26 @@ const [checkingExisting, setCheckingExisting] = useState(true);
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-  
-    let cleanValue = value;
-  
-    // Auto-extract iframe src if user pastes embed code
-    const iframeMatch = value.match(/<iframe.*?src=["'](.*?)["']/);
-    if (iframeMatch) {
-      cleanValue = iframeMatch[1]; // The extracted src URL
-    }
-  
-    setForm(prev => ({ ...prev, [name]: cleanValue }));
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+const handleMediaInputChange = (
+  provider: 'youtube' | 'bandcamp' | 'soundcloud',
+  value: string
+) => {
+    const fieldMap = {
+      youtube: 'embed_youtube',
+      soundcloud: 'embed_soundcloud',
+      bandcamp: 'embed_bandcamp',
+    } as const;
+    setMediaInputs((prev) => ({ ...prev, [provider]: value }));
+    const { embedUrl, error } = parseMediaInput(value, provider);
+
+    setMediaErrors((prev) => ({ ...prev, [provider]: error }));
+    setForm((prev) => ({
+      ...prev,
+      [fieldMap[provider]]: embedUrl,
+    }));
   };
   
 
@@ -187,6 +208,10 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
   if (!hasAccess && !choice) {
     setError("Choose Trial or Subscribe to continue.");
+    return;
+  }
+  if (Object.values(mediaErrors).some(Boolean)) {
+    setError("Fix the highlighted media links before submitting.");
     return;
   }
 
@@ -397,24 +422,49 @@ const handleSubmit = async (e: React.FormEvent) => {
           className="w-full p-2 rounded bg-gray-800 border border-gray-600"
         />
 
-        <input name="embed_youtube" placeholder="Paste YouTube embed link or iframe code" value={form.embed_youtube} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        {form.embed_youtube && (
+        <label className="block text-sm font-semibold text-gray-200 mb-1">YouTube (paste a link or embed code)</label>
+        <input
+          name="embed_youtube"
+          placeholder="https://www.youtube.com/watch?v=… or the full embed snippet"
+          value={mediaInputs.youtube}
+          onChange={(e) => handleMediaInputChange('youtube', e.target.value)}
+          className="w-full p-2 rounded bg-gray-800 border border-gray-600"
+        />
+        <p className="text-xs text-gray-400 mt-1">Paste a full link or the iframe snippet—we’ll format it for you.</p>
+        {mediaErrors.youtube && (
+          <p className="text-xs text-red-400 mt-1">{mediaErrors.youtube}</p>
+        )}
+        {form.embed_youtube && !mediaErrors.youtube && (
           <div className="mt-2">
             <p className="text-xs text-gray-400 mb-1">Preview:</p>
-            <iframe
-              src={form.embed_youtube}
-              title="YouTube Preview"
-              width="100%"
-              height="250"
-              className="rounded border border-gray-600"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
+            <div className="aspect-video w-full overflow-hidden rounded border border-gray-600">
+              <iframe
+                src={form.embed_youtube}
+                title="YouTube Preview"
+                width="100%"
+                height="100%"
+                className="h-full w-full"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
           </div>
         )}
 
-        <input name="embed_soundcloud" placeholder="Paste SoundCloud embed link or iframe code" value={form.embed_soundcloud} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        {form.embed_soundcloud && (
+        <label className="block text-sm font-semibold text-gray-200 mt-4 mb-1">SoundCloud (paste a link or embed code)</label>
+        <input
+          name="embed_soundcloud"
+          placeholder="https://soundcloud.com/... or the full embed snippet"
+          value={mediaInputs.soundcloud}
+          onChange={(e) => handleMediaInputChange('soundcloud', e.target.value)}
+          className="w-full p-2 rounded bg-gray-800 border border-gray-600"
+        />
+        <p className="text-xs text-gray-400 mt-1">Drop any SoundCloud URL—we convert it to the player embed automatically.</p>
+        {mediaErrors.soundcloud && (
+          <p className="text-xs text-red-400 mt-1">{mediaErrors.soundcloud}</p>
+        )}
+        {form.embed_soundcloud && !mediaErrors.soundcloud && (
           <div className="mt-2">
             <p className="text-xs text-gray-400 mb-1">Preview:</p>
             <iframe
@@ -424,20 +474,31 @@ const handleSubmit = async (e: React.FormEvent) => {
               frameBorder="no"
               allow="autoplay"
               src={form.embed_soundcloud}
-              className="rounded border border-gray-600"
+              className="rounded border border-gray-600 w-full"
             />
           </div>
         )}
 
-        <input name="embed_bandcamp" placeholder="Paste Bandcamp embed link or iframe code" value={form.embed_bandcamp} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        {form.embed_bandcamp && (
+        <label className="block text-sm font-semibold text-gray-200 mt-4 mb-1">Bandcamp (paste a link or embed code)</label>
+        <input
+          name="embed_bandcamp"
+          placeholder="https://artist.bandcamp.com/... or the full embed snippet"
+          value={mediaInputs.bandcamp}
+          onChange={(e) => handleMediaInputChange('bandcamp', e.target.value)}
+          className="w-full p-2 rounded bg-gray-800 border border-gray-600"
+        />
+        <p className="text-xs text-gray-400 mt-1">Share an album, track, or full Bandcamp embed snippet.</p>
+        {mediaErrors.bandcamp && (
+          <p className="text-xs text-red-400 mt-1">{mediaErrors.bandcamp}</p>
+        )}
+        {form.embed_bandcamp && !mediaErrors.bandcamp && (
           <div className="mt-2">
             <p className="text-xs text-gray-400 mb-1">Preview:</p>
             <iframe
-              style={{ border: '0', width: '100%', height: '120px' }}
+              style={{ border: '0', width: '100%', height: '160px' }}
               src={form.embed_bandcamp}
               seamless
-              className="rounded border border-gray-600"
+              className="rounded border border-gray-600 w-full"
             />
           </div>
         )}
