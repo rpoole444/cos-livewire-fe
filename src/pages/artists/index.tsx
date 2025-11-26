@@ -8,11 +8,11 @@ import { isActivePro } from '@/util/isActivePro';
 import { useAuth } from '@/context/AuthContext';
 
 interface Artist {
-  display_name: string;
+  display_name?: string;
   slug: string;
-  profile_image: string;
-  genres: string[];
-  bio: string;
+  profile_image?: string;
+  genres?: string[];
+  bio?: string;
   access_state?: 'pro' | 'trial' | 'gated' | 'none';
 }
 
@@ -27,18 +27,23 @@ export default function ArtistDirectoryPage() {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   const filteredArtists = artists.filter((artist) => {
     const q = searchQuery.toLowerCase();
+    const name = (artist.display_name || '').toLowerCase();
+    const genresList = Array.isArray(artist.genres) ? artist.genres : [];
     const matchesQuery =
-      artist.display_name.toLowerCase().includes(q) ||
-      artist.genres.join(', ').toLowerCase().includes(q);
+      name.includes(q) ||
+      genresList.join(', ').toLowerCase().includes(q);
     return matchesQuery;
   });
 
   useEffect(() => {
     const fetchArtists = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/artists/public-list`);
+        const res = await fetch(`${API_BASE_URL}/api/artists/public-list?include_gated=true`, {
+          credentials: 'include',
+        });
         const data = await res.json();
-        setArtists(data);
+        const list = Array.isArray(data) ? data : Array.isArray(data?.artists) ? data.artists : [];
+        setArtists(list);
       } catch (err) {
         console.error('Error fetching artists:', err);
       } finally {
@@ -53,12 +58,12 @@ export default function ArtistDirectoryPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <Head>
-        <title>Artist Directory – Alpine Groove Guide</title>
+        <title>Pro Directory – Alpine Groove Guide</title>
         <meta name="description" content="Browse Alpine Pro pages for artists, venues, and promoters across Colorado" />
       </Head>
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 sm:py-10">
         <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 text-center shadow-2xl ring-1 ring-slate-800">
-          <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">Artist, Venue &amp; Promoter Directory</h1>
+          <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">Pro Directory: Artists, Venues &amp; Promoters</h1>
           <p className="mt-2 text-sm text-slate-400 sm:text-base">
             Discover Alpine Groove Guide Pro pages for artists, venues, and promoters across the Colorado Front Range.
           </p>
@@ -100,8 +105,10 @@ export default function ArtistDirectoryPage() {
         ) : (
           <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
             {filteredArtists.map((artist) => {
+              const displayName = artist.display_name || 'Untitled Profile';
               const hasImage = Boolean(artist.profile_image);
-              const initials = artist.display_name
+              const imageSrc = hasImage ? (artist.profile_image as string) : '/alpine_groove_guide_icon.png';
+              const initials = displayName
                 .split(' ')
                 .map((word) => word[0])
                 .join('')
@@ -109,6 +116,7 @@ export default function ArtistDirectoryPage() {
                 .toUpperCase();
               const truncatedBio =
                 artist.bio && artist.bio.length > 100 ? `${artist.bio.slice(0, 97).trim()}…` : artist.bio;
+              const genresList = Array.isArray(artist.genres) ? artist.genres : [];
               const accessState = artist.access_state ?? 'none';
               const isLocked = accessState === 'gated';
 
@@ -116,7 +124,7 @@ export default function ArtistDirectoryPage() {
                 <Link
                   key={artist.slug}
                   href={`/artists/${artist.slug}`}
-                  aria-label={`View artist profile for ${artist.display_name}`}
+                  aria-label={`View artist profile for ${displayName}`}
                   className={`flex gap-4 rounded-3xl border p-4 text-left transition transform hover:scale-[1.02] hover:border-emerald-400/70 hover:bg-slate-900 hover:shadow-emerald-500/25 ${
                     isLocked ? 'border-amber-400/30 bg-slate-900/70' : 'border-slate-800/80 bg-slate-900/80'
                   }`}
@@ -124,8 +132,8 @@ export default function ArtistDirectoryPage() {
                   <div className="relative h-16 w-16 flex-shrink-0 rounded-2xl border border-slate-700/80 bg-slate-800/80 sm:h-20 sm:w-20">
                     {hasImage ? (
                       <Image
-                        src={artist.profile_image}
-                        alt={artist.display_name}
+                        src={imageSrc}
+                        alt={displayName}
                         fill
                         className={`rounded-2xl object-cover ${isLocked ? 'opacity-60 blur-[1px]' : ''}`}
                       />
@@ -143,7 +151,7 @@ export default function ArtistDirectoryPage() {
                   <div className="flex flex-1 flex-col">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className={`text-base font-semibold sm:text-lg ${isLocked ? 'text-slate-200' : 'text-slate-50'}`}>
-                        {artist.display_name}
+                        {displayName}
                       </h2>
                       {accessState === 'pro' && (
                         <span className="rounded-full border border-emerald-400/60 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-200">
@@ -159,9 +167,9 @@ export default function ArtistDirectoryPage() {
                     {truncatedBio && (
                       <p className={`mt-1 text-xs sm:text-sm ${isLocked ? 'text-slate-500' : 'text-slate-400'}`}>{truncatedBio}</p>
                     )}
-                    {artist.genres.length > 0 && (
+                    {genresList.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {artist.genres.map((genre) => (
+                        {genresList.map((genre) => (
                           <span
                             key={genre}
                             className="rounded-full bg-slate-800/80 px-2 py-0.5 text-[11px] text-slate-300"
