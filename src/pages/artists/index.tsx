@@ -13,6 +13,7 @@ interface Artist {
   profile_image: string;
   genres: string[];
   bio: string;
+  access_state?: 'pro' | 'trial' | 'gated' | 'none';
 }
 
 export default function ArtistDirectoryPage() {
@@ -108,28 +109,56 @@ export default function ArtistDirectoryPage() {
                 .toUpperCase();
               const truncatedBio =
                 artist.bio && artist.bio.length > 100 ? `${artist.bio.slice(0, 97).trim()}…` : artist.bio;
+              const accessState = artist.access_state ?? 'none';
+              const isLocked = accessState === 'gated';
 
               return (
                 <Link
                   key={artist.slug}
                   href={`/artists/${artist.slug}`}
                   aria-label={`View artist profile for ${artist.display_name}`}
-                  className="flex gap-4 rounded-3xl border border-slate-800/80 bg-slate-900/80 p-4 text-left transition transform hover:scale-[1.02] hover:border-emerald-400/70 hover:bg-slate-900 hover:shadow-emerald-500/25"
+                  className={`flex gap-4 rounded-3xl border p-4 text-left transition transform hover:scale-[1.02] hover:border-emerald-400/70 hover:bg-slate-900 hover:shadow-emerald-500/25 ${
+                    isLocked ? 'border-amber-400/30 bg-slate-900/70' : 'border-slate-800/80 bg-slate-900/80'
+                  }`}
                 >
                   <div className="relative h-16 w-16 flex-shrink-0 rounded-2xl border border-slate-700/80 bg-slate-800/80 sm:h-20 sm:w-20">
                     {hasImage ? (
-                      <Image src={artist.profile_image} alt={artist.display_name} fill className="rounded-2xl object-cover" />
+                      <Image
+                        src={artist.profile_image}
+                        alt={artist.display_name}
+                        fill
+                        className={`rounded-2xl object-cover ${isLocked ? 'opacity-60 blur-[1px]' : ''}`}
+                      />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 text-sm font-semibold text-slate-200">
                         {initials}
                       </div>
                     )}
+                    {isLocked && (
+                      <span className="absolute left-1 top-1 rounded-full border border-amber-400/50 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-100 shadow-sm">
+                        🔒 Profile locked
+                      </span>
+                    )}
                   </div>
                   <div className="flex flex-1 flex-col">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-semibold text-slate-50 sm:text-lg">{artist.display_name}</h2>
+                      <h2 className={`text-base font-semibold sm:text-lg ${isLocked ? 'text-slate-200' : 'text-slate-50'}`}>
+                        {artist.display_name}
+                      </h2>
+                      {accessState === 'pro' && (
+                        <span className="rounded-full border border-emerald-400/60 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-200">
+                          Alpine Pro
+                        </span>
+                      )}
+                      {accessState === 'trial' && (
+                        <span className="rounded-full border border-blue-400/60 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-blue-100">
+                          Trial
+                        </span>
+                      )}
                     </div>
-                    {truncatedBio && <p className="mt-1 text-xs text-slate-400 sm:text-sm">{truncatedBio}</p>}
+                    {truncatedBio && (
+                      <p className={`mt-1 text-xs sm:text-sm ${isLocked ? 'text-slate-500' : 'text-slate-400'}`}>{truncatedBio}</p>
+                    )}
                     {artist.genres.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">
                         {artist.genres.map((genre) => (
@@ -142,7 +171,11 @@ export default function ArtistDirectoryPage() {
                         ))}
                       </div>
                     )}
-                    <span className="mt-auto text-xs text-emerald-300">View profile →</span>
+                    <span
+                      className={`mt-auto text-xs ${isLocked ? 'text-amber-200' : 'text-emerald-300'} flex items-center gap-1`}
+                    >
+                      {isLocked ? '🔒 Profile locked' : 'View profile →'}
+                    </span>
                   </div>
                 </Link>
               );

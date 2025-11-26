@@ -45,6 +45,9 @@ interface Artist {
   events: Event[];
   trial_ends_at?: string | null;
   is_approved?: boolean;
+  access_state?: 'pro' | 'trial' | 'gated' | 'none';
+  is_owner?: boolean;
+  pro_cancelled_at?: string | null;
 }
 
 interface Props {
@@ -90,11 +93,15 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const { user } = useAuth();
   const router = useRouter();
   const isPending = router.query.pending === 'true';
-  const isOwner = user?.id === artist?.user_id;
+  const isOwner = artist?.is_owner ?? user?.id === artist?.user_id;
   const canEdit = artist && user && (user.id === artist.user_id || user.is_admin);
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const isTrialExpired = artist?.trial_ends_at ? dayjs().isAfter(dayjs(artist.trial_ends_at), 'day') : true;
+  const accessState = artist?.access_state ?? 'none';
+  const isProAccess = accessState === 'pro';
+  const isTrialAccess = accessState === 'trial';
+  const isGated = !isOwner && accessState === 'gated';
+  const shouldBlur = isGated;
   const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
   const logRef = useRef(false);
   const eventsLoggedRef = useRef(false);
@@ -186,13 +193,12 @@ const ArtistProfilePage = ({ artist }: Props) => {
         ? artist.profile_image
         : `${siteBaseUrl}${artist.profile_image}`
       : `${siteBaseUrl}/alpine_groove_guide_icon.png`;
-  const shouldBlur = !artist.is_pro && (isTrialExpired || !artist.trial_ends_at);
   const limitedHeadline = isOwner
-    ? "Upgrade your Alpine Pro page to unlock your full public profile."
-    : "This Alpine Pro page hasn’t been fully unlocked yet.";
+    ? 'Your public profile is locked until you reactivate Alpine Pro.'
+    : 'This profile is locked.';
   const limitedBody = isOwner
-    ? "Fans currently see a limited preview of your profile. Upgrade to Alpine Pro to reveal your full bio, media, downloads, and upcoming shows—perfect for artists, venues, and promoters."
-    : "You’re seeing a limited preview because this artist, venue, or promoter hasn’t upgraded to Alpine Pro yet. When they do, their full media, downloads, and events will appear here.";
+    ? 'Fans currently see a blurred preview because your Pro membership or trial ended. Reactivate Alpine Pro to unlock your media, downloads, and events.'
+    : 'Become an Alpine Pro member to unlock the full bio, media, downloads, and events for this artist, venue, or promoter.';
 
   return (
     <>
@@ -221,17 +227,17 @@ const ArtistProfilePage = ({ artist }: Props) => {
           {showTrialToast && isOwner && (
             <div className="rounded bg-green-600 p-2 text-center text-sm text-white shadow">✅ Your Alpine Pro trial is active.</div>
           )}
-          {!isOwner && !artist.is_pro && isTrialExpired && (
+          {isGated && (
             <div className="rounded bg-slate-800 p-3 text-center text-sm text-blue-300 shadow">
-              📣 This Pro page’s Alpine Pro trial has ended.{' '}
+              📣 This profile is locked because the Alpine Pro membership isn’t active.{' '}
               <Link href="/upgrade" className="underline hover:text-blue-200">
-                Learn more about upgrading to Pro
+                Learn more about Alpine Pro
               </Link>
               .
             </div>
           )}
 
-          <TrialBanner artist_user_id={artist.user_id} trial_ends_at={artist.trial_ends_at} is_pro={artist.is_pro} />
+          <TrialBanner artist_user_id={artist.user_id} trial_ends_at={artist.trial_ends_at} is_pro={isProAccess} />
 
           <section className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 ring-1 ring-slate-800 shadow-2xl shadow-black/30">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
@@ -248,9 +254,19 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 <div className="flex-1 space-y-3">
                   <div className="flex flex-wrap items-center gap-3">
                     <h1 className="text-3xl font-bold text-white sm:text-4xl">{artist.display_name}</h1>
-                    {artist.is_pro && (
+                    {isProAccess && (
                       <span className="rounded-full border border-emerald-400/70 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
                         Alpine Pro
+                      </span>
+                    )}
+                    {isTrialAccess && (
+                      <span className="rounded-full border border-blue-400/70 bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-100">
+                        Trial
+                      </span>
+                    )}
+                    {isGated && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/60 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-100">
+                        🔒 Profile locked
                       </span>
                     )}
                   </div>
@@ -383,7 +399,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
           <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold text-white">About</h2>
-              {artist.is_pro && <span className="text-xs uppercase tracking-[0.3em] text-emerald-300">PRO ARTIST</span>}
+              {isProAccess && <span className="text-xs uppercase tracking-[0.3em] text-emerald-300">PRO ARTIST</span>}
             </div>
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-slate-300">
               <span className="flex items-center gap-1">
@@ -586,6 +602,12 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     if (!res.ok) return { notFound: true };
 
     const artist = await res.json();
+    const accessState = artist?.access_state ?? 'none';
+
+    if (!artist || (!artist.is_owner && accessState === 'none')) {
+      return { notFound: true };
+    }
+
     return { props: { artist } };
   } catch (err) {
     console.error('GSSP /artists/[slug] error:', err);

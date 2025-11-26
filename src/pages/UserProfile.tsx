@@ -69,7 +69,6 @@ const isProActive = !!user?.pro_active;
 const canUseProFeatures = isProActive;
 const proCancelledAt = user?.pro_cancelled_at ? new Date(user.pro_cancelled_at) : null;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
-const trialExpired = !!user?.trial_ends_at && !trialActive && !isProActive;
 const rawDisplayName = (user?.display_name ?? user?.displayName ?? "").trim();
 const normalizedDisplayName = rawDisplayName.toLowerCase();
 const normalizedEmail = (user?.email ?? "").trim().toLowerCase();
@@ -82,11 +81,19 @@ const pageTitle = profileHeadingName
   : "Alpine Pro Dashboard – Alpine Groove Guide";
 const avatarSource = artistImage || profilePicture || null;
 const avatarInitial = (artistDisplayName || profileHeadingName)?.charAt(0)?.toUpperCase() || "?";
-const canVisitPublicPage = Boolean(isApproved && (trialActive || canUseProFeatures));
+const canVisitPublicPage = Boolean(hasArtistProfile && artistSlug);
 const [artistCardDismissed, setArtistCardDismissed] = useState(false);
 const canShowArtistWelcome = !needsProfileSetup && !hasArtistProfile && !isEditing && !artistCardDismissed;
 const shouldShowTrialBanner = !canUseProFeatures && trialActive;
 const shouldShowCancelBanner = canUseProFeatures && !!proCancelledAt;
+const hadProBefore = !!user?.pro_cancelled_at;
+const cancellationCompleted = !!proCancelledAt && !canUseProFeatures;
+const shouldShowManageBilling = canUseProFeatures || hadProBefore;
+const isPublicLocked = hasArtistProfile && !canUseProFeatures && !trialActive;
+const viewButtonLabel = isPublicLocked ? "View page (locked preview)" : "View Public Page";
+const viewButtonTitle = isPublicLocked
+  ? "Visitors currently see a blurred version until you reactivate Alpine Pro."
+  : "View your public page";
 const trialEndDate = user?.trial_ends_at ? new Date(user.trial_ends_at).toLocaleDateString() : null;
 let artistStatusLabel = "No Pro page";
 let artistStatusClass = "border border-slate-600 bg-slate-800 text-slate-200";
@@ -101,8 +108,8 @@ if (hasArtistProfile) {
     artistStatusLabel = "Live (trial)";
     artistStatusClass = "border border-blue-400/40 bg-blue-500/10 text-blue-100";
   } else {
-    artistStatusLabel = "Hidden";
-    artistStatusClass = "border border-slate-600 bg-slate-800 text-slate-200";
+    artistStatusLabel = "Locked to public";
+    artistStatusClass = "border border-amber-400/40 bg-amber-500/10 text-amber-100";
   }
 }
 
@@ -791,14 +798,16 @@ const textareaClasses =
                   <button
                     onClick={() => router.push(`/artists/${artistSlug}`)}
                     disabled={!canVisitPublicPage}
-                    title={canVisitPublicPage ? "View your public page" : "Your page is offline until your trial or subscription is active"}
+                    title={viewButtonTitle}
                     className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold ${
-                      canVisitPublicPage
-                        ? "bg-purple-600 text-white shadow-lg shadow-purple-600/30 hover:-translate-y-[1px] hover:bg-purple-500"
-                        : "border border-slate-700 text-slate-400"
+                      !canVisitPublicPage
+                        ? "border border-slate-700 text-slate-400"
+                        : isPublicLocked
+                        ? "border border-amber-400/60 bg-amber-500/10 text-amber-100 hover:-translate-y-[1px] hover:border-amber-300"
+                        : "bg-purple-600 text-white shadow-lg shadow-purple-600/30 hover:-translate-y-[1px] hover:bg-purple-500"
                     }`}
                   >
-                    View Public Page
+                    {viewButtonLabel}
                   </button>
                   <button
                     onClick={() => router.push(`/artists/edit/${artistSlug}`)}
@@ -812,6 +821,11 @@ const textareaClasses =
               {!isApproved && (
                 <div className="rounded-lg border border-amber-400/60 bg-amber-500/10 p-4 text-sm text-amber-100">
                   🎷 Your Pro page is under review. You’ll be notified when it’s approved.
+                </div>
+              )}
+              {isPublicLocked && hasArtistProfile && (
+                <div className="rounded-lg border border-amber-400/60 bg-amber-500/10 p-4 text-sm text-amber-100">
+                  🔒 Visitors currently see a blurred, locked version of your page. Restart Alpine Pro to fully unlock it for the directory.
                 </div>
               )}
             </div>
@@ -838,6 +852,11 @@ const textareaClasses =
                 To keep your profile public and listed, renew your subscription in Billing.
               </div>
             )}
+            {!shouldShowTrialBanner && cancellationCompleted && proCancelledAt && (
+              <div className="rounded-md border border-amber-400/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+                Your Alpine Pro membership ended on <strong>{proCancelledAt.toLocaleDateString()}</strong>. Restart your plan to unlock your profile for visitors.
+              </div>
+            )}
             {canUseProFeatures ? (
               <p className="text-slate-300 text-sm">Alpine Pro is active on your account.</p>
             ) : shouldShowTrialBanner ? (
@@ -846,12 +865,12 @@ const textareaClasses =
               </p>
             ) : (
               <p className="text-slate-300 text-sm">
-                You are not currently subscribed to Alpine Pro.
+                You are not currently subscribed to Alpine Pro. Your public profile stays locked in the directory until you start a trial or subscription.
               </p>
             )}
           </div>
 
-          {canUseProFeatures ? (
+          {shouldShowManageBilling ? (
             <>
               <button
                 onClick={handleManageBilling}
@@ -860,7 +879,9 @@ const textareaClasses =
                 Manage subscription
               </button>
               <p className="mt-2 text-xs text-slate-400">
-                You can manage or cancel your subscription anytime in the Billing Portal. Pro access continues until the end of your current billing period.
+                {canUseProFeatures
+                  ? "You can manage or cancel your subscription anytime in the Billing Portal. Pro access continues until the end of your current billing period."
+                  : "Use the billing portal to restart Alpine Pro. While inactive, visitors see a blurred, locked version of your page in the directory."}
               </p>
             </>
           ) : (
