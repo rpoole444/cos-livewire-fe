@@ -50,6 +50,41 @@ interface Props {
   artist: Artist | null;
 }
 
+type MediaProvider = 'soundcloud' | 'bandcamp';
+
+const ResponsiveMediaEmbed = ({
+  src,
+  provider,
+  title,
+}: {
+  src: string;
+  provider: MediaProvider;
+  title: string;
+}) => {
+  const baseWrapper =
+    'w-full max-w-4xl mx-auto mt-3 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/40';
+  const heightClasses =
+    provider === 'soundcloud'
+      ? 'h-[300px] sm:h-[360px] lg:h-[420px]'
+      : 'h-[450px] sm:h-[520px] lg:h-[600px]';
+
+  return (
+    <div className={baseWrapper}>
+      {/* Ensure embeds feel intentional across screen sizes by fixing sensible default heights per provider */}
+      <iframe
+        src={src}
+        title={title}
+        loading="lazy"
+        allow="autoplay"
+        className={`w-full ${heightClasses}`}
+        frameBorder="0"
+        scrolling="no"
+        allowFullScreen
+      />
+    </div>
+  );
+};
+
 const ArtistProfilePage = ({ artist }: Props) => {
   const { user } = useAuth();
   const router = useRouter();
@@ -385,27 +420,20 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 {artist.embed_soundcloud && (
                   <div>
                     <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">SoundCloud</h3>
-                    <iframe
-                      width="100%"
-                      height="166"
-                      scrolling="no"
-                      frameBorder="no"
-                      allow="autoplay"
+                    <ResponsiveMediaEmbed
+                      provider="soundcloud"
                       src={artist.embed_soundcloud}
-                      className="mt-2 rounded-xl border border-slate-800"
-                    ></iframe>
+                      title={`${artist.display_name} SoundCloud`}
+                    />
                   </div>
                 )}
                 {artist.embed_bandcamp && (
                   <div>
                     <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Bandcamp</h3>
-                    <iframe
-                      style={{ border: 0 }}
+                    <ResponsiveMediaEmbed
+                      provider="bandcamp"
                       src={artist.embed_bandcamp}
-                      width="100%"
-                      height="160"
-                      allow="autoplay"
-                      className="mt-2 rounded-xl border border-slate-800"
+                      title={`${artist.display_name} Bandcamp`}
                     />
                   </div>
                 )}
