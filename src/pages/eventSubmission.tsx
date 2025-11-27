@@ -61,7 +61,7 @@ const EventSubmission = () => {
 
   const [events, setEvents] = useState<Event[]>([initialEvent]);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  const { user, logout } = useAuth();
+  const { user, logout, refreshSession, loading } = useAuth();
   const router = useRouter();
   const locationInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -95,10 +95,24 @@ const EventSubmission = () => {
   }, []);
 
   useEffect(() => {
+    if (!router.isReady) return;
+    refreshSession();
+  }, [router.isReady, refreshSession]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    const success = router.query.success === 'true';
+    if (success) {
+      refreshSession();
+    }
+  }, [router.isReady, router.query.success, refreshSession]);
+
+  useEffect(() => {
+    if (loading) return;
     if (!user) {
       router.push('/LoginPage?redirect=/eventSubmission');
     }
-  }, [user, router]);
+  }, [user, router, loading]);
 
 const initializeAutocomplete = (index: number) => {
   if (

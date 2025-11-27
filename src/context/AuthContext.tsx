@@ -52,6 +52,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchUserWithExtras = useCallback(async (): Promise<UserType | null> => {
     const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
       credentials: 'include',
+      cache: 'no-store',
+      headers: {
+        'cache-control': 'no-store',
+      },
     });
     const data = await response.json();
 
@@ -59,6 +63,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const profilePicRes = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
       credentials: 'include',
+      cache: 'no-store',
+      headers: {
+        'cache-control': 'no-store',
+      },
     });
     const profilePicData = await profilePicRes.json();
 
@@ -83,6 +91,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const payload = userData;
           setUser(payload);
           console.log('setUser payload:', payload);
+        } else {
+          setUser(null);
         }
       } catch (err) {
         console.error('Error fetching auth status:', err);
@@ -110,6 +120,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const profileRes = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
       credentials: 'include',
+      cache: 'no-store',
+      headers: {
+        'cache-control': 'no-store',
+      },
     });
 
     const profileData = profileRes.ok
@@ -132,6 +146,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const payload = fullUser;
     setUser(payload);
     console.log('setUser payload:', payload);
+
+    // Ensure the session is reloaded from the server (e.g., right after Stripe upgrade flows)
+    const refreshed = await fetchUserWithExtras();
+    if (refreshed) {
+      setUser(refreshed);
+      console.log('setUser payload:', refreshed);
+    }
   };
 
   const refreshSession = useCallback(async () => {
@@ -141,6 +162,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const payload = userData;
         setUser(payload);
         console.log('setUser payload:', payload);
+      } else {
+        setUser(null);
       }
     } catch (err) {
       console.error('Error in refreshSession:', err);
