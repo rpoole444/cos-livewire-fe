@@ -50,38 +50,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const fetchUserWithExtras = useCallback(async (): Promise<UserType | null> => {
-    const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: {
-        'cache-control': 'no-store',
-      },
-    });
-    const data = await response.json();
+  const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
+    credentials: 'include',
+    cache: 'no-store',
+  });
 
-    if (!data.isLoggedIn) return null;
+  const data = await response.json();
 
-    const profilePicRes = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: {
-        'cache-control': 'no-store',
-      },
-    });
-    const profilePicData = await profilePicRes.json();
+  if (!data.isLoggedIn) return null;
 
-    return {
-      ...data.user,
-      displayName: data.user.displayName ?? data.user.display_name ?? '',
-      display_name: data.user.display_name ?? data.user.displayName ?? '',
-      top_music_genres: parseGenres(data.user.top_music_genres),
-      profile_picture: profilePicData.profile_picture_url || null,
-      trial_ends_at: data.user.trial_ends_at || null,
-      trial_active: data.user.trial_active || null,
-      pro_active: data.user.pro_active ?? false,
-      pro_cancelled_at: data.user.pro_cancelled_at ?? null,
-    };
-  }, []);
+  const profilePicRes = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
+    credentials: 'include',
+    cache: 'no-store',
+  });
+
+  const profilePicData = await profilePicRes.json();
+
+  return {
+    ...data.user,
+    displayName: data.user.displayName ?? data.user.display_name ?? '',
+    display_name: data.user.display_name ?? data.user.displayName ?? '',
+    top_music_genres: parseGenres(data.user.top_music_genres),
+    profile_picture: profilePicData.profile_picture_url || null,
+    trial_ends_at: data.user.trial_ends_at || null,
+    trial_active: data.user.trial_active || null,
+    pro_active: data.user.pro_active ?? false,
+    pro_cancelled_at: data.user.pro_cancelled_at ?? null,
+  };
+}, []);
+
 
   useEffect(() => {
     const checkAuthStatus = async () => {
@@ -119,12 +116,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     const profileRes = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
-      credentials: 'include',
-      cache: 'no-store',
-      headers: {
-        'cache-control': 'no-store',
-      },
-    });
+  credentials: 'include',
+  cache: 'no-store',
+});
+
 
     const profileData = profileRes.ok
       ? await profileRes.json()
