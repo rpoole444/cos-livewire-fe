@@ -191,21 +191,17 @@ export default function Home() {
         </p>
       </div>
 
-      {user?.is_admin && (
-        <div className="px-4 py-6 max-w-5xl mx-auto">
-          <div className="mt-6 bg-gray-800 text-white p-6 rounded-lg shadow-md border-l-4 border-yellow-500">
-            <h3 className="text-lg font-bold mb-2 text-yellow-300">🧑‍🎤 Pro Directory (Admin Preview)</h3>
-            <p className="text-sm text-gray-300 mb-4">
-              Preview and test Alpine Pro pages for artists, venues, and promoters before they go live to the public.
-            </p>
-            <Link href="/artists">
-              <a className="inline-block px-4 py-2 bg-yellow-500 text-black rounded font-semibold hover:bg-yellow-400">
-                View Directory
-              </a>
-            </Link>
-          </div>
+      <div className="px-4 py-6 max-w-5xl mx-auto">
+        <div className="mt-6 bg-gray-800 text-white p-6 rounded-lg shadow-md border-l-4 border-emerald-500">
+          <h3 className="text-lg font-bold mb-2 text-emerald-300">🎶 Pro Directory</h3>
+          <p className="text-sm text-gray-300 mb-4">
+            Browse Alpine Pro pages for artists, venues, and promoters across the Front Range.
+          </p>
+          <Link href="/artists" className="inline-block px-4 py-2 bg-emerald-500 text-black rounded font-semibold hover:bg-emerald-400">
+            View Directory
+          </Link>
         </div>
-      )}
+      </div>
 
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-10 pt-6 lg:flex-row lg:items-start lg:gap-8">

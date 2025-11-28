@@ -24,7 +24,7 @@ const WelcomeUser = () => {
 
   const handleLogout = async () => {
     try {
-      logout();
+      await logout();
       router.push("/");
     } catch (err) {
       console.error(err);

@@ -22,9 +22,13 @@ const SiteHeader = () => {
   };
 
   const handleLogout = async () => {
-    await logout();
-    setMenuOpen(false);
-    router.push("/");
+    try {
+      await logout();
+      setMenuOpen(false);
+      await router.replace("/");
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
   };
 
   const NavLink = ({ href, label }: { href: string; label: string }) => (
