@@ -2,6 +2,7 @@ import Link from "next/link";
 import dayjs from "dayjs";
 import React from "react";
 import EventPoster from "./EventPoster";
+import { getEventImageSrc } from "@/util/getEventImageSrc";
 
 type EventCardProps = {
   title: string;
@@ -31,63 +32,41 @@ const EventCard: React.FC<EventCardProps> = ({
     console.warn("[EventCard] invalid or missing startTime", { title, startTime });
   }
 
-  const dow = isValidDate ? parsed!.format("ddd").toUpperCase() : "";
-  const month = isValidDate ? parsed!.format("MMM") : "";
-  const day = isValidDate ? parsed!.format("D") : "";
-  const time = isValidDate ? parsed!.format("h:mm A") : "";
-
   const handleClick = () => {
     handleCardClick?.();
   };
 
+  const formattedDate = isValidDate ? parsed!.format("ddd, MMM D • h:mm A") : "Date TBA";
+  const imageSrc = getEventImageSrc(imageUrl);
+
   const card = (
     <article
-      className="flex gap-3 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow-sm transition hover:border-emerald-400/80 hover:bg-slate-900 hover:shadow-emerald-500/25"
+      className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 shadow-lg transition hover:border-emerald-400/80 hover:shadow-emerald-500/25"
       onClick={handleClick}
     >
-      <EventPoster
-        posterUrl={imageUrl}
-        title={title}
-        variant="card"
-        className="hidden w-20 flex-shrink-0 sm:block"
-      />
+      <div className="relative h-72 w-full">
+        <EventPoster posterUrl={imageSrc} title={title} variant="card" className="h-full w-full" />
 
-      <div className="flex flex-1 flex-col justify-between">
-        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-          {isValidDate ? (
-            <>
-              <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/80 px-2 py-0.5">
-                <span>{dow}</span>
-                <span className="h-1 w-1 rounded-full bg-slate-600" />
-                <span>
-                  {month} {day}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/70 to-transparent">
+          <div className="pointer-events-auto px-4 pb-4 pt-3 space-y-1">
+            <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-300">
+              <span>{formattedDate}</span>
+              {isFeatured && (
+                <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] text-emerald-200">
+                  Featured
                 </span>
-              </span>
-              <span className="text-slate-500">· {time}</span>
-            </>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-slate-900/80 px-2 py-0.5 text-[10px] text-slate-400">
-              Date TBA
-            </span>
-          )}
-          {isFeatured && (
-            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] text-emerald-300">
-              Featured
-            </span>
-          )}
+              )}
+            </div>
+            <h2 className="text-lg font-semibold text-white line-clamp-2">{title}</h2>
+            {(venueName || city) && (
+              <p className="text-sm text-slate-300 line-clamp-1">
+                {venueName}
+                {venueName && city ? " • " : ""}
+                {city}
+              </p>
+            )}
+          </div>
         </div>
-
-        <h3 className="text-sm font-semibold text-slate-50 group-hover:text-white">
-          {title}
-        </h3>
-
-        {(venueName || city) && (
-          <p className="mt-1 text-xs text-slate-400">
-            {venueName && <span>{venueName}</span>}
-            {venueName && city && <span className="mx-1">•</span>}
-            {city && <span>{city}</span>}
-          </p>
-        )}
       </div>
     </article>
   );
