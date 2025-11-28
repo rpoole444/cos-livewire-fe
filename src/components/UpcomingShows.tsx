@@ -54,7 +54,8 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
                   <EventPoster
                     posterUrl={event.poster}
                     title={event.title}
-                    className="h-16 w-16 flex-shrink-0 sm:h-20 sm:w-20"
+                    variant="square"
+                    className="w-16 flex-shrink-0 sm:w-20"
                   />
                   <div className="flex-1">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">

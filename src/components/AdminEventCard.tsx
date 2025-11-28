@@ -86,7 +86,8 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
             <EventPoster
               posterUrl={editedEvent.poster}
               title={event.title}
-              className="mx-auto h-72 w-full max-w-xs"
+              variant="card"
+              className="mx-auto w-full max-w-xs"
             />
             {isEditing && (
               <div className="mt-2 flex flex-col items-center gap-2">

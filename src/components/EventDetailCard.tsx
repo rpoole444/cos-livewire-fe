@@ -73,8 +73,8 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
         <EventPoster
           posterUrl={event.poster}
           title={event.title}
-          fit="contain"
-          className="w-full sm:w-60 max-w-sm min-h-[260px] sm:min-h-[320px] max-h-[620px] flex-shrink-0 bg-slate-900/60"
+          variant="detail"
+          className="w-full sm:w-60 max-w-lg flex-shrink-0"
         />
 
         <div className="flex-1 space-y-3 text-sm text-slate-300">

@@ -87,21 +87,25 @@ const About = () => {
           </div>
         </section>
 
-        <section className="space-y-6 text-slate-200">
-          <p>
-            Welcome to <span className="text-emerald-300 font-semibold">Alpine Groove Guide</span> — a grassroots, curated
-            feed of Colorado Springs, Denver, and Front Range gigs. Artists submit events, venues highlight their stages,
-            and locals find shows that fit their vibe. Every listing is reviewed to keep the calendar accurate and trusted.
-          </p>
-          <p>
-            I&apos;m <span className="text-emerald-300 font-semibold">Reid Poole</span> — trumpet player, bandleader, and
-            software engineer. After two decades performing and teaching, I returned home to build tools that help working
-            musicians connect with fans, venues, and each other in a single elevated experience.
-          </p>
-          <p>
-            Alpine Groove Guide is my love letter to this community. Whether you&apos;re spinning jazz, experimenting with
-            electronic textures, or fronting a punk outfit, there&apos;s space for you here.
-          </p>
+        <section className="space-y-6 text-slate-200 max-w-3xl mx-auto">
+          <div className="space-y-4">
+            <p className="text-emerald-300 font-semibold">About Reid Poole</p>
+            <p>
+              I’m a musician, educator, and full-stack engineer who believes a city’s strength is reflected in its arts community. After spending a decade immersed in the New Orleans music scene — performing nightly, leading bands, and teaching the next generation — I returned to Colorado determined to help the Front Range grow a more connected, supported, and sustainable arts ecosystem.
+            </p>
+            <p>
+              Alpine Groove Guide is the result of that commitment. I built it to solve a simple problem that affects every artist and venue I know: visibility. When artists are easier to discover, venues are easier to navigate, and audiences know what’s happening, an entire culture becomes stronger. AGG is my way of putting real tools into the hands of the people shaping our scene — musicians, venues, presenters, educators, and the community that supports them.
+            </p>
+            <p>
+              My background spans twenty years of performing, arranging, teaching, and building creative communities, paired with hands-on engineering work in React, Next.js, Node, and modern web systems. But at the core, I’m someone who wants this region — Colorado Springs, Manitou Springs, Pueblo, the Tri-Lakes area, Castle Rock, and beyond — to have the thriving arts identity it deserves.
+            </p>
+            <p>
+              I believe in building platforms that lift people up. I believe in scenes where musicians aren’t isolated but connected. And I believe that a strong arts community doesn’t appear on its own — it’s built piece by piece, by people who care enough to do the work.
+            </p>
+            <p>
+              If you’re reading this, I hope you’ll be part of it. Come find me at a show, a jam session, or somewhere between code commits. I’m always excited to talk about the music and the city we’re building together.
+            </p>
+          </div>
         </section>
 
         <section className="flex flex-col items-center gap-6 rounded-3xl border border-slate-800 bg-slate-900/80 p-6 sm:flex-row sm:items-center sm:gap-8">
@@ -112,6 +116,7 @@ const About = () => {
             height={176}
             className="h-40 w-40 rounded-2xl object-cover shadow-2xl ring-1 ring-slate-700"
           />
+          {/* TODO: Replace portrait image */}
           <div>
             <h2 className="text-2xl font-semibold text-white">Reid Poole</h2>
             <p className="text-slate-400">Musician • Bandleader • Software Engineer</p>

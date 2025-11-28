@@ -5,27 +5,29 @@ type EventPosterProps = {
   posterUrl?: string | null;
   title?: string;
   className?: string;
-  fit?: 'cover' | 'contain';
+  variant?: 'detail' | 'card' | 'square';
 };
 
 /**
  * Renders either the real event poster or a stylized Alpine Groove Guide fallback
  * so events without artwork still feel intentional and on-brand.
+ * QA: real posters fit ratio, placeholder fills container, no stretching, consistent card heights.
  */
-const EventPoster = ({ posterUrl, title, className, fit = 'cover' }: EventPosterProps) => {
+const EventPoster = ({ posterUrl, title, className, variant = 'card' }: EventPosterProps) => {
+  const aspectClass =
+    variant === 'detail' ? 'aspect-[16/9]' : variant === 'square' ? 'aspect-square' : 'aspect-[4/5]';
   const baseClass =
-    "relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900";
-  const fitClass = fit === 'contain' ? 'object-contain' : 'object-cover';
+    "relative w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-900";
+  const src = posterUrl || DEFAULT_EVENT_POSTER;
 
   if (posterUrl) {
     return (
-      <div className={`${baseClass} ${className ?? ""}`}>
-        {/* Make poster responsive to image orientation */}
+      <div className={`${baseClass} ${aspectClass} ${className ?? ""}`}>
         <Image
-          src={posterUrl}
+          src={src}
           alt={title ? `${title} poster` : "Event poster"}
           fill
-          className={`h-full w-full ${fitClass}`}
+          className="h-full w-full object-cover"
           sizes="(max-width: 768px) 100vw, 400px"
         />
       </div>
@@ -33,29 +35,14 @@ const EventPoster = ({ posterUrl, title, className, fit = 'cover' }: EventPoster
   }
 
   return (
-    <div className={`${baseClass} ${className ?? ""}`}>
-      <div className="absolute inset-0">
-        <Image
-          src={DEFAULT_EVENT_POSTER}
-          alt="Alpine Groove Guide background"
-          fill
-          className="object-cover opacity-40 blur-3xl scale-125"
-          sizes="100vw"
-        />
-      </div>
-      <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/50 to-emerald-700/60" />
-      <div className="relative z-10 flex h-full w-full flex-col items-center justify-center text-center">
-        <Image
-          src={DEFAULT_EVENT_POSTER}
-          alt="Alpine Groove Guide event"
-          width={160}
-          height={160}
-          className="rounded-2xl shadow-lg"
-        />
-        <p className="mt-4 px-4 text-[10px] font-semibold uppercase tracking-[0.4em] text-slate-200/80">
-          Alpine Groove Guide Event
-        </p>
-      </div>
+    <div className={`${baseClass} ${aspectClass} ${className ?? ""}`}>
+      <Image
+        src={src}
+        alt={title ? `${title} poster` : "Event poster"}
+        fill
+        className="h-full w-full object-cover"
+        sizes="(max-width: 768px) 100vw, 400px"
+      />
     </div>
   );
 };

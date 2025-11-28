@@ -48,7 +48,8 @@ const EventCard: React.FC<EventCardProps> = ({
       <EventPoster
         posterUrl={imageUrl}
         title={title}
-        className="hidden h-20 w-20 flex-shrink-0 sm:block"
+        variant="card"
+        className="hidden w-20 flex-shrink-0 sm:block"
       />
 
       <div className="flex flex-1 flex-col justify-between">
