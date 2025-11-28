@@ -54,6 +54,8 @@ interface Props {
   artist: Artist | null;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 type MediaProvider = 'soundcloud' | 'bandcamp';
 
 const ResponsiveMediaEmbed = ({
@@ -106,6 +108,10 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const logRef = useRef(false);
   const eventsLoggedRef = useRef(false);
   const pageTitle = artist?.display_name ? `${artist.display_name} – Profile` : 'Artist Profile – Alpine Groove Guide';
+  const [tipAmount, setTipAmount] = useState<number>(5);
+  const [customTip, setCustomTip] = useState<string>('');
+  const [tipping, setTipping] = useState(false);
+  const [tipError, setTipError] = useState<string | null>(null);
 
   useEffect(() => {
     if (artist && !logRef.current) {
@@ -238,6 +244,110 @@ const ArtistProfilePage = ({ artist }: Props) => {
           )}
 
           <TrialBanner artist_user_id={artist.user_id} trial_ends_at={artist.trial_ends_at} is_pro={isProAccess} />
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-lg shadow-black/30">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Support this artist</p>
+                <h3 className="text-lg font-semibold text-white">Send a tip</h3>
+                <p className="text-sm text-slate-400">Choose an amount to send a one-time tip via Stripe.</p>
+              </div>
+              {!user && (
+                <button
+                  onClick={() => router.push(`/LoginPage?redirect=/artists/${artist.slug}`)}
+                  className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 hover:border-emerald-300 hover:text-white"
+                >
+                  Log in to tip
+                </button>
+              )}
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {[5, 10, 20].map((amt) => (
+                <button
+                  key={amt}
+                  disabled={!user}
+                  onClick={() => {
+                    setTipAmount(amt);
+                    setCustomTip('');
+                    setTipError(null);
+                  }}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    tipAmount === amt && !customTip
+                      ? 'border border-emerald-400/60 bg-emerald-500/10 text-emerald-200'
+                      : 'border border-slate-700 bg-slate-900/60 text-slate-200 hover:border-emerald-300 hover:text-emerald-100'
+                  } ${!user ? 'opacity-60 cursor-not-allowed' : ''}`}
+                >
+                  ${amt}
+                </button>
+              ))}
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  step={1}
+                  disabled={!user}
+                  value={customTip}
+                  onChange={(e) => {
+                    setCustomTip(e.target.value);
+                    setTipError(null);
+                  }}
+                  placeholder="Custom"
+                  className="w-24 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:border-emerald-400 focus:outline-none disabled:opacity-60"
+                />
+                <span className="text-sm text-slate-400">$</span>
+              </div>
+            </div>
+
+            {tipError && <p className="mt-2 text-xs text-rose-300">{tipError}</p>}
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                disabled={tipping || !user}
+                onClick={async () => {
+                  if (!artist?.id) return;
+                  if (!user) {
+                    router.push(`/LoginPage?redirect=/artists/${artist.slug}`);
+                    return;
+                  }
+                  const amount = customTip ? Number(customTip) : tipAmount;
+                  if (!amount || amount < 1) {
+                    setTipError('Enter at least $1 to tip.');
+                    return;
+                  }
+                  setTipping(true);
+                  setTipError(null);
+                  try {
+                    const res = await fetch(`${API_BASE_URL}/api/payments/create-tip-session`, {
+                      method: 'POST',
+                      credentials: 'include',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ artistId: artist.id, amount }),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok || !data?.url) {
+                      throw new Error(data?.message || 'Unable to start checkout.');
+                    }
+                    window.location.href = data.url;
+                  } catch (err) {
+                    console.error('Tip session error', err);
+                    setTipError('Unable to start the tip checkout right now. Please try again.');
+                  } finally {
+                    setTipping(false);
+                  }
+                }}
+                className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold ${
+                  user
+                    ? 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0'
+                    : 'border border-slate-700 text-slate-400'
+                } ${tipping ? 'opacity-70 cursor-wait' : ''}`}
+              >
+                {tipping ? 'Starting checkout…' : 'Tip this artist'}
+              </button>
+              <p className="text-xs text-slate-500">Powered by Stripe Checkout</p>
+            </div>
+            {/* Manual test: select $5 and tip, complete Stripe checkout, return with tipSuccess=true and see success banner. */}
+          </section>
 
           <section className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 ring-1 ring-slate-800 shadow-2xl shadow-black/30">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start">

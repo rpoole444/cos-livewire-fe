@@ -56,6 +56,8 @@ const UserProfile: React.FC = () => {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showApprovalToast, setShowApprovalToast] = useState(false);
   const [showTrialToast, setShowTrialToast] = useState(false);
+  const [showTipSuccess, setShowTipSuccess] = useState(false);
+  const [showTipCancelled, setShowTipCancelled] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [restoreError, setRestoreError] = useState("");
   const approvalRef = useRef<boolean | null>(null);
@@ -192,7 +194,15 @@ if (hasArtistProfile) {
         setTimeout(() => setShowTrialToast(false), 5000);
       }
 
-      if (successParam === 'true' || trialParam === 'active') {
+      if (query?.tipSuccess === 'true') {
+        setShowTipSuccess(true);
+        setTimeout(() => setShowTipSuccess(false), 5000);
+      } else if (query?.tipCancelled === 'true') {
+        setShowTipCancelled(true);
+        setTimeout(() => setShowTipCancelled(false), 5000);
+      }
+
+      if (successParam === 'true' || trialParam === 'active' || query?.tipSuccess === 'true' || query?.tipCancelled === 'true') {
         replace({ pathname, query: {} }, undefined, { shallow: true });
       }
 
@@ -500,6 +510,16 @@ const textareaClasses =
         {showApprovalToast && (
           <div className="rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-4 py-2 text-center text-sm text-emerald-200">
             🎉 You’re live on the directory!
+          </div>
+        )}
+        {showTipSuccess && (
+          <div className="rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-4 py-2 text-center text-sm text-emerald-200">
+            🙌 Thanks for tipping this artist. Your payment went through.
+          </div>
+        )}
+        {showTipCancelled && (
+          <div className="rounded-lg border border-amber-400/60 bg-amber-500/10 px-4 py-2 text-center text-sm text-amber-100">
+            Tip was cancelled. No charge was made.
           </div>
         )}
         {showTrialToast && (
