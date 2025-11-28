@@ -5,24 +5,27 @@ type EventPosterProps = {
   posterUrl?: string | null;
   title?: string;
   className?: string;
+  fit?: 'cover' | 'contain';
 };
 
 /**
  * Renders either the real event poster or a stylized Alpine Groove Guide fallback
  * so events without artwork still feel intentional and on-brand.
  */
-const EventPoster = ({ posterUrl, title, className }: EventPosterProps) => {
+const EventPoster = ({ posterUrl, title, className, fit = 'cover' }: EventPosterProps) => {
   const baseClass =
     "relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900";
+  const fitClass = fit === 'contain' ? 'object-contain' : 'object-cover';
 
   if (posterUrl) {
     return (
       <div className={`${baseClass} ${className ?? ""}`}>
+        {/* Make poster responsive to image orientation */}
         <Image
           src={posterUrl}
           alt={title ? `${title} poster` : "Event poster"}
           fill
-          className="h-full w-full object-cover"
+          className={`h-full w-full ${fitClass}`}
           sizes="(max-width: 768px) 100vw, 400px"
         />
       </div>

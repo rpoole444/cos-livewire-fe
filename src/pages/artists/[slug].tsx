@@ -70,7 +70,7 @@ const ResponsiveMediaEmbed = ({
   const heightClasses =
     provider === 'soundcloud'
       ? 'h-[300px] sm:h-[360px] lg:h-[420px]'
-      : 'h-[450px] sm:h-[520px] lg:h-[600px]';
+      : 'h-[200px] sm:h-[230px] lg:h-[260px]'; // Let Bandcamp embed card height match player
 
   return (
     <div className={baseWrapper}>
