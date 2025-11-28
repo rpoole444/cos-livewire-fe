@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
+import SupportTipSection from '@/components/SupportTipSection';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -56,8 +57,6 @@ const UserProfile: React.FC = () => {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showApprovalToast, setShowApprovalToast] = useState(false);
   const [showTrialToast, setShowTrialToast] = useState(false);
-  const [showTipSuccess, setShowTipSuccess] = useState(false);
-  const [showTipCancelled, setShowTipCancelled] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [restoreError, setRestoreError] = useState("");
   const approvalRef = useRef<boolean | null>(null);
@@ -194,15 +193,7 @@ if (hasArtistProfile) {
         setTimeout(() => setShowTrialToast(false), 5000);
       }
 
-      if (query?.tipSuccess === 'true') {
-        setShowTipSuccess(true);
-        setTimeout(() => setShowTipSuccess(false), 5000);
-      } else if (query?.tipCancelled === 'true') {
-        setShowTipCancelled(true);
-        setTimeout(() => setShowTipCancelled(false), 5000);
-      }
-
-      if (successParam === 'true' || trialParam === 'active' || query?.tipSuccess === 'true' || query?.tipCancelled === 'true') {
+      if (successParam === 'true' || trialParam === 'active') {
         replace({ pathname, query: {} }, undefined, { shallow: true });
       }
 
@@ -510,16 +501,6 @@ const textareaClasses =
         {showApprovalToast && (
           <div className="rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-4 py-2 text-center text-sm text-emerald-200">
             🎉 You’re live on the directory!
-          </div>
-        )}
-        {showTipSuccess && (
-          <div className="rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-4 py-2 text-center text-sm text-emerald-200">
-            🙌 Thanks for tipping this artist. Your payment went through.
-          </div>
-        )}
-        {showTipCancelled && (
-          <div className="rounded-lg border border-amber-400/60 bg-amber-500/10 px-4 py-2 text-center text-sm text-amber-100">
-            Tip was cancelled. No charge was made.
           </div>
         )}
         {showTrialToast && (
@@ -927,21 +908,16 @@ const textareaClasses =
           )}
         </section>
 
-        <section className="rounded-3xl border border-slate-800/80 bg-slate-950/70 p-6 shadow-xl shadow-black/30 space-y-4 sm:p-8">
-          <h3 className="font-semibold text-xl text-white">Support Alpine Groove Guide</h3>
-          <p className="text-sm text-slate-300">
-            Help keep the directory running and discoverable for local artists.
-          </p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              onClick={() => handleDonate("payment")}
-              className="inline-flex flex-1 items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
-            >
-              💵 Send a $7 Tip
-            </button>
+        <section className="space-y-4">
+          <SupportTipSection source="profile" useCredentials requireAuth />
+          <div className="rounded-3xl border border-slate-800/80 bg-slate-950/70 p-6 shadow-xl shadow-black/30">
+            <h3 className="font-semibold text-xl text-white">Keep Pro Tools Going</h3>
+            <p className="mt-1 text-sm text-slate-300">
+              Prefer ongoing support? Stay on the $7/month membership to keep Alpine Groove Guide humming.
+            </p>
             <button
               onClick={() => handleDonate("subscription")}
-              className="inline-flex flex-1 items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/60"
+              className="mt-4 inline-flex w-full items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/60"
             >
               💫 $7/Month Membership
             </button>

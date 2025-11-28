@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import SupportTipSection from "@/components/SupportTipSection";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -117,6 +118,12 @@ const About = () => {
             <p className="mt-1 text-sm text-slate-500">Founder, Alpine Groove Guide</p>
           </div>
         </section>
+
+        <SupportTipSection
+          source="public"
+          buttonLabel="Tip Alpine Groove Guide"
+          className="shadow-2xl"
+        />
 
         <section className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-lg">
           <h3 className="text-2xl font-semibold text-white">🎶 Get Involved</h3>
