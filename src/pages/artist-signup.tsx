@@ -22,6 +22,8 @@ interface ExistingArtist {
 export default function ArtistSignupPage() {
   const { user, refreshSession, loading: authLoading } = useAuth();
   const router = useRouter();
+  const invite = router.query.invite;
+  const inviteCode = typeof invite === 'string' ? invite : undefined;
 
   const trialActive = isTrialActive(user?.trial_ends_at);
   const proActive = isActivePro(user as any);
@@ -69,9 +71,10 @@ const [mediaErrors, setMediaErrors] = useState({
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.replace("/login?next=/artist-signup");
+      const inviteQuery = inviteCode ? `&invite=${encodeURIComponent(inviteCode)}` : '';
+      router.replace(`/RegisterPage?redirect=/artist-signup${inviteQuery}`);
     }
-  }, [authLoading, user, router]);
+  }, [authLoading, user, router, inviteCode]);
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

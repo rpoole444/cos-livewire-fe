@@ -9,6 +9,8 @@ const RegisterPage = () => {
   const { user } = useAuth();
   const router = useRouter();
   const redirect = router.query.redirect as string;
+  const invite = router.query.invite;
+  const inviteCode = typeof invite === 'string' ? invite : undefined;
 
   useEffect(() => {
     if (user) {
@@ -39,6 +41,7 @@ const RegisterPage = () => {
                 setAuthMode={(mode) => {
                   if (mode === "login") router.push("/LoginPage");
                 }}
+                inviteCode={inviteCode}
                 onSuccess={() => router.push("/LoginPage?redirect=/artist-signup")}
               />
             </div>

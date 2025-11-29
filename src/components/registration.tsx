@@ -28,9 +28,10 @@ const genreOptions = [
 interface RegistrationProps {
   setAuthMode: (mode: string) => void;
   onSuccess?: () => void;
+  inviteCode?: string;
 }
 
-const RegistrationForm: React.FC<RegistrationProps> = ({ setAuthMode, onSuccess }) => {
+const RegistrationForm: React.FC<RegistrationProps> = ({ setAuthMode, onSuccess, inviteCode }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -75,7 +76,7 @@ const RegistrationForm: React.FC<RegistrationProps> = ({ setAuthMode, onSuccess 
 
     setIsSubmitting(true);
     try {
-      await registerUser(firstName, lastName, displayName, email, password, description, genres);
+      await registerUser(firstName, lastName, displayName, email, password, description, genres, inviteCode);
       setRegistrationSuccess(true);
       setTimeout(() => {
         if (onSuccess) {
@@ -104,6 +105,11 @@ const RegistrationForm: React.FC<RegistrationProps> = ({ setAuthMode, onSuccess 
 
   return (
     <form className="space-y-5" onSubmit={handleRegister}>
+      {inviteCode && (
+        <div className="rounded-lg border border-emerald-400/50 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200">
+          You&apos;re using invite <strong className="text-emerald-100">{inviteCode}</strong>. If valid, you&apos;ll get an extended trial.
+        </div>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <label htmlFor="first-name" className="text-xs font-medium uppercase tracking-[0.12em] text-slate-300">
