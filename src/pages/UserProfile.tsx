@@ -59,6 +59,9 @@ const UserProfile: React.FC = () => {
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [restoreError, setRestoreError] = useState("");
+  const [inviteCode, setInviteCode] = useState("");
+  const [inviteStatus, setInviteStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [inviteMessage, setInviteMessage] = useState<string>("");
   const approvalRef = useRef<boolean | null>(null);
   const refetchedOnce = useRef(false);
   const accountSectionRef = useRef<HTMLDivElement | null>(null);
@@ -115,6 +118,42 @@ if (hasArtistProfile) {
 }
 
   const [formError, setFormError] = useState("");
+  const handleInviteClaim = async () => {
+    const trimmed = inviteCode.trim();
+    if (!trimmed) {
+      setInviteStatus("error");
+      setInviteMessage("Please enter an invite code.");
+      return;
+    }
+    if (!user) {
+      setInviteStatus("error");
+      setInviteMessage("You need to be logged in to claim an invite.");
+      return;
+    }
+    setInviteStatus("loading");
+    setInviteMessage("");
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/invites/claim`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ inviteCode: trimmed.toUpperCase() }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.message || "Unable to apply invite.");
+      }
+      await refreshSession();
+      const endDate = data?.trial_ends_at ? new Date(data.trial_ends_at).toLocaleDateString() : "";
+      setInviteStatus("success");
+      setInviteMessage(endDate ? `Invite applied! Your trial now ends on ${endDate}.` : "Invite applied! Your trial is active.");
+      setInviteCode("");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unable to apply invite.";
+      setInviteStatus("error");
+      setInviteMessage(message);
+    }
+  };
 
   const applyArtistProfileStatus = useCallback((status: ArtistProfileStatus | null) => {
     if (!status) {
@@ -870,6 +909,47 @@ const textareaClasses =
               </p>
             )}
           </div>
+
+          {(!canUseProFeatures || trialActive) && (
+            <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Have an invite code?</p>
+                  <p className="text-sm text-slate-300">Enter your invite to activate or extend your Alpine Pro trial.</p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <input
+                  type="text"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  placeholder="e.g. FOUNDER3M"
+                  className="w-full rounded-lg border border-slate-700/80 bg-slate-900/70 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/80 focus:outline-none focus:ring-2 focus:ring-emerald-400/70"
+                />
+                <button
+                  type="button"
+                  onClick={handleInviteClaim}
+                  disabled={inviteStatus === 'loading' || !inviteCode.trim()}
+                  className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold ${
+                    inviteStatus === 'loading' || !inviteCode.trim()
+                      ? 'border border-slate-700 text-slate-400 cursor-not-allowed'
+                      : 'bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/30 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0'
+                  }`}
+                >
+                  {inviteStatus === 'loading' ? 'Applying…' : 'Claim invite'}
+                </button>
+              </div>
+              {inviteMessage && (
+                <p
+                  className={`text-xs ${
+                    inviteStatus === 'success' ? 'text-emerald-200' : 'text-amber-200'
+                  }`}
+                >
+                  {inviteMessage}
+                </p>
+              )}
+            </div>
+          )}
 
           {shouldShowManageBilling ? (
             <>
