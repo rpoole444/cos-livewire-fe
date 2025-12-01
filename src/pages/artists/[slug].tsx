@@ -22,6 +22,7 @@ interface Event {
   genre: string;
   slug: string;
   poster?: string | null;
+  start_time?: string
 }
 
 interface Artist {
@@ -520,21 +521,22 @@ const ArtistProfilePage = ({ artist }: Props) => {
                     <Link
                       key={event.id}
                       href={`/eventRouter/${event.slug}`}
-                      className="mb-4 flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/60 p-4 last:mb-0 transition hover:scale-[1.01] hover:border-emerald-400/60 hover:bg-slate-900"
+                      className="mb-4 flex gap-3 rounded-xl border border-slate-800 bg-slate-900/60 p-3 last:mb-0 transition hover:scale-[1.01] hover:border-emerald-400/60 hover:bg-slate-900 sm:flex-col sm:gap-0 sm:p-4"
                     >
                       <EventPoster
                         posterUrl={event.poster}
                         title={event.title}
-                        variant="square"
-                        className="w-16 flex-shrink-0 sm:w-20"
+                        variant="card"
+                        className="w-24 flex-shrink-0 sm:w-full"
                       />
-                      <div className="flex-1">
+                      <div className="flex flex-1 flex-col justify-center sm:mt-2">
                         <p className="text-xs uppercase tracking-[0.3em] text-emerald-300">
                           {dayjs.utc(event.date).format('ddd, MMM D')}
+                          {event.start_time ? ` • ${dayjs.utc(`${event.date}T${event.start_time}`).format('h:mm A')}` : ''}
                         </p>
-                        <h3 className="mt-1 text-lg font-semibold text-white">{event.title}</h3>
+                        <h3 className="mt-1 text-base font-semibold leading-tight text-white sm:text-lg">{event.title}</h3>
                         <p className="text-sm text-slate-300">
-                          📍 {event.venue_name} • {event.location}
+                          📍 {event.venue_name} {event.location ? `• ${event.location}` : ''}
                         </p>
                         <p className="text-xs text-slate-400">🎵 {event.genre}</p>
                       </div>
