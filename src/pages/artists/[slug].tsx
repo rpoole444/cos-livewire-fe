@@ -530,23 +530,25 @@ const ArtistProfilePage = ({ artist }: Props) => {
                       <Link
                         key={event.id}
                         href={`/eventRouter/${event.slug}`}
-                        className="mb-3 flex gap-3 rounded-xl border border-slate-800 bg-slate-900/60 p-2 last:mb-0 transition hover:scale-[1.01] hover:border-emerald-400/60 hover:bg-slate-900 sm:items-center sm:gap-4 sm:p-3"
+                        className="mb-3 w-full px-4 last:mb-0 sm:px-0"
                       >
-                        <EventPoster
-                          posterUrl={event.poster}
-                          title={event.title}
-                          variant="card"
-                          className="w-20 flex-shrink-0 sm:w-32"
-                        />
-                        <div className="flex flex-1 flex-col justify-center">
-                          {dateLine && (
-                            <p className="text-[11px] uppercase tracking-[0.3em] text-emerald-300">{dateLine}</p>
-                          )}
-                          <h3 className="mt-1 text-sm font-semibold leading-tight text-white sm:text-base">{event.title}</h3>
-                          <p className="text-xs text-slate-300 sm:text-sm">
-                            📍 {event.venue_name} {event.location ? `• ${event.location}` : ''}
-                          </p>
-                          <p className="text-[11px] text-slate-400 sm:text-xs">🎵 {event.genre}</p>
+                        <div className="flex flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900/60 p-3 transition hover:scale-[1.01] hover:border-emerald-400/60 hover:bg-slate-900 sm:flex-row sm:items-center sm:gap-4 sm:p-3">
+                          <EventPoster
+                            posterUrl={event.poster}
+                            title={event.title}
+                            variant="card"
+                            className="h-40 w-full flex-shrink-0 sm:h-40 sm:w-32"
+                          />
+                          <div className="flex flex-1 flex-col justify-center sm:mt-0">
+                            {dateLine && (
+                              <p className="text-[11px] uppercase tracking-[0.3em] text-emerald-300">{dateLine}</p>
+                            )}
+                            <h3 className="mt-1 text-sm font-semibold leading-tight text-white sm:text-base">{event.title}</h3>
+                            <p className="text-xs text-slate-300 sm:text-sm">
+                              📍 {event.venue_name} {event.location ? `• ${event.location}` : ''}
+                            </p>
+                            <p className="text-[11px] text-slate-400 sm:text-xs">🎵 {event.genre}</p>
+                          </div>
                         </div>
                       </Link>
                     );
