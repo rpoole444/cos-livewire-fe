@@ -13,7 +13,6 @@ type EventCardProps = {
   venueName?: string | null;
   imageUrl?: string | null;
   isFeatured?: boolean;
-  handleCardClick?: () => void;
 };
 
 const EventCard: React.FC<EventCardProps> = ({
@@ -25,7 +24,6 @@ const EventCard: React.FC<EventCardProps> = ({
   venueName,
   imageUrl,
   isFeatured,
-  handleCardClick,
 }) => {
   const parsed = startTime ? dayjs(startTime) : null;
   const isValidDate = parsed?.isValid() ?? false;
@@ -34,17 +32,12 @@ const EventCard: React.FC<EventCardProps> = ({
     console.warn("[EventCard] invalid or missing startTime", { title, startTime });
   }
 
-  const handleClick = () => {
-    handleCardClick?.();
-  };
-
   const formattedDate = isValidDate ? parsed!.format("ddd, MMM D • h:mm A") : "Date TBA";
   const imageSrc = getEventImageSrc(imageUrl);
 
   const card = (
     <article
       className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 shadow-lg transition hover:border-emerald-400/80 hover:shadow-emerald-500/25"
-      onClick={handleClick}
     >
       <div className="relative h-72 w-full">
         <EventPoster posterUrl={imageSrc} title={title} variant="card" className="h-full w-full" />
@@ -73,8 +66,13 @@ const EventCard: React.FC<EventCardProps> = ({
     </article>
   );
 
+  if (!slug) {
+    console.warn("[EventCard] missing slug; navigation disabled", { id, title });
+    return <div className="group block">{card}</div>;
+  }
+
   return (
-    <Link href={`/events/${id}`} className="group block">
+    <Link href={`/eventRouter/${slug}`} className="group block">
       {card}
     </Link>
   );
