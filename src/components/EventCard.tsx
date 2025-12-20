@@ -5,7 +5,7 @@ import EventPoster from "./EventPoster";
 import { getEventImageSrc } from "@/util/getEventImageSrc";
 
 type EventCardProps = {
-  id?: number | string | null;
+  id: number;
   title: string;
   slug?: string | null;
   startTime?: string | null;
@@ -73,23 +73,11 @@ const EventCard: React.FC<EventCardProps> = ({
     </article>
   );
 
-  if (id != null) {
-    return (
-      <Link href={`/events/${id}`} className="group block">
-        {card}
-      </Link>
-    );
-  }
-
-  if (slug) {
-    return (
-      <Link href={`/eventRouter/${slug}`} className="group block">
-        {card}
-      </Link>
-    );
-  }
-
-  return <div className="group block">{card}</div>;
+  return (
+    <Link href={`/events/${id}`} className="group block">
+      {card}
+    </Link>
+  );
 };
 
 export default EventCard;
