@@ -11,6 +11,7 @@ import WelcomeUser from '@/components/WelcomeUser';
 import EventsCalendar from '@/components/EventsCalendar';
 import UpcomingShows from '@/components/UpcomingShows';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/router';
 import { useHomeState } from '@/hooks/useHomeState';
 import { getEvents } from './api/route';
 import { Event } from '@/interfaces/interfaces';
@@ -61,6 +62,7 @@ export default function Home() {
 
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const { user } = useAuth();
+  const router = useRouter();
 
   const switchAuthMode = () =>
     setAuthMode((m) => (m === 'login' ? 'register' : 'login'));
@@ -278,6 +280,9 @@ export default function Home() {
                     </header>
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                       {filteredEvents.map((event) => {
+                        if (!event.id) {
+                          console.warn("[Home] event missing id; navigation may fail", event);
+                        }
                         const startTimeISO = buildEventDateTime(event.date, event.start_time);
                         console.log("[Home] rendering EventCard", {
                           id: event.id,
@@ -289,6 +294,7 @@ export default function Home() {
                         return (
                           <EventCard
                             key={event.id}
+                            id={event.id}
                             title={event.title}
                             slug={event.slug}
                             startTime={startTimeISO ?? undefined}
@@ -296,6 +302,12 @@ export default function Home() {
                             venueName={event.venue_name}
                             imageUrl={event.poster || undefined}
                             isFeatured={(event as any).is_featured}
+                            handleCardClick={() => {
+                              console.log("[Home] event click payload", event);
+                              if (event.id) {
+                                router.push(`/events/${event.id}`);
+                              }
+                            }}
                           />
                         );
                       })}
