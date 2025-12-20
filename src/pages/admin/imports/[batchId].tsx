@@ -39,6 +39,7 @@ const AdminImportBatchPage = () => {
   const [actionId, setActionId] = useState<number | string | null>(null);
   const [editingId, setEditingId] = useState<number | string | null>(null);
   const [draft, setDraft] = useState<Partial<ImportEvent>>({});
+  const source = 'moondog';
 
   const apiBasePath = useMemo(() => {
     if (!batchIdValue) return null;
@@ -109,11 +110,11 @@ const AdminImportBatchPage = () => {
     setStatusMessage(null);
     setStatusTone(null);
     try {
-      const res = await fetch(`${apiBasePath}/accept`, {
+      // Per-event accept endpoint to avoid batch-level 404s.
+      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/events/${event.id}/accept`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ import_event_id: event.id }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -121,7 +122,7 @@ const AdminImportBatchPage = () => {
       }
       setEvents((prev) =>
         prev.map((item) =>
-          item.id === event.id ? { ...item, status: 'accepted', is_accepted: true } : item
+          item.id === event.id ? { ...item, status: 'ACCEPTED', is_accepted: true } : item
         )
       );
       setStatusMessage('Event accepted.');
@@ -141,11 +142,11 @@ const AdminImportBatchPage = () => {
     setStatusMessage(null);
     setStatusTone(null);
     try {
-      const res = await fetch(`${apiBasePath}/reject`, {
-        method: 'PATCH',
+      // Per-event reject endpoint to avoid batch-level 404s.
+      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/events/${event.id}/reject`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ import_event_id: event.id }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -153,7 +154,7 @@ const AdminImportBatchPage = () => {
       }
       setEvents((prev) =>
         prev.map((item) =>
-          item.id === event.id ? { ...item, status: 'rejected', is_rejected: true } : item
+          item.id === event.id ? { ...item, status: 'REJECTED', is_rejected: true } : item
         )
       );
       setStatusMessage('Event rejected.');
