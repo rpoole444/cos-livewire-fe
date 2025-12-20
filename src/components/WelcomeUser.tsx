@@ -119,6 +119,12 @@ const WelcomeUser = () => {
             >
               Review submissions
             </Link>
+            <Link
+              href="/admin/import"
+              className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-center text-sm font-medium text-emerald-200 transition hover:border-emerald-300 hover:text-white"
+            >
+              Import batches
+            </Link>
           </div>
         )}
 
