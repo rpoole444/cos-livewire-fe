@@ -12,12 +12,14 @@ type ImportEvent = {
   time?: string | null;
   start_time?: string | null;
   date_time?: string | null;
+  start_at?: string | null;
   venue?: string | null;
   venue_name?: string | null;
   artist_display?: string | null;
   artist?: string | null;
   warnings?: string[] | string | null;
   parse_warnings?: string[] | string | null;
+  raw_block?: string | null;
   status?: string | null;
   is_rejected?: boolean | null;
   is_accepted?: boolean | null;
@@ -88,12 +90,17 @@ const AdminImportBatchPage = () => {
   };
 
   const getDateTimeLabel = (event: ImportEvent) => {
-    if (event.date_time) return event.date_time;
-    const date = event.date ?? '';
-    const time = event.start_time ?? event.time ?? '';
-    if (!date && !time) return '—';
-    if (date && time) return `${date} ${time}`;
-    return date || time;
+    const rawValue = event.start_at ?? event.date_time;
+    if (!rawValue) return '—';
+    const parsed = new Date(rawValue);
+    if (Number.isNaN(parsed.getTime())) return '—';
+    return parsed.toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
   };
 
   const handleAccept = async (event: ImportEvent) => {
@@ -320,6 +327,13 @@ const AdminImportBatchPage = () => {
                         : isRejected
                         ? 'bg-rose-500/10'
                         : 'bg-transparent';
+                      if (process.env.NODE_ENV !== 'production') {
+                        const hasTimeInRawBlock = Boolean(event.raw_block?.match(/\b\d{1,2}:\d{2}\b/));
+                        const startAtInvalid = !event.start_at || Number.isNaN(new Date(event.start_at).getTime());
+                        if (hasTimeInRawBlock && startAtInvalid) {
+                          console.warn('[AdminImport] Invalid or missing start_at for staged event:', event);
+                        }
+                      }
 
                       return (
                         <tr key={event.id} className={`${rowTone}`}>
