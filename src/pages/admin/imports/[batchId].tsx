@@ -39,7 +39,11 @@ const AdminImportBatchPage = () => {
   const [actionId, setActionId] = useState<number | string | null>(null);
   const [editingId, setEditingId] = useState<number | string | null>(null);
   const [draft, setDraft] = useState<Partial<ImportEvent>>({});
+  const [showPromoteModal, setShowPromoteModal] = useState(false);
+  const [isPromoting, setIsPromoting] = useState(false);
+  const [hasPromoted, setHasPromoted] = useState(false);
   const source = 'moondog';
+  const redirectAfterPromote = false;
 
   const apiBasePath = useMemo(() => {
     if (!batchIdValue) return null;
@@ -229,6 +233,39 @@ const AdminImportBatchPage = () => {
     }
   };
 
+  const acceptedCount = events.filter((event) => getStatus(event).toLowerCase() === 'accepted').length;
+  const canPromote = acceptedCount > 0 && !hasPromoted;
+
+  const handlePromoteBatch = async () => {
+    if (!apiBasePath || !batchIdValue) return;
+    setIsPromoting(true);
+    setStatusMessage(null);
+    setStatusTone(null);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/${batchIdValue}/promote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.message || 'Failed to promote batch.');
+      }
+      setHasPromoted(true);
+      setStatusMessage(`Published ${acceptedCount} event${acceptedCount === 1 ? '' : 's'} to the live calendar.`);
+      setStatusTone('success');
+      if (redirectAfterPromote) {
+        router.push('/AdminService');
+      }
+    } catch (error) {
+      console.error('Promote batch failed', error);
+      setStatusMessage('Unable to promote this batch. Please try again.');
+      setStatusTone('error');
+    } finally {
+      setIsPromoting(false);
+      setShowPromoteModal(false);
+    }
+  };
   if (loading || !isAuthorized || !router.isReady) {
     return (
       <>
@@ -268,12 +305,23 @@ const AdminImportBatchPage = () => {
                   Review parsed records before they are committed to the live calendar.
                 </p>
               </div>
-              <Link
-                href="/admin/import"
-                className="rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white"
-              >
-                ← Back to import
-              </Link>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                {acceptedCount > 0 && (
+                  <button
+                    onClick={() => setShowPromoteModal(true)}
+                    disabled={!canPromote}
+                    className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Promote batch
+                  </button>
+                )}
+                <Link
+                  href="/admin/import"
+                  className="rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white"
+                >
+                  ← Back to import
+                </Link>
+              </div>
             </div>
 
             {statusMessage && (
@@ -474,6 +522,33 @@ const AdminImportBatchPage = () => {
           </Link>
         </div>
       </div>
+      {showPromoteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-3xl border border-slate-700 bg-slate-950 p-6 text-slate-100 shadow-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">Confirm publish</p>
+            <h2 className="mt-3 text-2xl font-semibold">Promote accepted events?</h2>
+            <p className="mt-3 text-sm text-slate-400">
+              This will publish {acceptedCount} event{acceptedCount === 1 ? '' : 's'} to the live calendar.
+            </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <button
+                onClick={() => setShowPromoteModal(false)}
+                disabled={isPromoting}
+                className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePromoteBatch}
+                disabled={isPromoting}
+                className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isPromoting ? 'Publishing…' : 'Confirm publish'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
