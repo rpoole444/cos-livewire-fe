@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { Switch } from '@headlessui/react';
-import { Search, CalendarSearch } from 'lucide-react';
+import { ArrowRight, CalendarDays, CalendarSearch, Music2, Search, Sparkles, Users } from 'lucide-react';
 import Link from 'next/link';
 import HeroSection from '@/components/HeroSection';
 import LoginForm from '@/components/login';
@@ -156,26 +156,95 @@ export default function Home() {
         </div>
       )}
 
-      <div className="text-center py-6 px-4 md:px-0">
-        <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-gold drop-shadow-md">
-          Welcome to Alpine Groove Guide
-        </h2>
-        <p className="text-gray-300 mt-2 max-w-xl mx-auto text-base md:text-lg">
-          Discover the best live music happening across Colorado Springs and beyond.
-        </p>
-      </div>
+      <section className="border-b border-slate-800 bg-slate-950">
+        <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 md:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center lg:py-10">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold uppercase text-emerald-200">
+              <Sparkles className="h-4 w-4" />
+              Free community artist pages through 2026
+            </div>
 
-      <div className="px-4 py-6 max-w-5xl mx-auto">
-        <div className="mt-6 bg-gray-800 text-white p-6 rounded-lg shadow-md border-l-4 border-emerald-500">
-          <h3 className="text-lg font-bold mb-2 text-emerald-300">🎶 Pro Directory</h3>
-          <p className="text-sm text-gray-300 mb-4">
-            Browse Alpine Pro pages for artists, venues, and promoters across the Front Range.
-          </p>
-          <Link href="/artists" className="inline-block px-4 py-2 bg-emerald-500 text-black rounded font-semibold hover:bg-emerald-400">
-            View Directory
-          </Link>
+            <div className="space-y-3">
+              <h1 className="max-w-3xl text-4xl font-black leading-[1.05] text-slate-50 md:text-5xl">
+                Find the next show, share the next stage.
+              </h1>
+              <p className="max-w-2xl text-base leading-7 text-slate-300 md:text-lg">
+                Alpine Groove Guide brings Front Range shows, artist pages, venues, and promoters into one clean local calendar built for fans and working musicians.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => document.getElementById('events')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                className="inline-flex items-center justify-center gap-2 bg-emerald-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:ring-offset-2 focus:ring-offset-slate-950"
+              >
+                Browse events
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <Link
+                href="/artists"
+                className="inline-flex items-center justify-center gap-2 border border-slate-600 px-5 py-3 text-sm font-bold text-slate-100 transition hover:border-emerald-300 hover:text-emerald-100 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 focus:ring-offset-slate-950"
+              >
+                View directory
+                <Users className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="grid gap-3 text-sm text-slate-300 sm:grid-cols-3">
+              <div className="border border-slate-800 bg-slate-900/70 p-4">
+                <CalendarDays className="mb-3 h-5 w-5 text-gold" />
+                <p className="font-semibold text-slate-50">Local calendar</p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">Daily shows, searchable by date, genre, venue, and artist.</p>
+              </div>
+              <div className="border border-slate-800 bg-slate-900/70 p-4">
+                <Music2 className="mb-3 h-5 w-5 text-emerald-300" />
+                <p className="font-semibold text-slate-50">Artist pages</p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">Profiles for musicians, venues, promoters, and community builders.</p>
+              </div>
+              <div className="border border-slate-800 bg-slate-900/70 p-4">
+                <Users className="mb-3 h-5 w-5 text-cyan-300" />
+                <p className="font-semibold text-slate-50">Scene discovery</p>
+                <p className="mt-1 text-xs leading-5 text-slate-400">A faster way for fans to find what is happening nearby.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="border border-slate-800 bg-slate-900 p-5 shadow-2xl shadow-black/30">
+            <div className="flex items-center gap-4">
+              <Image
+                src="/alpine_groove_guide_icon.png"
+                alt="Alpine Groove Guide"
+                width={88}
+                height={88}
+                className="h-20 w-20 shrink-0"
+                priority
+              />
+              <div>
+                <p className="text-xs font-semibold uppercase text-emerald-300">Pro Directory</p>
+                <h2 className="mt-1 text-2xl font-bold text-slate-50">Artists, venues, promoters.</h2>
+              </div>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-slate-300">
+              Browse community profiles across the Front Range, or create your own page while artist access is open through 2026.
+            </p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <Link
+                href="/artists"
+                className="inline-flex items-center justify-center bg-emerald-400 px-4 py-3 text-sm font-bold text-slate-950 transition hover:bg-emerald-300"
+              >
+                Open directory
+              </Link>
+              <Link
+                href={user ? "/artist-signup" : "/LoginPage?redirect=/artist-signup"}
+                className="inline-flex items-center justify-center border border-slate-600 px-4 py-3 text-sm font-bold text-slate-100 transition hover:border-slate-300"
+              >
+                Create page
+              </Link>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
 
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-10 pt-6 lg:flex-row lg:items-start lg:gap-8">

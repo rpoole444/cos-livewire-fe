@@ -7,47 +7,56 @@ import EventPoster from "./EventPoster";
 
 interface UpcomingShowsProps {
   user: UserType;
-  userGenres: string;
+  userGenres: string | string[];
   events: Event[];
 }
 
-const MAX_RECOMMENDATIONS = 10;
-
 const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events }) => {
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    if (userGenres && events) {
+    const genres = Array.isArray(userGenres) ? userGenres : [userGenres].filter(Boolean);
+
+    if (genres.length && events) {
       const currentDate = new Date();
       currentDate.setHours(0, 0, 0, 0);
       const filtered = events.filter(event => {
         const eventDate = parseLocalDayjs(event.date);
         if (!eventDate.isValid()) return false;
         return (
-          userGenres.includes(event.genre) &&
+          genres.includes(event.genre) &&
           (eventDate.isSame(currentDate, "day") || eventDate.isAfter(currentDate, "day"))
         );
       });
       setFilteredEvents(filtered);
+    } else {
+      setFilteredEvents([]);
     }
   }, [userGenres, events]);
 
-  const eventsToDisplay = showAll ? filteredEvents : filteredEvents.slice(0, MAX_RECOMMENDATIONS);
-
   return (
-    <div className="mt-6 rounded-3xl border border-slate-800/70 bg-slate-950/90 p-5 text-slate-50 shadow-lg shadow-slate-950/70 sm:p-6">
-      <h2 className="mb-5 text-center text-xl font-semibold text-slate-50 sm:text-2xl">
-        {user.displayName}&apos;s Music Picks 🎶
-      </h2>
-      {eventsToDisplay.length > 0 ? (
-        <>
-          <ul className="space-y-4">
-            {eventsToDisplay.map((event) => (
+    <div className="mt-6 border border-slate-800/70 bg-slate-950/90 p-5 text-slate-50 shadow-lg shadow-slate-950/70 sm:p-6">
+      <div className="mb-4 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase text-emerald-300">Suggested events</p>
+          <h2 className="mt-1 text-xl font-semibold text-slate-50">
+            {user.displayName}&apos;s Music Picks
+          </h2>
+        </div>
+        {filteredEvents.length > 0 && (
+          <span className="shrink-0 border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-300">
+            {filteredEvents.length}
+          </span>
+        )}
+      </div>
+      {filteredEvents.length > 0 ? (
+        <div className="max-h-[32rem] overflow-y-auto pr-2 [scrollbar-color:#34d399_#0f172a] [scrollbar-width:thin]">
+          <ul className="space-y-3">
+            {filteredEvents.map((event) => (
               <li key={event.id}>
                 <Link
                   href={`/eventRouter/${event.slug}`}
-                  className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-3 transition hover:border-emerald-400/70 hover:bg-slate-900"
+                  className="flex items-center gap-3 border border-slate-800 bg-slate-900/80 p-3 transition hover:border-emerald-400/70 hover:bg-slate-900"
                   aria-label={`View details for ${event.title}`}
                 >
                   <EventPoster
@@ -71,18 +80,7 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
               </li>
             ))}
           </ul>
-
-          {!showAll && filteredEvents.length > MAX_RECOMMENDATIONS && (
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => setShowAll(true)}
-                className="rounded-full border border-emerald-400/50 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20"
-              >
-                Show More
-              </button>
-            </div>
-          )}
-        </>
+        </div>
       ) : (
         <p className="text-sm text-slate-400 text-center">No upcoming events match your favorite genres yet.</p>
       )}
