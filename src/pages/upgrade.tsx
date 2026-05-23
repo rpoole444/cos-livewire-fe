@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { COMMUNITY_ARTIST_ACCESS_LABEL, isCommunityArtistAccessActive } from '@/util/communityAccess';
 
 const plans = [
   {
@@ -46,6 +47,7 @@ export default function UpgradePage() {
   const [selectedPlan, setSelectedPlan] = useState('monthly');
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const communityAccessActive = isCommunityArtistAccessActive();
 
   const handleSubscribe = async () => {
     if (!user?.id) return alert('You must be logged in to subscribe.');
@@ -74,15 +76,19 @@ export default function UpgradePage() {
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <Head>
-        <title>Upgrade to Alpine Pro – Alpine Groove Guide</title>
+        <title>Support Alpine Groove Guide – Alpine Groove Guide</title>
       </Head>
 
       <main className="flex-grow">
         {/* HERO */}
         <section className="text-center py-16 px-6 bg-black">
-          <h1 className="text-4xl font-extrabold text-gold mb-4">Upgrade to Alpine Pro</h1>
+          <h1 className="text-4xl font-extrabold text-gold mb-4">
+            {communityAccessActive ? 'Support Alpine Groove Guide' : 'Upgrade to Alpine Pro'}
+          </h1>
           <p className="max-w-2xl mx-auto text-lg text-gray-300">
-            Reach more fans, book more rooms, and give your artist, venue, or promoter brand a premium home across the Front Range.
+            {communityAccessActive
+              ? `${COMMUNITY_ARTIST_ACCESS_LABEL}. Paid support stays open for people who want to help keep the guide growing.`
+              : 'Reach more fans, book more rooms, and give your artist, venue, or promoter brand a premium home across the Front Range.'}
           </p>
         </section>
 
@@ -98,7 +104,7 @@ export default function UpgradePage() {
 
         {/* PLANS SECTION */}
         <section className="bg-gray-800 py-12 px-6 text-center">
-          <h2 className="text-2xl font-semibold mb-6">Choose Your Plan</h2>
+          <h2 className="text-2xl font-semibold mb-6">{communityAccessActive ? 'Optional Support Plans' : 'Choose Your Plan'}</h2>
           <div className="flex flex-col items-center">
             <div className="flex gap-4 mb-6 flex-wrap justify-center">
               {plans.map((plan) => (
@@ -123,23 +129,27 @@ export default function UpgradePage() {
               disabled={loading || !user}
               className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded font-semibold text-white disabled:opacity-50"
             >
-              {loading ? 'Redirecting…' : `Subscribe (${plans.find(p => p.id === selectedPlan)?.price})`}
+              {loading ? 'Redirecting…' : communityAccessActive ? `Support (${plans.find(p => p.id === selectedPlan)?.price})` : `Subscribe (${plans.find(p => p.id === selectedPlan)?.price})`}
             </button>
-            <p className="mt-4 text-sm text-gray-300">Save over 15% with the annual plan.</p>
+            <p className="mt-4 text-sm text-gray-300">
+              {communityAccessActive ? 'Artist page creation is free through 2026; this is optional support.' : 'Save over 15% with the annual plan.'}
+            </p>
           </div>
         </section>
 
         {/* FREE TRIAL CTA */}
         <section className="py-12 px-6 text-center bg-black">
-          <h2 className="text-xl font-semibold mb-2">Not Ready to Commit?</h2>
+          <h2 className="text-xl font-semibold mb-2">{communityAccessActive ? 'Create a Page for Free' : 'Not Ready to Commit?'}</h2>
           <p className="text-md text-gray-300 mb-4">
-            Try Alpine Pro free for 30 days — no payment required.
+            {communityAccessActive
+              ? 'Invite your artist, venue, or promoter friends to claim a public page while community access is open.'
+              : 'Try Alpine Pro free for 30 days — no payment required.'}
           </p>
           <Link
             href="/artist-signup"
             className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-semibold"
           >
-            Start Free Trial →
+            {communityAccessActive ? 'Create Free Artist Page →' : 'Start Free Trial →'}
           </Link>
           <p className="text-sm text-gray-400 mt-2">No credit card required.</p>
         </section>

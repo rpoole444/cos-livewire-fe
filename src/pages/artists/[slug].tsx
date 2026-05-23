@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import EventPoster from '@/components/EventPoster';
 import { buildEventDateTime, parseLocalDayjs } from '@/util/dateHelper';
+import { COMMUNITY_ARTIST_ACCESS_LABEL, isCommunityArtistAccessActive } from '@/util/communityAccess';
 dayjs.extend(utc);
 
 interface Event {
@@ -100,9 +101,10 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const accessState = artist?.access_state ?? 'none';
+  const communityAccessActive = isCommunityArtistAccessActive();
   const isProAccess = accessState === 'pro';
   const isTrialAccess = accessState === 'trial';
-  const isGated = !isOwner && accessState === 'gated';
+  const isGated = !communityAccessActive && !isOwner && accessState === 'gated';
   const shouldBlur = isGated;
   const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
   const logRef = useRef(false);
@@ -228,6 +230,11 @@ const ArtistProfilePage = ({ artist }: Props) => {
           )}
           {showTrialToast && isOwner && (
             <div className="rounded bg-green-600 p-2 text-center text-sm text-white shadow">✅ Your Alpine Pro trial is active.</div>
+          )}
+          {communityAccessActive && (
+            <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-3 text-center text-sm text-emerald-100 shadow">
+              {COMMUNITY_ARTIST_ACCESS_LABEL}. This profile is available during the community access window.
+            </div>
           )}
           {isGated && (
             <div className="rounded bg-slate-800 p-3 text-center text-sm text-blue-300 shadow">

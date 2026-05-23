@@ -11,6 +11,7 @@ import EventForm from '../components/EventForm';
 import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 import { isActivePro } from '@/util/isActivePro';
+import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
 
 interface Event {
   title: string;
@@ -65,23 +66,13 @@ const EventSubmission = () => {
   const router = useRouter();
   const locationInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [greetingLogged, setGreetingLogged] = useState(false);
 
   const proActive = isActivePro(user as any);
   const trialActive = isTrialActive(user?.trial_ends_at);
-  const canAddMultiple = Boolean(proActive || trialActive);
-  const trialExpired = user && !proActive && !!user.trial_ends_at && !trialActive;
-
-  useEffect(() => {
-    if (!greetingLogged) {
-      console.log("[SubmitEvent] user for greeting", {
-        id: user?.id,
-        displayName: user?.displayName,
-        display_name: (user as any)?.display_name,
-      });
-      setGreetingLogged(true);
-    }
-  }, [user, greetingLogged]);
+  const communityAccessActive = isCommunityArtistAccessActive();
+  const canUseArtistAccess = hasArtistProfileAccess(user);
+  const canAddMultiple = Boolean(canUseArtistAccess);
+  const trialExpired = user && !communityAccessActive && !proActive && !!user.trial_ends_at && !trialActive;
 
   const addEvent = () => setEvents((prev) => [...prev, { ...initialEvent }]);
   const removeEvent = (index: number) =>
@@ -429,6 +420,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
           <section className="space-y-6">
             <TrialBanner trial_ends_at={user.trial_ends_at} />
+            {communityAccessActive && (
+              <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+                <span className="font-semibold">{COMMUNITY_ARTIST_ACCESS_LABEL}.</span> Multiple event submissions are open during the community access window.
+              </div>
+            )}
 
             <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 shadow-xl shadow-slate-950/30">
               <div className="space-y-2 text-sm text-slate-300">
@@ -519,7 +515,9 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
               <li>• Double-check venue spelling so search works across the site.</li>
             </ul>
             <div className="mt-6 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-xs text-emerald-100">
-              Pro or trial members can add up to four recurring dates at a time. Make sure each date is confirmed before submitting.
+              {communityAccessActive
+                ? "Community artist access is open through 2026, including multiple event submissions. Make sure each date is confirmed before submitting."
+                : "Pro or trial members can add up to four recurring dates at a time. Make sure each date is confirmed before submitting."}
             </div>
           </aside>
         </div>

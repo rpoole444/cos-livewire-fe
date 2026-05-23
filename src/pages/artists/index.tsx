@@ -3,9 +3,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
-import { isTrialActive } from '@/util/isTrialActive';
-import { isActivePro } from '@/util/isActivePro';
 import { useAuth } from '@/context/AuthContext';
+import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
 
 interface Artist {
   display_name?: string;
@@ -23,6 +22,8 @@ export default function ArtistDirectoryPage() {
   const [stateFilter, setStateFilter] = useState('');
   const [zipFilter, setZipFilter] = useState('');
   const { user } = useAuth()
+  const communityAccessActive = isCommunityArtistAccessActive();
+  const canCreateArtistPage = hasArtistProfileAccess(user);
   
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   const filteredArtists = artists.filter((artist) => {
@@ -67,12 +68,23 @@ export default function ArtistDirectoryPage() {
           <p className="mt-2 text-sm text-slate-400 sm:text-base">
             Discover Alpine Groove Guide Pro pages for artists, venues, and promoters across the Colorado Front Range.
           </p>
-          {!isActivePro(user as any) && !isTrialActive(user?.trial_ends_at) && (
+          {canCreateArtistPage ? (
+            <Link href="/artist-signup">
+              <button className="mt-4 rounded-full border border-emerald-400/50 bg-emerald-500/10 px-5 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20">
+                {communityAccessActive ? 'Create your free artist page →' : 'Create your Pro page →'}
+              </button>
+            </Link>
+          ) : (
             <Link href="/upgrade">
               <button className="mt-4 rounded-full border border-emerald-400/50 bg-emerald-500/10 px-5 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20">
                 Put your artist, venue, or series on Alpine Pro →
               </button>
             </Link>
+          )}
+          {communityAccessActive && (
+            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">
+              {COMMUNITY_ARTIST_ACCESS_LABEL}
+            </p>
           )}
         </div>
 

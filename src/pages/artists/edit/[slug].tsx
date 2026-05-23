@@ -8,6 +8,7 @@ import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 import { isActivePro } from '@/util/isActivePro';
 import { parseMediaInput } from '@/util/parseMediaInput';
+import { COMMUNITY_ARTIST_ACCESS_LABEL, isCommunityArtistAccessActive } from '@/util/communityAccess';
 
 const topGenres = [
   'Jazz', 'Rock', 'Pop', 'Hip-Hop', 'R&B', 'Electronic',
@@ -21,7 +22,8 @@ export default function EditArtistProfilePage() {
 
   const trialActive = isTrialActive(user?.trial_ends_at);
   const proActive = isActivePro(user as any);
-  const trialExpired = user && !proActive && !!user.trial_ends_at && !trialActive;
+  const communityAccessActive = isCommunityArtistAccessActive();
+  const trialExpired = user && !communityAccessActive && !proActive && !!user.trial_ends_at && !trialActive;
 
   const [form, setForm] = useState({
     display_name: '',
@@ -203,6 +205,11 @@ export default function EditArtistProfilePage() {
       </Head>
       <div className="max-w-xl mx-auto p-6 text-white">
         <TrialBanner trial_ends_at={user?.trial_ends_at} />
+        {communityAccessActive && (
+          <div className="mb-5 rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+            {COMMUNITY_ARTIST_ACCESS_LABEL}. You can keep this profile updated during the community access window.
+          </div>
+        )}
         <h1 className="text-2xl font-bold mb-4">Edit Artist Profile</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input name="display_name" value={form.display_name} onChange={handleChange} placeholder="Display Name" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />

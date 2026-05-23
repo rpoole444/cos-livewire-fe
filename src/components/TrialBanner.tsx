@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { COMMUNITY_ARTIST_ACCESS_LABEL, isCommunityArtistAccessActive } from '@/util/communityAccess';
 
 interface TrialBannerProps {
   trial_ends_at?: string | null;
@@ -16,6 +17,7 @@ const TrialBanner: React.FC<TrialBannerProps> = (props) => {
   const isOwner = props.artist_user_id ? user?.id === props.artist_user_id : true;
   const trialEndStr = props.trial_ends_at ?? user?.trial_ends_at ?? null;
   const isPro = (props.is_pro ?? user?.pro_active) === true;
+  const communityAccessActive = isCommunityArtistAccessActive();
 
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
 
@@ -34,6 +36,15 @@ const TrialBanner: React.FC<TrialBannerProps> = (props) => {
   if (!isOwner || !trialEndStr || isPro || daysLeft === null) return null;
 
   const isExpired = dayjs().isAfter(dayjs(trialEndStr), 'day');
+
+  if (isExpired && communityAccessActive) {
+    return (
+      <div className="rounded-md p-3 text-white text-center shadow-md mb-4 text-sm font-medium bg-emerald-700">
+        🎁 <span className="font-semibold">{COMMUNITY_ARTIST_ACCESS_LABEL}.</span>{' '}
+        Your trial ended, but artist page access remains open during the community access window.
+      </div>
+    );
+  }
 
   return (
     <div className={`rounded-md p-3 text-white text-center shadow-md mb-4 text-sm font-medium ${

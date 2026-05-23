@@ -7,6 +7,7 @@ import Link from "next/link";
 import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 import SupportTipSection from '@/components/SupportTipSection';
+import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -70,6 +71,8 @@ const UserProfile: React.FC = () => {
 
 const trialActive = !!user?.trial_ends_at && isTrialActive(user.trial_ends_at);
 const isProActive = !!user?.pro_active;
+const communityAccessActive = isCommunityArtistAccessActive();
+const canUseArtistAccess = hasArtistProfileAccess(user);
 const canUseProFeatures = isProActive;
 const proCancelledAt = user?.pro_cancelled_at ? new Date(user.pro_cancelled_at) : null;
   const [isApproved, setIsApproved] = useState<boolean | null>(null);
@@ -93,7 +96,7 @@ const shouldShowCancelBanner = canUseProFeatures && !!proCancelledAt;
 const hadProBefore = !!user?.pro_cancelled_at;
 const cancellationCompleted = !!proCancelledAt && !canUseProFeatures;
 const shouldShowManageBilling = canUseProFeatures || hadProBefore;
-const isPublicLocked = hasArtistProfile && !canUseProFeatures && !trialActive;
+const isPublicLocked = hasArtistProfile && !canUseArtistAccess;
 const viewButtonLabel = isPublicLocked ? "View page (locked preview)" : "View Public Page";
 const viewButtonTitle = isPublicLocked
   ? "Visitors currently see a blurred version until you reactivate Alpine Pro."
@@ -111,6 +114,9 @@ if (hasArtistProfile) {
   } else if (trialActive) {
     artistStatusLabel = "Live (trial)";
     artistStatusClass = "border border-blue-400/40 bg-blue-500/10 text-blue-100";
+  } else if (communityAccessActive) {
+    artistStatusLabel = "Live (community access)";
+    artistStatusClass = "border border-emerald-400/40 bg-emerald-500/10 text-emerald-100";
   } else {
     artistStatusLabel = "Locked to public";
     artistStatusClass = "border border-amber-400/40 bg-amber-500/10 text-amber-100";
@@ -547,6 +553,11 @@ const textareaClasses =
             ✅ Welcome! Your 30-day free trial of Alpine Pro is active.
           </div>
         )}
+        {communityAccessActive && (
+          <div className="rounded-lg border border-emerald-400/60 bg-emerald-500/10 px-4 py-2 text-center text-sm text-emerald-200">
+            {COMMUNITY_ARTIST_ACCESS_LABEL}. Paid Alpine Pro support remains optional.
+          </div>
+        )}
 
         <section className="rounded-3xl border border-slate-800/80 bg-slate-950/70 p-6 shadow-xl shadow-black/30 sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
@@ -777,15 +788,17 @@ const textareaClasses =
           {!hasArtistProfile ? (
             canShowArtistWelcome ? (
               <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
-                <p className="text-slate-300 text-sm">
-                  Create your Pro page for your artist, venue, or promoter project to showcase your work on Alpine Groove Guide.
-                </p>
+              <p className="text-slate-300 text-sm">
+                {communityAccessActive
+                  ? "Create your free artist page for your artist, venue, or promoter project to showcase your work on Alpine Groove Guide."
+                  : "Create your Pro page for your artist, venue, or promoter project to showcase your work on Alpine Groove Guide."}
+              </p>
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={gotoCreateProfile}
                     className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
                   >
-                    Create Your Pro Page
+                    {communityAccessActive ? "Create Free Artist Page" : "Create Your Pro Page"}
                   </button>
                   {canRestoreProfile && (
                     <button
@@ -819,7 +832,7 @@ const textareaClasses =
                   onClick={gotoCreateProfile}
                   className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
                 >
-                  Create Your Pro Page
+                  {communityAccessActive ? "Create Free Artist Page" : "Create Your Pro Page"}
                 </button>
               </div>
             )
@@ -899,6 +912,10 @@ const textareaClasses =
             )}
             {canUseProFeatures ? (
               <p className="text-slate-300 text-sm">Alpine Pro is active on your account.</p>
+            ) : communityAccessActive ? (
+              <p className="text-slate-300 text-sm">
+                Community artist page access is active through 2026. You can still subscribe or tip to support Alpine Groove Guide.
+              </p>
             ) : shouldShowTrialBanner ? (
               <p className="text-slate-300 text-sm">
                 Your free trial is active{trialEndDate ? ` until ${trialEndDate}` : ""}. Upgrade to keep your tools after the trial.

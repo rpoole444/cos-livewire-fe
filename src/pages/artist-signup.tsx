@@ -7,6 +7,7 @@ import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 import { isActivePro } from '@/util/isActivePro';
 import { parseMediaInput } from '@/util/parseMediaInput';
+import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
 
 const topGenres = [
   'Jazz', 'Rock', 'Pop', 'Hip-Hop', 'R&B', 'Electronic',
@@ -27,7 +28,8 @@ export default function ArtistSignupPage() {
 
   const trialActive = isTrialActive(user?.trial_ends_at);
   const proActive = isActivePro(user as any);
-  const trialExpired = user && !proActive && !!user.trial_ends_at && !trialActive;
+  const communityAccessActive = isCommunityArtistAccessActive();
+  const trialExpired = user && !communityAccessActive && !proActive && !!user.trial_ends_at && !trialActive;
 
   const [form, setForm] = useState({
     display_name: '',
@@ -54,8 +56,8 @@ export default function ArtistSignupPage() {
 const [choice, setChoice] = useState<null | 'trial' | 'subscribe'>(null);
 const [plan, setPlan] = useState<'monthly'|'annual'>('monthly');
 
-const hasAccess = !!proActive || !!trialActive;   // already pro or in trial?
-const canStartTrial = !proActive && !trialActive; 
+const hasAccess = hasArtistProfileAccess(user);   // paid, trial, or community campaign access
+const canStartTrial = !communityAccessActive && !proActive && !trialActive; 
 const [existingArtist, setExistingArtist] = useState<ExistingArtist | null>(null);
 const [checkingExisting, setCheckingExisting] = useState(true);
 const [mediaInputs, setMediaInputs] = useState({
@@ -381,9 +383,16 @@ const handleSubmit = async (e: React.FormEvent) => {
         <TrialBanner trial_ends_at={user?.trial_ends_at} />
         <h1 className="text-2xl font-bold mb-2">🎤 Claim Your Artist Profile</h1>
       <p className="text-sm text-gray-300 mb-4">
-        Create your public Pro page for your artist, venue, or promoter series and enjoy 30 days of Alpine Pro access free.
-        Add your music, bio, media kit, and upcoming shows — no credit card required!
+        {communityAccessActive
+          ? `${COMMUNITY_ARTIST_ACCESS_LABEL}. Create a public page for your artist, venue, or promoter series with no credit card required.`
+          : "Create your public Pro page for your artist, venue, or promoter series and enjoy 30 days of Alpine Pro access free."}
+        {" "}Add your music, bio, media kit, and upcoming shows.
       </p>      
+      {communityAccessActive && (
+        <div className="mb-5 rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+          Alpine Pro billing is still available for supporters, but profile creation is open to the community through 2026.
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input name="display_name" placeholder="Display Name" value={form.display_name} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
 
@@ -580,7 +589,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           disabled={isSubmitting || (!hasAccess && !choice)}
           className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white disabled:opacity-50"
         >
-          {isSubmitting ? 'Creating…' : 'Create Profile & Continue'}
+          {isSubmitting ? 'Creating…' : communityAccessActive ? 'Create Free Artist Page' : 'Create Profile & Continue'}
         </button>
       </form>
     </div>
