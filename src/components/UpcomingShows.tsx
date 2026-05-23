@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import dayjs from "dayjs";
 import { Event } from "@/interfaces/interfaces";
 import { UserType } from "@/types";
 import { parseLocalDayjs } from "../util/dateHelper";
@@ -59,7 +58,7 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
                   />
                   <div className="flex-1">
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                      {dayjs(event.date).format('ddd, MMM D')}
+                      {parseLocalDayjs(event.date).format('ddd, MMM D')}
                     </p>
                     <p className="text-sm font-semibold text-slate-50 sm:text-base">{event.title}</p>
                     <p className="text-xs text-slate-400 sm:text-sm">

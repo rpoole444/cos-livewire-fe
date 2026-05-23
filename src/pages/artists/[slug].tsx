@@ -11,6 +11,7 @@ import { FaFacebookF, FaTwitter, FaLink, FaShareAlt } from 'react-icons/fa';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import EventPoster from '@/components/EventPoster';
+import { buildEventDateTime, parseLocalDayjs } from '@/util/dateHelper';
 dayjs.extend(utc);
 
 interface Event {
@@ -518,9 +519,10 @@ const ArtistProfilePage = ({ artist }: Props) => {
               {artist.events && artist.events.length > 0 ? (
                 <div className={shouldBlur ? 'relative blur-sm pointer-events-none select-none' : ''}>
                   {artist.events.map((event) => {
-                    const dateObj = event.date ? dayjs(event.date) : null;
+                    const dateObj = event.date ? parseLocalDayjs(event.date) : null;
                     const dateValid = dateObj?.isValid();
-                    const timeObj = event.start_time ? dayjs(`${event.date}T${event.start_time}`) : null;
+                    const startDateTime = buildEventDateTime(event.date, event.start_time);
+                    const timeObj = startDateTime ? dayjs(startDateTime) : null;
                     const timeValid = timeObj?.isValid();
                     const dateLabel = dateValid ? dateObj!.format('ddd, MMM D') : null;
                     const timeLabel = timeValid ? timeObj!.format('h:mm A') : null;
