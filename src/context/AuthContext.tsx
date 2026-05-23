@@ -7,12 +7,30 @@ import React, {
 } from 'react';
 import { UserType } from '../types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
+
+const readJson = async <T,>(response: Response): Promise<T | null> => {
+  const contentType = response.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) return null;
+  return response.json().catch(() => null);
+};
+
+const parseGenres = (input: any): string[] => {
+  if (Array.isArray(input)) return input;
+  if (typeof input === 'string') {
+    try {
+      return JSON.parse(input);
+    } catch (err) {
+      console.error('Genre parse error:', err);
+    }
+  }
+  return [];
+};
 
 interface AuthContextType {
   user: UserType | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (updatedUser: UserType) => void;
   loading: boolean;
   refreshSession: () => Promise<void>;
@@ -21,7 +39,7 @@ interface AuthContextType {
 const defaultContext: AuthContextType = {
   user: null,
   login: async () => {},
-  logout: () => {},
+  logout: async () => {},
   updateUser: () => {},
   loading: true,
   refreshSession: async () => {},
@@ -37,47 +55,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const parseGenres = (input: any): string[] => {
-    if (Array.isArray(input)) return input;
-    if (typeof input === 'string') {
-      try {
-        return JSON.parse(input);
-      } catch (err) {
-        console.error('Genre parse error:', err);
-      }
-    }
-    return [];
-  };
-
   const fetchUserWithExtras = useCallback(async (): Promise<UserType | null> => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
-    credentials: 'include',
-    cache: 'no-store',
-  });
+    const response = await fetch(`${API_BASE_URL}/api/auth/session`, {
+      credentials: 'include',
+      cache: 'no-store',
+    });
 
-  const data = await response.json();
+    if (!response.ok) return null;
 
-  if (!data.isLoggedIn) return null;
+    const data = await readJson<{ isLoggedIn?: boolean; user?: any }>(response);
+    if (!data?.isLoggedIn || !data.user) return null;
 
-  const profilePicRes = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
-    credentials: 'include',
-    cache: 'no-store',
-  });
+    const profilePicRes = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
+      credentials: 'include',
+      cache: 'no-store',
+    });
 
-  const profilePicData = await profilePicRes.json();
+    const profilePicData = profilePicRes.ok
+      ? await readJson<{ profile_picture_url?: string | null }>(profilePicRes)
+      : null;
 
-  return {
-    ...data.user,
-    displayName: data.user.displayName ?? data.user.display_name ?? '',
-    display_name: data.user.display_name ?? data.user.displayName ?? '',
-    top_music_genres: parseGenres(data.user.top_music_genres),
-    profile_picture: profilePicData.profile_picture_url || null,
-    trial_ends_at: data.user.trial_ends_at || null,
-    trial_active: data.user.trial_active || null,
-    pro_active: data.user.pro_active ?? false,
-    pro_cancelled_at: data.user.pro_cancelled_at ?? null,
-  };
-}, []);
+    return {
+      ...data.user,
+      displayName: data.user.displayName ?? data.user.display_name ?? '',
+      display_name: data.user.display_name ?? data.user.displayName ?? '',
+      top_music_genres: parseGenres(data.user.top_music_genres),
+      profile_picture: profilePicData?.profile_picture_url || null,
+      trial_ends_at: data.user.trial_ends_at || null,
+      trial_active: data.user.trial_active || null,
+      pro_active: data.user.pro_active ?? false,
+      pro_cancelled_at: data.user.pro_cancelled_at ?? null,
+    };
+  }, []);
 
 
   useEffect(() => {
@@ -108,21 +117,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       body: JSON.stringify({ email, password }),
     });
 
-    const data = await response.json().catch(() => ({}));
+    const data = await readJson<{ message?: string; user?: any }>(response);
 
     if (!response.ok) {
-      throw new Error(data.message || `Login failed with status ${response.status}`);
+      throw new Error(data?.message || `Login failed with status ${response.status}`);
+    }
+
+    if (!data?.user) {
+      throw new Error('Login response did not include a user.');
     }
 
     const profileRes = await fetch(`${API_BASE_URL}/api/auth/profile-picture`, {
-  credentials: 'include',
-  cache: 'no-store',
-});
-
+      credentials: 'include',
+      cache: 'no-store',
+    });
 
     const profileData = profileRes.ok
-      ? await profileRes.json()
-      : { profile_picture_url: null };
+      ? await readJson<{ profile_picture_url?: string | null }>(profileRes)
+      : null;
 
     const genres = parseGenres(data.user.top_music_genres);
 
@@ -131,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       displayName: data.user.displayName ?? data.user.display_name ?? '',
       display_name: data.user.display_name ?? data.user.displayName ?? '',
       top_music_genres: genres,
-      profile_picture: profileData.profile_picture_url,
+      profile_picture: profileData?.profile_picture_url || null,
       trial_ends_at: data.user.trial_ends_at || null,
       pro_active: data.user.pro_active ?? false,
       pro_cancelled_at: data.user.pro_cancelled_at ?? null,

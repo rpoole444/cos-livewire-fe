@@ -1,5 +1,5 @@
 import { parseMSTDate } from "@/util/dateHelper";
-import { Events } from "@/interfaces/interfaces"; // Make sure this import exists
+import { Events, Users } from "@/interfaces/interfaces";
 
 interface EventStatusUpdatePayload {
   isApproved: boolean;
@@ -20,11 +20,6 @@ const res = await fetch(`${API_BASE_URL}/api/events`, {
   const sortedEvents = data.sort((a :any, b :any) => {
     return parseMSTDate(b.date).getTime() - parseMSTDate(a.date).getTime()
   })
-  console.log("[API:getEvents] responding with", sortedEvents.length, "event(s). date range:",
-    sortedEvents.length
-      ? { min: sortedEvents[sortedEvents.length - 1].date, max: sortedEvents[0].date }
-      : "none"
-  );
   return sortedEvents
 }
 
@@ -39,10 +34,7 @@ const fetchEventDetails = async (eventId: number) => {
       return null;
     }
 
-    const data = await res.json();
-    console.log('EVENT DATA:', data);
-
-    return data;
+    return res.json();
   } catch (err) {
     console.error('Error fetching event details:', err);
     return null;
@@ -98,7 +90,6 @@ async function loginUser(email: string, password: string){
     if (!response.ok) {
       throw new Error(data.message || "Failed to login");
     }
-    console.log("login successful:", data)
     return data; // Return the successful response data
   } catch (error) {
     // Convert error to a string if necessary and re-throw it to be handled by the caller
@@ -131,7 +122,6 @@ async function logoutUser(): Promise<void> {
     // throw an error to be caught by the calling function.
     throw new Error('Logout failed');
   }
-  console.log("logout successful:", response);
 } catch (error) {
     console.error('Logout failed with error:', error);
     throw error; // Re-throw the error to be caught by the calling function
@@ -173,8 +163,7 @@ async function updateEventStatus(eventId: number, isApproved: boolean): Promise<
     }
 
     // You can handle the successful response here if needed
-    const data = await response.json();
-    console.log(data.message); // Logging the success message from the response
+    await response.json().catch(() => null);
   } catch (error) {
     // Handle any errors that occurred during the request
     console.error('There was an error updating the event status', error);
@@ -205,7 +194,7 @@ const updateEventDetails = async (eventId: number, eventData: any) => {
   }
 };
 
-async function fetchAllUsers(): Promise<void> {
+async function fetchAllUsers(): Promise<Users> {
   const res = await fetch(`${API_BASE_URL}/api/auth/users`, {
       credentials: 'include', // Make sure to include credentials if this endpoint requires authentication
     });
@@ -240,8 +229,7 @@ async function deleteEvent(eventId: number): Promise<void> {
       throw new Error(errorBody.message || 'Failed to fetch data');
   }
  if (res.status !== 204) {
-    const data = await res.json();
-    console.log(data);
+    await res.json().catch(() => null);
   }
   } catch (error) {
     // Handle any errors that occurred during the request
