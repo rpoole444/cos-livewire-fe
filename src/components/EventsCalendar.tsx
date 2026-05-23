@@ -17,13 +17,6 @@ export default function Calendar({
   onDateSelect,
   events,
 }: CalendarProps) {
-  console.log(
-    "[EventsCalendar] render",
-    "currentDate=",
-    currentDate.format("YYYY-MM-DD"),
-    "events.length=",
-    events?.length ?? 0
-  );
   const days = ["S", "M", "T", "W", "T", "F", "S"];
   const [viewDate, setViewDate] = useState<Dayjs>(currentDate);
 
@@ -50,24 +43,11 @@ export default function Calendar({
   const getEventsForDate = (date: Dayjs) => {
     if (!events || events.length === 0) return [];
 
-    const matches = events.filter((event) => {
+    return events.filter((event) => {
       const eventDate = parseLocalDayjs(event.date);
       if (!eventDate.isValid()) return false;
       return eventDate.isSame(date, "day");
     });
-
-    if (matches.length > 0) {
-      console.log(
-        "[EventsCalendar] getEventsForDate matched",
-        matches.length,
-        "event(s) for",
-        date.format("YYYY-MM-DD"),
-        "titles=",
-        matches.map((e) => e.title)
-      );
-    }
-
-    return matches;
   };
 
   return (

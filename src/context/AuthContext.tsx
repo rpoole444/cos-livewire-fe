@@ -87,7 +87,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (userData) {
           const payload = userData;
           setUser(payload);
-          console.log('setUser payload:', payload);
         } else {
           setUser(null);
         }
@@ -140,13 +139,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const payload = fullUser;
     setUser(payload);
-    console.log('setUser payload:', payload);
 
     // Ensure the session is reloaded from the server (e.g., right after Stripe upgrade flows)
     const refreshed = await fetchUserWithExtras();
     if (refreshed) {
       setUser(refreshed);
-      console.log('setUser payload:', refreshed);
     }
   };
 
@@ -156,7 +153,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (userData) {
         const payload = userData;
         setUser(payload);
-        console.log('setUser payload:', payload);
       } else {
         setUser(null);
       }

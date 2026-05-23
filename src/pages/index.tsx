@@ -69,7 +69,6 @@ export default function Home() {
     (async () => {
       try {
         const data = await getEvents();
-        console.log("[Home] fetched events from API:", data.length);
         const approved = data
           .filter((e: any) => e.is_approved)
           .sort((a: any, b: any) =>
@@ -125,32 +124,7 @@ export default function Home() {
     }
   }, [events, currentDate, searchQuery, searchAllUpcoming]);
 
-  console.log(
-    "[Home] events from props:",
-    events.length,
-    "first3=",
-    events.slice(0, 3).map((e) => ({
-      id: e.id,
-      title: e.title,
-      date: e.date,
-      start_time: e.start_time,
-    }))
-  );
-
-  console.log(
-    "[Home] filteredEvents:",
-    filteredEvents.length,
-    "currentDate=",
-    currentDate.format("YYYY-MM-DD"),
-    "searchAllUpcoming=",
-    searchAllUpcoming,
-    "searchQuery=",
-    searchQuery
-  );
-
-
   const handleDateSelect = (date: Dayjs) => {
-    console.log("[Home] handleDateSelect", date.format("YYYY-MM-DD"));
     setCurrentDate(date);
     setSearchQuery('');
     setSearchAllUpcoming(false);
@@ -279,13 +253,6 @@ export default function Home() {
                     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                       {filteredEvents.map((event) => {
                         const startTimeISO = buildEventDateTime(event.date, event.start_time);
-                        console.log("[Home] rendering EventCard", {
-                          id: event.id,
-                          title: event.title,
-                          date: event.date,
-                          start_time: event.start_time,
-                          startTimeISO,
-                        });
                         return (
                           <EventCard
                             key={event.id}

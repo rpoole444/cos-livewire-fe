@@ -4,43 +4,61 @@ import AdminArtistCard from './AdminArtistCard';
 import { getPendingArtists, approveArtist, deleteArtist, updateArtist } from '@/pages/api/artists';
 import { Artist, Artists } from '@/interfaces/interfaces';
 
-const ArtistReview: React.FC = () => {
+interface ArtistReviewProps {
+  onCountChange?: (count: number) => void;
+}
+
+const ArtistReview: React.FC<ArtistReviewProps> = ({ onCountChange }) => {
   const [artists, setArtists] = useState<Artists>([]);
   const [proFilter, setProFilter] = useState<'all' | 'true' | 'false'>('all');
   const [approvedFilter, setApprovedFilter] = useState<'all' | 'true' | 'false'>('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('📡 Fetching pending artists...');
-
+        setLoading(true);
+        setErrorMessage('');
         const data = await getPendingArtists();
-        console.log('✅ Fetched:', data);
-
         setArtists(data);
+        onCountChange?.(data.length);
       } catch (err) {
         console.error('Failed to load artists for review', err);
+        setErrorMessage('Unable to load artist submissions. Please refresh or try again in a moment.');
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [onCountChange]);
 
   const handleApprove = async (id: number) => {
     try {
       await approveArtist(id);
-      setArtists(prev => prev.filter(a => a.id !== id));
+      setArtists(prev => {
+        const next = prev.filter(a => a.id !== id);
+        onCountChange?.(next.length);
+        return next;
+      });
     } catch (err) {
       console.error('Approve error', err);
+      setErrorMessage('Unable to approve that artist profile.');
     }
   };
 
   const handleDeny = async (slug: string) => {
     try {
       await deleteArtist(slug);
-      setArtists(prev => prev.filter(a => a.slug !== slug));
+      setArtists(prev => {
+        const next = prev.filter(a => a.slug !== slug);
+        onCountChange?.(next.length);
+        return next;
+      });
     } catch (err) {
       console.error('Delete error', err);
+      setErrorMessage('Unable to deny that artist profile.');
     }
   };
 
@@ -50,6 +68,7 @@ const ArtistReview: React.FC = () => {
       setArtists(prev => prev.map(a => (a.id === updated.id ? updated : a)));
     } catch (err) {
       console.error('Save error', err);
+      setErrorMessage('Unable to save artist changes.');
     }
   };
 
@@ -64,13 +83,18 @@ const ArtistReview: React.FC = () => {
 
   return (
     <div className="mt-8">
-      <div className="flex flex-wrap gap-4 mb-4">
+      {errorMessage && (
+        <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+          {errorMessage}
+        </div>
+      )}
+      <div className="mb-4 grid gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 sm:grid-cols-3">
         <div>
-          <label className="mr-2">Pro</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-widest text-slate-400">Pro status</label>
           <select
             value={proFilter}
             onChange={e => setProFilter(e.target.value as 'all' | 'true' | 'false')}
-            className="text-black p-1 rounded"
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
           >
             <option value="all">All</option>
             <option value="true">Pro</option>
@@ -78,11 +102,11 @@ const ArtistReview: React.FC = () => {
           </select>
         </div>
         <div>
-          <label className="mr-2">Approved</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-widest text-slate-400">Approval</label>
           <select
             value={approvedFilter}
             onChange={e => setApprovedFilter(e.target.value as 'all' | 'true' | 'false')}
-            className="text-black p-1 rounded"
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
           >
             <option value="all">All</option>
             <option value="true">Approved</option>
@@ -90,18 +114,22 @@ const ArtistReview: React.FC = () => {
           </select>
         </div>
         <div>
-          <label className="mr-2">Sort</label>
+          <label className="mb-1 block text-xs font-semibold uppercase tracking-widest text-slate-400">Sort</label>
           <select
             value={sortOrder}
             onChange={e => setSortOrder(e.target.value as 'newest' | 'oldest')}
-            className="text-black p-1 rounded"
+            className="w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-sm text-slate-100"
           >
             <option value="newest">Newest</option>
             <option value="oldest">Oldest</option>
           </select>
         </div>
       </div>
-      {filteredArtists.length > 0 ? (
+      {loading ? (
+        <div className="rounded-2xl border border-slate-800 bg-slate-950/70 px-5 py-10 text-center text-sm text-slate-300">
+          Loading artist submissions...
+        </div>
+      ) : filteredArtists.length > 0 ? (
         <ul className="space-y-6">
           {filteredArtists.map(a => (
             <li key={a.id} className="bg-white rounded-md shadow-md p-4">

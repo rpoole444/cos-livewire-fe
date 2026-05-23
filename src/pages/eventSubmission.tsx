@@ -186,7 +186,21 @@ const handleFileChange = (index: number, e: React.ChangeEvent<HTMLInputElement>)
     }
   };
 
- const getNthWeekdayOfMonth = (year: number, month: number, weekday: number, nth: number): Date | null => {
+const formatLocalDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateInput = (dateStr: string): Date | null => {
+  const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const [, year, month, day] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day));
+};
+
+const getNthWeekdayOfMonth = (year: number, month: number, weekday: number, nth: number): Date | null => {
   const firstOfMonth = new Date(year, month, 1);
   let count = 0;
 
@@ -208,13 +222,14 @@ const getWeekdayOccurrence = (date: Date): number => {
 
 const generateRecurringDates = (startDateStr: string, frequency: string, count = 4): string[] => {
   const result: string[] = [];
-  const startDate = new Date(startDateStr);
+  const startDate = parseDateInput(startDateStr);
+  if (!startDate) return result;
 
   if (frequency === 'weekly') {
     for (let i = 0; i < count; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i * 7);
-      result.push(date.toISOString().split("T")[0]);
+      result.push(formatLocalDate(date));
     }
   } else if (frequency === 'monthly') {
     const weekday = startDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
@@ -225,7 +240,7 @@ const generateRecurringDates = (startDateStr: string, frequency: string, count =
       const month = startDate.getMonth() + i;
       const recurringDate = getNthWeekdayOfMonth(year, month, weekday, nth);
       if (recurringDate) {
-        result.push(recurringDate.toISOString().split("T")[0]);
+        result.push(formatLocalDate(recurringDate));
       }
     }
   }

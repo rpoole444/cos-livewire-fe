@@ -6,7 +6,7 @@ interface AdminEventCardProps {
   event: Event;
   onApprove: () => void;
   onDeny: () => void;
-  onSave: (updatedEvent: Event) => void;
+  onSave: (updatedEvent: Event) => void | Promise<void>;
 }
 
 const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDeny, onSave }) => {
@@ -17,6 +17,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
   const [formattedStartTime, setFormattedStartTime] = useState('');
   const [formattedEndTime, setFormattedEndTime] = useState('');
   const [isApproving, setIsApproving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (event.date) {
@@ -27,8 +28,23 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
     if (event.end_time) setFormattedEndTime(event.end_time);
   }, [event]);
 
+  useEffect(() => {
+    setEditedEvent(event);
+  }, [event]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    setEditedEvent(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleDateTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === 'date') setFormattedDate(value);
+    if (name === 'start_time') setFormattedStartTime(value);
+    if (name === 'end_time') setFormattedEndTime(value);
     setEditedEvent(prev => ({
       ...prev,
       [name]: value,
@@ -56,9 +72,14 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
   };
 
   const handleEditClick = () => setIsEditing(true);
-  const handleSaveClick = () => {
-    onSave(editedEvent);
-    setIsEditing(false);
+  const handleSaveClick = async () => {
+    setIsSaving(true);
+    try {
+      await onSave(editedEvent);
+      setIsEditing(false);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -155,7 +176,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
             id="date"
             name="date"
             value={formattedDate}
-            onChange={handleChange}
+            onChange={handleDateTimeChange}
             disabled={!isEditing}
             className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
           />
@@ -167,7 +188,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
             id="start_time"
             name="start_time"
             value={formattedStartTime}
-            onChange={handleChange}
+            onChange={handleDateTimeChange}
             disabled={!isEditing}
             className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
           />
@@ -179,7 +200,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
             id="end_time"
             name="end_time"
             value={formattedEndTime}
-            onChange={handleChange}
+            onChange={handleDateTimeChange}
             disabled={!isEditing}
             className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
           />
@@ -261,9 +282,10 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
             {isEditing ? (
               <button
                 onClick={handleSaveClick}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+                disabled={isSaving}
+                className="bg-green-600 hover:bg-green-700 disabled:opacity-60 text-white px-4 py-2 rounded-md"
               >
-                Save
+                {isSaving ? 'Saving...' : 'Save'}
               </button>
             ) : (
               <button
