@@ -140,34 +140,25 @@ async function getEventsForReview(): Promise<Events> {
 }
 
 async function updateEventStatus(eventId: number, isApproved: boolean): Promise<void> {
-  try {
-    // Construct the payload
-    const payload: EventStatusUpdatePayload = {
-      isApproved,
-    };
+  const payload: EventStatusUpdatePayload = {
+    isApproved,
+  };
 
-    // Send the PUT request to the backend
-    const response = await fetch(`${API_BASE_URL}/api/events/review/${eventId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-      credentials: 'include',
-    });
+  const response = await fetch(`${API_BASE_URL}/api/events/review/${eventId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    credentials: 'include',
+  });
 
-    // Check if the response is ok
-    if (!response.ok) {
-      // If the response is not ok, throw an error with the response status
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    // You can handle the successful response here if needed
-    await response.json().catch(() => null);
-  } catch (error) {
-    // Handle any errors that occurred during the request
-    console.error('There was an error updating the event status', error);
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    throw new Error(errorBody?.message || `Failed to update event status (status ${response.status})`);
   }
+
+  await response.json().catch(() => null);
 }
 
 const updateEventDetails = async (eventId: number, eventData: any) => {
@@ -215,25 +206,21 @@ export async function fetchEventDetailsBySlug(slug: string) {
 
 
 async function deleteEvent(eventId: number): Promise<void> {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', 
-    });
+  const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  });
 
-     if(!res.ok){
-    const errorBody = await res.json(); // Try to parse the response body as JSON
-      throw new Error(errorBody.message || 'Failed to fetch data');
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    throw new Error(errorBody?.message || `Failed to delete event (status ${res.status})`);
   }
- if (res.status !== 204) {
+
+  if (res.status !== 204) {
     await res.json().catch(() => null);
-  }
-  } catch (error) {
-    // Handle any errors that occurred during the request
-    console.error('There was an error deleting the event', error);
   }
 }
 export { 

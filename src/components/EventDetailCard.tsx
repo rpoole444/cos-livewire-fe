@@ -1,5 +1,6 @@
 import Link from "next/link";
 import React, { useMemo, useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Event } from "@/interfaces/interfaces";
 import { UserType } from "@/types";
 import { parseLocalDayjs } from "@/util/dateHelper";
@@ -8,6 +9,7 @@ import EventPoster from "./EventPoster";
 interface EventDetailCardProps {
   event: Event;
   handleCardClick?: (id: number) => void;
+  handleEdit?: (id: number) => void;
   handleDelete?: (id: number) => void;
   user?: UserType | null;
   expandDescription?: boolean;
@@ -39,6 +41,7 @@ const formatTime = (timeString: string) => {
 const EventDetailCard: React.FC<EventDetailCardProps> = ({
   event,
   handleCardClick,
+  handleEdit,
   handleDelete,
   user,
   expandDescription = false,
@@ -147,8 +150,21 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
             )}
           </div>
 
-          {handleDelete && (
+          {(handleEdit || handleDelete) && (
             <div className="flex flex-wrap gap-2 pt-3">
+              {handleEdit && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(event.id);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/60 px-4 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-500/10"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit event
+                </button>
+              )}
+              {handleDelete && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -156,10 +172,12 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
                     handleDelete(event.id);
                   }
                 }}
-                className="inline-flex items-center rounded-lg border border-rose-500/60 px-4 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-500/10"
+                className="inline-flex items-center gap-2 rounded-lg border border-rose-500/60 px-4 py-2 text-xs font-semibold text-rose-100 hover:bg-rose-500/10"
               >
+                <Trash2 className="h-3.5 w-3.5" />
                 Delete event
               </button>
+              )}
             </div>
           )}
         </div>

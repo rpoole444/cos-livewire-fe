@@ -12,9 +12,10 @@ import EventsCalendar from '@/components/EventsCalendar';
 import UpcomingShows from '@/components/UpcomingShows';
 import { useAuth } from '@/context/AuthContext';
 import { useHomeState } from '@/hooks/useHomeState';
-import { getEvents } from './api/route';
+import { deleteEvent, getEvents } from './api/route';
 import { Event } from '@/interfaces/interfaces';
 import { buildEventDateTime, parseLocalDayjs, parseMSTDate } from '@/util/dateHelper';
+import { canManageEvent } from '@/util/eventPermissions';
 import EventCard from '@/components/EventCard';
 
 import dayjs, { Dayjs } from 'dayjs';
@@ -128,6 +129,17 @@ export default function Home() {
     setCurrentDate(date);
     setSearchQuery('');
     setSearchAllUpcoming(false);
+  };
+
+  const handleDeleteEvent = async (id: number) => {
+    try {
+      await deleteEvent(id);
+      setEvents((prev) => prev.filter((event) => event.id !== id));
+      setFilteredEvents((prev) => prev.filter((event) => event.id !== id));
+    } catch (err) {
+      console.error('Failed to delete event', err);
+      alert('Unable to delete that event. Please try again.');
+    }
   };
 
   const siteUrl = 'https://app.alpinegrooveguide.com';
@@ -333,6 +345,8 @@ export default function Home() {
                             venueName={event.venue_name}
                             imageUrl={event.poster || undefined}
                             isFeatured={(event as any).is_featured}
+                            canManage={canManageEvent(user, event)}
+                            onDelete={handleDeleteEvent}
                           />
                         );
                       })}

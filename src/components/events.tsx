@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { deleteEvent } from '@/pages/api/route';
+import { canManageEvent } from '@/util/eventPermissions';
 
 interface EventsProps {
   events: CustomEvent[];
@@ -14,16 +15,14 @@ interface EventsProps {
 const Events: React.FC<EventsProps> = ({ events }) => {
   const router = useRouter();
   const { user } = useAuth();
-  const isAdmin = user?.is_admin;
 
   const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to delete this event?')) {
-      try {
-        await deleteEvent(id);
-        router.reload();
-      } catch (err) {
-        console.error('Failed to delete event', err);
-      }
+    try {
+      await deleteEvent(id);
+      router.reload();
+    } catch (err) {
+      console.error('Failed to delete event', err);
+      alert('Unable to delete that event. Please try again.');
     }
   };
 
@@ -45,7 +44,8 @@ const Events: React.FC<EventsProps> = ({ events }) => {
             event={event}
             user={user}
             handleCardClick={() => router.push(`/eventRouter/${event.slug}`)}
-            handleDelete={isAdmin ? handleDelete : undefined}
+            handleEdit={canManageEvent(user, event) ? () => router.push(`/events/edit/${event.id}`) : undefined}
+            handleDelete={canManageEvent(user, event) ? handleDelete : undefined}
           />
         </li>
       ))}

@@ -107,8 +107,8 @@ const EditEventPage = () => {
       });
   
       if (res.ok) {
-        const updated = await res.json();          // ← updated event
-        router.push(`/eventRouter/${eventData.slug}`); // go to detail page
+        const updated = await res.json();
+        router.push(`/eventRouter/${updated.slug || eventData.slug}`);
       } else {
         const { message } = await res.json();
         alert(`Error: ${message}`);

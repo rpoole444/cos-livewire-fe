@@ -11,8 +11,10 @@ import RegistrationForm from "@/components/registration";
 import { Event } from "@/interfaces/interfaces";
 import { useAuth } from "@/context/AuthContext";
 import { FaFacebookF, FaTwitter, FaLink, FaLocationArrow, FaShareAlt } from "react-icons/fa";
+import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/router";
-import { fetchEventDetailsBySlug } from "../api/route"; // or wherever you define it
+import { deleteEvent, fetchEventDetailsBySlug } from "../api/route";
+import { canManageEvent } from "@/util/eventPermissions";
 
 
 interface Props {
@@ -24,6 +26,7 @@ const EventDetailPage = ({ event, events }: Props) => {
   const { user } = useAuth();
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const router = useRouter();
+  const canManage = canManageEvent(user, event);
   const pageTitle = event?.title
     ? `${event.title} – Event Details – Alpine Groove Guide`
     : "Event Details – Alpine Groove Guide";
@@ -36,6 +39,18 @@ const EventDetailPage = ({ event, events }: Props) => {
     if (!event?.address) return;
     const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.address)}`;
     window.open(url, "_blank");
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!confirm("Are you sure you want to delete this event?")) return;
+
+    try {
+      await deleteEvent(event.id);
+      router.push("/");
+    } catch (err) {
+      console.error("Failed to delete event", err);
+      alert("Unable to delete that event. Please try again.");
+    }
   };
 
   return (
@@ -54,13 +69,24 @@ const EventDetailPage = ({ event, events }: Props) => {
               ← Back to all events
             </Link>
             <EventDetailCard event={event} user={user} expandDescription />
-            {user && (user.id === event.user_id || user.is_admin) && (
-              <Link
-                href={`/events/edit/${event.id}`}
-                className="inline-flex items-center justify-center rounded-lg border border-emerald-400/60 px-4 py-2.5 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-white"
-              >
-                Edit event
-              </Link>
+            {canManage && (
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href={`/events/edit/${event.id}`}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-400/60 px-4 py-2.5 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-white"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit event
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleDeleteEvent}
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-rose-500/60 px-4 py-2.5 text-sm font-semibold text-rose-100 transition hover:border-rose-300 hover:bg-rose-500/10"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete event
+                </button>
+              </div>
             )}
 
             {event.description && (

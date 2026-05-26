@@ -1,6 +1,7 @@
 import Link from "next/link";
 import dayjs from "dayjs";
 import React from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import EventPoster from "./EventPoster";
 import { getEventImageSrc } from "@/util/getEventImageSrc";
 
@@ -13,6 +14,8 @@ type EventCardProps = {
   venueName?: string | null;
   imageUrl?: string | null;
   isFeatured?: boolean;
+  canManage?: boolean;
+  onDelete?: (id: number) => void | Promise<void>;
 };
 
 const EventCard: React.FC<EventCardProps> = ({
@@ -24,6 +27,8 @@ const EventCard: React.FC<EventCardProps> = ({
   venueName,
   imageUrl,
   isFeatured,
+  canManage,
+  onDelete,
 }) => {
   const parsed = startTime ? dayjs(startTime) : null;
   const isValidDate = parsed?.isValid() ?? false;
@@ -35,10 +40,8 @@ const EventCard: React.FC<EventCardProps> = ({
   const formattedDate = isValidDate ? parsed!.format("ddd, MMM D • h:mm A") : "Date TBA";
   const imageSrc = getEventImageSrc(imageUrl);
 
-  const card = (
-    <article
-      className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 shadow-lg transition hover:border-emerald-400/80 hover:shadow-emerald-500/25"
-    >
+  const cardContent = (
+    <>
       <div className="relative h-72 w-full">
         <EventPoster posterUrl={imageSrc} title={title} variant="card" className="h-full w-full" />
 
@@ -63,6 +66,51 @@ const EventCard: React.FC<EventCardProps> = ({
           </div>
         </div>
       </div>
+    </>
+  );
+
+  const actionControls = canManage ? (
+    <div className="absolute right-3 top-3 z-10 flex gap-2">
+      <Link
+        href={`/events/edit/${id}`}
+        aria-label={`Edit ${title}`}
+        title="Edit event"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-600 bg-slate-950/85 text-slate-100 shadow-lg shadow-black/30 transition hover:border-emerald-300 hover:text-emerald-200"
+      >
+        <Pencil className="h-4 w-4" />
+      </Link>
+      {onDelete && (
+        <button
+          type="button"
+          aria-label={`Delete ${title}`}
+          title="Delete event"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (confirm("Are you sure you want to delete this event?")) {
+              onDelete(id);
+            }
+          }}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-500/70 bg-slate-950/85 text-rose-100 shadow-lg shadow-black/30 transition hover:border-rose-300 hover:bg-rose-500/15"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      )}
+    </div>
+  ) : null;
+
+  const card = (
+    <article
+      className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 shadow-lg transition hover:border-emerald-400/80 hover:shadow-emerald-500/25"
+    >
+      {actionControls}
+      {slug ? (
+        <Link href={`/eventRouter/${slug}`} className="group block">
+          {cardContent}
+        </Link>
+      ) : (
+        cardContent
+      )}
     </article>
   );
 
@@ -71,11 +119,7 @@ const EventCard: React.FC<EventCardProps> = ({
     return <div className="group block">{card}</div>;
   }
 
-  return (
-    <Link href={`/eventRouter/${slug}`} className="group block">
-      {card}
-    </Link>
-  );
+  return <div className="group block">{card}</div>;
 };
 
 export default EventCard;
