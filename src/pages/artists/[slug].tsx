@@ -100,6 +100,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const canEdit = artist && user && (user.id === artist.user_id || user.is_admin);
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [embedCopied, setEmbedCopied] = useState(false);
   const accessState = artist?.access_state ?? 'none';
   const communityAccessActive = isCommunityArtistAccessActive();
   const isProAccess = accessState === 'pro';
@@ -186,6 +187,8 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const siteBaseUrl = 'https://app.alpinegrooveguide.com';
   const shareUrl = `${siteBaseUrl}/share/artist/${artist.slug}`;
   const artistUrl = `${siteBaseUrl}/artists/${artist.slug}`;
+  const embedUrl = `${siteBaseUrl}/embed/artists/${artist.slug}?theme=dark&limit=5`;
+  const embedSnippet = `<iframe src="${embedUrl}" title="${artist.display_name.replace(/"/g, '&quot;')} upcoming shows" width="100%" height="560" style="border:0;border-radius:16px;overflow:hidden" loading="lazy"></iframe>`;
   const description = artist.bio
     ? artist.bio.length > 150
       ? `${artist.bio.slice(0, 147).trim()}…`
@@ -583,6 +586,44 @@ const ArtistProfilePage = ({ artist }: Props) => {
               )}
             </div>
           </section>
+
+          {canEdit && (
+            <section className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Website embed</p>
+              <h2 className="mt-2 text-2xl font-semibold text-white">Put this schedule on your website</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
+                Copy this iframe into any page builder or HTML block. Approved upcoming shows update automatically.
+              </p>
+              <textarea
+                readOnly
+                value={embedSnippet}
+                aria-label="Artist schedule embed code"
+                className="mt-4 h-32 w-full resize-none rounded-xl border border-slate-700 bg-slate-950 p-3 font-mono text-xs leading-relaxed text-slate-200"
+                onFocus={(event) => event.currentTarget.select()}
+              />
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(embedSnippet);
+                    setEmbedCopied(true);
+                    window.setTimeout(() => setEmbedCopied(false), 2500);
+                  }}
+                  className="rounded-xl bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
+                >
+                  {embedCopied ? 'Copied' : 'Copy embed code'}
+                </button>
+                <a
+                  href={embedUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm font-semibold text-emerald-200 underline-offset-4 hover:underline"
+                >
+                  Preview widget ↗
+                </a>
+              </div>
+            </section>
+          )}
 
           {canEdit && (
             <div className="flex flex-wrap gap-4">

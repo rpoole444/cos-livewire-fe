@@ -16,7 +16,13 @@ Router.events.on('routeChangeStart', () => NProgress.start());
 Router.events.on('routeChangeComplete', () => NProgress.done());
 Router.events.on('routeChangeError', () => NProgress.done());
 
-export default function MyApp({ Component, pageProps }: AppProps) {
+export default function MyApp({ Component, pageProps, router }: AppProps) {
+  const isEmbedRoute = router.pathname.startsWith('/embed/');
+
+  if (isEmbedRoute) {
+    return <Component {...pageProps} />;
+  }
+
   return (
     <ClientOnly>
       <AuthProvider>
