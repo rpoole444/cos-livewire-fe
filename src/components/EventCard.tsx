@@ -45,19 +45,19 @@ const EventCard: React.FC<EventCardProps> = ({
       <div className="relative h-72 w-full">
         <EventPoster posterUrl={imageSrc} title={title} variant="card" className="h-full w-full" />
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/90 via-slate-950/70 to-transparent">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent">
           <div className="pointer-events-auto px-4 pb-4 pt-3 space-y-1">
-            <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-300">
+            <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-mist">
               <span>{formattedDate}</span>
               {isFeatured && (
-                <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] text-emerald-200">
+                <span className="border border-gold/60 bg-gold/15 px-2 py-0.5 text-[10px] text-sun-gold">
                   Featured
                 </span>
               )}
             </div>
-            <h2 className="text-lg font-semibold text-white line-clamp-2">{title}</h2>
+            <h2 className="agg-display text-lg font-semibold text-ivory line-clamp-2">{title}</h2>
             {(venueName || city) && (
-              <p className="text-sm text-slate-300 line-clamp-1">
+              <p className="text-sm text-ivory/65 line-clamp-1">
                 {venueName}
                 {venueName && city ? " • " : ""}
                 {city}
@@ -75,7 +75,7 @@ const EventCard: React.FC<EventCardProps> = ({
         href={`/events/edit/${id}`}
         aria-label={`Edit ${title}`}
         title="Edit event"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-600 bg-slate-950/85 text-slate-100 shadow-lg shadow-black/30 transition hover:border-emerald-300 hover:text-emerald-200"
+        className="inline-flex h-9 w-9 items-center justify-center border border-gold/60 bg-black/90 text-ivory shadow-lg shadow-black/30 transition hover:border-sun-gold hover:text-sun-gold"
       >
         <Pencil className="h-4 w-4" />
       </Link>
@@ -91,7 +91,7 @@ const EventCard: React.FC<EventCardProps> = ({
               onDelete(id);
             }
           }}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-rose-500/70 bg-slate-950/85 text-rose-100 shadow-lg shadow-black/30 transition hover:border-rose-300 hover:bg-rose-500/15"
+          className="inline-flex h-9 w-9 items-center justify-center border border-copper bg-black/90 text-mist shadow-lg shadow-black/30 transition hover:bg-copper/20"
         >
           <Trash2 className="h-4 w-4" />
         </button>
@@ -101,7 +101,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
   const card = (
     <article
-      className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70 shadow-lg transition hover:border-emerald-400/80 hover:shadow-emerald-500/25"
+      className="agg-corner-frame relative overflow-hidden border border-gold/35 bg-[#11130e] shadow-lg transition hover:-translate-y-1 hover:border-sun-gold hover:shadow-gold/10"
     >
       {actionControls}
       {slug ? (

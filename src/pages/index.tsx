@@ -161,26 +161,26 @@ export default function Home() {
         <meta name="twitter:description" content={homeDescription} />
         <meta name="twitter:image" content={`${siteUrl}/alpine_groove_guide_icon.png`} />
       </Head>
-      <div className="flex flex-col min-h-screen bg-gray-900 text-white font-sans">
+      <div className="flex min-h-screen flex-col bg-black text-ivory font-sans">
       {showHero && (
         <div className="animate-fadeIn transition-opacity duration-700 ease-in-out">
           <HeroSection user={user} setAuthMode={switchAuthMode} />
         </div>
       )}
 
-      <section className="border-b border-slate-800 bg-slate-950">
-        <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 md:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center lg:py-10">
+      <section className="border-b border-gold/30 bg-[#11130e]">
+        <div className="mx-auto grid w-full max-w-7xl gap-8 px-4 py-10 md:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center lg:py-12">
           <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-xs font-semibold uppercase text-emerald-200">
+            <div className="inline-flex items-center gap-2 border border-alpine/60 bg-pine/50 px-3 py-2 text-xs font-black uppercase tracking-wider text-mist">
               <Sparkles className="h-4 w-4" />
               Free community artist pages through 2026
             </div>
 
             <div className="space-y-3">
-              <h1 className="max-w-3xl text-4xl font-black leading-[1.05] text-slate-50 md:text-5xl">
-                Find the next show, share the next stage.
+              <h1 className="agg-display max-w-3xl text-4xl font-semibold leading-[1.08] text-sun-gold md:text-5xl">
+                The scene is local. The guide should be too.
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-slate-300 md:text-lg">
+              <p className="max-w-2xl text-base leading-7 text-ivory/70 md:text-lg">
                 Alpine Groove Guide brings Front Range shows, artist pages, venues, and promoters into one clean local calendar built for fans and working musicians.
               </p>
             </div>
@@ -189,67 +189,67 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => document.getElementById('events')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                className="inline-flex items-center justify-center gap-2 bg-emerald-400 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:ring-offset-2 focus:ring-offset-slate-950"
+                className="inline-flex items-center justify-center gap-2 border border-gold bg-gold px-5 py-3 text-sm font-black uppercase tracking-wider text-black transition hover:bg-sun-gold focus:outline-none focus:ring-2 focus:ring-sun-gold focus:ring-offset-2 focus:ring-offset-black"
               >
                 Browse events
                 <ArrowRight className="h-4 w-4" />
               </button>
               <Link
                 href="/artists"
-                className="inline-flex items-center justify-center gap-2 border border-slate-600 px-5 py-3 text-sm font-bold text-slate-100 transition hover:border-emerald-300 hover:text-emerald-100 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 focus:ring-offset-slate-950"
+                className="inline-flex items-center justify-center gap-2 border border-alpine px-5 py-3 text-sm font-black uppercase tracking-wider text-ivory transition hover:border-sun-gold hover:text-sun-gold focus:outline-none focus:ring-2 focus:ring-alpine focus:ring-offset-2 focus:ring-offset-black"
               >
                 View directory
                 <Users className="h-4 w-4" />
               </Link>
             </div>
 
-            <div className="grid gap-3 text-sm text-slate-300 sm:grid-cols-3">
-              <div className="border border-slate-800 bg-slate-900/70 p-4">
-                <CalendarDays className="mb-3 h-5 w-5 text-gold" />
-                <p className="font-semibold text-slate-50">Local calendar</p>
-                <p className="mt-1 text-xs leading-5 text-slate-400">Daily shows, searchable by date, genre, venue, and artist.</p>
+            <div className="grid gap-3 text-sm text-ivory/70 sm:grid-cols-3">
+              <div className="agg-corner-frame border border-gold/30 bg-black/50 p-4">
+                <CalendarDays className="mb-3 h-5 w-5 text-sun-gold" />
+                <p className="font-bold text-ivory">Local calendar</p>
+                <p className="mt-1 text-xs leading-5 text-ivory/50">Daily shows, searchable by date, genre, venue, and artist.</p>
               </div>
-              <div className="border border-slate-800 bg-slate-900/70 p-4">
-                <Music2 className="mb-3 h-5 w-5 text-emerald-300" />
-                <p className="font-semibold text-slate-50">Artist pages</p>
-                <p className="mt-1 text-xs leading-5 text-slate-400">Profiles for musicians, venues, promoters, and community builders.</p>
+              <div className="agg-corner-frame border border-gold/30 bg-black/50 p-4">
+                <Music2 className="mb-3 h-5 w-5 text-alpine" />
+                <p className="font-bold text-ivory">Artist pages</p>
+                <p className="mt-1 text-xs leading-5 text-ivory/50">Profiles for musicians, venues, promoters, and community builders.</p>
               </div>
-              <div className="border border-slate-800 bg-slate-900/70 p-4">
-                <Users className="mb-3 h-5 w-5 text-cyan-300" />
-                <p className="font-semibold text-slate-50">Scene discovery</p>
-                <p className="mt-1 text-xs leading-5 text-slate-400">A faster way for fans to find what is happening nearby.</p>
+              <div className="agg-corner-frame border border-gold/30 bg-black/50 p-4">
+                <Users className="mb-3 h-5 w-5 text-copper" />
+                <p className="font-bold text-ivory">Scene discovery</p>
+                <p className="mt-1 text-xs leading-5 text-ivory/50">A faster way for fans to find what is happening nearby.</p>
               </div>
             </div>
           </div>
 
-          <div className="border border-slate-800 bg-slate-900 p-5 shadow-2xl shadow-black/30">
+          <div className="agg-panel agg-corner-frame p-5">
             <div className="flex items-center gap-4">
               <Image
-                src="/alpine_groove_guide_icon.png"
+                src="/icon_mark.svg"
                 alt="Alpine Groove Guide"
                 width={88}
                 height={88}
-                className="h-20 w-20 shrink-0"
+                className="h-20 w-20 shrink-0 object-contain"
                 priority
               />
               <div>
-                <p className="text-xs font-semibold uppercase text-emerald-300">Pro Directory</p>
-                <h2 className="mt-1 text-2xl font-bold text-slate-50">Artists, venues, promoters.</h2>
+                <p className="text-xs font-black uppercase tracking-wider text-alpine">Community Directory</p>
+                <h2 className="agg-display mt-1 text-2xl font-semibold text-sun-gold">Artists, venues, promoters.</h2>
               </div>
             </div>
-            <p className="mt-4 text-sm leading-6 text-slate-300">
+            <p className="mt-4 text-sm leading-6 text-ivory/70">
               Browse community profiles across the Front Range, or create your own page while artist access is open through 2026.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               <Link
                 href="/artists"
-                className="inline-flex items-center justify-center bg-emerald-400 px-4 py-3 text-sm font-bold text-slate-950 transition hover:bg-emerald-300"
+                className="inline-flex items-center justify-center border border-gold bg-gold px-4 py-3 text-sm font-black uppercase tracking-wider text-black transition hover:bg-sun-gold"
               >
                 Open directory
               </Link>
               <Link
                 href={user ? "/artist-signup" : "/LoginPage?redirect=/artist-signup"}
-                className="inline-flex items-center justify-center border border-slate-600 px-4 py-3 text-sm font-bold text-slate-100 transition hover:border-slate-300"
+                className="inline-flex items-center justify-center border border-alpine px-4 py-3 text-sm font-black uppercase tracking-wider text-ivory transition hover:border-sun-gold hover:text-sun-gold"
               >
                 Create page
               </Link>
@@ -259,10 +259,10 @@ export default function Home() {
       </section>
 
 
-      <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 pb-10 pt-6 lg:flex-row lg:items-start lg:gap-8">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-14 pt-8 lg:flex-row lg:items-start lg:gap-8">
         <section className="flex-1 min-w-0">
           <div className="flex flex-col gap-6">
-            <aside className="w-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-700">
+            <aside className="agg-panel agg-corner-frame w-full p-5 sm:p-6">
               <EventsCalendar
                 currentDate={currentDate}
                 events={events}
@@ -272,7 +272,10 @@ export default function Home() {
 
             <section id="events" className="flex-grow scroll-mt-20" ref={resultsRef}>
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-3">
-                <h1 className="text-3xl font-bold tracking-tight">Events</h1>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.3em] text-alpine">Live Music Calendar</p>
+                  <h1 className="agg-display mt-1 text-3xl font-semibold text-sun-gold">Find your next show</h1>
+                </div>
                 <div className="flex flex-col md:flex-row gap-2 md:items-center w-full md:w-auto">
                   <div className="relative w-full md:w-80">
                     <input
@@ -280,16 +283,16 @@ export default function Home() {
                       placeholder="Search by title, genre, artist, or venue..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full p-3 pl-10 border border-gray-600 rounded-md text-black bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gold"
+                      className="w-full border border-gold/40 bg-[#11130e] p-3 pl-10 text-ivory placeholder-ivory/35 focus:border-sun-gold focus:outline-none focus:ring-1 focus:ring-sun-gold"
                     />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-alpine" />
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
                       checked={searchAllUpcoming}
                       onChange={setSearchAllUpcoming}
                       className={classNames(
-                        searchAllUpcoming ? 'bg-blue-600' : 'bg-gray-600',
+                        searchAllUpcoming ? 'bg-gold' : 'bg-pine',
                         'relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none'
                       )}
                     >
@@ -300,7 +303,7 @@ export default function Home() {
                         )}
                       />
                     </Switch>
-                    <span className="text-sm text-gray-300 flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-sm text-ivory/70">
                       <CalendarSearch className="w-4 h-4" /> All Upcoming
                     </span>
                   </div>
@@ -308,7 +311,7 @@ export default function Home() {
               </div>
 
               {searchAllUpcoming && searchQuery && (
-                <p className="text-xs text-gray-400 italic mb-4">
+                <p className="mb-4 text-xs italic text-ivory/45">
                   Showing search results across all approved upcoming events.
                 </p>
               )}
@@ -323,10 +326,10 @@ export default function Home() {
                   <section className="mx-auto max-w-6xl px-0 pb-10">
                     <header className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div>
-                        <h2 className="text-2xl font-semibold text-slate-50">
+                        <h2 className="agg-display text-2xl font-semibold text-ivory">
                           Live Music Calendar
                         </h2>
-                        <p className="text-sm text-slate-400">
+                        <p className="text-sm text-ivory/50">
                           Discover shows across Colorado Springs and the Front Range.
                         </p>
                       </div>
@@ -355,14 +358,14 @@ export default function Home() {
                 ) : (
                   <div className="text-center mt-12 flex flex-col items-center gap-6">
                     <Image
-                      src="/alpine_groove_guide_icon.png"
+                      src="/icon_mark.svg"
                       alt="Alpine Groove Logo"
                       width={180}
                       height={180}
-                      className="opacity-80 animate-pulse"
+                      className="animate-pulse object-contain opacity-80"
                     />
-                    <p className="text-gray-400 text-lg font-medium">
-                      🥺 No events to display.
+                    <p className="text-lg font-medium text-ivory/55">
+                      No events to display.
                       <br className="hidden sm:inline" />
                       Try adjusting your search or clicking another date!
                     </p>
@@ -375,7 +378,7 @@ export default function Home() {
 
         <aside id="auth-section" className="w-full lg:w-[320px] xl:w-[360px] lg:flex-shrink-0">
           <div className="lg:sticky lg:top-24">
-            <div className="rounded-3xl border border-slate-800/80 bg-slate-950/70 p-6 shadow-2xl shadow-black/50 backdrop-blur-md sm:p-8 space-y-6">
+            <div className="agg-panel agg-corner-frame space-y-6 p-6 backdrop-blur-md sm:p-8">
               {user ? (
                 <div className="space-y-6">
                   <WelcomeUser />
@@ -392,13 +395,13 @@ export default function Home() {
               ) : (
                 <>
                   <div className="text-center space-y-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-400">
+                    <p className="text-[11px] font-black uppercase tracking-[0.28em] text-alpine">
                       Alpine Groove Guide
                     </p>
-                    <h2 className="text-xl font-semibold tracking-tight text-slate-50">
+                    <h2 className="agg-display text-xl font-semibold tracking-tight text-sun-gold">
                       {authMode === 'login' ? 'Sign in' : 'Create your account'}
                     </h2>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-ivory/50">
                       {authMode === 'login'
                         ? 'Log in to manage your shows and stay in sync with the calendar.'
                         : 'Sign up to start showcasing your events and artist presence.'}

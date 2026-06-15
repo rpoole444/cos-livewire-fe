@@ -51,13 +51,13 @@ export default function Calendar({
   };
 
   return (
-    <div className="text-white">
+    <div className="text-ivory">
       {/* Header & Navigation */}
       <div className="flex justify-between items-center mb-3">
-        <h1 className="text-xl font-semibold">
+        <h1 className="agg-display text-xl font-semibold text-sun-gold">
           {months[viewDate.month()]} {viewDate.year()}
         </h1>
-        <div className="flex items-center gap-3 text-slate-200">
+        <div className="flex items-center gap-3 text-ivory/70">
           <GrFormPrevious
             className="w-6 h-6 cursor-pointer hover:scale-110 transition"
             onClick={handlePrevious}
@@ -65,7 +65,7 @@ export default function Calendar({
           />
           <button
             onClick={handleToday}
-            className="rounded-full border border-slate-700 px-3 py-1 text-xs font-medium text-slate-200 hover:border-emerald-400 hover:text-white transition"
+            className="border border-gold/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-ivory/70 transition hover:border-sun-gold hover:text-sun-gold"
           >
             Today
           </button>
@@ -78,7 +78,7 @@ export default function Calendar({
       </div>
 
       {/* Calendar Days */}
-      <div className="grid grid-cols-7 gap-2 text-center mb-2 text-sm font-medium text-gray-400">
+      <div className="mb-2 grid grid-cols-7 gap-2 text-center text-sm font-bold text-alpine">
         {days.map((day, i) => (
           <div key={i}>{day}</div>
         ))}
@@ -100,14 +100,14 @@ export default function Calendar({
                 onClick={() => onDateSelect(date)}
                 className={cn(
                   "relative rounded-full w-10 h-10 flex items-center justify-center transition select-none border border-transparent text-sm font-semibold",
-                  currentMonth ? "text-slate-200" : "text-slate-600",
+                  currentMonth ? "text-ivory" : "text-ivory/20",
                   isSelected
-                    ? "bg-emerald-500 text-slate-950 shadow shadow-emerald-500/30"
-                    : "hover:border-emerald-400/60",
+                    ? "bg-gold text-black shadow shadow-gold/30"
+                    : "hover:border-gold/60 hover:text-sun-gold",
                   hasEvents &&
-                    "ring-2 ring-purple-400/70 ring-offset-2 ring-offset-slate-900",
+                    "ring-2 ring-alpine/80 ring-offset-2 ring-offset-[#11130e]",
                   isToday &&
-                    "outline outline-2 outline-emerald-400/70 outline-offset-2"
+                    "outline outline-2 outline-sun-gold/70 outline-offset-2"
                 )}
                 aria-label={
                   hasEvents
@@ -123,24 +123,24 @@ export default function Calendar({
         })}
       </div>
 
-      <div className="mt-3 text-xs text-slate-400">
+      <div className="mt-3 text-xs text-ivory/45">
         Showing events for{" "}
-        <span className="font-semibold text-slate-100">
+        <span className="font-semibold text-ivory">
           {currentDate.format("dddd, MMM D, YYYY")}
         </span>
       </div>
 
-      <div className="mt-4 text-sm text-gray-300 space-y-1">
+      <div className="mt-4 space-y-1 text-sm text-ivory/60">
         <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full border border-emerald-400"></span>
+          <span className="inline-block h-3 w-3 rounded-full border border-sun-gold"></span>
           <span>Today</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full border-2 border-purple-400/70"></span>
+          <span className="inline-block h-3 w-3 rounded-full border-2 border-alpine"></span>
           <span>Has events</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-block w-3 h-3 rounded-full bg-emerald-500"></span>
+          <span className="inline-block h-3 w-3 rounded-full bg-gold"></span>
           <span>Selected</span>
         </div>
       </div>

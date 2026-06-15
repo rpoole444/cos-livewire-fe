@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <rect width="1024" height="1024" fill="#0B0C09"/>
+  <rect x="78" y="78" width="868" height="868" fill="none" stroke="#C9962E" stroke-width="7"/>
+  <circle cx="512" cy="360" r="105" fill="#B86432"/>
+  <path d="M434 360 A78 78 0 0 1 590 360 L512 360 Z" fill="#E0B861"/>
+  <g stroke="#C9962E" stroke-width="6" stroke-linecap="round"><line x1="512" y1="232" x2="512" y2="85"/><line x1="432" y1="260" x2="340" y2="145"/><line x1="592" y1="260" x2="684" y2="145"/><line x1="400" y1="340" x2="240" y2="300"/><line x1="624" y1="340" x2="784" y2="300"/></g>
+  <polygon points="192,650 512,355 832,650" fill="#263F38"/>
+  <polygon points="512,355 450,510 330,540" fill="#F4E7B8"/>
+  <polygon points="512,355 575,510 695,540" fill="#4F7870"/>
+  <polygon points="170,650 340,455 510,650" fill="#4F7870"/>
+  <polygon points="514,650 685,470 855,650" fill="#4F7870"/>
+  <path d="M215 750 L365 766 L515 750 L665 766 L815 750" fill="none" stroke="#4F7870" stroke-width="12"/>
+  <path d="M215 795 L365 811 L515 795 L665 811 L815 795" fill="none" stroke="#4F7870" stroke-width="12"/>
+</svg>

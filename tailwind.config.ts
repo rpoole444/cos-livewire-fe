@@ -10,11 +10,18 @@ const config: Config = {
     darkMode: false,
     extend: {
       fontFamily: {
-        sans: ["Poppins", "sans-serif"]
+        sans: ["Lato", "Inter", "system-ui", "sans-serif"],
+        display: ["Cinzel", "Cormorant Garamond", "Georgia", "serif"]
       },
       colors: {
-        gold: "#FFD700",
-        black: "#0D0D0D"
+        black: "#0B0C09",
+        gold: "#C9962E",
+        "sun-gold": "#E0B861",
+        ivory: "#F4E7B8",
+        copper: "#B86432",
+        alpine: "#4F7870",
+        pine: "#263F38",
+        mist: "#F3DFA6"
       },
       screens: {
         sm: '640px',

@@ -35,10 +35,10 @@ const SiteHeader = () => {
     <Link
       key={href}
       href={href}
-      className={`rounded-full px-3 py-1 text-xs font-semibold tracking-wide transition sm:text-sm ${
+      className={`border-b px-2 py-2 text-xs font-bold uppercase tracking-[0.12em] transition sm:text-[13px] ${
         isActive(href)
-          ? "bg-slate-800/80 text-white"
-          : "text-slate-300 hover:text-white hover:bg-slate-800/60"
+          ? "border-gold text-sun-gold"
+          : "border-transparent text-ivory/70 hover:border-alpine hover:text-ivory"
       }`}
     >
       {label}
@@ -46,16 +46,15 @@ const SiteHeader = () => {
   );
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-800/70 bg-slate-950/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-2 rounded-full px-2 py-1 transition hover:bg-slate-900/60">
-            <div className="relative h-8 w-8 sm:h-9 sm:w-9">
-              <Image src="/alpine_groove_guide_icon.png" alt="Alpine Groove Guide" fill className="rounded-xl object-cover" />
+    <header className="sticky top-0 z-30 border-b border-gold/40 bg-black/95 backdrop-blur-xl">
+      <div className="mx-auto flex min-h-[76px] max-w-7xl items-center justify-between gap-5 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="flex min-w-0 items-center gap-6">
+          <Link href="/" className="group flex min-w-0 items-center transition hover:opacity-90">
+            <div className="relative h-12 w-40 sm:h-14 sm:w-48">
+              <Image src="/logo_horizontal.svg" alt="Alpine Groove Guide" fill priority className="object-contain object-left" />
             </div>
-            <span className="text-sm font-semibold text-slate-50 sm:text-base">Alpine Groove Guide</span>
           </Link>
-          <nav className="hidden items-center gap-2 sm:flex">
+          <nav className="hidden items-center gap-3 lg:flex">
             {navLinks.map((link) => (
               <NavLink key={link.href} href={link.href} label={link.label} />
             ))}
@@ -65,12 +64,12 @@ const SiteHeader = () => {
         <div className="hidden items-center gap-3 sm:flex">
           {!user ? (
             <>
-              <Link href="/LoginPage" className="text-xs font-semibold text-slate-300 hover:text-white sm:text-sm">
+              <Link href="/LoginPage" className="text-xs font-bold uppercase tracking-wider text-ivory/70 hover:text-sun-gold sm:text-sm">
                 Log In
               </Link>
               <Link
                 href="/RegisterPage"
-                className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 sm:text-sm"
+                className="border border-gold bg-gold px-4 py-2 text-xs font-black uppercase tracking-wider text-black transition hover:bg-sun-gold sm:text-sm"
               >
                 Sign Up
               </Link>
@@ -79,13 +78,13 @@ const SiteHeader = () => {
             <>
               <Link
                 href="/profile"
-                className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 sm:text-sm"
+                className="border border-gold bg-gold px-4 py-2 text-xs font-black uppercase tracking-wider text-black transition hover:bg-sun-gold sm:text-sm"
               >
                 Profile
               </Link>
               <button
                 onClick={handleLogout}
-                className="text-xs font-semibold text-slate-300 hover:text-white sm:text-sm"
+                className="text-xs font-bold uppercase tracking-wider text-ivory/70 hover:text-sun-gold sm:text-sm"
               >
                 Log out
               </button>
@@ -94,7 +93,7 @@ const SiteHeader = () => {
         </div>
 
         <button
-          className="text-slate-200 sm:hidden"
+          className="border border-gold/50 p-2 text-sun-gold sm:hidden"
           onClick={() => setMenuOpen((prev) => !prev)}
           aria-label="Toggle navigation"
         >
@@ -105,14 +104,14 @@ const SiteHeader = () => {
       </div>
 
       {menuOpen && (
-        <div className="border-t border-slate-800 bg-slate-950 px-4 py-4 sm:hidden">
+        <div className="border-t border-gold/30 bg-black px-4 py-4 sm:hidden">
           <nav className="flex flex-col gap-3">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-full px-3 py-2 text-sm font-semibold transition ${
-                  isActive(link.href) ? "bg-slate-800/80 text-white" : "text-slate-300 hover:text-white hover:bg-slate-800/60"
+                className={`border-l-2 px-3 py-2 text-sm font-bold uppercase tracking-wider transition ${
+                  isActive(link.href) ? "border-gold text-sun-gold" : "border-transparent text-ivory/70 hover:text-ivory"
                 }`}
                 onClick={() => setMenuOpen(false)}
               >
@@ -120,19 +119,19 @@ const SiteHeader = () => {
               </Link>
             ))}
           </nav>
-          <div className="mt-4 flex flex-col gap-3 border-t border-slate-800 pt-4">
+          <div className="mt-4 flex flex-col gap-3 border-t border-gold/30 pt-4">
             {!user ? (
               <>
                 <Link
                   href="/LoginPage"
-                  className="text-sm font-semibold text-slate-300 hover:text-white"
+                  className="text-sm font-bold text-ivory/70 hover:text-sun-gold"
                   onClick={() => setMenuOpen(false)}
                 >
                   Log In
                 </Link>
                 <Link
                   href="/RegisterPage"
-                  className="rounded-full bg-emerald-500 px-4 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+                  className="border border-gold bg-gold px-4 py-2 text-center text-sm font-black uppercase tracking-wider text-black transition hover:bg-sun-gold"
                   onClick={() => setMenuOpen(false)}
                 >
                   Sign Up
@@ -142,14 +141,14 @@ const SiteHeader = () => {
               <>
                 <Link
                   href="/profile"
-                  className="rounded-full bg-emerald-500 px-4 py-2 text-center text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
+                  className="border border-gold bg-gold px-4 py-2 text-center text-sm font-black uppercase tracking-wider text-black transition hover:bg-sun-gold"
                   onClick={() => setMenuOpen(false)}
                 >
                   Profile
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="text-left text-sm font-semibold text-slate-300 hover:text-white"
+                  className="text-left text-sm font-bold text-ivory/70 hover:text-sun-gold"
                 >
                   Log out
                 </button>

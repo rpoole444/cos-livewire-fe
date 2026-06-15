@@ -1,11 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-
-const sampleShows = [
-  { title: 'Moonlit Vinyl', venue: 'The Lodge · Denver', time: 'Tonight · 9:00 PM', genre: 'Indie Groove' },
-  { title: 'High Country Jazz Jam', venue: 'Gold Room · COS', time: 'Fri · 8:00 PM', genre: 'Jazz' },
-  { title: 'Bass Camp Afterhours', venue: 'Underground · Boulder', time: 'Sat · 11:30 PM', genre: 'Electronic' },
-];
+import Image from 'next/image';
+import { ArrowDown, CalendarPlus } from 'lucide-react';
 
 const HeroSection = ({ user }: { user: any; setAuthMode: (mode: string) => void }) => {
   const handleBrowse = () => {
@@ -17,53 +13,53 @@ const HeroSection = ({ user }: { user: any; setAuthMode: (mode: string) => void 
   const createShowLink = user ? '/eventSubmission' : '/LoginPage?redirect=/eventSubmission';
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
-      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-16 md:py-20 lg:flex-row lg:items-center lg:gap-12">
-        <div className="flex-1 space-y-6 text-left">
-          <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-300">Colorado Front Range</p>
-          <h1 className="text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
-            Live music, <span className="text-emerald-300">on one stage.</span>
-          </h1>
-          <p className="max-w-2xl text-base text-slate-200 sm:text-lg">
-            Discover Colorado Front Range shows, and give artists, venues, and promoters a home for their gigs. Alpine Groove Guide
-            keeps every set time, ticket link, and local lineup in one elevated feed.
+    <section className="relative overflow-hidden border-b border-gold/40 bg-black text-ivory">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_40%,rgba(201,150,46,0.13),transparent_34%),radial-gradient(circle_at_18%_10%,rgba(79,120,112,0.16),transparent_28%)]" />
+      <div className="mx-auto grid min-h-[620px] max-w-7xl items-center gap-10 px-6 py-14 lg:grid-cols-[minmax(0,0.85fr)_minmax(420px,1.15fr)] lg:px-8 lg:py-20">
+        <div className="relative z-10 space-y-7 text-left">
+          <p className="text-xs font-black uppercase tracking-[0.42em] text-alpine">Colorado Front Range</p>
+          <div className="space-y-3">
+            <h1 className="agg-display agg-text-shadow text-5xl font-semibold leading-[0.98] text-sun-gold sm:text-6xl lg:text-7xl">
+              Find the
+              <span className="block text-ivory">good set.</span>
+            </h1>
+            <div className="h-px w-40 bg-copper" />
+          </div>
+          <p className="max-w-xl text-base leading-7 text-ivory/75 sm:text-lg">
+            A human-curated guide to live music, artists, venues, and the people shaping the Front Range sound.
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               onClick={handleBrowse}
-              className="inline-flex items-center justify-center rounded-2xl bg-emerald-400 px-6 py-3 text-sm font-semibold text-slate-950 shadow-xl shadow-emerald-500/40 transition hover:bg-emerald-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-200"
+              className="inline-flex items-center justify-center gap-2 border border-gold bg-gold px-6 py-3 text-sm font-black uppercase tracking-wider text-black transition hover:bg-sun-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sun-gold"
             >
-              Browse live music
+              Browse the calendar
+              <ArrowDown className="h-4 w-4" />
             </button>
             <Link
               href={createShowLink}
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-600 px-6 py-3 text-center text-sm font-semibold text-slate-100 transition hover:border-slate-200 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-200"
+              className="inline-flex items-center justify-center gap-2 border border-alpine px-6 py-3 text-center text-sm font-black uppercase tracking-wider text-ivory transition hover:border-sun-gold hover:text-sun-gold"
             >
               Add your show
+              <CalendarPlus className="h-4 w-4" />
             </Link>
           </div>
+          <p className="text-xs font-bold uppercase tracking-[0.24em] text-ivory/45">
+            Artist pages • Local gigs • Real humans
+          </p>
         </div>
 
-        <div className="flex w-full flex-1 items-center justify-center">
-          <div className="relative w-full max-w-md space-y-4 rounded-3xl bg-slate-950/60 p-6 ring-1 ring-slate-800 backdrop-blur">
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Now playing</p>
-            <div className="space-y-4">
-              {sampleShows.map((show, idx) => (
-                <div
-                  key={show.title}
-                  className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-lg ring-1 ring-slate-900/40"
-                  style={{ transform: `translateY(${idx * 6}px)` }}
-                >
-                  <p className="text-[10px] uppercase tracking-[0.4em] text-emerald-200">{show.genre}</p>
-                  <h3 className="mt-1 text-lg font-semibold text-white">{show.title}</h3>
-                  <p className="text-sm text-slate-300">{show.venue}</p>
-                  <p className="text-xs text-slate-500">{show.time}</p>
-                </div>
-              ))}
-            </div>
-            <div className="pointer-events-none absolute -left-16 -top-8 hidden h-32 w-32 rounded-full bg-emerald-400/30 blur-3xl md:block" />
-            <div className="pointer-events-none absolute -right-14 bottom-0 hidden h-32 w-32 rounded-full bg-cyan-400/20 blur-3xl lg:block" />
+        <div className="relative flex w-full items-center justify-center">
+          <div className="agg-corner-frame relative aspect-square w-full max-w-[570px] border border-gold/40 bg-[#080906]/70 p-5 shadow-2xl shadow-black/60 sm:p-8">
+            <div className="absolute inset-3 border border-gold/20" />
+            <Image
+              src="/logo_primary_stacked.svg"
+              alt="Alpine Groove Guide"
+              fill
+              priority
+              className="object-contain p-9 sm:p-12"
+            />
           </div>
         </div>
       </div>

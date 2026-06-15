@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="2400" viewBox="0 0 2400 2400">
+  <defs>
+    <style>
+      .bg{fill:#0B0C09;}
+      .gold{fill:#C9962E;stroke:#C9962E;}
+      .sun{fill:#E0B861;}
+      .ivory{fill:#F4E7B8;}
+      .copper{fill:#B86432;}
+      .teal{fill:#4F7870;}
+      .pine{fill:#263F38;}
+      .title{font-family:'Cinzel','Cormorant Garamond','Times New Roman',serif;font-weight:700;letter-spacing:18px;}
+      .sans{font-family:'Lato','Inter',Arial,sans-serif;font-weight:800;letter-spacing:10px;}
+    </style>
+  </defs>
+  <rect class="bg" x="0" y="0" width="2400" height="2400"/>
+  <rect x="160" y="160" width="2080" height="2080" fill="none" stroke="#C9962E" stroke-width="10"/>
+  <rect x="200" y="200" width="2000" height="2000" fill="none" stroke="#C9962E" stroke-width="4"/>
+  <g transform="translate(1200 610)">
+    <g stroke="#C9962E" stroke-width="8" stroke-linecap="round">
+      <line x1="0" y1="-185" x2="0" y2="-380"/><line x1="-65" y1="-172" x2="-150" y2="-350"/><line x1="65" y1="-172" x2="150" y2="-350"/>
+      <line x1="-130" y1="-130" x2="-300" y2="-280"/><line x1="130" y1="-130" x2="300" y2="-280"/>
+      <line x1="-180" y1="-55" x2="-390" y2="-100"/><line x1="180" y1="-55" x2="390" y2="-100"/>
+    </g>
+    <circle r="155" class="copper"/><path d="M -115 0 A 115 115 0 0 1 115 0 L 0 0 Z" class="sun"/>
+  </g>
+  <g transform="translate(1200 880)">
+    <polygon points="-320,0 0,-430 320,0" class="pine"/><polygon points="0,-430 -50,-210 -190,-180" class="ivory"/><polygon points="0,-430 50,-210 190,-180" class="teal"/>
+    <polygon points="-720,0 -430,-300 -170,0" class="teal"/><polygon points="-430,-300 -500,-130 -640,-90" class="ivory"/>
+    <polygon points="170,0 430,-275 700,0" class="teal"/><polygon points="430,-275 315,-130 200,-90" class="ivory"/>
+  </g>
+  <text x="1200" y="1380" text-anchor="middle" font-size="280" class="title ivory">ALPINE</text>
+  <text x="1200" y="1645" text-anchor="middle" font-size="245" class="title ivory">GROOVE</text>
+  <path d="M 530 1745 L 760 1771 L 990 1745 L 1220 1771 L 1450 1745 L 1680 1771 L 1870 1745" fill="none" stroke="#4F7870" stroke-width="22"/>
+  <text x="1200" y="2150" text-anchor="middle" font-size="210" class="title copper">GUIDE</text>
+</svg>
