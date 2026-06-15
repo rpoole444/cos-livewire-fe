@@ -26,6 +26,7 @@ export default function EditArtistProfilePage() {
   const trialExpired = user && !communityAccessActive && !proActive && !!user.trial_ends_at && !trialActive;
 
   const [form, setForm] = useState({
+    profile_type: 'artist' as 'artist' | 'venue' | 'promoter',
     display_name: '',
     bio: '',
     contact_email: '',
@@ -36,6 +37,14 @@ export default function EditArtistProfilePage() {
     embed_soundcloud: '',
     embed_bandcamp: '',
     tip_jar_url: '',
+    venue_address: '',
+    venue_city: '',
+    venue_state: '',
+    venue_postal_code: '',
+    venue_phone: '',
+    booking_email: '',
+    venue_capacity: '',
+    age_policy: '',
   });
 
   const [files, setFiles] = useState({
@@ -62,9 +71,12 @@ export default function EditArtistProfilePage() {
     if (!slug) return;
     const fetchArtist = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${slug}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${slug}`, {
+          credentials: 'include',
+        });
         const data = await res.json();
         const nextForm = {
+          profile_type: data.profile_type || 'artist',
           display_name: data.display_name,
           bio: data.bio,
           contact_email: data.contact_email,
@@ -74,7 +86,15 @@ export default function EditArtistProfilePage() {
           embed_youtube: data.embed_youtube || '',
           embed_soundcloud: data.embed_soundcloud || '',
           embed_bandcamp: data.embed_bandcamp || '',
-          tip_jar_url: '',
+          tip_jar_url: data.tip_jar_url || '',
+          venue_address: data.venue_address || '',
+          venue_city: data.venue_city || '',
+          venue_state: data.venue_state || '',
+          venue_postal_code: data.venue_postal_code || '',
+          venue_phone: data.venue_phone || '',
+          booking_email: data.booking_email || '',
+          venue_capacity: data.venue_capacity ? String(data.venue_capacity) : '',
+          age_policy: data.age_policy || '',
         };
         setForm(nextForm);
         setMediaInputs({
@@ -149,6 +169,10 @@ export default function EditArtistProfilePage() {
       setError("Fix the highlighted media links before saving.");
       return;
     }
+    if (form.profile_type === 'venue' && (!form.venue_address.trim() || !form.venue_city.trim())) {
+      setError("Venue address and city are required.");
+      return;
+    }
 
     setLoading(true);
     const formData = new FormData();
@@ -196,7 +220,7 @@ export default function EditArtistProfilePage() {
 
   const pageTitle = form.display_name
     ? `Edit ${form.display_name} – Alpine Groove Guide`
-    : 'Edit Artist Profile – Alpine Groove Guide';
+    : 'Edit Pro Page – Alpine Groove Guide';
 
   return (
     <>
@@ -210,12 +234,50 @@ export default function EditArtistProfilePage() {
             {COMMUNITY_ARTIST_ACCESS_LABEL}. You can keep this profile updated during the community access window.
           </div>
         )}
-        <h1 className="text-2xl font-bold mb-4">Edit Artist Profile</h1>
+        <h1 className="text-2xl font-bold mb-4">
+          Edit {form.profile_type === 'venue' ? 'Venue' : 'Pro'} Profile
+        </h1>
       <form onSubmit={handleSubmit} className="space-y-4">
+        <label className="block">
+          Profile Type
+          <select
+            name="profile_type"
+            value={form.profile_type}
+            onChange={(e) =>
+              setForm((prev) => ({
+                ...prev,
+                profile_type: e.target.value as 'artist' | 'venue' | 'promoter',
+              }))
+            }
+            className="mt-1 w-full rounded border border-gray-600 bg-gray-800 p-2"
+          >
+            <option value="artist">Artist</option>
+            <option value="venue">Venue</option>
+            <option value="promoter">Promoter</option>
+          </select>
+        </label>
         <input name="display_name" value={form.display_name} onChange={handleChange} placeholder="Display Name" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <input name="contact_email" value={form.contact_email} onChange={handleChange} placeholder="Contact Email" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <input name="website" value={form.website} onChange={handleChange} placeholder="Website URL" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <textarea name="bio" value={form.bio} onChange={handleChange} placeholder="Bio" className="w-full p-2 rounded bg-gray-800 border border-gray-600" rows={4} />
+
+        {form.profile_type === 'venue' && (
+          <div className="space-y-4 rounded-xl border border-emerald-400/30 bg-emerald-500/5 p-4">
+            <h2 className="font-semibold text-emerald-100">Venue details</h2>
+            <input name="venue_address" required value={form.venue_address} onChange={handleChange} placeholder="Street Address" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <input name="venue_city" required value={form.venue_city} onChange={handleChange} placeholder="City" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <input name="venue_state" value={form.venue_state} onChange={handleChange} placeholder="State" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <input name="venue_postal_code" value={form.venue_postal_code} onChange={handleChange} placeholder="ZIP" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            </div>
+            <input name="booking_email" type="email" value={form.booking_email} onChange={handleChange} placeholder="Booking Email" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input name="venue_phone" type="tel" value={form.venue_phone} onChange={handleChange} placeholder="Venue Phone" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <input name="venue_capacity" type="number" min="1" value={form.venue_capacity} onChange={handleChange} placeholder="Capacity" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            </div>
+            <input name="age_policy" value={form.age_policy} onChange={handleChange} placeholder="Age Policy" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+          </div>
+        )}
         <label className="block mb-2">
           Tip Jar URL (PayPal/Venmo):
           <input
@@ -305,20 +367,22 @@ export default function EditArtistProfilePage() {
           <input type="file" accept="image/*" name="profile_image" onChange={handleFileChange} className="w-full text-sm mt-1" />
         </label>
 
-        <label className="block">Upload Promo Photo:
+        <label className="block">Upload {form.profile_type === 'venue' ? 'Room or Stage Photo' : 'Promo Photo'}:
           <input type="file" accept="image/*" name="promo_photo" onChange={handleFileChange} className="w-full text-sm mt-1" />
         </label>
 
-        <label className="block">Upload Stage Plot:
+        <label className="block">Upload {form.profile_type === 'venue' ? 'House Stage / Tech Specs' : 'Stage Plot'}:
           <input type="file" name="stage_plot" onChange={handleFileChange} className="w-full text-sm mt-1" />
         </label>
 
-        <label className="block">Upload Press Kit:
+        <label className="block">Upload {form.profile_type === 'venue' ? 'Venue Booking Packet' : 'Press Kit'}:
           <input type="file" name="press_kit" onChange={handleFileChange} className="w-full text-sm mt-1" />
         </label>
 
         <div>
-          <label className="block font-semibold mb-1">Genres (up to 4)</label>
+          <label className="block font-semibold mb-1">
+            {form.profile_type === 'venue' ? 'Music styles hosted (up to 4)' : 'Genres (up to 4)'}
+          </label>
           <div className="grid grid-cols-2 gap-2">
             {topGenres.map(genre => (
               <label key={genre} className="flex items-center">

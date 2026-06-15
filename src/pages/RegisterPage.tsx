@@ -42,7 +42,9 @@ const RegisterPage = () => {
                   if (mode === "login") router.push("/LoginPage");
                 }}
                 inviteCode={inviteCode}
-                onSuccess={() => router.push("/LoginPage?redirect=/artist-signup")}
+                onSuccess={() =>
+                  router.push(`/LoginPage?redirect=${encodeURIComponent(redirect || '/artist-signup')}`)
+                }
               />
             </div>
             <p className="text-center text-xs text-slate-400">

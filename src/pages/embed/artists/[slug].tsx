@@ -18,6 +18,7 @@ interface ArtistSchedule {
   display_name: string;
   slug: string;
   events: ScheduleEvent[];
+  profile_type?: 'artist' | 'venue' | 'promoter';
 }
 
 interface EmbedScheduleProps {
@@ -38,6 +39,7 @@ export default function EmbedArtistSchedule({ schedule, theme }: EmbedSchedulePr
   const secondaryText = isLight ? 'text-stone-600' : 'text-slate-300';
   const mutedText = isLight ? 'text-stone-500' : 'text-slate-400';
   const accentText = isLight ? 'text-amber-700' : 'text-emerald-300';
+  const isVenue = schedule.profile_type === 'venue';
 
   return (
     <>
@@ -49,7 +51,7 @@ export default function EmbedArtistSchedule({ schedule, theme }: EmbedSchedulePr
         <header className="mb-4 flex items-end justify-between gap-4">
           <div>
             <p className={`text-[10px] font-semibold uppercase tracking-[0.28em] ${accentText}`}>
-              Upcoming shows
+              {isVenue ? 'Upcoming at this venue' : 'Upcoming shows'}
             </p>
             <h1 className="mt-1 text-xl font-semibold sm:text-2xl">{schedule.display_name}</h1>
           </div>
@@ -98,7 +100,7 @@ export default function EmbedArtistSchedule({ schedule, theme }: EmbedSchedulePr
           </div>
         ) : (
           <div className={`rounded-xl border p-6 text-center text-sm ${cardClass} ${secondaryText}`}>
-            No upcoming shows are listed yet.
+            No upcoming {isVenue ? 'events' : 'shows'} are listed yet.
           </div>
         )}
 

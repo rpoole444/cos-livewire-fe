@@ -61,6 +61,7 @@ const EventSubmission = () => {
   };
 
   const [events, setEvents] = useState<Event[]>([initialEvent]);
+  const [venueDefaults, setVenueDefaults] = useState<Partial<Event>>({});
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const { user, logout, refreshSession, loading } = useAuth();
   const router = useRouter();
@@ -74,7 +75,7 @@ const EventSubmission = () => {
   const canAddMultiple = Boolean(canUseArtistAccess);
   const trialExpired = user && !communityAccessActive && !proActive && !!user.trial_ends_at && !trialActive;
 
-  const addEvent = () => setEvents((prev) => [...prev, { ...initialEvent }]);
+  const addEvent = () => setEvents((prev) => [...prev, { ...initialEvent, ...venueDefaults }]);
   const removeEvent = (index: number) =>
     setEvents((prev) => prev.filter((_, i) => i !== index));
 
@@ -104,6 +105,45 @@ const EventSubmission = () => {
       router.push('/LoginPage?redirect=/eventSubmission');
     }
   }, [user, router, loading]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadVenueDefaults = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, {
+          credentials: 'include',
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        const profile = data?.artist;
+        if (profile?.profile_type !== 'venue') return;
+
+        const defaults: Partial<Event> = {
+          venue_name: profile.display_name || '',
+          address: profile.venue_address || '',
+          location: [profile.venue_city, profile.venue_state].filter(Boolean).join(', '),
+          website: profile.website || '',
+          ageRestriction: profile.age_policy || '',
+        };
+        setVenueDefaults(defaults);
+        setEvents((prev) =>
+          prev.map((event) => ({
+            ...event,
+            venue_name: event.venue_name || defaults.venue_name || '',
+            address: event.address || defaults.address || '',
+            location: event.location || defaults.location || '',
+            website: event.website || defaults.website || '',
+            ageRestriction: event.ageRestriction || defaults.ageRestriction || '',
+          }))
+        );
+      } catch (error) {
+        console.error('[eventSubmission] Unable to load venue defaults', error);
+      }
+    };
+
+    loadVenueDefaults();
+  }, [user]);
 
 const initializeAutocomplete = (index: number) => {
   if (
@@ -423,6 +463,11 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             {communityAccessActive && (
               <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
                 <span className="font-semibold">{COMMUNITY_ARTIST_ACCESS_LABEL}.</span> Multiple event submissions are open during the community access window.
+              </div>
+            )}
+            {venueDefaults.venue_name && (
+              <div className="rounded-2xl border border-amber-400/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+                Venue tools are active for <strong>{venueDefaults.venue_name}</strong>. Location and venue details are prefilled, and you can still edit them per event.
               </div>
             )}
 

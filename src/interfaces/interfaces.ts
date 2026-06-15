@@ -94,6 +94,15 @@ export interface Artist {
   deleted_at?: string | null;
   created_at?: string;
   updated_at?: string;
+  profile_type?: 'artist' | 'venue' | 'promoter';
+  venue_address?: string;
+  venue_city?: string;
+  venue_state?: string;
+  venue_postal_code?: string;
+  venue_phone?: string;
+  booking_email?: string;
+  venue_capacity?: number | null;
+  age_policy?: string;
 }
 
 

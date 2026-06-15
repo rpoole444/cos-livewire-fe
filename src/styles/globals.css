@@ -76,6 +76,41 @@ a {
   letter-spacing: 0.04em;
 }
 
+.agg-profile-form input[type="text"],
+.agg-profile-form input[type="email"],
+.agg-profile-form input[type="tel"],
+.agg-profile-form input[type="number"],
+.agg-profile-form input[type="url"],
+.agg-profile-form textarea,
+.agg-profile-form select {
+  width: 100%;
+  border: 1px solid rgba(201, 150, 46, 0.34);
+  border-radius: 0;
+  background: rgba(17, 19, 14, 0.92);
+  color: var(--agg-warm-ivory);
+  padding: 0.75rem 0.85rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.agg-profile-form input:focus,
+.agg-profile-form textarea:focus,
+.agg-profile-form select:focus {
+  border-color: var(--agg-sun-gold);
+  box-shadow: 0 0 0 2px rgba(224, 184, 97, 0.14);
+  outline: none;
+}
+
+.agg-profile-form input::placeholder,
+.agg-profile-form textarea::placeholder {
+  color: rgba(244, 231, 184, 0.38);
+}
+
+.agg-profile-form input[type="file"] {
+  border: 1px dashed rgba(79, 120, 112, 0.7);
+  background: rgba(38, 63, 56, 0.2);
+  padding: 0.75rem;
+}
+
 /* Keep native date/time picker icons high-contrast so users know they can click them. */
 .agg-date-time-input::-webkit-calendar-picker-indicator {
   filter: invert(1);

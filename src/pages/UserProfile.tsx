@@ -23,6 +23,7 @@ type ArtistProfileStatus = {
     is_approved?: boolean;
     deleted_at?: string | null;
     profile_image?: string | null;
+    profile_type?: 'artist' | 'venue' | 'promoter';
   } | null;
   deletedArtist: {
     slug?: string;
@@ -53,6 +54,7 @@ const UserProfile: React.FC = () => {
   const [hasArtistProfile, setHasArtistProfile] = useState(false);
   const [artistSlug, setArtistSlug] = useState("");
   const [artistDisplayName, setArtistDisplayName] = useState("");
+  const [profileType, setProfileType] = useState<'artist' | 'venue' | 'promoter'>('artist');
   const [canRestoreProfile, setCanRestoreProfile] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
@@ -101,6 +103,7 @@ const viewButtonLabel = isPublicLocked ? "View page (locked preview)" : "View Pu
 const viewButtonTitle = isPublicLocked
   ? "Visitors currently see a blurred version until you reactivate Alpine Pro."
   : "View your public page";
+const profileTypeLabel = profileType === 'venue' ? 'Venue' : profileType === 'promoter' ? 'Promoter' : 'Artist';
 const trialEndDate = user?.trial_ends_at ? new Date(user.trial_ends_at).toLocaleDateString() : null;
 let artistStatusLabel = "No Pro page";
 let artistStatusClass = "border border-slate-600 bg-slate-800 text-slate-200";
@@ -166,6 +169,7 @@ if (hasArtistProfile) {
       setHasArtistProfile(false);
       setArtistSlug("");
       setArtistDisplayName("");
+      setProfileType('artist');
       setIsApproved(null);
       setCanRestoreProfile(false);
       setRestoreError("");
@@ -178,6 +182,7 @@ if (hasArtistProfile) {
     setHasArtistProfile(hasActiveArtist);
     setArtistSlug(hasActiveArtist ? artist.slug || "" : "");
     setArtistDisplayName(hasActiveArtist ? artist.display_name || "" : "");
+    setProfileType(hasActiveArtist ? artist.profile_type || 'artist' : 'artist');
     setArtistImage(hasActiveArtist ? artist.profile_image || null : null);
 
     setIsApproved(
@@ -512,6 +517,7 @@ if (hasArtistProfile) {
   };
 // after
 const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
+const gotoCreateVenueProfile = () => router.push('/venue-signup?from=profile');
 const startAccountSetup = () => {
   setIsEditing(true);
   accountSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -774,7 +780,9 @@ const textareaClasses =
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <p className="text-xs uppercase tracking-wide text-slate-500">My Pro Presence</p>
-                <h2 className="text-2xl font-semibold text-white">Pro Page</h2>
+                <h2 className="text-2xl font-semibold text-white">
+                  {hasArtistProfile ? `${profileTypeLabel} Pro Page` : 'Pro Page'}
+                </h2>
               </div>
               {needsProfileSetup && !hasArtistProfile && (
                 <span className="text-sm text-emerald-200">Step 2: Create your Pro page (optional)</span>
@@ -793,12 +801,18 @@ const textareaClasses =
                   ? "Create your free artist page for your artist, venue, or promoter project to showcase your work on Alpine Groove Guide."
                   : "Create your Pro page for your artist, venue, or promoter project to showcase your work on Alpine Groove Guide."}
               </p>
-                <div className="flex flex-col gap-2">
+                <div className="grid gap-2 sm:grid-cols-2">
                   <button
                     onClick={gotoCreateProfile}
                     className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
                   >
                     {communityAccessActive ? "Create Free Artist Page" : "Create Your Pro Page"}
+                  </button>
+                  <button
+                    onClick={gotoCreateVenueProfile}
+                    className="inline-flex items-center justify-center rounded-lg border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-100 hover:-translate-y-[1px] hover:border-amber-300 hover:bg-amber-500/20 active:translate-y-0"
+                  >
+                    Create Venue Page
                   </button>
                   {canRestoreProfile && (
                     <button
@@ -817,7 +831,7 @@ const textareaClasses =
                   <button
                     type="button"
                     onClick={() => setArtistCardDismissed(true)}
-                    className="text-sm text-gray-300 underline hover:text-white text-left"
+                    className="text-left text-sm text-gray-300 underline hover:text-white sm:col-span-2"
                   >
                     Maybe later
                   </button>
@@ -828,12 +842,20 @@ const textareaClasses =
                 <p className="text-sm text-slate-300">
                   Ready later? You can create your Pro page whenever you like.
                 </p>
-                <button
-                  onClick={gotoCreateProfile}
-                  className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
-                >
-                  {communityAccessActive ? "Create Free Artist Page" : "Create Your Pro Page"}
-                </button>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button
+                    onClick={gotoCreateProfile}
+                    className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
+                  >
+                    {communityAccessActive ? "Create Free Artist Page" : "Create Artist Page"}
+                  </button>
+                  <button
+                    onClick={gotoCreateVenueProfile}
+                    className="inline-flex items-center justify-center rounded-lg border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-100 hover:border-amber-300"
+                  >
+                    Create Venue Page
+                  </button>
+                </div>
               </div>
             )
           ) : (
@@ -841,6 +863,9 @@ const textareaClasses =
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-xl font-semibold text-white">{artistDisplayName || "Your Pro page"}</p>
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/80">
+                    Owned {profileTypeLabel.toLowerCase()} profile
+                  </p>
                   <div className="mt-1">
                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${artistStatusClass}`}>
                       {artistStatusLabel}

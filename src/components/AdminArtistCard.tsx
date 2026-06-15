@@ -14,7 +14,7 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
   const [isExpanded, setIsExpanded] = useState(false);
   const [edited, setEdited] = useState<Artist>({ ...artist });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setEdited(prev => ({ ...prev, [name]: value }));
   };
@@ -39,7 +39,7 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
     <div className="bg-white rounded-md shadow-md text-black p-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold flex items-center gap-1">
-          🎵 {artist.display_name}
+          {artist.profile_type === 'venue' ? '🏛️' : artist.profile_type === 'promoter' ? '📣' : '🎵'} {artist.display_name}
         </h3>
         <button onClick={() => setIsExpanded(!isExpanded)} className="text-blue-600 underline">
           {isExpanded ? 'Hide' : 'See More'}
@@ -67,6 +67,21 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
           )}
 
           <div>
+            <label className="block text-sm font-medium">Profile Type</label>
+            <select
+              name="profile_type"
+              value={edited.profile_type || 'artist'}
+              onChange={handleChange}
+              disabled={!isEditing}
+              className="mt-1 w-full rounded border p-2"
+            >
+              <option value="artist">Artist</option>
+              <option value="venue">Venue</option>
+              <option value="promoter">Promoter</option>
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium">Display Name</label>
             <input
               type="text"
@@ -77,6 +92,19 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
               className="mt-1 p-2 border rounded w-full"
             />
           </div>
+
+          {edited.profile_type === 'venue' && (
+            <div className="grid gap-3 rounded border border-amber-300 bg-amber-50 p-3 sm:grid-cols-2">
+              <input name="venue_address" value={edited.venue_address || ''} onChange={handleChange} disabled={!isEditing} placeholder="Street address" className="rounded border p-2" />
+              <input name="venue_city" value={edited.venue_city || ''} onChange={handleChange} disabled={!isEditing} placeholder="City" className="rounded border p-2" />
+              <input name="venue_state" value={edited.venue_state || ''} onChange={handleChange} disabled={!isEditing} placeholder="State" className="rounded border p-2" />
+              <input name="venue_postal_code" value={edited.venue_postal_code || ''} onChange={handleChange} disabled={!isEditing} placeholder="ZIP" className="rounded border p-2" />
+              <input name="booking_email" value={edited.booking_email || ''} onChange={handleChange} disabled={!isEditing} placeholder="Booking email" className="rounded border p-2" />
+              <input name="venue_phone" value={edited.venue_phone || ''} onChange={handleChange} disabled={!isEditing} placeholder="Phone" className="rounded border p-2" />
+              <input name="venue_capacity" type="number" value={edited.venue_capacity || ''} onChange={handleChange} disabled={!isEditing} placeholder="Capacity" className="rounded border p-2" />
+              <input name="age_policy" value={edited.age_policy || ''} onChange={handleChange} disabled={!isEditing} placeholder="Age policy" className="rounded border p-2" />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium">Bio</label>

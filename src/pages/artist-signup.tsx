@@ -8,6 +8,7 @@ import { isTrialActive } from '@/util/isTrialActive';
 import { isActivePro } from '@/util/isActivePro';
 import { parseMediaInput } from '@/util/parseMediaInput';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
+import { Building2, Megaphone, Mic2 } from 'lucide-react';
 
 const topGenres = [
   'Jazz', 'Rock', 'Pop', 'Hip-Hop', 'R&B', 'Electronic',
@@ -20,7 +21,13 @@ interface ExistingArtist {
   deleted_at?: string | null;
 }
 
-export default function ArtistSignupPage() {
+type ProfileType = 'artist' | 'venue' | 'promoter';
+
+type ArtistSignupPageProps = {
+  initialProfileType?: ProfileType;
+};
+
+export default function ArtistSignupPage({ initialProfileType = 'artist' }: ArtistSignupPageProps) {
   const { user, refreshSession, loading: authLoading } = useAuth();
   const router = useRouter();
   const invite = router.query.invite;
@@ -32,6 +39,7 @@ export default function ArtistSignupPage() {
   const trialExpired = user && !communityAccessActive && !proActive && !!user.trial_ends_at && !trialActive;
 
   const [form, setForm] = useState({
+    profile_type: initialProfileType,
     display_name: '',
     bio: '',
     contact_email: user?.email || '',
@@ -42,6 +50,14 @@ export default function ArtistSignupPage() {
     embed_bandcamp: '',
     website: '',
     tip_jar_url: '',
+    venue_address: '',
+    venue_city: '',
+    venue_state: 'Colorado',
+    venue_postal_code: '',
+    venue_phone: '',
+    booking_email: user?.email || '',
+    venue_capacity: '',
+    age_policy: '',
   });
 
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
@@ -74,9 +90,18 @@ const [mediaErrors, setMediaErrors] = useState({
   useEffect(() => {
     if (!authLoading && !user) {
       const inviteQuery = inviteCode ? `&invite=${encodeURIComponent(inviteCode)}` : '';
-      router.replace(`/RegisterPage?redirect=/artist-signup${inviteQuery}`);
+      const signupPath = initialProfileType === 'venue' ? '/venue-signup' : '/artist-signup';
+      router.replace(`/RegisterPage?redirect=${encodeURIComponent(signupPath)}${inviteQuery}`);
     }
-  }, [authLoading, user, router, inviteCode]);
+  }, [authLoading, user, router, inviteCode, initialProfileType]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    const requestedType = router.query.type;
+    if (requestedType === 'venue' || requestedType === 'promoter' || requestedType === 'artist') {
+      setForm((prev) => ({ ...prev, profile_type: requestedType }));
+    }
+  }, [router.isReady, router.query.type]);
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -209,6 +234,10 @@ const handleSubmit = async (e: React.FormEvent) => {
   }
   if (!user || form.genres.length === 0 || !files.profile_image) {
     setError("Missing required fields");
+    return;
+  }
+  if (form.profile_type === 'venue' && (!form.venue_address.trim() || !form.venue_city.trim())) {
+    setError("Venue address and city are required.");
     return;
   }
   if (!hasAccess && !choice) {
@@ -377,28 +406,67 @@ const handleSubmit = async (e: React.FormEvent) => {
   return (
     <>
       <Head>
-        <title>Artist Signup – Alpine Groove Guide</title>
+        <title>{form.profile_type === 'venue' ? 'Venue Signup' : 'Pro Page Signup'} – Alpine Groove Guide</title>
       </Head>
-      <div className="max-w-xl mx-auto p-6 text-white">
+      <div className="mx-auto max-w-3xl px-4 py-10 text-ivory sm:px-6">
         <TrialBanner trial_ends_at={user?.trial_ends_at} />
-        <h1 className="text-2xl font-bold mb-2">🎤 Claim Your Artist Profile</h1>
-      <p className="text-sm text-gray-300 mb-4">
+        <header className="agg-panel agg-corner-frame mb-6 p-6 sm:p-8">
+          <p className="text-xs font-black uppercase tracking-[0.3em] text-alpine">
+            {form.profile_type === 'venue' ? 'Venue tools' : 'Alpine Pro directory'}
+          </p>
+          <h1 className="agg-display mt-2 text-3xl font-semibold text-sun-gold sm:text-4xl">
+            {form.profile_type === 'venue' ? 'Claim Your Venue Page' : 'Claim Your Pro Page'}
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-ivory/65">
         {communityAccessActive
           ? `${COMMUNITY_ARTIST_ACCESS_LABEL}. Create a public page for your artist, venue, or promoter series with no credit card required.`
           : "Create your public Pro page for your artist, venue, or promoter series and enjoy 30 days of Alpine Pro access free."}
-        {" "}Add your music, bio, media kit, and upcoming shows.
-      </p>      
+        {" "}
+        {form.profile_type === 'venue'
+          ? 'Add your booking details, room information, media, and upcoming shows.'
+          : 'Add your music, bio, media kit, and upcoming shows.'}
+          </p>
+        </header>
       {communityAccessActive && (
-        <div className="mb-5 rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
+        <div className="mb-5 border border-alpine/50 bg-pine/30 p-4 text-sm text-mist">
           Alpine Pro billing is still available for supporters, but profile creation is open to the community through 2026.
         </div>
       )}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input name="display_name" placeholder="Display Name" value={form.display_name} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+      <form onSubmit={handleSubmit} className="agg-profile-form agg-panel space-y-5 p-5 sm:p-8">
+        <fieldset>
+          <legend className="mb-3 block text-sm font-bold text-ivory">What kind of page are you creating?</legend>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {(['artist', 'venue', 'promoter'] as ProfileType[]).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setForm((prev) => ({ ...prev, profile_type: type }))}
+                className={`flex min-h-24 flex-col items-center justify-center gap-2 border px-3 py-3 text-sm font-bold capitalize transition ${
+                  form.profile_type === type
+                    ? 'border-gold bg-gold/15 text-sun-gold'
+                    : 'border-gold/25 bg-black/40 text-ivory/60 hover:border-alpine hover:text-ivory'
+                }`}
+              >
+                {type === 'artist' && <Mic2 className="h-5 w-5" />}
+                {type === 'venue' && <Building2 className="h-5 w-5" />}
+                {type === 'promoter' && <Megaphone className="h-5 w-5" />}
+                {type}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <input
+          name="display_name"
+          placeholder={form.profile_type === 'venue' ? 'Venue Name' : 'Display Name'}
+          value={form.display_name}
+          onChange={handleChange}
+          className="w-full p-2 rounded bg-gray-800 border border-gray-600"
+        />
 
         <input
           name="slug"
-          placeholder="URL Slug (e.g. reid-poole-quartet)"
+          placeholder={form.profile_type === 'venue' ? 'URL Slug (e.g. gold-room)' : 'URL Slug (e.g. reid-poole-quartet)'}
           value={form.slug}
           onChange={handleChange}
           className="w-full p-2 rounded bg-gray-800 border border-gray-600"
@@ -407,14 +475,47 @@ const handleSubmit = async (e: React.FormEvent) => {
           This becomes your public link: <code>/artists/{form.slug || 'your-slug'}</code>
         </p>
 
-        <label className="block text-sm font-semibold">Profile Image</label>
+        <label className="block text-sm font-semibold">
+          {form.profile_type === 'venue' ? 'Venue Logo or Photo' : 'Profile Image'}
+        </label>
         <input type="file" name="profile_image" accept="image/*" onChange={handleFileChange} className="w-full text-sm" />
 
         <input name="contact_email" placeholder="Contact Email" value={form.contact_email} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
-        <textarea name="bio" placeholder="Bio" value={form.bio} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" rows={4} />
+        <textarea
+          name="bio"
+          placeholder={form.profile_type === 'venue' ? 'Tell fans and bookers about the room, neighborhood, and experience.' : 'Bio'}
+          value={form.bio}
+          onChange={handleChange}
+          className="w-full p-2 rounded bg-gray-800 border border-gray-600"
+          rows={4}
+        />
+
+        {form.profile_type === 'venue' && (
+          <div className="agg-corner-frame space-y-4 border border-gold/35 bg-black/40 p-5">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.26em] text-alpine">Venue tools</p>
+              <h2 className="agg-display mt-1 text-xl font-semibold text-sun-gold">Room &amp; Booking Details</h2>
+              <p className="mt-2 text-xs leading-5 text-ivory/50">These details power your public page and prefill future event submissions.</p>
+            </div>
+            <input name="venue_address" required placeholder="Street Address" value={form.venue_address} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <input name="venue_city" required placeholder="City" value={form.venue_city} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <input name="venue_state" placeholder="State" value={form.venue_state} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <input name="venue_postal_code" placeholder="ZIP" value={form.venue_postal_code} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            </div>
+            <input name="booking_email" type="email" placeholder="Booking Email" value={form.booking_email} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input name="venue_phone" type="tel" placeholder="Venue Phone" value={form.venue_phone} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <input name="venue_capacity" type="number" min="1" placeholder="Capacity" value={form.venue_capacity} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            </div>
+            <input name="age_policy" placeholder="Age Policy (e.g. All ages, 21+)" value={form.age_policy} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+          </div>
+        )}
 
         <div>
-          <label className="block font-semibold mb-1">Pick up to 4 Genres</label>
+          <label className="block font-semibold mb-1">
+            {form.profile_type === 'venue' ? 'Pick up to 4 music styles you host' : 'Pick up to 4 Genres'}
+          </label>
           <div className="grid grid-cols-2 gap-2">
             {topGenres.map((genre) => (
               <label key={genre} className="flex items-center">
@@ -515,13 +616,19 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
         )}
 
-        <label className="block text-sm font-semibold mt-4">Promo Photo</label>
+        <label className="block text-sm font-semibold mt-4">
+          {form.profile_type === 'venue' ? 'Room or Stage Photo' : 'Promo Photo'}
+        </label>
         <input type="file" name="promo_photo" accept="image/*" onChange={handleFileChange} className="w-full text-sm" />
 
-        <label className="block text-sm font-semibold mt-4">Stage Plot</label>
+        <label className="block text-sm font-semibold mt-4">
+          {form.profile_type === 'venue' ? 'House Stage / Tech Specs' : 'Stage Plot'}
+        </label>
         <input type="file" name="stage_plot" accept="image/*,.pdf" onChange={handleFileChange} className="w-full text-sm" />
 
-        <label className="block text-sm font-semibold mt-4">Press Kit</label>
+        <label className="block text-sm font-semibold mt-4">
+          {form.profile_type === 'venue' ? 'Venue One-Sheet or Booking Packet' : 'Press Kit'}
+        </label>
         <input type="file" name="press_kit" accept="application/pdf,image/*" onChange={handleFileChange} className="w-full text-sm" />
 
         {/* Access choices */}
@@ -587,9 +694,13 @@ const handleSubmit = async (e: React.FormEvent) => {
         <button
           type="submit"
           disabled={isSubmitting || (!hasAccess && !choice)}
-          className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded text-white disabled:opacity-50"
+          className="w-full border border-gold bg-gold px-5 py-3 text-sm font-black uppercase tracking-wider text-black transition hover:bg-sun-gold disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isSubmitting ? 'Creating…' : communityAccessActive ? 'Create Free Artist Page' : 'Create Profile & Continue'}
+          {isSubmitting
+            ? 'Creating…'
+            : communityAccessActive
+            ? `Create Free ${form.profile_type === 'venue' ? 'Venue' : 'Pro'} Page`
+            : 'Create Profile & Continue'}
         </button>
       </form>
     </div>

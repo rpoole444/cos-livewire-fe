@@ -44,7 +44,7 @@ const ArtistReview: React.FC<ArtistReviewProps> = ({ onCountChange }) => {
       });
     } catch (err) {
       console.error('Approve error', err);
-      setErrorMessage('Unable to approve that artist profile.');
+        setErrorMessage('Unable to approve that Pro profile.');
     }
   };
 
@@ -58,7 +58,7 @@ const ArtistReview: React.FC<ArtistReviewProps> = ({ onCountChange }) => {
       });
     } catch (err) {
       console.error('Delete error', err);
-      setErrorMessage('Unable to deny that artist profile.');
+      setErrorMessage('Unable to deny that Pro profile.');
     }
   };
 
@@ -68,7 +68,7 @@ const ArtistReview: React.FC<ArtistReviewProps> = ({ onCountChange }) => {
       setArtists(prev => prev.map(a => (a.id === updated.id ? updated : a)));
     } catch (err) {
       console.error('Save error', err);
-      setErrorMessage('Unable to save artist changes.');
+      setErrorMessage('Unable to save profile changes.');
     }
   };
 
@@ -127,7 +127,7 @@ const ArtistReview: React.FC<ArtistReviewProps> = ({ onCountChange }) => {
       </div>
       {loading ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-950/70 px-5 py-10 text-center text-sm text-slate-300">
-          Loading artist submissions...
+          Loading Pro page submissions...
         </div>
       ) : filteredArtists.length > 0 ? (
         <ul className="space-y-6">

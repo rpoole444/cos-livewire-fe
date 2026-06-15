@@ -13,6 +13,9 @@ interface Artist {
   genres?: string[];
   bio?: string;
   access_state?: 'pro' | 'trial' | 'gated' | 'none';
+  profile_type?: 'artist' | 'venue' | 'promoter';
+  venue_city?: string;
+  venue_state?: string;
 }
 
 export default function ArtistDirectoryPage() {
@@ -30,9 +33,12 @@ export default function ArtistDirectoryPage() {
     const q = searchQuery.toLowerCase();
     const name = (artist.display_name || '').toLowerCase();
     const genresList = Array.isArray(artist.genres) ? artist.genres : [];
+    const location = [artist.venue_city, artist.venue_state].filter(Boolean).join(' ');
     const matchesQuery =
       name.includes(q) ||
-      genresList.join(', ').toLowerCase().includes(q);
+      genresList.join(', ').toLowerCase().includes(q) ||
+      location.toLowerCase().includes(q) ||
+      (artist.profile_type || 'artist').includes(q);
     return matchesQuery;
   });
 
@@ -69,11 +75,18 @@ export default function ArtistDirectoryPage() {
             Discover Alpine Groove Guide Pro pages for artists, venues, and promoters across the Colorado Front Range.
           </p>
           {canCreateArtistPage ? (
-            <Link href="/artist-signup">
-              <button className="mt-4 rounded-full border border-emerald-400/50 bg-emerald-500/10 px-5 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20">
-                {communityAccessActive ? 'Create your free artist page →' : 'Create your Pro page →'}
-              </button>
-            </Link>
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
+              <Link href="/artist-signup">
+                <button className="rounded-full border border-emerald-400/50 bg-emerald-500/10 px-5 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20">
+                  {communityAccessActive ? 'Create a free artist page →' : 'Create an artist page →'}
+                </button>
+              </Link>
+              <Link href="/venue-signup">
+                <button className="rounded-full border border-amber-400/50 bg-amber-500/10 px-5 py-2 text-sm font-semibold text-amber-100 transition hover:border-amber-300 hover:bg-amber-500/20">
+                  Create a venue page →
+                </button>
+              </Link>
+            </div>
           ) : (
             <Link href="/upgrade">
               <button className="mt-4 rounded-full border border-emerald-400/50 bg-emerald-500/10 px-5 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20">
@@ -93,7 +106,7 @@ export default function ArtistDirectoryPage() {
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">🔍</span>
             <input
               type="text"
-              placeholder="Search by name or genre"
+              placeholder="Search by name, type, genre, or city"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-full border border-slate-700 bg-slate-900 py-2 pl-9 pr-4 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none"
@@ -131,6 +144,8 @@ export default function ArtistDirectoryPage() {
               const genresList = Array.isArray(artist.genres) ? artist.genres : [];
               const accessState = artist.access_state ?? 'none';
               const isLocked = accessState === 'gated';
+              const profileType = artist.profile_type || 'artist';
+              const profileLabel = profileType.charAt(0).toUpperCase() + profileType.slice(1);
 
               return (
                 <Link
@@ -165,6 +180,9 @@ export default function ArtistDirectoryPage() {
                       <h2 className={`text-base font-semibold sm:text-lg ${isLocked ? 'text-slate-200' : 'text-slate-50'}`}>
                         {displayName}
                       </h2>
+                      <span className="rounded-full border border-slate-600 bg-slate-800/70 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-300">
+                        {profileLabel}
+                      </span>
                       {accessState === 'pro' && (
                         <span className="rounded-full border border-emerald-400/60 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-200">
                           Alpine Pro
@@ -178,6 +196,11 @@ export default function ArtistDirectoryPage() {
                     </div>
                     {truncatedBio && (
                       <p className={`mt-1 text-xs sm:text-sm ${isLocked ? 'text-slate-500' : 'text-slate-400'}`}>{truncatedBio}</p>
+                    )}
+                    {profileType === 'venue' && (artist.venue_city || artist.venue_state) && (
+                      <p className="mt-1 text-xs text-amber-100/80">
+                        {[artist.venue_city, artist.venue_state].filter(Boolean).join(', ')}
+                      </p>
                     )}
                     {genresList.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1">

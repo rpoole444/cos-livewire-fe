@@ -13,6 +13,7 @@ import utc from 'dayjs/plugin/utc';
 import EventPoster from '@/components/EventPoster';
 import { buildEventDateTime, parseLocalDayjs } from '@/util/dateHelper';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, isCommunityArtistAccessActive } from '@/util/communityAccess';
+import { Building2, ExternalLink, MapPin, Phone, Ticket, Users } from 'lucide-react';
 dayjs.extend(utc);
 
 interface Event {
@@ -51,6 +52,15 @@ interface Artist {
   access_state?: 'pro' | 'trial' | 'gated' | 'none';
   is_owner?: boolean;
   pro_cancelled_at?: string | null;
+  profile_type?: 'artist' | 'venue' | 'promoter';
+  venue_address?: string;
+  venue_city?: string;
+  venue_state?: string;
+  venue_postal_code?: string;
+  venue_phone?: string;
+  booking_email?: string;
+  venue_capacity?: number | null;
+  age_policy?: string;
 }
 
 interface Props {
@@ -110,7 +120,12 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
   const logRef = useRef(false);
   const eventsLoggedRef = useRef(false);
-  const pageTitle = artist?.display_name ? `${artist.display_name} – Profile` : 'Artist Profile – Alpine Groove Guide';
+  const profileType = artist?.profile_type || 'artist';
+  const isVenue = profileType === 'venue';
+  const profileLabel = isVenue ? 'Venue' : profileType === 'promoter' ? 'Promoter' : 'Artist';
+  const pageTitle = artist?.display_name
+    ? `${artist.display_name} – ${profileLabel}`
+    : `${profileLabel} Profile – Alpine Groove Guide`;
 
   useEffect(() => {
     if (artist && !logRef.current) {
@@ -145,11 +160,11 @@ const ArtistProfilePage = ({ artist }: Props) => {
         credentials: 'include',
       });
       if (res.ok) {
-        alert('Artist profile deleted successfully.');
+        alert(`${profileLabel} profile deleted successfully.`);
         router.push('/');
       } else {
         const errData = await res.json();
-        alert(`Failed to delete artist: ${errData.message || 'Unknown error'}`);
+        alert(`Failed to delete profile: ${errData.message || 'Unknown error'}`);
       }
     } catch (err) {
       console.error('Delete error:', err);
@@ -193,6 +208,8 @@ const ArtistProfilePage = ({ artist }: Props) => {
     ? artist.bio.length > 150
       ? `${artist.bio.slice(0, 147).trim()}…`
       : artist.bio
+    : isVenue
+    ? `${artist.display_name} is a Front Range live music venue featured on Alpine Groove Guide.`
     : `${artist.display_name} is featured on Alpine Groove Guide. Discover their upcoming shows.`;
   const ogImage =
     artist.profile_image && artist.profile_image.trim().length > 0
@@ -205,7 +222,15 @@ const ArtistProfilePage = ({ artist }: Props) => {
     : 'This profile is locked.';
   const limitedBody = isOwner
     ? 'Fans currently see a blurred preview because your Pro membership or trial ended. Reactivate Alpine Pro to unlock your media, downloads, and events.'
-    : 'Become an Alpine Pro member to unlock the full bio, media, downloads, and events for this artist, venue, or promoter.';
+    : `Become an Alpine Pro member to unlock the full bio, media, downloads, and events for this ${profileType}.`;
+  const venueLocation = [artist.venue_city, artist.venue_state].filter(Boolean).join(', ');
+  const venueFullAddress = [
+    artist.venue_address,
+    artist.venue_city,
+    artist.venue_state,
+    artist.venue_postal_code,
+  ].filter(Boolean).join(', ');
+  const bookingEmail = artist.booking_email || artist.contact_email;
 
   return (
     <>
@@ -251,7 +276,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
           <TrialBanner artist_user_id={artist.user_id} trial_ends_at={artist.trial_ends_at} is_pro={isProAccess} />
 
-          <section className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 ring-1 ring-slate-800 shadow-2xl shadow-black/30">
+          <section className="agg-corner-frame overflow-hidden border border-gold/40 bg-gradient-to-br from-[#171a12] via-black to-[#11130e] p-6 shadow-2xl shadow-black/40">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
               <div className="flex flex-1 flex-col gap-5 sm:flex-row sm:items-center">
                 <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-3xl bg-slate-900 shadow-xl ring-1 ring-slate-700 sm:mx-0">
@@ -265,7 +290,11 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 </div>
                 <div className="flex-1 space-y-3">
                   <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="text-3xl font-bold text-white sm:text-4xl">{artist.display_name}</h1>
+                    <h1 className="agg-display text-3xl font-semibold text-sun-gold sm:text-4xl">{artist.display_name}</h1>
+                    <span className="inline-flex items-center gap-1.5 border border-alpine/60 bg-pine/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-mist">
+                      {isVenue && <Building2 className="h-3.5 w-3.5" />}
+                      {profileLabel}
+                    </span>
                     {isProAccess && (
                       <span className="rounded-full border border-emerald-400/70 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
                         Alpine Pro
@@ -282,10 +311,16 @@ const ArtistProfilePage = ({ artist }: Props) => {
                       </span>
                     )}
                   </div>
+                  {isVenue && venueLocation && (
+                    <p className="flex items-center gap-2 text-sm font-semibold text-alpine">
+                      <MapPin className="h-4 w-4" />
+                      {venueLocation}
+                    </p>
+                  )}
                   {artist.bio ? (
                     <p className="mt-4 mb-6 text-sm leading-relaxed text-slate-300">{artist.bio}</p>
                   ) : (
-                    <p className="mt-4 mb-6 text-sm text-slate-400">This artist hasn’t added a bio yet.</p>
+                    <p className="mt-4 mb-6 text-sm text-slate-400">This {profileType} hasn’t added a bio yet.</p>
                   )}
                   {artist.genres.length > 0 && (
                     <div className="flex flex-wrap gap-2">
@@ -300,20 +335,20 @@ const ArtistProfilePage = ({ artist }: Props) => {
               </div>
               <div className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 p-5 lg:max-w-sm">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
-                  Contact / Book
+                  {isVenue ? 'Booking / Venue Contact' : 'Contact / Book'}
                 </h3>
                 <div className="mt-3 space-y-3">
-                  {artist.contact_email &&
+                  {bookingEmail &&
                     (shouldBlur ? (
                       <div className="rounded-2xl border border-slate-800 bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-slate-300 opacity-60">
                         Contact / Book
                       </div>
                     ) : (
                       <a
-                        href={`mailto:${artist.contact_email}`}
+                        href={`mailto:${bookingEmail}`}
                         className="inline-flex w-full items-center justify-center rounded-2xl border border-emerald-400/60 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20"
                       >
-                        Contact / Book
+                        {isVenue ? 'Booking / Venue Contact' : 'Contact / Book'}
                       </a>
                     ))}
 
@@ -326,7 +361,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                         shouldBlur || !artist.website ? 'pointer-events-none opacity-60 blur-[1px]' : ''
                       }`}
                     >
-                      Official Website →
+                      Official Website <ExternalLink className="ml-1 inline h-3.5 w-3.5" />
                     </a>
                     <a
                       href={
@@ -342,7 +377,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                         shouldBlur || !artist.tip_jar_url ? 'pointer-events-none opacity-60 blur-[1px]' : ''
                       }`}
                     >
-                      Send a Tip 💐
+                      {isVenue ? 'Support this venue' : 'Send a Tip 💐'}
                     </a>
                   </div>
 
@@ -391,6 +426,58 @@ const ArtistProfilePage = ({ artist }: Props) => {
               </div>
             </section>
 
+          {isVenue && (
+            <section className="grid gap-4 md:grid-cols-2">
+              <div className="agg-panel agg-corner-frame p-6">
+                <p className="text-xs font-black uppercase tracking-[0.28em] text-alpine">Plan your visit</p>
+                <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">Venue Details</h2>
+                <div className="mt-5 space-y-4 text-sm text-ivory/75">
+                  {venueFullAddress && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueFullAddress)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-start gap-3 transition hover:text-sun-gold"
+                    >
+                      <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-copper" />
+                      <span>
+                        <strong className="block text-ivory">Address</strong>
+                        {venueFullAddress}
+                      </span>
+                    </a>
+                  )}
+                  {artist.venue_phone && (
+                    <a href={`tel:${artist.venue_phone}`} className="flex items-start gap-3 transition hover:text-sun-gold">
+                      <Phone className="mt-0.5 h-5 w-5 shrink-0 text-alpine" />
+                      <span>
+                        <strong className="block text-ivory">Phone</strong>
+                        {artist.venue_phone}
+                      </span>
+                    </a>
+                  )}
+                </div>
+              </div>
+              <div className="agg-panel agg-corner-frame p-6">
+                <p className="text-xs font-black uppercase tracking-[0.28em] text-alpine">Room information</p>
+                <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">At a Glance</h2>
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <div className="border border-gold/25 bg-black/40 p-4">
+                    <Users className="h-5 w-5 text-alpine" />
+                    <p className="mt-2 text-xs uppercase tracking-wider text-ivory/45">Capacity</p>
+                    <p className="mt-1 font-bold text-ivory">
+                      {artist.venue_capacity ? artist.venue_capacity.toLocaleString() : 'Ask venue'}
+                    </p>
+                  </div>
+                  <div className="border border-gold/25 bg-black/40 p-4">
+                    <Ticket className="h-5 w-5 text-copper" />
+                    <p className="mt-2 text-xs uppercase tracking-wider text-ivory/45">Age policy</p>
+                    <p className="mt-1 font-bold text-ivory">{artist.age_policy || 'Varies by show'}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
           {shouldBlur && (
             <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-5 text-center text-sm text-emerald-100">
               <p className="text-base font-semibold text-slate-50">{limitedHeadline}</p>
@@ -411,12 +498,12 @@ const ArtistProfilePage = ({ artist }: Props) => {
           <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-semibold text-white">About</h2>
-              {isProAccess && <span className="text-xs uppercase tracking-[0.3em] text-emerald-300">PRO ARTIST</span>}
+              {isProAccess && <span className="text-xs uppercase tracking-[0.3em] text-emerald-300">PRO {profileLabel}</span>}
             </div>
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-slate-300">
               <span className="flex items-center gap-1">
                 📧
-                <span className={shouldBlur ? 'blur-sm select-none' : ''}>{artist.contact_email}</span>
+                <span className={shouldBlur ? 'blur-sm select-none' : ''}>{bookingEmail}</span>
               </span>
               {artist.website && (
                 <span className="flex items-center gap-1">
@@ -436,7 +523,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
           {(artist.embed_youtube || artist.embed_soundcloud || artist.embed_bandcamp) && (
             <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-              <h2 className="text-2xl font-semibold text-white">Media &amp; Links</h2>
+              <h2 className="text-2xl font-semibold text-white">{isVenue ? 'Venue Media & Links' : 'Media & Links'}</h2>
               <div className={`mt-4 space-y-6 ${shouldBlur ? 'blur-sm pointer-events-none select-none' : ''}`}>
                 {artist.embed_youtube && (
                   <div>
@@ -491,17 +578,17 @@ const ArtistProfilePage = ({ artist }: Props) => {
               <div className={`mt-4 space-y-2 text-sm ${shouldBlur ? 'blur-sm pointer-events-none select-none' : ''}`}>
                 {artist.promo_photo && (
                   <a href={artist.promo_photo} target="_blank" rel="noopener noreferrer" className="text-emerald-300 underline">
-                    📸 Promo Photo
+                    📸 {isVenue ? 'Room / Stage Photo' : 'Promo Photo'}
                   </a>
                 )}
                 {artist.stage_plot && (
                   <a href={artist.stage_plot} target="_blank" rel="noopener noreferrer" className="text-emerald-300 underline">
-                    🎚️ Stage Plot
+                    🎚️ {isVenue ? 'House Stage / Tech Specs' : 'Stage Plot'}
                   </a>
                 )}
                 {artist.press_kit && (
                   <a href={artist.press_kit} target="_blank" rel="noopener noreferrer" className="text-emerald-300 underline">
-                    📄 Press Kit
+                    📄 {isVenue ? 'Venue Booking Packet' : 'Press Kit'}
                   </a>
                 )}
               </div>
@@ -524,7 +611,9 @@ const ArtistProfilePage = ({ artist }: Props) => {
           )}
 
           <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
-            <h2 className="text-2xl font-semibold text-white">Upcoming Shows</h2>
+            <h2 className="text-2xl font-semibold text-white">
+              {isVenue ? 'Upcoming Shows at This Venue' : 'Upcoming Shows'}
+            </h2>
             <div className="mt-4">
               {artist.events && artist.events.length > 0 ? (
                 <div className={shouldBlur ? 'relative blur-sm pointer-events-none select-none' : ''}>
@@ -567,7 +656,9 @@ const ArtistProfilePage = ({ artist }: Props) => {
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-slate-400">No upcoming events listed.</p>
+                <p className="text-sm text-slate-400">
+                  {isVenue ? 'No upcoming shows are listed for this venue yet.' : 'No upcoming events listed.'}
+                </p>
               )}
               {shouldBlur && (
                 <div className="mt-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-4 text-center text-sm text-slate-300">
@@ -590,14 +681,16 @@ const ArtistProfilePage = ({ artist }: Props) => {
           {canEdit && (
             <section className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Website embed</p>
-              <h2 className="mt-2 text-2xl font-semibold text-white">Put this schedule on your website</h2>
+              <h2 className="mt-2 text-2xl font-semibold text-white">
+                Put this {isVenue ? 'venue calendar' : 'schedule'} on your website
+              </h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
                 Copy this iframe into any page builder or HTML block. Approved upcoming shows update automatically.
               </p>
               <textarea
                 readOnly
                 value={embedSnippet}
-                aria-label="Artist schedule embed code"
+                aria-label={`${profileLabel} schedule embed code`}
                 className="mt-4 h-32 w-full resize-none rounded-xl border border-slate-700 bg-slate-950 p-3 font-mono text-xs leading-relaxed text-slate-200"
                 onFocus={(event) => event.currentTarget.select()}
               />
@@ -631,7 +724,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 onClick={() => router.push(`/artists/edit/${artist.slug}`)}
                 className="flex-1 rounded-2xl border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-blue-100 transition hover:border-blue-300 hover:text-white"
               >
-                ✏️ Edit Profile
+                ✏️ Edit {profileLabel} Profile
               </button>
               <button
                 onClick={handleDelete}
