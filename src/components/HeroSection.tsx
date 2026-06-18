@@ -26,7 +26,7 @@ const HeroSection = ({ user }: { user: any; setAuthMode: (mode: string) => void 
             <div className="h-px w-40 bg-copper" />
           </div>
           <p className="max-w-xl text-base leading-7 text-ivory/75 sm:text-lg">
-            A human-curated guide to live music, artists, venues, and the people shaping the Front Range sound.
+            Discover live music across Colorado’s Front Range and nearby southern Colorado music communities.
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -46,7 +46,7 @@ const HeroSection = ({ user }: { user: any; setAuthMode: (mode: string) => void 
             </Link>
           </div>
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-ivory/45">
-            Artist pages • Local gigs • Real humans
+            Artist pages • Regional gigs • Real humans
           </p>
         </div>
 

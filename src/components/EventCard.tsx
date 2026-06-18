@@ -4,6 +4,7 @@ import React from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import EventPoster from "./EventPoster";
 import { getEventImageSrc } from "@/util/getEventImageSrc";
+import { getRegionLabel } from "@/constants/regions";
 
 type EventCardProps = {
   id: number;
@@ -11,6 +12,7 @@ type EventCardProps = {
   slug?: string | null;
   startTime?: string | null;
   city?: string | null;
+  region?: string | null;
   venueName?: string | null;
   imageUrl?: string | null;
   isFeatured?: boolean;
@@ -24,6 +26,7 @@ const EventCard: React.FC<EventCardProps> = ({
   slug,
   startTime,
   city,
+  region,
   venueName,
   imageUrl,
   isFeatured,
@@ -49,6 +52,11 @@ const EventCard: React.FC<EventCardProps> = ({
           <div className="pointer-events-auto px-4 pb-4 pt-3 space-y-1">
             <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-mist">
               <span>{formattedDate}</span>
+              {region && (
+                <span className="border border-alpine/60 bg-pine/70 px-2 py-0.5 text-[10px] text-mist">
+                  {getRegionLabel(region)}
+                </span>
+              )}
               {isFeatured && (
                 <span className="border border-gold/60 bg-gold/15 px-2 py-0.5 text-[10px] text-sun-gold">
                   Featured

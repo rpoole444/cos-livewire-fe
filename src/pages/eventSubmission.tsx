@@ -12,6 +12,7 @@ import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 import { isActivePro } from '@/util/isActivePro';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
+import { DEFAULT_REGION } from '@/constants/regions';
 
 interface Event {
   title: string;
@@ -29,6 +30,7 @@ interface Event {
   address: string;
   venue_name: string; 
   website: string;
+  region: string;
   poster: string | null;
   recurrence: string;
   repeatCount: number;
@@ -53,6 +55,7 @@ const EventSubmission = () => {
     address: '',
     venue_name: '',
     website: '',
+    region: DEFAULT_REGION,
     poster: '',
     recurrence: '',
     repeatCount: 1,
@@ -125,6 +128,7 @@ const EventSubmission = () => {
           location: [profile.venue_city, profile.venue_state].filter(Boolean).join(', '),
           website: profile.website || '',
           ageRestriction: profile.age_policy || '',
+          region: profile.home_region || DEFAULT_REGION,
         };
         setVenueDefaults(defaults);
         setEvents((prev) =>
@@ -135,6 +139,7 @@ const EventSubmission = () => {
             location: event.location || defaults.location || '',
             website: event.website || defaults.website || '',
             ageRestriction: event.ageRestriction || defaults.ageRestriction || '',
+            region: event.region || defaults.region || DEFAULT_REGION,
           }))
         );
       } catch (error) {
@@ -326,6 +331,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       );
       formData.append('venue_name', ev.venue_name);
       formData.append('website', ev.website);
+      formData.append('region', ev.region);
       formData.append('recurrenceDates', JSON.stringify(recurrenceDates));
       formData.append('slug', fullSlug);
 

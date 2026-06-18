@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
+import { MUSIC_REGIONS } from '@/constants/regions';
 
 interface Event {
   title: string;
@@ -16,6 +17,7 @@ interface Event {
   address: string;
   venue_name: string;
   website: string;
+  region: string;
   poster: string | null;
   recurrence: string;
   repeatCount: number;
@@ -317,6 +319,29 @@ const EventForm: React.FC<Props> = ({
             className={inputClass}
           />
           <p className={helperClass}>Start typing to search Google Places.</p>
+        </div>
+
+        <div>
+          <label htmlFor={`region-${index}`} className={labelClass}>
+            Region / Area
+          </label>
+          <select
+            id={`region-${index}`}
+            name="region"
+            required
+            value={event.region}
+            onChange={(e) => onChange(index, e)}
+            className={`${inputClass} appearance-none`}
+          >
+            {MUSIC_REGIONS.map((region) => (
+              <option key={region.slug} value={region.slug}>
+                {region.label}
+              </option>
+            ))}
+          </select>
+          <p className={helperClass}>
+            Choose the area where this event is happening so music fans can find it by region.
+          </p>
         </div>
 
         <div>

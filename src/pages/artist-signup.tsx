@@ -9,6 +9,7 @@ import { isActivePro } from '@/util/isActivePro';
 import { parseMediaInput } from '@/util/parseMediaInput';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
 import { Building2, Megaphone, Mic2 } from 'lucide-react';
+import { DEFAULT_REGION, MUSIC_REGIONS } from '@/constants/regions';
 
 const topGenres = [
   'Jazz', 'Rock', 'Pop', 'Hip-Hop', 'R&B', 'Electronic',
@@ -50,6 +51,7 @@ export default function ArtistSignupPage({ initialProfileType = 'artist' }: Arti
     embed_bandcamp: '',
     website: '',
     tip_jar_url: '',
+    home_region: DEFAULT_REGION,
     venue_address: '',
     venue_city: '',
     venue_state: 'Colorado',
@@ -103,7 +105,7 @@ const [mediaErrors, setMediaErrors] = useState({
     }
   }, [router.isReady, router.query.type]);
 
-const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
@@ -455,6 +457,28 @@ const handleSubmit = async (e: React.FormEvent) => {
             ))}
           </div>
         </fieldset>
+
+        <div>
+          <label htmlFor="home_region" className="mb-2 block text-sm font-bold text-ivory">
+            Home Region
+          </label>
+          <select
+            id="home_region"
+            name="home_region"
+            value={form.home_region}
+            onChange={handleChange}
+            className="w-full p-2 rounded bg-gray-800 border border-gray-600"
+          >
+            {MUSIC_REGIONS.map((region) => (
+              <option key={region.slug} value={region.slug}>
+                {region.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-ivory/45">
+            Choose the primary scene where this {form.profile_type} should be discoverable.
+          </p>
+        </div>
 
         <input
           name="display_name"

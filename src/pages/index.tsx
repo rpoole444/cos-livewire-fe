@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { Switch } from '@headlessui/react';
 import { ArrowRight, CalendarDays, CalendarSearch, Music2, Search, Sparkles, Users } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import HeroSection from '@/components/HeroSection';
 import LoginForm from '@/components/login';
 import RegistrationForm from '@/components/registration';
@@ -17,6 +18,14 @@ import { Event } from '@/interfaces/interfaces';
 import { buildEventDateTime, parseLocalDayjs, parseMSTDate } from '@/util/dateHelper';
 import { canManageEvent } from '@/util/eventPermissions';
 import EventCard from '@/components/EventCard';
+import {
+  REGION_ALL,
+  REGION_FILTER_OPTIONS,
+  PREFERRED_REGION_STORAGE_KEY,
+  RegionFilterValue,
+  getRegionLabel,
+  normalizeRegionFilter,
+} from '@/constants/regions';
 
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
@@ -40,6 +49,10 @@ export default function Home() {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const [selectedRegion, setSelectedRegion] = useState<RegionFilterValue>(() => {
+    if (typeof window === 'undefined') return REGION_ALL;
+    return normalizeRegionFilter(localStorage.getItem(PREFERRED_REGION_STORAGE_KEY));
+  });
   const [searchAllUpcoming, setSearchAllUpcoming] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('searchAllUpcoming') === 'true';
@@ -47,6 +60,7 @@ export default function Home() {
     return false;
   });
   const [showHero, setShowHero] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const lastVisit = localStorage.getItem('lastVisitDate');
@@ -62,6 +76,16 @@ export default function Home() {
 
   const resultsRef = useRef<HTMLDivElement | null>(null);
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    const queryRegion = Array.isArray(router.query.region)
+      ? router.query.region[0]
+      : router.query.region;
+    if (queryRegion) {
+      setSelectedRegion(normalizeRegionFilter(queryRegion));
+    }
+  }, [router.isReady, router.query.region]);
 
   const switchAuthMode = () =>
     setAuthMode((m) => (m === 'login' ? 'register' : 'login'));
@@ -84,6 +108,7 @@ export default function Home() {
 
   useEffect(() => {
     localStorage.setItem('searchAllUpcoming', String(searchAllUpcoming));
+    localStorage.setItem(PREFERRED_REGION_STORAGE_KEY, selectedRegion);
 
     const today = dayjs().startOf('day');
 
@@ -99,6 +124,7 @@ export default function Home() {
     };
 
     const filtered = events.filter((event) => {
+      if (selectedRegion !== REGION_ALL && event.region !== selectedRegion) return false;
       if (!matchesSearch(event)) return false;
 
       const eventDate = parseLocalDayjs(event.date);
@@ -123,7 +149,29 @@ export default function Home() {
     if (searchAllUpcoming && searchQuery && resultsRef.current) {
       resultsRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [events, currentDate, searchQuery, searchAllUpcoming]);
+  }, [events, currentDate, searchQuery, searchAllUpcoming, selectedRegion]);
+
+  const regionScopedEvents = selectedRegion === REGION_ALL
+    ? events
+    : events.filter((event) => event.region === selectedRegion);
+
+  const handleRegionChange = (nextRegion: RegionFilterValue) => {
+    setSelectedRegion(nextRegion);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(PREFERRED_REGION_STORAGE_KEY, nextRegion);
+    }
+    router.replace(
+      {
+        pathname: router.pathname,
+        query: {
+          ...router.query,
+          region: nextRegion === REGION_ALL ? undefined : nextRegion,
+        },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
 
   const handleDateSelect = (date: Dayjs) => {
     setCurrentDate(date);
@@ -144,7 +192,7 @@ export default function Home() {
 
   const siteUrl = 'https://app.alpinegrooveguide.com';
   const homeDescription =
-    'Alpine Groove Guide is the Colorado Front Range live music calendar—discover concerts, browse Pro pages for artists, venues, and promoters, and share your own events in one premium feed.';
+    'Alpine Groove Guide is a community-powered live music calendar for Colorado’s Front Range—discover shows by region, artist, venue, and date.';
 
   return (
     <>
@@ -181,7 +229,7 @@ export default function Home() {
                 The scene is local. The guide should be too.
               </h1>
               <p className="max-w-2xl text-base leading-7 text-ivory/70 md:text-lg">
-                Alpine Groove Guide brings Front Range shows, artist pages, venues, and promoters into one clean local calendar built for fans and working musicians.
+                Alpine Groove Guide is a community-powered live music calendar for Colorado’s Front Range, built for fans and working musicians.
               </p>
             </div>
 
@@ -206,8 +254,8 @@ export default function Home() {
             <div className="grid gap-3 text-sm text-ivory/70 sm:grid-cols-3">
               <div className="agg-corner-frame border border-gold/30 bg-black/50 p-4">
                 <CalendarDays className="mb-3 h-5 w-5 text-sun-gold" />
-                <p className="font-bold text-ivory">Local calendar</p>
-                <p className="mt-1 text-xs leading-5 text-ivory/50">Daily shows, searchable by date, genre, venue, and artist.</p>
+                <p className="font-bold text-ivory">Regional calendar</p>
+                <p className="mt-1 text-xs leading-5 text-ivory/50">Daily shows, searchable by date, region, genre, venue, and artist.</p>
               </div>
               <div className="agg-corner-frame border border-gold/30 bg-black/50 p-4">
                 <Music2 className="mb-3 h-5 w-5 text-alpine" />
@@ -265,7 +313,7 @@ export default function Home() {
             <aside className="agg-panel agg-corner-frame w-full p-5 sm:p-6">
               <EventsCalendar
                 currentDate={currentDate}
-                events={events}
+                events={regionScopedEvents}
                 onDateSelect={handleDateSelect}
               />
             </aside>
@@ -275,8 +323,25 @@ export default function Home() {
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.3em] text-alpine">Live Music Calendar</p>
                   <h1 className="agg-display mt-1 text-3xl font-semibold text-sun-gold">Find your next show</h1>
+                  <p className="mt-1 text-sm text-ivory/55">
+                    {selectedRegion === REGION_ALL
+                      ? 'Showing all Front Range events.'
+                      : `Showing events in ${getRegionLabel(selectedRegion)}.`}
+                  </p>
                 </div>
                 <div className="flex flex-col md:flex-row gap-2 md:items-center w-full md:w-auto">
+                  <select
+                    aria-label="Filter events by region"
+                    value={selectedRegion}
+                    onChange={(event) => handleRegionChange(normalizeRegionFilter(event.target.value))}
+                    className="w-full border border-gold/40 bg-[#11130e] p-3 text-ivory focus:border-sun-gold focus:outline-none focus:ring-1 focus:ring-sun-gold md:w-56"
+                  >
+                    {REGION_FILTER_OPTIONS.map((region) => (
+                      <option key={region.slug} value={region.slug}>
+                        {region.label}
+                      </option>
+                    ))}
+                  </select>
                   <div className="relative w-full md:w-80">
                     <input
                       type="text"
@@ -330,7 +395,7 @@ export default function Home() {
                           Live Music Calendar
                         </h2>
                         <p className="text-sm text-ivory/50">
-                          Discover shows across Colorado Springs and the Front Range.
+                          Discover live music from Colorado Springs to Denver, Boulder, Fort Collins, Pueblo, and beyond.
                         </p>
                       </div>
                     </header>
@@ -345,6 +410,7 @@ export default function Home() {
                             slug={event.slug}
                             startTime={startTimeISO ?? undefined}
                             city={event.location || undefined}
+                            region={event.region}
                             venueName={event.venue_name}
                             imageUrl={event.poster || undefined}
                             isFeatured={(event as any).is_featured}

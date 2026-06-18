@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Event } from '@/interfaces/interfaces';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { DEFAULT_REGION, MUSIC_REGIONS, getRegionLabel } from '@/constants/regions';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const EditEventPage = () => {
@@ -82,7 +83,7 @@ const EditEventPage = () => {
 
   /* ── helpers ───────────────────────────────────────── */
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setEventData((prev) => (prev ? { ...prev, [name]: value } : prev));
@@ -170,6 +171,27 @@ const EditEventPage = () => {
           placeholder="Location"
           className="w-full p-2 bg-gray-900 border border-gray-700 rounded"
         />
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-300">
+            Region / Area
+          </label>
+          <select
+            name="region"
+            value={eventData.region ?? DEFAULT_REGION}
+            onChange={handleChange}
+            className="w-full p-2 bg-gray-900 border border-gray-700 rounded"
+          >
+            {MUSIC_REGIONS.map((region) => (
+              <option key={region.slug} value={region.slug}>
+                {region.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-gray-400">
+            Current calendar region: {getRegionLabel(eventData.region)}
+          </p>
+        </div>
 
         {/* Date */}
         <input

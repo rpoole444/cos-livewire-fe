@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Artist } from '../interfaces/interfaces';
+import { DEFAULT_REGION, MUSIC_REGIONS, getRegionLabel } from '@/constants/regions';
 
 interface Props {
   artist: Artist;
@@ -41,6 +42,9 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
         <h3 className="font-semibold flex items-center gap-1">
           {artist.profile_type === 'venue' ? '🏛️' : artist.profile_type === 'promoter' ? '📣' : '🎵'} {artist.display_name}
         </h3>
+        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
+          {getRegionLabel(artist.home_region)}
+        </span>
         <button onClick={() => setIsExpanded(!isExpanded)} className="text-blue-600 underline">
           {isExpanded ? 'Hide' : 'See More'}
         </button>
@@ -78,6 +82,23 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
               <option value="artist">Artist</option>
               <option value="venue">Venue</option>
               <option value="promoter">Promoter</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium">Home Region</label>
+            <select
+              name="home_region"
+              value={edited.home_region || DEFAULT_REGION}
+              onChange={handleChange}
+              disabled={!isEditing}
+              className="mt-1 w-full rounded border p-2"
+            >
+              {MUSIC_REGIONS.map((region) => (
+                <option key={region.slug} value={region.slug}>
+                  {region.label}
+                </option>
+              ))}
             </select>
           </div>
 

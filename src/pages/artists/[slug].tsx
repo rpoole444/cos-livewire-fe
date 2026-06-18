@@ -14,6 +14,7 @@ import EventPoster from '@/components/EventPoster';
 import { buildEventDateTime, parseLocalDayjs } from '@/util/dateHelper';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, isCommunityArtistAccessActive } from '@/util/communityAccess';
 import { Building2, ExternalLink, MapPin, Phone, Ticket, Users } from 'lucide-react';
+import { getRegionLabel } from '@/constants/regions';
 dayjs.extend(utc);
 
 interface Event {
@@ -53,6 +54,7 @@ interface Artist {
   is_owner?: boolean;
   pro_cancelled_at?: string | null;
   profile_type?: 'artist' | 'venue' | 'promoter';
+  home_region?: string;
   venue_address?: string;
   venue_city?: string;
   venue_state?: string;
@@ -295,6 +297,11 @@ const ArtistProfilePage = ({ artist }: Props) => {
                       {isVenue && <Building2 className="h-3.5 w-3.5" />}
                       {profileLabel}
                     </span>
+                    {artist.home_region && (
+                      <span className="inline-flex items-center gap-1.5 border border-gold/50 bg-gold/10 px-3 py-1 text-xs font-bold uppercase tracking-wider text-sun-gold">
+                        {getRegionLabel(artist.home_region)}
+                      </span>
+                    )}
                     {isProAccess && (
                       <span className="rounded-full border border-emerald-400/70 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
                         Alpine Pro

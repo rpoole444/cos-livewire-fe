@@ -5,6 +5,7 @@ import Head from 'next/head';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
+import { getRegionLabel } from '@/constants/regions';
 
 interface Artist {
   display_name?: string;
@@ -14,6 +15,7 @@ interface Artist {
   bio?: string;
   access_state?: 'pro' | 'trial' | 'gated' | 'none';
   profile_type?: 'artist' | 'venue' | 'promoter';
+  home_region?: string;
   venue_city?: string;
   venue_state?: string;
 }
@@ -34,10 +36,12 @@ export default function ArtistDirectoryPage() {
     const name = (artist.display_name || '').toLowerCase();
     const genresList = Array.isArray(artist.genres) ? artist.genres : [];
     const location = [artist.venue_city, artist.venue_state].filter(Boolean).join(' ');
+    const regionLabel = getRegionLabel(artist.home_region).toLowerCase();
     const matchesQuery =
       name.includes(q) ||
       genresList.join(', ').toLowerCase().includes(q) ||
       location.toLowerCase().includes(q) ||
+      regionLabel.includes(q) ||
       (artist.profile_type || 'artist').includes(q);
     return matchesQuery;
   });
@@ -72,7 +76,7 @@ export default function ArtistDirectoryPage() {
         <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 text-center shadow-2xl ring-1 ring-slate-800">
           <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">Pro Directory: Artists, Venues &amp; Promoters</h1>
           <p className="mt-2 text-sm text-slate-400 sm:text-base">
-            Discover Alpine Groove Guide Pro pages for artists, venues, and promoters across the Colorado Front Range.
+            Discover Alpine Groove Guide Pro pages for artists, venues, and promoters across Colorado’s Front Range.
           </p>
           {canCreateArtistPage ? (
             <div className="mt-4 flex flex-wrap justify-center gap-3">
@@ -106,7 +110,7 @@ export default function ArtistDirectoryPage() {
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">🔍</span>
             <input
               type="text"
-              placeholder="Search by name, type, genre, or city"
+              placeholder="Search by name, type, genre, city, or region"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full rounded-full border border-slate-700 bg-slate-900 py-2 pl-9 pr-4 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none"
@@ -181,8 +185,13 @@ export default function ArtistDirectoryPage() {
                         {displayName}
                       </h2>
                       <span className="rounded-full border border-slate-600 bg-slate-800/70 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-300">
-                        {profileLabel}
+                      {profileLabel}
                       </span>
+                      {artist.home_region && (
+                        <span className="rounded-full border border-amber-400/50 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-100">
+                          {getRegionLabel(artist.home_region)}
+                        </span>
+                      )}
                       {accessState === 'pro' && (
                         <span className="rounded-full border border-emerald-400/60 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-200">
                           Alpine Pro

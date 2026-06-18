@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Event } from '../interfaces/interfaces';
 import EventPoster from "./EventPoster";
+import { DEFAULT_REGION, MUSIC_REGIONS, getRegionLabel } from '@/constants/regions';
 
 interface AdminEventCardProps {
   event: Event;
@@ -32,7 +33,7 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
     setEditedEvent(event);
   }, [event]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setEditedEvent(prev => ({
       ...prev,
@@ -86,6 +87,9 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
     <div className="flex flex-col space-y-6 p-6 border border-gray-200 rounded-lg shadow-md bg-white">
       <div className="flex justify-between items-start">
         <h3 className="font-semibold text-black">{event.title}</h3>
+        <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-900">
+          {getRegionLabel(event.region)}
+        </span>
         <button onClick={() => setIsExpanded(!isExpanded)} className="text-blue-600 underline">
           {isExpanded ? 'Hide' : 'See More'}
         </button>
@@ -165,6 +169,24 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
           disabled={!isEditing}
           className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
         />
+      </div>
+
+      <div>
+        <label htmlFor="region" className="text-sm font-medium text-gray-700">Region / Area</label>
+        <select
+          id="region"
+          name="region"
+          value={editedEvent.region || DEFAULT_REGION}
+          onChange={handleChange}
+          disabled={!isEditing}
+          className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
+        >
+          {MUSIC_REGIONS.map((region) => (
+            <option key={region.slug} value={region.slug}>
+              {region.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Date & Time */}

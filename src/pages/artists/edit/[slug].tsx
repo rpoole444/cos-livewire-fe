@@ -9,6 +9,7 @@ import { isTrialActive } from '@/util/isTrialActive';
 import { isActivePro } from '@/util/isActivePro';
 import { parseMediaInput } from '@/util/parseMediaInput';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, isCommunityArtistAccessActive } from '@/util/communityAccess';
+import { DEFAULT_REGION, MUSIC_REGIONS } from '@/constants/regions';
 
 const topGenres = [
   'Jazz', 'Rock', 'Pop', 'Hip-Hop', 'R&B', 'Electronic',
@@ -37,6 +38,7 @@ export default function EditArtistProfilePage() {
     embed_soundcloud: '',
     embed_bandcamp: '',
     tip_jar_url: '',
+    home_region: DEFAULT_REGION,
     venue_address: '',
     venue_city: '',
     venue_state: '',
@@ -87,6 +89,7 @@ export default function EditArtistProfilePage() {
           embed_soundcloud: data.embed_soundcloud || '',
           embed_bandcamp: data.embed_bandcamp || '',
           tip_jar_url: data.tip_jar_url || '',
+          home_region: data.home_region || DEFAULT_REGION,
           venue_address: data.venue_address || '',
           venue_city: data.venue_city || '',
           venue_state: data.venue_state || '',
@@ -118,7 +121,7 @@ export default function EditArtistProfilePage() {
   }, [user, router]);
   
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm(prev => ({ ...prev, [name]: value }));
   };
@@ -255,6 +258,24 @@ export default function EditArtistProfilePage() {
             <option value="venue">Venue</option>
             <option value="promoter">Promoter</option>
           </select>
+        </label>
+        <label className="block">
+          Home Region
+          <select
+            name="home_region"
+            value={form.home_region}
+            onChange={handleChange}
+            className="mt-1 w-full rounded border border-gray-600 bg-gray-800 p-2"
+          >
+            {MUSIC_REGIONS.map((region) => (
+              <option key={region.slug} value={region.slug}>
+                {region.label}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs text-gray-400">
+            This controls where your profile is discoverable as regional browsing expands.
+          </span>
         </label>
         <input name="display_name" value={form.display_name} onChange={handleChange} placeholder="Display Name" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
         <input name="contact_email" value={form.contact_email} onChange={handleChange} placeholder="Contact Email" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />

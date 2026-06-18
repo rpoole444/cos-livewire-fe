@@ -5,6 +5,7 @@ import { Event } from "@/interfaces/interfaces";
 import { UserType } from "@/types";
 import { parseLocalDayjs } from "@/util/dateHelper";
 import EventPoster from "./EventPoster";
+import { getRegionLabel } from "@/constants/regions";
 
 interface EventDetailCardProps {
   event: Event;
@@ -83,6 +84,7 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
         <div className="flex-1 space-y-3 text-sm text-slate-300">
           <div className="flex flex-wrap items-center gap-2">
             {event.genre ? infoPill(event.genre) : null}
+            {event.region ? infoPill(getRegionLabel(event.region)) : null}
             {event.eventType ? infoPill(event.eventType) : null}
             {event.age_restriction ? infoPill(event.age_restriction) : null}
           </div>

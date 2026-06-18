@@ -16,6 +16,7 @@ export interface CustomEvent {
   customTicketPrice?: string;
   website_link: string;
   poster: string | null;
+  region?: string;
   eventType: string;
   recurrence?: string,
   repeatCount?: number,
@@ -43,6 +44,7 @@ export interface Event extends CustomEvent {
   venue_name: string; 
   website: string;
   poster: string | null;
+  region?: string;
   recurrence?: string,
   repeatCount?: number,
   is_approved: boolean,
@@ -95,6 +97,7 @@ export interface Artist {
   created_at?: string;
   updated_at?: string;
   profile_type?: 'artist' | 'venue' | 'promoter';
+  home_region?: string;
   venue_address?: string;
   venue_city?: string;
   venue_state?: string;
