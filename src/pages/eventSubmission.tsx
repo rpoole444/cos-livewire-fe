@@ -121,7 +121,12 @@ const EventSubmission = () => {
         });
         if (!response.ok) return;
         const data = await response.json();
-        const profile = data?.artist;
+        const profiles = Array.isArray(data?.profiles)
+          ? data.profiles
+          : data?.artist
+            ? [data.artist]
+            : [];
+        const profile = profiles.find((item: any) => item?.profile_type === 'venue');
         if (profile?.profile_type !== 'venue') return;
 
         const defaults: Partial<Event> = {

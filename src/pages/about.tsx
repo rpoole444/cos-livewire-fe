@@ -27,8 +27,14 @@ const About = () => {
         if (!isMounted) return;
         if (res.ok) {
           const data = await res.json().catch(() => null);
-          if (data?.artist && !data.artist.deleted_at) {
-            setArtistSlug(data.artist.slug ?? null);
+          const profiles = Array.isArray(data?.profiles)
+            ? data.profiles
+            : data?.artist
+              ? [data.artist]
+              : [];
+          const profile = profiles.find((item: any) => item && !item.deleted_at && item.slug);
+          if (profile) {
+            setArtistSlug(profile.slug ?? null);
           } else {
             setArtistSlug(null);
           }

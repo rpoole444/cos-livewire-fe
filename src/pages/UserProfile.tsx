@@ -16,18 +16,21 @@ const genresList = [
   "Country", "Hip-Hop", "Pop", "R&B", "Rap", "Reggae", "Soul", "Techno", "World", "Other"
 ];
 
+type OwnedProfile = {
+  id?: number;
+  slug?: string;
+  display_name?: string;
+  is_approved?: boolean;
+  deleted_at?: string | null;
+  profile_image?: string | null;
+  profile_type?: 'artist' | 'venue' | 'promoter';
+};
+
 type ArtistProfileStatus = {
-  artist: {
-    slug?: string;
-    display_name?: string;
-    is_approved?: boolean;
-    deleted_at?: string | null;
-    profile_image?: string | null;
-    profile_type?: 'artist' | 'venue' | 'promoter';
-  } | null;
-  deletedArtist: {
-    slug?: string;
-  } | null;
+  artist: OwnedProfile | null;
+  profiles?: OwnedProfile[];
+  deletedArtist: OwnedProfile | null;
+  deletedProfiles?: OwnedProfile[];
   canRestore: boolean;
 };
 
@@ -55,6 +58,8 @@ const UserProfile: React.FC = () => {
   const [artistSlug, setArtistSlug] = useState("");
   const [artistDisplayName, setArtistDisplayName] = useState("");
   const [profileType, setProfileType] = useState<'artist' | 'venue' | 'promoter'>('artist');
+  const [ownedProfiles, setOwnedProfiles] = useState<OwnedProfile[]>([]);
+  const [deletedProfiles, setDeletedProfiles] = useState<OwnedProfile[]>([]);
   const [canRestoreProfile, setCanRestoreProfile] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
@@ -90,7 +95,6 @@ const pageTitle = profileHeadingName
   : "Alpine Pro Dashboard – Alpine Groove Guide";
 const avatarSource = artistImage || profilePicture || null;
 const avatarInitial = (artistDisplayName || profileHeadingName)?.charAt(0)?.toUpperCase() || "?";
-const canVisitPublicPage = Boolean(hasArtistProfile && artistSlug);
 const [artistCardDismissed, setArtistCardDismissed] = useState(false);
 const canShowArtistWelcome = !needsProfileSetup && !hasArtistProfile && !isEditing && !artistCardDismissed;
 const shouldShowTrialBanner = !canUseProFeatures && trialActive;
@@ -99,32 +103,42 @@ const hadProBefore = !!user?.pro_cancelled_at;
 const cancellationCompleted = !!proCancelledAt && !canUseProFeatures;
 const shouldShowManageBilling = canUseProFeatures || hadProBefore;
 const isPublicLocked = hasArtistProfile && !canUseArtistAccess;
-const viewButtonLabel = isPublicLocked ? "View page (locked preview)" : "View Public Page";
-const viewButtonTitle = isPublicLocked
-  ? "Visitors currently see a blurred version until you reactivate Alpine Pro."
-  : "View your public page";
 const profileTypeLabel = profileType === 'venue' ? 'Venue' : profileType === 'promoter' ? 'Promoter' : 'Artist';
 const trialEndDate = user?.trial_ends_at ? new Date(user.trial_ends_at).toLocaleDateString() : null;
-let artistStatusLabel = "No Pro page";
-let artistStatusClass = "border border-slate-600 bg-slate-800 text-slate-200";
-if (hasArtistProfile) {
-  if (!isApproved) {
-    artistStatusLabel = "Pending approval";
-    artistStatusClass = "border border-amber-400/40 bg-amber-500/10 text-amber-100";
-  } else if (canUseProFeatures) {
-    artistStatusLabel = "Live";
-    artistStatusClass = "border border-emerald-400/40 bg-emerald-500/10 text-emerald-100";
-  } else if (trialActive) {
-    artistStatusLabel = "Live (trial)";
-    artistStatusClass = "border border-blue-400/40 bg-blue-500/10 text-blue-100";
-  } else if (communityAccessActive) {
-    artistStatusLabel = "Live (community access)";
-    artistStatusClass = "border border-emerald-400/40 bg-emerald-500/10 text-emerald-100";
-  } else {
-    artistStatusLabel = "Locked to public";
-    artistStatusClass = "border border-amber-400/40 bg-amber-500/10 text-amber-100";
+
+const profileTypeText = (type?: OwnedProfile["profile_type"]) =>
+  type === 'venue' ? 'Venue' : type === 'promoter' ? 'Promoter' : 'Artist';
+
+const getProfileStatus = (profile: OwnedProfile) => {
+  if (!profile.is_approved) {
+    return {
+      label: "Pending approval",
+      className: "border border-amber-400/40 bg-amber-500/10 text-amber-100",
+    };
   }
-}
+  if (canUseProFeatures) {
+    return {
+      label: "Live",
+      className: "border border-emerald-400/40 bg-emerald-500/10 text-emerald-100",
+    };
+  }
+  if (trialActive) {
+    return {
+      label: "Live (trial)",
+      className: "border border-blue-400/40 bg-blue-500/10 text-blue-100",
+    };
+  }
+  if (communityAccessActive) {
+    return {
+      label: "Live (community access)",
+      className: "border border-emerald-400/40 bg-emerald-500/10 text-emerald-100",
+    };
+  }
+  return {
+    label: "Locked to public",
+    className: "border border-amber-400/40 bg-amber-500/10 text-amber-100",
+  };
+};
 
   const [formError, setFormError] = useState("");
   const handleInviteClaim = async () => {
@@ -166,6 +180,8 @@ if (hasArtistProfile) {
 
   const applyArtistProfileStatus = useCallback((status: ArtistProfileStatus | null) => {
     if (!status) {
+      setOwnedProfiles([]);
+      setDeletedProfiles([]);
       setHasArtistProfile(false);
       setArtistSlug("");
       setArtistDisplayName("");
@@ -176,24 +192,30 @@ if (hasArtistProfile) {
       return;
     }
 
-    const { artist, deletedArtist, canRestore } = status;
-    const hasActiveArtist = !!artist && !artist.deleted_at;
+    const activeProfiles = (status.profiles?.length ? status.profiles : status.artist ? [status.artist] : [])
+      .filter((profile) => profile && !profile.deleted_at);
+    const removedProfiles = (status.deletedProfiles?.length ? status.deletedProfiles : status.deletedArtist ? [status.deletedArtist] : [])
+      .filter((profile) => profile && profile.deleted_at);
+    const primaryProfile = activeProfiles[0] || null;
+    const hasActiveArtist = !!primaryProfile;
 
+    setOwnedProfiles(activeProfiles);
+    setDeletedProfiles(removedProfiles);
     setHasArtistProfile(hasActiveArtist);
-    setArtistSlug(hasActiveArtist ? artist.slug || "" : "");
-    setArtistDisplayName(hasActiveArtist ? artist.display_name || "" : "");
-    setProfileType(hasActiveArtist ? artist.profile_type || 'artist' : 'artist');
-    setArtistImage(hasActiveArtist ? artist.profile_image || null : null);
+    setArtistSlug(hasActiveArtist ? primaryProfile.slug || "" : "");
+    setArtistDisplayName(hasActiveArtist ? primaryProfile.display_name || "" : "");
+    setProfileType(hasActiveArtist ? primaryProfile.profile_type || 'artist' : 'artist');
+    setArtistImage(hasActiveArtist ? primaryProfile.profile_image || null : null);
 
     setIsApproved(
       hasActiveArtist
-        ? typeof artist.is_approved === "boolean"
-          ? artist.is_approved
+        ? typeof primaryProfile.is_approved === "boolean"
+          ? primaryProfile.is_approved
           : true
         : null
     );
 
-    const restoreAvailable = !hasActiveArtist && (canRestore || !!deletedArtist);
+    const restoreAvailable = Boolean(status.canRestore || removedProfiles.length > 0);
     setCanRestoreProfile(restoreAvailable);
 
     if (hasActiveArtist || !restoreAvailable) {
@@ -216,10 +238,12 @@ if (hasArtistProfile) {
 
       const data = await res.json().catch(() => null);
       const artist = (data?.artist ?? null) as ArtistProfileStatus["artist"];
+      const profiles = (Array.isArray(data?.profiles) ? data.profiles : artist ? [artist] : []) as OwnedProfile[];
       const deletedArtist = (data?.deletedArtist ?? data?.deleted_artist ?? null) as ArtistProfileStatus["deletedArtist"];
-      const canRestoreFlag = Boolean(data?.canRestore ?? data?.can_restore ?? deletedArtist);
+      const deletedProfiles = (Array.isArray(data?.deletedProfiles) ? data.deletedProfiles : deletedArtist ? [deletedArtist] : []) as OwnedProfile[];
+      const canRestoreFlag = Boolean(data?.canRestore ?? data?.can_restore ?? deletedProfiles.length);
 
-      return { artist, deletedArtist, canRestore: canRestoreFlag };
+      return { artist, profiles, deletedArtist, deletedProfiles, canRestore: canRestoreFlag };
     } catch (err) {
       console.error('Artist /mine fetch failed:', err);
       return { artist: null, deletedArtist: null, canRestore: false };
@@ -481,7 +505,7 @@ if (hasArtistProfile) {
     }
   };
 
-  const handleRestoreProfile = async () => {
+  const handleRestoreProfile = async (profileId?: number) => {
     if (!user) return;
 
     setRestoreError("");
@@ -489,7 +513,10 @@ if (hasArtistProfile) {
     setRestoreLoading(true);
   
     try {
-      const res = await fetch(`${API_BASE_URL}/api/artists/by-user/${user.id}/restore`, {
+      const restoreUrl = profileId
+        ? `${API_BASE_URL}/api/artists/${profileId}/restore`
+        : `${API_BASE_URL}/api/artists/by-user/${user.id}/restore`;
+      const res = await fetch(restoreUrl, {
         method: 'PUT',
         credentials: 'include',
       });
@@ -793,121 +820,174 @@ const textareaClasses =
             </p>
           </div>
 
-          {!hasArtistProfile ? (
-            canShowArtistWelcome ? (
-              <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
-              <p className="text-slate-300 text-sm">
-                {communityAccessActive
-                  ? "Create your free artist page for your artist, venue, or promoter project to showcase your work on Alpine Groove Guide."
-                  : "Create your Pro page for your artist, venue, or promoter project to showcase your work on Alpine Groove Guide."}
-              </p>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  <button
-                    onClick={gotoCreateProfile}
-                    className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
-                  >
-                    {communityAccessActive ? "Create Free Artist Page" : "Create Your Pro Page"}
-                  </button>
-                  <button
-                    onClick={gotoCreateVenueProfile}
-                    className="inline-flex items-center justify-center rounded-lg border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-100 hover:-translate-y-[1px] hover:border-amber-300 hover:bg-amber-500/20 active:translate-y-0"
-                  >
-                    Create Venue Page
-                  </button>
-                  {canRestoreProfile && (
+          <div className="space-y-4">
+            {!hasArtistProfile ? (
+              canShowArtistWelcome ? (
+                <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+                  <p className="text-slate-300 text-sm">
+                    {communityAccessActive
+                      ? "Create your free artist page for your artist, venue, or promoter project to showcase your work on Alpine Groove Guide."
+                      : "Create your Pro page for your artist, venue, or promoter project to showcase your work on Alpine Groove Guide."}
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
                     <button
-                      onClick={handleRestoreProfile}
+                      onClick={gotoCreateProfile}
+                      className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
+                    >
+                      {communityAccessActive ? "Create Free Artist Page" : "Create Your Pro Page"}
+                    </button>
+                    <button
+                      onClick={gotoCreateVenueProfile}
+                      className="inline-flex items-center justify-center rounded-lg border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-100 hover:-translate-y-[1px] hover:border-amber-300 hover:bg-amber-500/20 active:translate-y-0"
+                    >
+                      Create Venue Page
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setArtistCardDismissed(true)}
+                      className="text-left text-sm text-gray-300 underline hover:text-white sm:col-span-2"
+                    >
+                      Maybe later
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gray-900/20 border border-gray-700 rounded-xl p-4">
+                  <p className="text-sm text-slate-300">
+                    Ready later? You can create your Pro page whenever you like.
+                  </p>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <button
+                      onClick={gotoCreateProfile}
+                      className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
+                    >
+                      {communityAccessActive ? "Create Free Artist Page" : "Create Artist Page"}
+                    </button>
+                    <button
+                      onClick={gotoCreateVenueProfile}
+                      className="inline-flex items-center justify-center rounded-lg border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-100 hover:border-amber-300"
+                    >
+                      Create Venue Page
+                    </button>
+                  </div>
+                </div>
+              )
+            ) : (
+              <>
+                <div className="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-900/50 p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-white">
+                      You manage {ownedProfiles.length} Pro {ownedProfiles.length === 1 ? "page" : "pages"}.
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Add another artist project, venue, or promoter series without replacing your existing page.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <button
+                      onClick={gotoCreateProfile}
+                      className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 hover:bg-emerald-400"
+                    >
+                      Add Artist Page
+                    </button>
+                    <button
+                      onClick={gotoCreateVenueProfile}
+                      className="inline-flex items-center justify-center rounded-lg border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-100 hover:border-amber-300"
+                    >
+                      Add Venue Page
+                    </button>
+                  </div>
+                </div>
+
+                {ownedProfiles.map((profile) => {
+                  const status = getProfileStatus(profile);
+                  const profileSlug = profile.slug || "";
+                  const canVisitProfile = Boolean(profileSlug);
+                  const profileLocked = Boolean(profileSlug && !canUseArtistAccess);
+                  return (
+                    <div key={profile.id || profileSlug} className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+                      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <p className="text-xl font-semibold text-white">{profile.display_name || "Untitled Pro page"}</p>
+                          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/80">
+                            Owned {profileTypeText(profile.profile_type).toLowerCase()} profile
+                          </p>
+                          <div className="mt-1">
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${status.className}`}>
+                              {status.label}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <button
+                            onClick={() => router.push(`/artists/${profileSlug}`)}
+                            disabled={!canVisitProfile}
+                            title={profileLocked ? "Visitors currently see a blurred version until you reactivate Alpine Pro." : "View your public page"}
+                            className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold ${
+                              !canVisitProfile
+                                ? "border border-slate-700 text-slate-400"
+                                : profileLocked
+                                ? "border border-amber-400/60 bg-amber-500/10 text-amber-100 hover:-translate-y-[1px] hover:border-amber-300"
+                                : "bg-purple-600 text-white shadow-lg shadow-purple-600/30 hover:-translate-y-[1px] hover:bg-purple-500"
+                            }`}
+                          >
+                            {profileLocked ? "View page (locked preview)" : "View Public Page"}
+                          </button>
+                          <button
+                            onClick={() => router.push(`/artists/edit/${profileSlug}`)}
+                            disabled={!profileSlug}
+                            className="inline-flex items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Manage Pro Page
+                          </button>
+                        </div>
+                      </div>
+
+                      {!profile.is_approved && (
+                        <div className="rounded-lg border border-amber-400/60 bg-amber-500/10 p-4 text-sm text-amber-100">
+                          Your Pro page is under review. You’ll be notified when it’s approved.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {isPublicLocked && hasArtistProfile && (
+                  <div className="rounded-lg border border-amber-400/60 bg-amber-500/10 p-4 text-sm text-amber-100">
+                    Visitors currently see blurred, locked versions of your public pages. Restart Alpine Pro to fully unlock them for the directory.
+                  </div>
+                )}
+              </>
+            )}
+
+            {canRestoreProfile && deletedProfiles.length > 0 && (
+              <div className="space-y-3 rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+                <p className="text-sm font-semibold text-slate-100">Deleted pages available to restore</p>
+                {deletedProfiles.map((profile) => (
+                  <div key={profile.id || profile.slug} className="flex flex-col gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-semibold text-white">{profile.display_name || profile.slug || "Previous Pro page"}</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                        {profileTypeText(profile.profile_type)} profile
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleRestoreProfile(profile.id)}
                       disabled={restoreLoading}
                       className={`inline-flex items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/60 ${
                         restoreLoading ? "opacity-70 cursor-not-allowed" : ""
                       }`}
                     >
-                      {restoreLoading ? "Restoring…" : "Restore previous page"}
+                      {restoreLoading ? "Restoring…" : "Restore page"}
                     </button>
-                  )}
-                  {restoreError && canRestoreProfile && (
-                    <p className="text-xs text-red-400">{restoreError}</p>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setArtistCardDismissed(true)}
-                    className="text-left text-sm text-gray-300 underline hover:text-white sm:col-span-2"
-                  >
-                    Maybe later
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-gray-900/20 border border-gray-700 rounded-xl p-4">
-                <p className="text-sm text-slate-300">
-                  Ready later? You can create your Pro page whenever you like.
-                </p>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <button
-                    onClick={gotoCreateProfile}
-                    className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0"
-                  >
-                    {communityAccessActive ? "Create Free Artist Page" : "Create Artist Page"}
-                  </button>
-                  <button
-                    onClick={gotoCreateVenueProfile}
-                    className="inline-flex items-center justify-center rounded-lg border border-amber-400/60 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-amber-100 hover:border-amber-300"
-                  >
-                    Create Venue Page
-                  </button>
-                </div>
-              </div>
-            )
-          ) : (
-            <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="text-xl font-semibold text-white">{artistDisplayName || "Your Pro page"}</p>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200/80">
-                    Owned {profileTypeLabel.toLowerCase()} profile
-                  </p>
-                  <div className="mt-1">
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${artistStatusClass}`}>
-                      {artistStatusLabel}
-                    </span>
                   </div>
-                </div>
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <button
-                    onClick={() => router.push(`/artists/${artistSlug}`)}
-                    disabled={!canVisitPublicPage}
-                    title={viewButtonTitle}
-                    className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold ${
-                      !canVisitPublicPage
-                        ? "border border-slate-700 text-slate-400"
-                        : isPublicLocked
-                        ? "border border-amber-400/60 bg-amber-500/10 text-amber-100 hover:-translate-y-[1px] hover:border-amber-300"
-                        : "bg-purple-600 text-white shadow-lg shadow-purple-600/30 hover:-translate-y-[1px] hover:bg-purple-500"
-                    }`}
-                  >
-                    {viewButtonLabel}
-                  </button>
-                  <button
-                    onClick={() => router.push(`/artists/edit/${artistSlug}`)}
-                    className="inline-flex items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/60"
-                  >
-                    Manage Pro Page
-                  </button>
-                </div>
+                ))}
+                {restoreError && (
+                  <p className="text-xs text-red-400">{restoreError}</p>
+                )}
               </div>
-
-              {!isApproved && (
-                <div className="rounded-lg border border-amber-400/60 bg-amber-500/10 p-4 text-sm text-amber-100">
-                  🎷 Your Pro page is under review. You’ll be notified when it’s approved.
-                </div>
-              )}
-              {isPublicLocked && hasArtistProfile && (
-                <div className="rounded-lg border border-amber-400/60 bg-amber-500/10 p-4 text-sm text-amber-100">
-                  🔒 Visitors currently see a blurred, locked version of your page. Restart Alpine Pro to fully unlock it for the directory.
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </section>
 
         <section className="rounded-3xl border border-slate-800/80 bg-slate-950/70 p-6 shadow-xl shadow-black/30 space-y-4 sm:p-8">

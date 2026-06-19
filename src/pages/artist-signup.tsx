@@ -17,9 +17,11 @@ const topGenres = [
 ];
 
 interface ExistingArtist {
+  id?: number;
   slug?: string;
   display_name?: string;
   deleted_at?: string | null;
+  profile_type?: ProfileType;
 }
 
 type ProfileType = 'artist' | 'venue' | 'promoter';
@@ -76,7 +78,7 @@ const [plan, setPlan] = useState<'monthly'|'annual'>('monthly');
 
 const hasAccess = hasArtistProfileAccess(user);   // paid, trial, or community campaign access
 const canStartTrial = !communityAccessActive && !proActive && !trialActive; 
-const [existingArtist, setExistingArtist] = useState<ExistingArtist | null>(null);
+const [existingProfiles, setExistingProfiles] = useState<ExistingArtist[]>([]);
 const [checkingExisting, setCheckingExisting] = useState(true);
 const [mediaInputs, setMediaInputs] = useState({
   youtube: '',
@@ -168,7 +170,13 @@ useEffect(() => {
           credentials: 'include',
         });
         const mine = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, { credentials: 'include' });
-        const { artist } = await mine.json();
+        const mineJson = await mine.json().catch(() => null);
+        const profiles = Array.isArray(mineJson?.profiles)
+          ? mineJson.profiles
+          : mineJson?.artist
+            ? [mineJson.artist]
+            : [];
+        const artist = profiles.find((profile: ExistingArtist) => Number(profile.id) === Number(artist_id)) || mineJson?.artist;
         if (artist?.slug) router.replace(`/artists/${artist.slug}?pending=true`);
         else router.replace('/UserProfile');
       } catch {}
@@ -186,9 +194,12 @@ useEffect(() => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, { credentials: "include" });
       if (res.ok) {
         const data = await res.json().catch(() => null);
-        if (data?.artist && !data.artist.deleted_at) {
-          setExistingArtist(data.artist);
-        }
+        const profiles = Array.isArray(data?.profiles)
+          ? data.profiles
+          : data?.artist
+            ? [data.artist]
+            : [];
+        setExistingProfiles(profiles.filter((profile: ExistingArtist) => profile && !profile.deleted_at));
       }
     } catch (err) {
       console.error("[artist-signup] existing artist check failed", err);
@@ -197,12 +208,6 @@ useEffect(() => {
     }
   })();
 }, [user]);
-
-useEffect(() => {
-  if (!checkingExisting && existingArtist?.slug) {
-    router.replace(`/artists/${existingArtist.slug}`);
-  }
-}, [checkingExisting, existingArtist?.slug, router]);
 
   if (authLoading || checkingExisting) {
     return (
@@ -220,20 +225,8 @@ useEffect(() => {
     );
   }
 
-  if (existingArtist?.slug) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-slate-200">
-        You already have a Pro page. Redirecting to your page…
-      </div>
-    );
-  }
-
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
-  if (existingArtist) {
-    setError("You already have a Pro page. Manage it instead.");
-    return;
-  }
   if (!user || form.genres.length === 0 || !files.profile_image) {
     setError("Missing required fields");
     return;
@@ -277,12 +270,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       if (msg.includes("slug")) {
         throw new Error(body?.message || "That URL slug is already taken. Please choose another.");
       }
-      // Reuse existing
-      const mineRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, { credentials: "include" });
-      if (!mineRes.ok) throw new Error("You already have a Pro page, but we couldn't load it.");
-      const mineJson = await mineRes.json();
-      if (!mineJson?.artist?.id || !mineJson?.artist?.slug) throw new Error("Existing Pro page found but incomplete data.");
-      artist = { id: mineJson.artist.id, slug: mineJson.artist.slug };
+      throw new Error(body?.message || "Could not create this Pro page.");
     } else {
       const text = await createRes.text().catch(() => "");
       throw new Error(text || "Failed to create artist profile");
@@ -376,35 +364,6 @@ const handleSubmit = async (e: React.FormEvent) => {
     );
   }
 
-  if (existingArtist?.slug) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center px-4">
-        <div className="max-w-md rounded-3xl border border-slate-800 bg-slate-900/70 p-6 text-center space-y-4">
-        <p className="text-sm text-slate-300">
-            You already have a Pro page: <span className="font-semibold text-slate-50">{existingArtist.display_name}</span>
-          </p>
-          <div className="flex flex-col gap-2">
-            <Link
-              href={`/artists/edit/${existingArtist.slug}`}
-              className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400"
-            >
-              Manage Pro Page
-            </Link>
-            <Link
-              href={`/artists/${existingArtist.slug}`}
-              className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-emerald-300 hover:text-white"
-            >
-              View Public Page
-            </Link>
-            <Link href="/UserProfile" className="text-xs text-slate-400 hover:text-slate-200">
-              Return to dashboard
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <Head>
@@ -412,6 +371,32 @@ const handleSubmit = async (e: React.FormEvent) => {
       </Head>
       <div className="mx-auto max-w-3xl px-4 py-10 text-ivory sm:px-6">
         <TrialBanner trial_ends_at={user?.trial_ends_at} />
+        {existingProfiles.length > 0 && (
+          <div className="mb-6 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm text-emerald-50">
+            <p className="font-semibold">
+              You already manage {existingProfiles.length} Pro {existingProfiles.length === 1 ? 'page' : 'pages'}.
+            </p>
+            <p className="mt-1 text-emerald-50/75">
+              Creating this page will add another profile to your dashboard without replacing your current one.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {existingProfiles.slice(0, 3).map((profile) => (
+                profile.slug ? (
+                  <Link
+                    key={profile.id || profile.slug}
+                    href={`/artists/${profile.slug}`}
+                    className="rounded-full border border-emerald-300/40 px-3 py-1 text-xs font-semibold text-emerald-50 hover:bg-emerald-400/10"
+                  >
+                    {profile.display_name || profile.slug}
+                  </Link>
+                ) : null
+              ))}
+              <Link href="/UserProfile" className="rounded-full border border-slate-600 px-3 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800">
+                Dashboard
+              </Link>
+            </div>
+          </div>
+        )}
         <header className="agg-panel agg-corner-frame mb-6 p-6 sm:p-8">
           <p className="text-xs font-black uppercase tracking-[0.3em] text-alpine">
             {form.profile_type === 'venue' ? 'Venue tools' : 'Alpine Pro directory'}
