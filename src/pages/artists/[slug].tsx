@@ -14,7 +14,7 @@ import EventPoster from '@/components/EventPoster';
 import { buildEventDateTime, parseLocalDayjs } from '@/util/dateHelper';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, isCommunityArtistAccessActive } from '@/util/communityAccess';
 import { Building2, ExternalLink, MapPin, Phone, Ticket, Users } from 'lucide-react';
-import { getRegionLabel } from '@/constants/regions';
+import { getRegionLabel, isMusicRegionSlug } from '@/constants/regions';
 dayjs.extend(utc);
 
 interface Event {
@@ -751,6 +751,15 @@ const ArtistProfilePage = ({ artist }: Props) => {
 export const getServerSideProps: GetServerSideProps = async (context) => {
   const slug = context.params?.slug as string;
   const cookie = context.req.headers.cookie || '';
+
+  if (isMusicRegionSlug(slug)) {
+    return {
+      redirect: {
+        destination: `/artists?region=${slug}`,
+        permanent: false,
+      },
+    };
+  }
 
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${slug}`, {

@@ -3,9 +3,16 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
-import { getRegionLabel } from '@/constants/regions';
+import {
+  REGION_ALL,
+  REGION_FILTER_OPTIONS,
+  RegionFilterValue,
+  getRegionLabel,
+  normalizeRegionFilter,
+} from '@/constants/regions';
 
 interface Artist {
   display_name?: string;
@@ -20,18 +27,37 @@ interface Artist {
   venue_state?: string;
 }
 
-export default function ArtistDirectoryPage() {
+type ProfileTypeFilter = 'all' | 'artist' | 'venue' | 'promoter';
+
+type ArtistDirectoryPageProps = {
+  initialRegion?: RegionFilterValue;
+  initialProfileType?: ProfileTypeFilter;
+};
+
+const normalizeProfileTypeFilter = (value: unknown): ProfileTypeFilter => {
+  return value === 'artist' || value === 'venue' || value === 'promoter' ? value : 'all';
+};
+
+export default function ArtistDirectoryPage({
+  initialRegion = REGION_ALL,
+  initialProfileType = 'all',
+}: ArtistDirectoryPageProps = {}) {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [stateFilter, setStateFilter] = useState('');
-  const [zipFilter, setZipFilter] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState<RegionFilterValue>(initialRegion);
+  const [profileTypeFilter, setProfileTypeFilter] = useState<ProfileTypeFilter>(initialProfileType);
+  const router = useRouter();
   const { user } = useAuth()
   const communityAccessActive = isCommunityArtistAccessActive();
   const canCreateArtistPage = hasArtistProfileAccess(user);
   
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   const filteredArtists = artists.filter((artist) => {
+    const profileType = artist.profile_type || 'artist';
+    if (selectedRegion !== REGION_ALL && artist.home_region !== selectedRegion) return false;
+    if (profileTypeFilter !== 'all' && profileType !== profileTypeFilter) return false;
+
     const q = searchQuery.toLowerCase();
     const name = (artist.display_name || '').toLowerCase();
     const genresList = Array.isArray(artist.genres) ? artist.genres : [];
@@ -42,9 +68,39 @@ export default function ArtistDirectoryPage() {
       genresList.join(', ').toLowerCase().includes(q) ||
       location.toLowerCase().includes(q) ||
       regionLabel.includes(q) ||
-      (artist.profile_type || 'artist').includes(q);
+      profileType.includes(q);
     return matchesQuery;
   });
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    const queryRegion = Array.isArray(router.query.region)
+      ? router.query.region[0]
+      : router.query.region;
+    const queryType = Array.isArray(router.query.type)
+      ? router.query.type[0]
+      : router.query.type;
+
+    setSelectedRegion(queryRegion ? normalizeRegionFilter(queryRegion) : initialRegion);
+    setProfileTypeFilter(queryType ? normalizeProfileTypeFilter(queryType) : initialProfileType);
+  }, [router.isReady, router.query.region, router.query.type, initialRegion, initialProfileType]);
+
+  const updateFilters = (nextRegion = selectedRegion, nextProfileType = profileTypeFilter) => {
+    setSelectedRegion(nextRegion);
+    setProfileTypeFilter(nextProfileType);
+    router.replace(
+      {
+        pathname: '/artists',
+        query: {
+          ...router.query,
+          region: nextRegion === REGION_ALL ? undefined : nextRegion,
+          type: nextProfileType === 'all' ? undefined : nextProfileType,
+        },
+      },
+      undefined,
+      { shallow: true }
+    );
+  };
 
   useEffect(() => {
     const fetchArtists = async () => {
@@ -77,6 +133,7 @@ export default function ArtistDirectoryPage() {
           <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">Pro Directory: Artists, Venues &amp; Promoters</h1>
           <p className="mt-2 text-sm text-slate-400 sm:text-base">
             Discover Alpine Groove Guide Pro pages for artists, venues, and promoters across Colorado’s Front Range.
+            {selectedRegion !== REGION_ALL ? ` Currently showing ${getRegionLabel(selectedRegion)}.` : ''}
           </p>
           {canCreateArtistPage ? (
             <div className="mt-4 flex flex-wrap justify-center gap-3">
@@ -106,6 +163,29 @@ export default function ArtistDirectoryPage() {
         </div>
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <select
+            aria-label="Filter directory by region"
+            value={selectedRegion}
+            onChange={(event) => updateFilters(normalizeRegionFilter(event.target.value), profileTypeFilter)}
+            className="w-full rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 focus:border-emerald-400 focus:outline-none sm:max-w-56"
+          >
+            {REGION_FILTER_OPTIONS.map((region) => (
+              <option key={region.slug} value={region.slug}>
+                {region.label}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Filter directory by profile type"
+            value={profileTypeFilter}
+            onChange={(event) => updateFilters(selectedRegion, normalizeProfileTypeFilter(event.target.value))}
+            className="w-full rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 focus:border-emerald-400 focus:outline-none sm:max-w-44"
+          >
+            <option value="all">All profiles</option>
+            <option value="artist">Artists</option>
+            <option value="venue">Venues</option>
+            <option value="promoter">Promoters</option>
+          </select>
           <div className="relative w-full sm:max-w-md">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">🔍</span>
             <input

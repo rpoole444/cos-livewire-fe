@@ -38,7 +38,11 @@ function classNames(...classes: string[]) {
 
 type AuthMode = 'login' | 'register';
 
-export default function Home() {
+type HomeProps = {
+  initialRegion?: RegionFilterValue;
+};
+
+export default function Home({ initialRegion }: HomeProps = {}) {
   const {
     selectedDate: currentDate,
     setSelectedDate: setCurrentDate,
@@ -50,6 +54,7 @@ export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [selectedRegion, setSelectedRegion] = useState<RegionFilterValue>(() => {
+    if (initialRegion) return initialRegion;
     if (typeof window === 'undefined') return REGION_ALL;
     return normalizeRegionFilter(localStorage.getItem(PREFERRED_REGION_STORAGE_KEY));
   });
@@ -84,8 +89,10 @@ export default function Home() {
       : router.query.region;
     if (queryRegion) {
       setSelectedRegion(normalizeRegionFilter(queryRegion));
+    } else if (initialRegion) {
+      setSelectedRegion(initialRegion);
     }
-  }, [router.isReady, router.query.region]);
+  }, [router.isReady, router.query.region, initialRegion]);
 
   const switchAuthMode = () =>
     setAuthMode((m) => (m === 'login' ? 'register' : 'login'));
