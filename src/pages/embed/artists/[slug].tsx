@@ -9,6 +9,7 @@ interface ScheduleEvent {
   date: string;
   start_time?: string | null;
   venue_name?: string | null;
+  venue_profile_id?: number | null;
   location?: string | null;
   slug: string;
 }

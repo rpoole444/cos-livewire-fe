@@ -80,11 +80,17 @@ export async function deleteArtist(slug: string) {
 }
 
 export async function updateArtist(slug: string, artistData: any) {
+  const formData = new FormData();
+  Object.entries(artistData || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (key === 'created_at' || key === 'updated_at' || key === 'deleted_at') return;
+    formData.append(key, Array.isArray(value) ? JSON.stringify(value) : String(value));
+  });
+
   const res = await fetch(`${API_BASE_URL}/api/artists/${slug}`, {
     method: 'PUT',
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(artistData),
+    body: formData,
   });
   if (!res.ok) {
     const err = await res.json();

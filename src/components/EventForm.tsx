@@ -16,6 +16,7 @@ interface Event {
   website_link: string;
   address: string;
   venue_name: string;
+  venue_profile_id?: number | null;
   website: string;
   region: string;
   poster: string | null;

@@ -29,6 +29,7 @@ interface Event {
   website_link: string;
   address: string;
   venue_name: string; 
+  venue_profile_id?: number | null;
   website: string;
   region: string;
   poster: string | null;
@@ -54,6 +55,7 @@ const EventSubmission = () => {
     website_link: '',
     address: '',
     venue_name: '',
+    venue_profile_id: null,
     website: '',
     region: DEFAULT_REGION,
     poster: '',
@@ -124,6 +126,7 @@ const EventSubmission = () => {
 
         const defaults: Partial<Event> = {
           venue_name: profile.display_name || '',
+          venue_profile_id: profile.id || null,
           address: profile.venue_address || '',
           location: [profile.venue_city, profile.venue_state].filter(Boolean).join(', '),
           website: profile.website || '',
@@ -135,6 +138,7 @@ const EventSubmission = () => {
           prev.map((event) => ({
             ...event,
             venue_name: event.venue_name || defaults.venue_name || '',
+            venue_profile_id: event.venue_profile_id || defaults.venue_profile_id || null,
             address: event.address || defaults.address || '',
             location: event.location || defaults.location || '',
             website: event.website || defaults.website || '',
@@ -166,6 +170,7 @@ const initializeAutocomplete = (index: number) => {
                 ...ev,
                 location: place.formatted_address || '',
                 venue_name: place.name || '',
+                venue_profile_id: null,
                 website: place.website || '',
                 address: place.formatted_address || '',
               }
@@ -330,6 +335,9 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         ev.website_link.startsWith('http') ? ev.website_link : `http://${ev.website_link}`
       );
       formData.append('venue_name', ev.venue_name);
+      if (ev.venue_profile_id) {
+        formData.append('venue_profile_id', String(ev.venue_profile_id));
+      }
       formData.append('website', ev.website);
       formData.append('region', ev.region);
       formData.append('recurrenceDates', JSON.stringify(recurrenceDates));

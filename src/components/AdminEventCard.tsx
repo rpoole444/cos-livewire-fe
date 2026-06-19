@@ -242,6 +242,11 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
             disabled={!isEditing}
             className={`mt-1 p-3 border w-full rounded-md text-black ${isEditing ? 'bg-white' : 'bg-gray-100'}`}
           />
+          {editedEvent.venue_profile_id && (
+            <p className="mt-1 text-xs text-emerald-700">
+              Linked to venue profile #{editedEvent.venue_profile_id}
+            </p>
+          )}
         </div>
       )}
 

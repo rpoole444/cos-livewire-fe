@@ -8,6 +8,7 @@ export interface CustomEvent {
   start_time: string; 
   end_time: string;
   venue_name: string;
+  venue_profile_id?: number | null;
   address: string;
   website: string;
   genre: string;
@@ -42,6 +43,7 @@ export interface Event extends CustomEvent {
   website_link: string;
   address: string;
   venue_name: string; 
+  venue_profile_id?: number | null;
   website: string;
   poster: string | null;
   region?: string;

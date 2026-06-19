@@ -22,6 +22,7 @@ interface Event {
   title: string;
   date: string;
   venue_name: string;
+  venue_profile_id?: number | null;
   location: string;
   genre: string;
   slug: string;
