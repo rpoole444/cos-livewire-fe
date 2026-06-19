@@ -1,6 +1,6 @@
 // pages/artists/[slug].tsx
 import { GetServerSideProps } from 'next';
-import { useEffect, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -15,6 +15,13 @@ import { buildEventDateTime, parseLocalDayjs } from '@/util/dateHelper';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, isCommunityArtistAccessActive } from '@/util/communityAccess';
 import { Building2, ExternalLink, MapPin, Phone, Ticket, Users } from 'lucide-react';
 import { getRegionLabel, isMusicRegionSlug } from '@/constants/regions';
+import {
+  buildBookingSnapshotText,
+  buildPromoCopy,
+  formatEventDateLine,
+  getProfileCompleteness,
+  normalizeExternalUrl,
+} from '@/util/profileValueTools';
 dayjs.extend(utc);
 
 interface Event {
@@ -27,7 +34,9 @@ interface Event {
   genre: string;
   slug: string;
   poster?: string | null;
-  start_time?: string
+  start_time?: string;
+  website_link?: string | null;
+  ticket_price?: string | null;
 }
 
 interface Artist {
@@ -65,6 +74,16 @@ interface Artist {
   venue_capacity?: number | null;
   age_policy?: string;
 }
+
+type WidgetOptions = {
+  theme: 'dark' | 'light';
+  layout: 'full' | 'compact';
+  showPoster: boolean;
+  showTicketButton: boolean;
+  limit: number;
+};
+
+type AnalyticsCounts = Record<string, number>;
 
 interface Props {
   artist: Artist | null;
@@ -114,6 +133,28 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
+  const [bookingLinkCopied, setBookingLinkCopied] = useState(false);
+  const [copiedPromoKey, setCopiedPromoKey] = useState<string | null>(null);
+  const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [inquirySubmitting, setInquirySubmitting] = useState(false);
+  const [inquiryMessage, setInquiryMessage] = useState('');
+  const [inquiryError, setInquiryError] = useState('');
+  const [inquiryForm, setInquiryForm] = useState({
+    name: '',
+    email: '',
+    date: '',
+    eventName: '',
+    budget: '',
+    notes: '',
+  });
+  const [widgetOptions, setWidgetOptions] = useState<WidgetOptions>({
+    theme: 'dark',
+    layout: 'full',
+    showPoster: true,
+    showTicketButton: true,
+    limit: 5,
+  });
+  const [analyticsCounts, setAnalyticsCounts] = useState<AnalyticsCounts | null>(null);
   const accessState = artist?.access_state ?? 'none';
   const communityAccessActive = isCommunityArtistAccessActive();
   const isProAccess = accessState === 'pro';
@@ -129,6 +170,27 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const pageTitle = artist?.display_name
     ? `${artist.display_name} – ${profileLabel}`
     : `${profileLabel} Profile – Alpine Groove Guide`;
+
+  const trackArtistEvent = async (
+    eventType: string,
+    options: { eventId?: number; source?: string; metadata?: Record<string, unknown> } = {}
+  ) => {
+    if (!artist?.slug) return;
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist.slug}/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_type: eventType,
+          event_id: options.eventId,
+          source: options.source || 'profile',
+          metadata: options.metadata,
+        }),
+      });
+    } catch (error) {
+      console.warn('[artist analytics] tracking failed', error);
+    }
+  };
 
   useEffect(() => {
     if (artist && !logRef.current) {
@@ -146,6 +208,28 @@ const ArtistProfilePage = ({ artist }: Props) => {
       eventsLoggedRef.current = true;
     }
   }, [artist]);
+
+  useEffect(() => {
+    if (!artist?.slug || isOwner) return;
+    trackArtistEvent('profile_view');
+  }, [artist?.slug, isOwner]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!artist?.slug || !canEdit) return;
+    const loadAnalytics = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist.slug}/analytics`, {
+          credentials: 'include',
+        });
+        if (!response.ok) return;
+        const data = await response.json().catch(() => null);
+        setAnalyticsCounts(data?.counts || null);
+      } catch (error) {
+        console.warn('[artist analytics] summary failed', error);
+      }
+    };
+    loadAnalytics();
+  }, [artist?.slug, canEdit]);
 
   useEffect(() => {
     if (router.query.trial === 'active') {
@@ -177,6 +261,52 @@ const ArtistProfilePage = ({ artist }: Props) => {
     }
   };
 
+  const copyText = async (text: string, key?: string) => {
+    await navigator.clipboard.writeText(text);
+    if (key) {
+      setCopiedPromoKey(key);
+      window.setTimeout(() => setCopiedPromoKey(null), 2200);
+    }
+  };
+
+  const downloadEpk = (filename: string, content: string) => {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleInquirySubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!artist) return;
+    setInquirySubmitting(true);
+    setInquiryError('');
+    setInquiryMessage('');
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist.slug}/inquiry`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inquiryForm),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'Unable to send inquiry.');
+      }
+      setInquiryMessage('Inquiry sent. The profile owner will receive it by email.');
+      setInquiryForm({ name: '', email: '', date: '', eventName: '', budget: '', notes: '' });
+    } catch (error) {
+      setInquiryError(error instanceof Error ? error.message : 'Unable to send inquiry.');
+    } finally {
+      setInquirySubmitting(false);
+    }
+  };
+
   if (!artist) {
     return (
       <>
@@ -205,8 +335,16 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const siteBaseUrl = 'https://app.alpinegrooveguide.com';
   const shareUrl = `${siteBaseUrl}/share/artist/${artist.slug}`;
   const artistUrl = `${siteBaseUrl}/artists/${artist.slug}`;
-  const embedUrl = `${siteBaseUrl}/embed/artists/${artist.slug}?theme=dark&limit=5`;
-  const embedSnippet = `<iframe src="${embedUrl}" title="${artist.display_name.replace(/"/g, '&quot;')} upcoming shows" width="100%" height="560" style="border:0;border-radius:16px;overflow:hidden" loading="lazy"></iframe>`;
+  const embedParams = new URLSearchParams({
+    theme: widgetOptions.theme,
+    layout: widgetOptions.layout,
+    poster: widgetOptions.showPoster ? '1' : '0',
+    tickets: widgetOptions.showTicketButton ? '1' : '0',
+    limit: String(widgetOptions.limit),
+  });
+  const embedUrl = `${siteBaseUrl}/embed/artists/${artist.slug}?${embedParams.toString()}`;
+  const embedHeight = widgetOptions.layout === 'compact' ? 360 : 620;
+  const embedSnippet = `<iframe src="${embedUrl}" title="${artist.display_name.replace(/"/g, '&quot;')} upcoming shows" width="100%" height="${embedHeight}" style="border:0;border-radius:16px;overflow:hidden" loading="lazy"></iframe>`;
   const description = artist.bio
     ? artist.bio.length > 150
       ? `${artist.bio.slice(0, 147).trim()}…`
@@ -234,6 +372,13 @@ const ArtistProfilePage = ({ artist }: Props) => {
     artist.venue_postal_code,
   ].filter(Boolean).join(', ');
   const bookingEmail = artist.booking_email || artist.contact_email;
+  const completeness = getProfileCompleteness(artist);
+  const epkText = buildBookingSnapshotText(artist, artistUrl);
+  const bookingAnchorUrl = `${artistUrl}#booking-inquiry`;
+  const latestVideoLabel = artist.embed_youtube ? 'Video ready' : 'Add a YouTube video';
+  const analyticsTotal = analyticsCounts
+    ? Object.values(analyticsCounts).reduce((sum, value) => sum + Number(value || 0), 0)
+    : 0;
 
   return (
     <>
@@ -352,19 +497,25 @@ const ArtistProfilePage = ({ artist }: Props) => {
                         Contact / Book
                       </div>
                     ) : (
-                      <a
-                        href={`mailto:${bookingEmail}`}
+                      <button
+                        id="booking-inquiry"
+                        type="button"
+                        onClick={() => {
+                          setInquiryOpen((open) => !open);
+                          trackArtistEvent('contact_click');
+                        }}
                         className="inline-flex w-full items-center justify-center rounded-2xl border border-emerald-400/60 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:bg-emerald-500/20"
                       >
-                        {isVenue ? 'Booking / Venue Contact' : 'Contact / Book'}
-                      </a>
+                        {isVenue ? 'Send venue inquiry' : 'Send booking inquiry'}
+                      </button>
                     ))}
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <a
-                      href={artist.website?.startsWith('http') ? artist.website : `https://${artist.website ?? ''}`}
+                      href={normalizeExternalUrl(artist.website)}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => trackArtistEvent('website_click')}
                       className={`rounded-2xl border border-slate-700 px-4 py-3 text-center text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white ${
                         shouldBlur || !artist.website ? 'pointer-events-none opacity-60 blur-[1px]' : ''
                       }`}
@@ -372,15 +523,10 @@ const ArtistProfilePage = ({ artist }: Props) => {
                       Official Website <ExternalLink className="ml-1 inline h-3.5 w-3.5" />
                     </a>
                     <a
-                      href={
-                        artist.tip_jar_url?.startsWith('http')
-                          ? artist.tip_jar_url
-                          : artist.tip_jar_url
-                          ? `https://${artist.tip_jar_url}`
-                          : '#'
-                      }
+                      href={normalizeExternalUrl(artist.tip_jar_url) || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={() => trackArtistEvent('tip_click')}
                       className={`rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-center text-sm font-semibold text-amber-200 transition hover:border-amber-300 hover:bg-amber-500/20 ${
                         shouldBlur || !artist.tip_jar_url ? 'pointer-events-none opacity-60 blur-[1px]' : ''
                       }`}
@@ -388,6 +534,62 @@ const ArtistProfilePage = ({ artist }: Props) => {
                       {isVenue ? 'Support this venue' : 'Send a Tip 💐'}
                     </a>
                   </div>
+
+                  {inquiryOpen && !shouldBlur && (
+                    <form onSubmit={handleInquirySubmit} className="space-y-3 rounded-2xl border border-slate-800 bg-black/30 p-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <input
+                          value={inquiryForm.name}
+                          onChange={(event) => setInquiryForm((prev) => ({ ...prev, name: event.target.value }))}
+                          required
+                          placeholder="Your name"
+                          className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                        />
+                        <input
+                          value={inquiryForm.email}
+                          onChange={(event) => setInquiryForm((prev) => ({ ...prev, email: event.target.value }))}
+                          required
+                          type="email"
+                          placeholder="Your email"
+                          className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                        />
+                        <input
+                          value={inquiryForm.date}
+                          onChange={(event) => setInquiryForm((prev) => ({ ...prev, date: event.target.value }))}
+                          type="date"
+                          className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                        />
+                        <input
+                          value={inquiryForm.budget}
+                          onChange={(event) => setInquiryForm((prev) => ({ ...prev, budget: event.target.value }))}
+                          placeholder="Budget range"
+                          className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                        />
+                      </div>
+                      <input
+                        value={inquiryForm.eventName}
+                        onChange={(event) => setInquiryForm((prev) => ({ ...prev, eventName: event.target.value }))}
+                        placeholder="Venue / event"
+                        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                      />
+                      <textarea
+                        value={inquiryForm.notes}
+                        onChange={(event) => setInquiryForm((prev) => ({ ...prev, notes: event.target.value }))}
+                        placeholder="Notes, set length, backline needs, expected audience, or anything helpful"
+                        rows={4}
+                        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500"
+                      />
+                      {inquiryError && <p className="text-xs text-red-300">{inquiryError}</p>}
+                      {inquiryMessage && <p className="text-xs text-emerald-300">{inquiryMessage}</p>}
+                      <button
+                        type="submit"
+                        disabled={inquirySubmitting}
+                        className="w-full rounded-xl bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {inquirySubmitting ? 'Sending inquiry...' : 'Send inquiry'}
+                      </button>
+                    </form>
+                  )}
 
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -433,6 +635,126 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 </div>
               </div>
             </section>
+
+          <section className="agg-panel agg-corner-frame p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.28em] text-alpine">Smart EPK</p>
+                <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">Booking Snapshot</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-ivory/65">
+                  A clean, booker-friendly snapshot with the details venues, presenters, and media usually need first.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (shouldBlur) return;
+                    await navigator.clipboard.writeText(bookingAnchorUrl);
+                    setBookingLinkCopied(true);
+                    window.setTimeout(() => setBookingLinkCopied(false), 2200);
+                  }}
+                  disabled={shouldBlur}
+                  className="rounded-xl border border-alpine/50 px-4 py-2.5 text-sm font-semibold text-mist transition hover:border-alpine hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {bookingLinkCopied ? 'Booking link copied' : 'Copy booking link'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (shouldBlur) return;
+                    downloadEpk(`${artist.slug}-booking-snapshot.txt`, epkText);
+                  }}
+                  disabled={shouldBlur}
+                  className="rounded-xl bg-sun-gold px-4 py-2.5 text-sm font-black text-night transition hover:bg-mist disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Download EPK
+                </button>
+              </div>
+            </div>
+
+            {shouldBlur ? (
+              <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-5 text-sm text-slate-300">
+                Booking snapshot details unlock when this profile has active Alpine Pro access.
+              </div>
+            ) : (
+              <>
+            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="border border-gold/25 bg-black/35 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Genre / style</p>
+                <p className="mt-2 font-semibold text-ivory">{artist.genres?.length ? artist.genres.join(', ') : 'Not listed'}</p>
+              </div>
+              <div className="border border-gold/25 bg-black/35 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Hometown / region</p>
+                <p className="mt-2 font-semibold text-ivory">
+                  {[artist.venue_city, artist.venue_state].filter(Boolean).join(', ') || (artist.home_region ? getRegionLabel(artist.home_region) : 'Not set')}
+                </p>
+              </div>
+              <div className="border border-gold/25 bg-black/35 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Booking email</p>
+                <p className="mt-2 break-words font-semibold text-ivory">{bookingEmail || 'Not provided'}</p>
+              </div>
+              <div className="border border-gold/25 bg-black/35 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Website</p>
+                {artist.website ? (
+                  <a
+                    href={normalizeExternalUrl(artist.website)}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => trackArtistEvent('website_click', { source: 'epk' })}
+                    className="mt-2 block break-words font-semibold text-alpine underline"
+                  >
+                    {artist.website}
+                  </a>
+                ) : (
+                  <p className="mt-2 font-semibold text-ivory">Not provided</p>
+                )}
+              </div>
+              <div className="border border-gold/25 bg-black/35 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Tip jar</p>
+                {artist.tip_jar_url ? (
+                  <a
+                    href={normalizeExternalUrl(artist.tip_jar_url)}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => trackArtistEvent('tip_click', { source: 'epk' })}
+                    className="mt-2 block break-words font-semibold text-alpine underline"
+                  >
+                    {artist.tip_jar_url}
+                  </a>
+                ) : (
+                  <p className="mt-2 font-semibold text-ivory">Not provided</p>
+                )}
+              </div>
+              <div className="border border-gold/25 bg-black/35 p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Latest video</p>
+                <p className="mt-2 font-semibold text-ivory">{latestVideoLabel}</p>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {artist.promo_photo && (
+                <a href={artist.promo_photo} target="_blank" rel="noreferrer" className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-semibold text-emerald-200 hover:border-emerald-300">
+                  Promo photo
+                </a>
+              )}
+              {artist.stage_plot && (
+                <a href={artist.stage_plot} target="_blank" rel="noreferrer" className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-semibold text-emerald-200 hover:border-emerald-300">
+                  Stage plot / tech specs
+                </a>
+              )}
+              {artist.press_kit && (
+                <a href={artist.press_kit} target="_blank" rel="noreferrer" className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-semibold text-emerald-200 hover:border-emerald-300">
+                  Press kit
+                </a>
+              )}
+              <a href="#upcoming-dates" className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-semibold text-emerald-200 hover:border-emerald-300">
+                Upcoming dates
+              </a>
+            </div>
+              </>
+            )}
+          </section>
 
           {isVenue && (
             <section className="grid gap-4 md:grid-cols-2">
@@ -501,6 +823,57 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 </div>
               )}
             </div>
+          )}
+
+          {canEdit && (
+            <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Profile completeness</p>
+                <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-4 border-emerald-300/70 bg-slate-950 text-2xl font-black text-white">
+                    {completeness.percent}%
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-white">Make this page easier to book.</h2>
+                    <p className="mt-1 text-sm text-slate-300">
+                      {completeness.missing.length
+                        ? `Next best improvements: ${completeness.missing.slice(0, 3).join(' ')}`
+                        : 'This profile has the core booking assets in place.'}
+                    </p>
+                    <Link href={`/artists/edit/${artist.slug}`} className="mt-3 inline-flex rounded-xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-300">
+                      Improve profile
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Basic analytics</p>
+                <h2 className="mt-2 text-xl font-semibold text-white">Last 30 days</h2>
+                {analyticsCounts ? (
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                    {[
+                      ['Profile views', analyticsCounts.profile_view],
+                      ['Embed views', analyticsCounts.embed_view],
+                      ['Website clicks', analyticsCounts.website_click],
+                      ['Ticket clicks', analyticsCounts.ticket_click],
+                      ['Contact clicks', analyticsCounts.contact_click],
+                      ['Tip clicks', analyticsCounts.tip_click],
+                    ].map(([label, value]) => (
+                      <div key={String(label)} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                        <p className="text-xs text-slate-500">{label}</p>
+                        <p className="mt-1 text-2xl font-semibold text-white">{Number(value || 0)}</p>
+                      </div>
+                    ))}
+                    <p className="col-span-2 text-xs text-slate-500">
+                      Total tracked interactions: {analyticsTotal}. Analytics are intentionally simple for now.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm text-slate-400">Analytics will appear here once the profile starts receiving public traffic.</p>
+                )}
+              </div>
+            </section>
           )}
 
           <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
@@ -618,7 +991,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
             </section>
           )}
 
-          <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
+          <section id="upcoming-dates" className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6">
             <h2 className="text-2xl font-semibold text-white">
               {isVenue ? 'Upcoming Shows at This Venue' : 'Upcoming Shows'}
             </h2>
@@ -635,31 +1008,66 @@ const ArtistProfilePage = ({ artist }: Props) => {
                     const timeLabel = timeValid ? timeObj!.format('h:mm A') : null;
                     const dateLine = dateLabel ? (timeLabel ? `${dateLabel} • ${timeLabel}` : dateLabel) : timeLabel;
 
+                    const promo = buildPromoCopy(event, artist.display_name);
+                    const ticketUrl = normalizeExternalUrl(event.website_link);
+
                     return (
-                      <Link
-                        key={event.id}
-                        href={`/eventRouter/${event.slug}`}
-                        className="mb-3 w-full px-4 last:mb-0 sm:px-0"
-                      >
-                        <div className="flex flex-col gap-2 rounded-xl border border-slate-800 bg-slate-900/60 p-3 transition hover:scale-[1.01] hover:border-emerald-400/60 hover:bg-slate-900 sm:flex-row sm:items-center sm:gap-4 sm:p-3">
-                          <EventPoster
-                            posterUrl={event.poster}
-                            title={event.title}
-                            variant="card"
-                            className="h-40 w-full flex-shrink-0 sm:h-40 sm:w-32"
-                          />
-                          <div className="flex flex-1 flex-col justify-center sm:mt-0">
-                            {dateLine && (
-                              <p className="text-[11px] uppercase tracking-[0.3em] text-emerald-300">{dateLine}</p>
-                            )}
-                            <h3 className="mt-1 text-sm font-semibold leading-tight text-white sm:text-base">{event.title}</h3>
-                            <p className="text-xs text-slate-300 sm:text-sm">
-                              📍 {event.venue_name} {event.location ? `• ${event.location}` : ''}
-                            </p>
-                            <p className="text-[11px] text-slate-400 sm:text-xs">🎵 {event.genre}</p>
-                          </div>
+                      <div key={event.id} className="mb-3 rounded-xl border border-slate-800 bg-slate-900/60 p-3 transition hover:border-emerald-400/60 hover:bg-slate-900 last:mb-0">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                          <Link href={`/eventRouter/${event.slug}`} className="contents">
+                            <EventPoster
+                              posterUrl={event.poster}
+                              title={event.title}
+                              variant="card"
+                              className="h-40 w-full flex-shrink-0 sm:h-40 sm:w-32"
+                            />
+                            <div className="flex flex-1 flex-col justify-center sm:mt-0">
+                              {dateLine && (
+                                <p className="text-[11px] uppercase tracking-[0.3em] text-emerald-300">{dateLine}</p>
+                              )}
+                              <h3 className="mt-1 text-sm font-semibold leading-tight text-white sm:text-base">{event.title}</h3>
+                              <p className="text-xs text-slate-300 sm:text-sm">
+                                📍 {event.venue_name} {event.location ? `• ${event.location}` : ''}
+                              </p>
+                              <p className="text-[11px] text-slate-400 sm:text-xs">🎵 {event.genre}</p>
+                            </div>
+                          </Link>
+                          {ticketUrl && (
+                            <a
+                              href={ticketUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              onClick={() => trackArtistEvent('ticket_click', { eventId: event.id })}
+                              className="rounded-xl border border-amber-400/50 bg-amber-500/10 px-4 py-2 text-center text-xs font-semibold text-amber-100 hover:border-amber-300"
+                            >
+                              Tickets / info
+                            </a>
+                          )}
                         </div>
-                      </Link>
+
+                        {canEdit && (
+                          <div className="mt-3 rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Promo copy</p>
+                            <p className="mt-1 text-sm text-slate-300">{promo.sms}</p>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {[
+                                ['instagram', 'Instagram caption', promo.instagram],
+                                ['facebook', 'Facebook text', promo.facebook],
+                                ['sms', 'Short SMS', promo.sms],
+                              ].map(([key, label, text]) => (
+                                <button
+                                  key={key}
+                                  type="button"
+                                  onClick={() => copyText(String(text), `${event.id}-${key}`)}
+                                  className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-emerald-300 hover:text-white"
+                                >
+                                  {copiedPromoKey === `${event.id}-${key}` ? 'Copied' : `Copy ${label}`}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
@@ -693,8 +1101,62 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 Put this {isVenue ? 'venue calendar' : 'schedule'} on your website
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
-                Copy this iframe into any page builder or HTML block. Approved upcoming shows update automatically.
+                Copy this iframe into any page builder or HTML block. Approved upcoming shows update automatically, and these settings let you match the widget to your site.
               </p>
+              <div className="mt-5 grid gap-3 md:grid-cols-5">
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Theme
+                  <select
+                    value={widgetOptions.theme}
+                    onChange={(event) => setWidgetOptions((prev) => ({ ...prev, theme: event.target.value === 'light' ? 'light' : 'dark' }))}
+                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-white"
+                  >
+                    <option value="dark">Dark</option>
+                    <option value="light">Light</option>
+                  </select>
+                </label>
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Layout
+                  <select
+                    value={widgetOptions.layout}
+                    onChange={(event) => setWidgetOptions((prev) => ({ ...prev, layout: event.target.value === 'compact' ? 'compact' : 'full' }))}
+                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-white"
+                  >
+                    <option value="full">Full</option>
+                    <option value="compact">Compact</option>
+                  </select>
+                </label>
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Count
+                  <input
+                    type="number"
+                    min={1}
+                    max={12}
+                    value={widgetOptions.limit}
+                    onChange={(event) => {
+                      const next = Number.parseInt(event.target.value, 10);
+                      setWidgetOptions((prev) => ({ ...prev, limit: Number.isFinite(next) ? Math.min(Math.max(next, 1), 12) : prev.limit }));
+                    }}
+                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-white"
+                  />
+                </label>
+                <label className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm font-semibold text-slate-200">
+                  <input
+                    type="checkbox"
+                    checked={widgetOptions.showPoster}
+                    onChange={(event) => setWidgetOptions((prev) => ({ ...prev, showPoster: event.target.checked }))}
+                  />
+                  Show poster
+                </label>
+                <label className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm font-semibold text-slate-200">
+                  <input
+                    type="checkbox"
+                    checked={widgetOptions.showTicketButton}
+                    onChange={(event) => setWidgetOptions((prev) => ({ ...prev, showTicketButton: event.target.checked }))}
+                  />
+                  Show ticket button
+                </label>
+              </div>
               <textarea
                 readOnly
                 value={embedSnippet}

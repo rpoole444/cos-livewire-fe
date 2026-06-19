@@ -1,7 +1,9 @@
 import type { GetServerSideProps } from 'next';
 import Head from 'next/head';
+import { useEffect } from 'react';
 import dayjs from 'dayjs';
 import { buildEventDateTime, parseLocalDayjs } from '@/util/dateHelper';
+import { normalizeExternalUrl } from '@/util/profileValueTools';
 
 interface ScheduleEvent {
   id: number;
@@ -11,6 +13,8 @@ interface ScheduleEvent {
   venue_name?: string | null;
   venue_profile_id?: number | null;
   location?: string | null;
+  poster?: string | null;
+  website_link?: string | null;
   slug: string;
 }
 
@@ -25,12 +29,16 @@ interface ArtistSchedule {
 interface EmbedScheduleProps {
   schedule: ArtistSchedule;
   theme: 'dark' | 'light';
+  layout: 'full' | 'compact';
+  showPoster: boolean;
+  showTicketButton: boolean;
 }
 
 const APP_URL = 'https://app.alpinegrooveguide.com';
 
-export default function EmbedArtistSchedule({ schedule, theme }: EmbedScheduleProps) {
+export default function EmbedArtistSchedule({ schedule, theme, layout, showPoster, showTicketButton }: EmbedScheduleProps) {
   const isLight = theme === 'light';
+  const isCompact = layout === 'compact';
   const pageClass = isLight
     ? 'min-h-screen bg-stone-50 text-stone-950'
     : 'min-h-screen bg-slate-950 text-slate-50';
@@ -42,13 +50,31 @@ export default function EmbedArtistSchedule({ schedule, theme }: EmbedSchedulePr
   const accentText = isLight ? 'text-amber-700' : 'text-emerald-300';
   const isVenue = schedule.profile_type === 'venue';
 
+  const trackEmbedEvent = async (eventType: string, eventId?: number) => {
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${schedule.slug}/track`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event_type: eventType,
+          event_id: eventId,
+          source: 'embed',
+        }),
+      });
+    } catch {}
+  };
+
+  useEffect(() => {
+    trackEmbedEvent('embed_view');
+  }, [schedule.slug]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <>
       <Head>
         <title>{`${schedule.display_name} upcoming shows`}</title>
         <meta name="robots" content="noindex" />
       </Head>
-      <main className={`${pageClass} p-4 sm:p-5`}>
+      <main className={`${pageClass} ${isCompact ? 'p-3' : 'p-4 sm:p-5'}`}>
         <header className="mb-4 flex items-end justify-between gap-4">
           <div>
             <p className={`text-[10px] font-semibold uppercase tracking-[0.28em] ${accentText}`}>
@@ -77,25 +103,56 @@ export default function EmbedArtistSchedule({ schedule, theme }: EmbedSchedulePr
               const venueLine = [event.venue_name, event.location].filter(Boolean).join(' · ');
 
               return (
-                <a
+                <div
                   key={event.id}
-                  href={`${APP_URL}/eventRouter/${event.slug}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={`grid grid-cols-[4.75rem_1fr_auto] items-center gap-3 rounded-xl border p-3 transition ${cardClass}`}
+                  className={`grid items-center gap-3 rounded-xl border p-3 transition ${cardClass} ${
+                    showPoster && !isCompact ? 'grid-cols-[5rem_1fr_auto]' : 'grid-cols-[4.75rem_1fr_auto]'
+                  }`}
                 >
+                  {showPoster && !isCompact && event.poster ? (
+                    <img src={event.poster} alt="" className="h-16 w-20 rounded-lg object-cover" />
+                  ) : (
                   <div>
                     <p className={`text-[11px] font-bold uppercase tracking-[0.12em] ${accentText}`}>
                       {dateLabel}
                     </p>
                     {timeLabel && <p className={`mt-1 text-xs ${mutedText}`}>{timeLabel}</p>}
                   </div>
+                  )}
                   <div className="min-w-0">
+                    {showPoster && !isCompact && event.poster && (
+                      <p className={`text-[11px] font-bold uppercase tracking-[0.12em] ${accentText}`}>
+                        {dateLabel}{timeLabel ? ` · ${timeLabel}` : ''}
+                      </p>
+                    )}
                     <h2 className="truncate text-sm font-semibold sm:text-base">{event.title}</h2>
-                    {venueLine && <p className={`mt-0.5 truncate text-xs sm:text-sm ${secondaryText}`}>{venueLine}</p>}
+                    {!isCompact && venueLine && <p className={`mt-0.5 truncate text-xs sm:text-sm ${secondaryText}`}>{venueLine}</p>}
                   </div>
-                  <span className={`text-lg ${mutedText}`} aria-hidden="true">↗</span>
-                </a>
+                  <div className="flex flex-col items-end gap-1">
+                    {showTicketButton && event.website_link ? (
+                      <a
+                        href={normalizeExternalUrl(event.website_link)}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => trackEmbedEvent('ticket_click', event.id)}
+                        className={`rounded-lg px-2 py-1 text-[11px] font-semibold ${
+                          isLight ? 'bg-amber-100 text-amber-900' : 'bg-emerald-400 text-slate-950'
+                        }`}
+                      >
+                        Tickets
+                      </a>
+                    ) : null}
+                    <a
+                      href={`${APP_URL}/eventRouter/${event.slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`text-lg ${mutedText}`}
+                      aria-label={`View ${event.title}`}
+                    >
+                      ↗
+                    </a>
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -119,6 +176,9 @@ export default function EmbedArtistSchedule({ schedule, theme }: EmbedSchedulePr
 export const getServerSideProps: GetServerSideProps<EmbedScheduleProps> = async (context) => {
   const slug = String(context.params?.slug || '');
   const theme = context.query.theme === 'light' ? 'light' : 'dark';
+  const layout = context.query.layout === 'compact' ? 'compact' : 'full';
+  const showPoster = context.query.poster !== '0';
+  const showTicketButton = context.query.tickets !== '0';
   const requestedLimit = Number.parseInt(String(context.query.limit || ''), 10);
   const limit = Number.isFinite(requestedLimit)
     ? Math.min(Math.max(requestedLimit, 1), 12)
@@ -134,7 +194,7 @@ export const getServerSideProps: GetServerSideProps<EmbedScheduleProps> = async 
     }
 
     const schedule = await response.json();
-    return { props: { schedule, theme } };
+    return { props: { schedule, theme, layout, showPoster, showTicketButton } };
   } catch (error) {
     console.error('GSSP /embed/artists/[slug] error:', error);
     return { notFound: true };
