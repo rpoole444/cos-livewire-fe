@@ -34,6 +34,8 @@ interface Event {
   genre: string;
   slug: string;
   poster?: string | null;
+  source?: string | null;
+  source_label?: string | null;
   start_time?: string;
   website_link?: string | null;
   ticket_price?: string | null;
@@ -1200,6 +1202,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                               posterUrl={event.poster}
                               title={event.title}
                               variant="card"
+                              fit={event.source || event.source_label ? 'contain' : 'cover'}
                               className="h-40 w-full flex-shrink-0 sm:h-40 sm:w-32"
                             />
                             <div className="flex flex-1 flex-col justify-center sm:mt-0">

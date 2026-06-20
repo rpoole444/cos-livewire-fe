@@ -15,6 +15,8 @@ type EventCardProps = {
   region?: string | null;
   venueName?: string | null;
   imageUrl?: string | null;
+  source?: string | null;
+  sourceLabel?: string | null;
   isFeatured?: boolean;
   canManage?: boolean;
   onDelete?: (id: number) => void | Promise<void>;
@@ -29,6 +31,8 @@ const EventCard: React.FC<EventCardProps> = ({
   region,
   venueName,
   imageUrl,
+  source,
+  sourceLabel,
   isFeatured,
   canManage,
   onDelete,
@@ -42,11 +46,18 @@ const EventCard: React.FC<EventCardProps> = ({
 
   const formattedDate = isValidDate ? parsed!.format("ddd, MMM D • h:mm A") : "Date TBA";
   const imageSrc = getEventImageSrc(imageUrl);
+  const shouldContainPoster = Boolean(source || sourceLabel);
 
   const cardContent = (
     <>
       <div className="relative h-72 w-full">
-        <EventPoster posterUrl={imageSrc} title={title} variant="card" className="h-full w-full" />
+        <EventPoster
+          posterUrl={imageSrc}
+          title={title}
+          variant="card"
+          fit={shouldContainPoster ? "contain" : "cover"}
+          className="h-full w-full"
+        />
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent">
           <div className="pointer-events-auto px-4 pb-4 pt-3 space-y-1">
@@ -60,6 +71,11 @@ const EventCard: React.FC<EventCardProps> = ({
               {isFeatured && (
                 <span className="border border-gold/60 bg-gold/15 px-2 py-0.5 text-[10px] text-sun-gold">
                   Featured
+                </span>
+              )}
+              {sourceLabel && (
+                <span className="border border-copper/60 bg-copper/15 px-2 py-0.5 text-[10px] text-mist">
+                  {sourceLabel}
                 </span>
               )}
             </div>

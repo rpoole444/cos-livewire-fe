@@ -87,6 +87,7 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
             {event.region ? infoPill(getRegionLabel(event.region)) : null}
             {event.eventType ? infoPill(event.eventType) : null}
             {event.age_restriction ? infoPill(event.age_restriction) : null}
+            {event.source_label ? infoPill(event.source_label) : null}
           </div>
           <h2 className="text-2xl font-semibold text-slate-50 sm:text-3xl">{event.title}</h2>
           <p className="text-sm font-semibold text-emerald-300">
@@ -105,6 +106,11 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
           )}
           {event.address && (
             <p className="text-sm text-slate-400">{event.address}</p>
+          )}
+          {event.source_label && (
+            <p className="rounded-2xl border border-copper/40 bg-copper/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-mist">
+              {event.source_label}
+            </p>
           )}
           {formattedPrice && (
             <p className="text-sm text-slate-200">

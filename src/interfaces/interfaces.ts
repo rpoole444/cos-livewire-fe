@@ -18,6 +18,11 @@ export interface CustomEvent {
   website_link: string;
   poster: string | null;
   region?: string;
+  source?: string | null;
+  source_label?: string | null;
+  source_fingerprint?: string | null;
+  source_import_event_id?: number | null;
+  artist_profile_id?: number | null;
   eventType: string;
   recurrence?: string,
   repeatCount?: number,

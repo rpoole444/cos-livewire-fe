@@ -87,6 +87,18 @@ const AdminImportBatchPage = () => {
     return [];
   };
 
+  const formatWarning = (warning: string) => {
+    const labels: Record<string, string> = {
+      duplicate_existing_event: 'Already on calendar',
+      duplicate_existing_import: 'Already imported',
+      duplicate_in_batch: 'Duplicate in this batch',
+      multiple_artists: 'Multiple artists',
+      multiple_times: 'Multiple times',
+      artist_missing: 'Artist missing',
+    };
+    return labels[warning] || warning;
+  };
+
   const getStatus = (event: ImportEvent) => {
     if (event.status) return event.status;
     if (event.is_accepted) return 'accepted';
@@ -444,7 +456,7 @@ const AdminImportBatchPage = () => {
                                     key={`${event.id}-warning-${index}`}
                                     className="rounded-full border border-amber-400/60 bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-200"
                                   >
-                                    {warning}
+                                    {formatWarning(warning)}
                                   </span>
                                 ))}
                               </div>
