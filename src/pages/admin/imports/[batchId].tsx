@@ -126,7 +126,9 @@ const AdminImportBatchPage = () => {
       }
       setEvents((prev) =>
         prev.map((item) =>
-          item.id === event.id ? { ...item, status: 'ACCEPTED', is_accepted: true } : item
+          item.id === event.id
+            ? { ...item, ...data, status: data?.status ?? 'accepted', is_accepted: true, is_rejected: false }
+            : item
         )
       );
       setStatusMessage('Event accepted.');
@@ -158,7 +160,9 @@ const AdminImportBatchPage = () => {
       }
       setEvents((prev) =>
         prev.map((item) =>
-          item.id === event.id ? { ...item, status: 'REJECTED', is_rejected: true } : item
+          item.id === event.id
+            ? { ...item, ...data, status: data?.status ?? 'rejected', is_accepted: false, is_rejected: true }
+            : item
         )
       );
       setStatusMessage('Event rejected.');
@@ -370,7 +374,7 @@ const AdminImportBatchPage = () => {
                       const isRejected = status === 'rejected';
                       const isAccepted = status === 'accepted';
                       const isEditing = editingId === event.id;
-                      const disableActions = isRejected || isAccepted || actionId === event.id;
+                      const disableActions = actionId === event.id;
                       const rowTone = isAccepted
                         ? 'bg-emerald-500/10'
                         : isRejected
@@ -488,20 +492,24 @@ const AdminImportBatchPage = () => {
                                   >
                                     Edit
                                   </button>
-                                  <button
-                                    onClick={() => handleAccept(event)}
-                                    disabled={disableActions}
-                                    className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-                                  >
-                                    Accept
-                                  </button>
-                                  <button
-                                    onClick={() => handleReject(event)}
-                                    disabled={disableActions}
-                                    className="rounded-full bg-rose-500 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-60"
-                                  >
-                                    Reject
-                                  </button>
+                                  {!isAccepted && (
+                                    <button
+                                      onClick={() => handleAccept(event)}
+                                      disabled={disableActions}
+                                      className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                      Accept
+                                    </button>
+                                  )}
+                                  {!isRejected && (
+                                    <button
+                                      onClick={() => handleReject(event)}
+                                      disabled={disableActions}
+                                      className="rounded-full bg-rose-500 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                      Reject
+                                    </button>
+                                  )}
                                 </>
                               )}
                             </div>
