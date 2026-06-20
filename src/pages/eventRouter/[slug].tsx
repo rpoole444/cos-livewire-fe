@@ -6,6 +6,7 @@ import { getEvents } from "../api/route";
 import EventDetailCard from "@/components/EventDetailCard";
 import WelcomeUser from "@/components/WelcomeUser";
 import UpcomingShows from "@/components/UpcomingShows";
+import EventQualityChecklist from "@/components/EventQualityChecklist";
 import LoginForm from "@/components/login";
 import RegistrationForm from "@/components/registration";
 import { Artist, Event } from "@/interfaces/interfaces";
@@ -16,6 +17,16 @@ import { useRouter } from "next/router";
 import { deleteEvent, fetchEventDetailsBySlug } from "../api/route";
 import { canDeleteEvent, canManageEvent } from "@/util/eventPermissions";
 
+type EventClaimStatus = {
+  id: number;
+  event_id: number;
+  artist_profile_id: number;
+  status: "pending" | "approved" | "rejected";
+  event_title: string;
+  event_slug: string;
+  artist_display_name: string;
+  admin_notes?: string | null;
+};
 
 interface Props {
   event: Event;
@@ -31,6 +42,7 @@ const EventDetailPage = ({ event, events }: Props) => {
   const [claimStatus, setClaimStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [claimMessage, setClaimMessage] = useState("");
   const [claimImageHint, setClaimImageHint] = useState<string | null>(null);
+  const [myClaims, setMyClaims] = useState<EventClaimStatus[]>([]);
   const router = useRouter();
   const canManage = canManageEvent(user, currentEvent);
   const canDelete = canDeleteEvent(user, currentEvent);
@@ -41,6 +53,12 @@ const EventDetailPage = ({ event, events }: Props) => {
   const alreadyClaimedByViewer = Boolean(
     user && currentEvent.claimed_artist?.user_id === user.id,
   );
+  const eventClaimsForViewer = useMemo(
+    () => myClaims.filter((claim) => Number(claim.event_id) === Number(currentEvent.id)),
+    [currentEvent.id, myClaims],
+  );
+  const pendingClaimForViewer = eventClaimsForViewer.find((claim) => claim.status === "pending");
+  const rejectedClaimForViewer = eventClaimsForViewer.find((claim) => claim.status === "rejected");
   const pageTitle = currentEvent?.title
     ? `${currentEvent.title} – Event Details – Alpine Groove Guide`
     : "Event Details – Alpine Groove Guide";
@@ -59,14 +77,17 @@ const EventDetailPage = ({ event, events }: Props) => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, {
-          credentials: "include",
-        });
-        if (!res.ok) return;
-        const data = await res.json();
+        const [profileRes, claimsRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, { credentials: "include" }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events/claims/mine`, { credentials: "include" }),
+        ]);
+        if (!profileRes.ok) return;
+        const data = await profileRes.json();
+        const claimsData = claimsRes.ok ? await claimsRes.json() : [];
         const profiles = Array.isArray(data.profiles) ? data.profiles : [];
         if (!cancelled) {
           setManagedProfiles(profiles);
+          setMyClaims(Array.isArray(claimsData) ? claimsData : []);
           const firstArtist = profiles.find((profile: Artist) => (profile.profile_type || "artist") === "artist");
           setSelectedProfileId(firstArtist?.id || "");
         }
@@ -116,6 +137,19 @@ const EventDetailPage = ({ event, events }: Props) => {
         ...prev,
         ...data.event,
       }));
+      if (data.claim) {
+        setMyClaims((prev) => [
+          {
+            ...data.claim,
+            event_title: currentEvent.title,
+            event_slug: currentEvent.slug,
+            artist_display_name:
+              artistProfiles.find((profile) => Number(profile.id) === Number(selectedProfileId))?.display_name ||
+              "Your artist profile",
+          },
+          ...prev.filter((claim) => Number(claim.id) !== Number(data.claim.id)),
+        ]);
+      }
       setClaimStatus("success");
       setClaimMessage(
         data.prompt ||
@@ -167,12 +201,18 @@ const EventDetailPage = ({ event, events }: Props) => {
                     This event is attached to the artist profile and will appear on that artist&apos;s schedule and embeds.
                   </p>
                   {alreadyClaimedByViewer && (
-                    <Link
-                      href={`/events/edit/${currentEvent.id}`}
-                      className="inline-flex items-center justify-center rounded-lg bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
-                    >
-                      Improve this listing
-                    </Link>
+                    <div className="space-y-3">
+                      <div className="rounded-2xl border border-emerald-400/40 bg-emerald-400/10 p-4 text-sm text-emerald-50">
+                        <p className="font-semibold">Claim approved.</p>
+                        <p className="mt-1">You can now edit this listing and make it stronger.</p>
+                      </div>
+                      <Link
+                        href={`/events/edit/${currentEvent.id}`}
+                        className="inline-flex items-center justify-center rounded-lg bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
+                      >
+                        Improve this listing
+                      </Link>
+                    </div>
                   )}
                 </div>
               ) : user ? (
@@ -181,7 +221,14 @@ const EventDetailPage = ({ event, events }: Props) => {
                   <p className="text-sm text-slate-300">
                     Claim it with your artist profile so it appears on your schedule and you can improve the public listing.
                   </p>
-                  {claimStatus === "success" ? (
+                  {pendingClaimForViewer ? (
+                    <div className="rounded-2xl border border-amber-400/40 bg-amber-400/10 p-4 text-sm text-amber-50">
+                      <p className="font-semibold">Claim pending.</p>
+                      <p className="mt-1">
+                        Your request for {pendingClaimForViewer.artist_display_name} is waiting for admin approval.
+                      </p>
+                    </div>
+                  ) : claimStatus === "success" ? (
                     <div className="rounded-2xl border border-emerald-400/40 bg-emerald-400/10 p-4 text-sm text-emerald-50">
                       Your claim request is waiting for admin approval.
                     </div>
@@ -217,6 +264,14 @@ const EventDetailPage = ({ event, events }: Props) => {
                       <Link href="/artist-signup" className="ml-2 font-semibold text-emerald-300 hover:text-emerald-200">
                         Create an artist page
                       </Link>
+                    </div>
+                  )}
+                  {rejectedClaimForViewer && (
+                    <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100">
+                      <p className="font-semibold">Claim rejected.</p>
+                      <p className="mt-1">
+                        This request was not approved{rejectedClaimForViewer.admin_notes ? `: ${rejectedClaimForViewer.admin_notes}` : "."}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -262,6 +317,7 @@ const EventDetailPage = ({ event, events }: Props) => {
                 )}
               </div>
             )}
+            {canManage && <EventQualityChecklist event={currentEvent} canEdit />}
 
             {currentEvent.description && (
               <section className="rounded-3xl border border-slate-800/80 bg-slate-950/60 p-6 shadow-xl shadow-black/30 sm:p-8">

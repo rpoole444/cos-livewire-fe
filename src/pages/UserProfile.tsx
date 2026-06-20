@@ -8,6 +8,7 @@ import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 import SupportTipSection from '@/components/SupportTipSection';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
+import { getMyEventClaims } from '@/pages/api/route';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -32,6 +33,22 @@ type ArtistProfileStatus = {
   deletedArtist: OwnedProfile | null;
   deletedProfiles?: OwnedProfile[];
   canRestore: boolean;
+};
+
+type EventClaimStatus = {
+  id: number;
+  event_id: number;
+  artist_profile_id: number;
+  status: "pending" | "approved" | "rejected";
+  event_title: string;
+  event_slug: string;
+  event_date?: string;
+  event_start_time?: string | null;
+  event_venue_name?: string | null;
+  artist_display_name: string;
+  artist_slug: string;
+  admin_notes?: string | null;
+  reviewed_at?: string | null;
 };
 
 const UserProfile: React.FC = () => {
@@ -70,6 +87,8 @@ const UserProfile: React.FC = () => {
   const [inviteCode, setInviteCode] = useState("");
   const [inviteStatus, setInviteStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [inviteMessage, setInviteMessage] = useState<string>("");
+  const [eventClaims, setEventClaims] = useState<EventClaimStatus[]>([]);
+  const [eventClaimsError, setEventClaimsError] = useState("");
   const approvalRef = useRef<boolean | null>(null);
   const refetchedOnce = useRef(false);
   const accountSectionRef = useRef<HTMLDivElement | null>(null);
@@ -106,6 +125,13 @@ const isPublicLocked = hasArtistProfile && !canUseArtistAccess;
 const profileTypeLabel = profileType === 'venue' ? 'Venue' : profileType === 'promoter' ? 'Promoter' : 'Artist';
 const trialEndDate = user?.trial_ends_at ? new Date(user.trial_ends_at).toLocaleDateString() : null;
 
+const formatClaimDate = (value?: string) => {
+  if (!value) return "Date TBA";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
 const profileTypeText = (type?: OwnedProfile["profile_type"]) =>
   type === 'venue' ? 'Venue' : type === 'promoter' ? 'Promoter' : 'Artist';
 
@@ -139,6 +165,29 @@ const getProfileStatus = (profile: OwnedProfile) => {
     className: "border border-amber-400/40 bg-amber-500/10 text-amber-100",
   };
 };
+
+const getClaimStatusCopy = (status: EventClaimStatus["status"]) => {
+  if (status === "approved") {
+    return {
+      label: "Claim approved",
+      className: "border border-emerald-400/40 bg-emerald-500/10 text-emerald-100",
+      detail: "You can now edit this listing.",
+    };
+  }
+  if (status === "rejected") {
+    return {
+      label: "Claim rejected",
+      className: "border border-rose-500/40 bg-rose-500/10 text-rose-100",
+      detail: "This request was not approved.",
+    };
+  }
+  return {
+    label: "Claim pending",
+    className: "border border-amber-400/40 bg-amber-500/10 text-amber-100",
+    detail: "An admin still needs to review this claim.",
+  };
+};
+
 
   const [formError, setFormError] = useState("");
   const handleInviteClaim = async () => {
@@ -250,6 +299,22 @@ const getProfileStatus = (profile: OwnedProfile) => {
     }
   }, [user?.id]);
 
+  const fetchEventClaims = useCallback(async () => {
+    if (!user?.id) {
+      setEventClaims([]);
+      return;
+    }
+
+    try {
+      setEventClaimsError("");
+      const data = await getMyEventClaims();
+      setEventClaims(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Unable to load event claims", error);
+      setEventClaimsError("Unable to load event claim status right now.");
+    }
+  }, [user?.id]);
+
   // Refresh auth/session info once per mount (and surface Stripe toasts if query flags exist)
   useEffect(() => {
     if (!routerReady || refetchedOnce.current) return;
@@ -317,10 +382,14 @@ const getProfileStatus = (profile: OwnedProfile) => {
   const checkArtistProfile = async () => {
     if (!user?.id) {
       applyArtistProfileStatus(null);
+      setEventClaims([]);
       return;
     }
 
-    const status = await fetchArtistProfileStatus();
+    const [status] = await Promise.all([
+      fetchArtistProfileStatus(),
+      fetchEventClaims(),
+    ]);
     if (!cancelled) {
       applyArtistProfileStatus(status);
     }
@@ -330,7 +399,7 @@ const getProfileStatus = (profile: OwnedProfile) => {
   return () => {
     cancelled = true;
   };
-}, [user?.id, fetchArtistProfileStatus, applyArtistProfileStatus]); // only re-run when the user id changes
+}, [user?.id, fetchArtistProfileStatus, fetchEventClaims, applyArtistProfileStatus]); // only re-run when the user id changes
 
   useEffect(() => {
     if (approvalRef.current === false && isApproved) {
@@ -985,6 +1054,69 @@ const textareaClasses =
                 {restoreError && (
                   <p className="text-xs text-red-400">{restoreError}</p>
                 )}
+              </div>
+            )}
+
+            {(eventClaims.length > 0 || eventClaimsError) && (
+              <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+                <div>
+                  <p className="text-sm font-semibold text-white">Event claim status</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Track gigs you asked to connect to your artist profile.
+                  </p>
+                </div>
+                {eventClaimsError && (
+                  <div className="rounded-lg border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-100">
+                    {eventClaimsError}
+                  </div>
+                )}
+                <div className="space-y-3">
+                  {eventClaims.slice(0, 8).map((claim) => {
+                    const statusCopy = getClaimStatusCopy(claim.status);
+                    const eventHref = claim.event_slug ? `/eventRouter/${claim.event_slug}` : "";
+                    return (
+                      <div key={claim.id} className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${statusCopy.className}`}>
+                                {statusCopy.label}
+                              </span>
+                              <span className="text-xs text-slate-500">{claim.artist_display_name}</span>
+                            </div>
+                            <p className="mt-2 truncate text-sm font-semibold text-white">{claim.event_title}</p>
+                            <p className="mt-1 text-xs text-slate-400">
+                              {formatClaimDate(claim.event_date)}
+                              {claim.event_venue_name ? ` • ${claim.event_venue_name}` : ""}
+                            </p>
+                            <p className="mt-2 text-xs text-slate-300">
+                              {claim.admin_notes || statusCopy.detail}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {eventHref && (
+                              <Link
+                                href={eventHref}
+                                className="inline-flex items-center justify-center rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/60"
+                              >
+                                View event
+                              </Link>
+                            )}
+                            {claim.status === "approved" && (
+                              <button
+                                type="button"
+                                onClick={() => router.push(`/events/edit/${claim.event_id}`)}
+                                className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-slate-950 hover:bg-emerald-400"
+                              >
+                                Edit listing
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

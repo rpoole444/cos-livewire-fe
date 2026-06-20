@@ -183,6 +183,17 @@ async function getEventClaimRequests() {
   return res.json();
 }
 
+async function getMyEventClaims() {
+  const res = await fetch(`${API_BASE_URL}/api/events/claims/mine`, {
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    throw new Error(errorBody?.message || 'Failed to fetch your event claims');
+  }
+  return res.json();
+}
+
 async function reviewEventClaim(claimId: number, approve: boolean, adminNotes?: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/events/claims/${claimId}/review`, {
     method: 'PUT',
@@ -274,6 +285,7 @@ export {
   getAdminSummary,
   updateEventStatus,
   getEventClaimRequests,
+  getMyEventClaims,
   reviewEventClaim,
   updateEventDetails,
   fetchEventDetails,
