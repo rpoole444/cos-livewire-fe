@@ -108,6 +108,14 @@ export interface Artist {
   booking_email?: string;
   venue_capacity?: number | null;
   age_policy?: string;
+  venue_stage_size?: string | null;
+  venue_pa_details?: string | null;
+  venue_backline?: string | null;
+  venue_load_in?: string | null;
+  venue_parking?: string | null;
+  venue_green_room?: string | null;
+  venue_sound_contact?: string | null;
+  venue_booking_policy?: string | null;
 }
 
 

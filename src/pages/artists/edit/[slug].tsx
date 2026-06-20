@@ -47,6 +47,14 @@ export default function EditArtistProfilePage() {
     booking_email: '',
     venue_capacity: '',
     age_policy: '',
+    venue_stage_size: '',
+    venue_pa_details: '',
+    venue_backline: '',
+    venue_load_in: '',
+    venue_parking: '',
+    venue_green_room: '',
+    venue_sound_contact: '',
+    venue_booking_policy: '',
   });
 
   const [files, setFiles] = useState({
@@ -98,6 +106,14 @@ export default function EditArtistProfilePage() {
           booking_email: data.booking_email || '',
           venue_capacity: data.venue_capacity ? String(data.venue_capacity) : '',
           age_policy: data.age_policy || '',
+          venue_stage_size: data.venue_stage_size || '',
+          venue_pa_details: data.venue_pa_details || '',
+          venue_backline: data.venue_backline || '',
+          venue_load_in: data.venue_load_in || '',
+          venue_parking: data.venue_parking || '',
+          venue_green_room: data.venue_green_room || '',
+          venue_sound_contact: data.venue_sound_contact || '',
+          venue_booking_policy: data.venue_booking_policy || '',
         };
         setForm(nextForm);
         setMediaInputs({
@@ -297,6 +313,24 @@ export default function EditArtistProfilePage() {
               <input name="venue_capacity" type="number" min="1" value={form.venue_capacity} onChange={handleChange} placeholder="Capacity" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
             </div>
             <input name="age_policy" value={form.age_policy} onChange={handleChange} placeholder="Age Policy" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            <div className="rounded-xl border border-slate-700/70 bg-slate-950/40 p-4">
+              <h3 className="text-sm font-semibold text-emerald-100">Public room details</h3>
+              <p className="mt-1 text-xs text-gray-400">These help fans and bookers understand the room at a glance.</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <input name="venue_stage_size" value={form.venue_stage_size} onChange={handleChange} placeholder="Stage size (e.g. 16x12)" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+                <input name="venue_sound_contact" value={form.venue_sound_contact} onChange={handleChange} placeholder="Sound contact" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              </div>
+              <textarea name="venue_pa_details" value={form.venue_pa_details} onChange={handleChange} placeholder="PA included / sound details" rows={3} className="mt-3 w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <textarea name="venue_backline" value={form.venue_backline} onChange={handleChange} placeholder="Backline available" rows={3} className="mt-3 w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            </div>
+            <div className="rounded-xl border border-amber-400/30 bg-amber-500/5 p-4">
+              <h3 className="text-sm font-semibold text-amber-100">Play this room details</h3>
+              <p className="mt-1 text-xs text-gray-400">These appear for logged-in artists and help reduce back-and-forth before booking.</p>
+              <textarea name="venue_load_in" value={form.venue_load_in} onChange={handleChange} placeholder="Load-in instructions" rows={3} className="mt-3 w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <textarea name="venue_parking" value={form.venue_parking} onChange={handleChange} placeholder="Artist parking" rows={3} className="mt-3 w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <textarea name="venue_green_room" value={form.venue_green_room} onChange={handleChange} placeholder="Green room / hospitality" rows={3} className="mt-3 w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <textarea name="venue_booking_policy" value={form.venue_booking_policy} onChange={handleChange} placeholder="Booking policy, advance requirements, or preferred inquiry details" rows={4} className="mt-3 w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            </div>
           </div>
         )}
         <label className="block mb-2">

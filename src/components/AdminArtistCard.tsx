@@ -124,6 +124,14 @@ const AdminArtistCard: React.FC<Props> = ({ artist, onApprove, onDeny, onSave })
               <input name="venue_phone" value={edited.venue_phone || ''} onChange={handleChange} disabled={!isEditing} placeholder="Phone" className="rounded border p-2" />
               <input name="venue_capacity" type="number" value={edited.venue_capacity || ''} onChange={handleChange} disabled={!isEditing} placeholder="Capacity" className="rounded border p-2" />
               <input name="age_policy" value={edited.age_policy || ''} onChange={handleChange} disabled={!isEditing} placeholder="Age policy" className="rounded border p-2" />
+              <input name="venue_stage_size" value={edited.venue_stage_size || ''} onChange={handleChange} disabled={!isEditing} placeholder="Stage size" className="rounded border p-2" />
+              <input name="venue_sound_contact" value={edited.venue_sound_contact || ''} onChange={handleChange} disabled={!isEditing} placeholder="Sound contact" className="rounded border p-2" />
+              <textarea name="venue_pa_details" value={edited.venue_pa_details || ''} onChange={handleChange} disabled={!isEditing} placeholder="PA / sound details" className="rounded border p-2 sm:col-span-2" />
+              <textarea name="venue_backline" value={edited.venue_backline || ''} onChange={handleChange} disabled={!isEditing} placeholder="Backline" className="rounded border p-2 sm:col-span-2" />
+              <textarea name="venue_load_in" value={edited.venue_load_in || ''} onChange={handleChange} disabled={!isEditing} placeholder="Load-in instructions" className="rounded border p-2 sm:col-span-2" />
+              <textarea name="venue_parking" value={edited.venue_parking || ''} onChange={handleChange} disabled={!isEditing} placeholder="Artist parking" className="rounded border p-2 sm:col-span-2" />
+              <textarea name="venue_green_room" value={edited.venue_green_room || ''} onChange={handleChange} disabled={!isEditing} placeholder="Green room / hospitality" className="rounded border p-2 sm:col-span-2" />
+              <textarea name="venue_booking_policy" value={edited.venue_booking_policy || ''} onChange={handleChange} disabled={!isEditing} placeholder="Booking policy" className="rounded border p-2 sm:col-span-2" />
             </div>
           )}
 

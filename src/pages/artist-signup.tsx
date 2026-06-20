@@ -62,6 +62,14 @@ export default function ArtistSignupPage({ initialProfileType = 'artist' }: Arti
     booking_email: user?.email || '',
     venue_capacity: '',
     age_policy: '',
+    venue_stage_size: '',
+    venue_pa_details: '',
+    venue_backline: '',
+    venue_load_in: '',
+    venue_parking: '',
+    venue_green_room: '',
+    venue_sound_contact: '',
+    venue_booking_policy: '',
   });
 
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
@@ -518,6 +526,13 @@ const handleSubmit = async (e: React.FormEvent) => {
               <input name="venue_capacity" type="number" min="1" placeholder="Capacity" value={form.venue_capacity} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
             </div>
             <input name="age_policy" placeholder="Age Policy (e.g. All ages, 21+)" value={form.age_policy} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input name="venue_stage_size" placeholder="Stage size (e.g. 16x12)" value={form.venue_stage_size} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <input name="venue_sound_contact" placeholder="Sound contact" value={form.venue_sound_contact} onChange={handleChange} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            </div>
+            <textarea name="venue_pa_details" placeholder="PA included / sound details" value={form.venue_pa_details} onChange={handleChange} rows={3} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            <textarea name="venue_backline" placeholder="Backline available" value={form.venue_backline} onChange={handleChange} rows={3} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            <textarea name="venue_booking_policy" placeholder="Booking policy or preferred inquiry details" value={form.venue_booking_policy} onChange={handleChange} rows={3} className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
           </div>
         )}
 

@@ -38,6 +38,17 @@ interface Event {
   posterFile?: File | null;
 }
 
+interface VenueProfileDefaults {
+  id?: number;
+  display_name?: string;
+  profile_type?: string;
+  venue_address?: string;
+  venue_city?: string;
+  venue_state?: string;
+  website?: string;
+  age_policy?: string;
+  home_region?: string;
+}
 
 const EventSubmission = () => {
   const pageTitle = "Submit Your Event – Alpine Groove Guide";
@@ -67,6 +78,8 @@ const EventSubmission = () => {
 
   const [events, setEvents] = useState<Event[]>([initialEvent]);
   const [venueDefaults, setVenueDefaults] = useState<Partial<Event>>({});
+  const [venueProfiles, setVenueProfiles] = useState<VenueProfileDefaults[]>([]);
+  const [selectedVenueProfileId, setSelectedVenueProfileId] = useState<string>('');
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const { user, logout, refreshSession, loading } = useAuth();
   const router = useRouter();
@@ -79,6 +92,32 @@ const EventSubmission = () => {
   const canUseArtistAccess = hasArtistProfileAccess(user);
   const canAddMultiple = Boolean(canUseArtistAccess);
   const trialExpired = user && !communityAccessActive && !proActive && !!user.trial_ends_at && !trialActive;
+
+  const buildVenueDefaults = (profile: VenueProfileDefaults): Partial<Event> => ({
+    venue_name: profile.display_name || '',
+    venue_profile_id: profile.id || null,
+    address: profile.venue_address || '',
+    location: [profile.venue_city, profile.venue_state].filter(Boolean).join(', '),
+    website: profile.website || '',
+    ageRestriction: profile.age_policy || '',
+    region: profile.home_region || DEFAULT_REGION,
+  });
+
+  const applyVenueDefaults = (defaults: Partial<Event>, overwrite = false) => {
+    setVenueDefaults(defaults);
+    setEvents((prev) =>
+      prev.map((event) => ({
+        ...event,
+        venue_name: overwrite ? defaults.venue_name || '' : event.venue_name || defaults.venue_name || '',
+        venue_profile_id: overwrite ? defaults.venue_profile_id || null : event.venue_profile_id || defaults.venue_profile_id || null,
+        address: overwrite ? defaults.address || '' : event.address || defaults.address || '',
+        location: overwrite ? defaults.location || '' : event.location || defaults.location || '',
+        website: overwrite ? defaults.website || '' : event.website || defaults.website || '',
+        ageRestriction: overwrite ? defaults.ageRestriction || '' : event.ageRestriction || defaults.ageRestriction || '',
+        region: overwrite ? defaults.region || DEFAULT_REGION : event.region || defaults.region || DEFAULT_REGION,
+      }))
+    );
+  };
 
   const addEvent = () => setEvents((prev) => [...prev, { ...initialEvent, ...venueDefaults }]);
   const removeEvent = (index: number) =>
@@ -126,31 +165,13 @@ const EventSubmission = () => {
           : data?.artist
             ? [data.artist]
             : [];
-        const profile = profiles.find((item: any) => item?.profile_type === 'venue');
+        const venueList = profiles.filter((item: any) => item?.profile_type === 'venue');
+        setVenueProfiles(venueList);
+        const profile = venueList[0];
         if (profile?.profile_type !== 'venue') return;
 
-        const defaults: Partial<Event> = {
-          venue_name: profile.display_name || '',
-          venue_profile_id: profile.id || null,
-          address: profile.venue_address || '',
-          location: [profile.venue_city, profile.venue_state].filter(Boolean).join(', '),
-          website: profile.website || '',
-          ageRestriction: profile.age_policy || '',
-          region: profile.home_region || DEFAULT_REGION,
-        };
-        setVenueDefaults(defaults);
-        setEvents((prev) =>
-          prev.map((event) => ({
-            ...event,
-            venue_name: event.venue_name || defaults.venue_name || '',
-            venue_profile_id: event.venue_profile_id || defaults.venue_profile_id || null,
-            address: event.address || defaults.address || '',
-            location: event.location || defaults.location || '',
-            website: event.website || defaults.website || '',
-            ageRestriction: event.ageRestriction || defaults.ageRestriction || '',
-            region: event.region || defaults.region || DEFAULT_REGION,
-          }))
-        );
+        setSelectedVenueProfileId(String(profile.id || ''));
+        applyVenueDefaults(buildVenueDefaults(profile));
       } catch (error) {
         console.error('[eventSubmission] Unable to load venue defaults', error);
       }
@@ -487,6 +508,48 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             {venueDefaults.venue_name && (
               <div className="rounded-2xl border border-amber-400/40 bg-amber-500/10 p-4 text-sm text-amber-100">
                 Venue tools are active for <strong>{venueDefaults.venue_name}</strong>. Location and venue details are prefilled, and you can still edit them per event.
+              </div>
+            )}
+            {venueProfiles.length > 1 && (
+              <div className="rounded-2xl border border-slate-700 bg-slate-900/70 p-4 text-sm text-slate-200">
+                <label className="block text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">
+                  Venue profile defaults
+                </label>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                  <select
+                    value={selectedVenueProfileId}
+                    onChange={(event) => {
+                      const nextId = event.target.value;
+                      setSelectedVenueProfileId(nextId);
+                      const profile = venueProfiles.find((item) => String(item.id || '') === nextId);
+                      if (profile) {
+                        applyVenueDefaults(buildVenueDefaults(profile), true);
+                      }
+                    }}
+                    className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white"
+                  >
+                    {venueProfiles.map((profile) => (
+                      <option key={profile.id || profile.display_name} value={String(profile.id || '')}>
+                        {profile.display_name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const profile = venueProfiles.find((item) => String(item.id || '') === selectedVenueProfileId);
+                      if (profile) {
+                        applyVenueDefaults(buildVenueDefaults(profile), true);
+                      }
+                    }}
+                    className="rounded-xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-300"
+                  >
+                    Apply to draft
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-slate-400">
+                  Switching venues replaces venue name, address, website, age policy, and region on the current draft.
+                </p>
               </div>
             )}
 

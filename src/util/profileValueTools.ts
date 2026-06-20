@@ -24,6 +24,16 @@ export type ProfileValueArtist = {
   profile_type?: ProfileType;
   venue_city?: string | null;
   venue_state?: string | null;
+  venue_capacity?: number | null;
+  age_policy?: string | null;
+  venue_stage_size?: string | null;
+  venue_pa_details?: string | null;
+  venue_backline?: string | null;
+  venue_load_in?: string | null;
+  venue_parking?: string | null;
+  venue_green_room?: string | null;
+  venue_sound_contact?: string | null;
+  venue_booking_policy?: string | null;
   events?: ProfileValueEvent[];
 };
 
@@ -68,6 +78,14 @@ export const getProfileCompleteness = (artist: ProfileValueArtist) => {
     { label: 'stage plot', complete: Boolean(artist.stage_plot), prompt: 'Upload a stage plot or tech specs.' },
     { label: 'press kit', complete: Boolean(artist.press_kit), prompt: 'Upload a press kit.' },
     { label: 'upcoming shows', complete: Boolean(artist.events?.length), prompt: 'Add or submit upcoming dates.' },
+    ...(artist.profile_type === 'venue'
+      ? [
+          { label: 'capacity', complete: Boolean(artist.venue_capacity), prompt: 'Add venue capacity.' },
+          { label: 'PA details', complete: Boolean(artist.venue_pa_details), prompt: 'Add PA / sound details.' },
+          { label: 'load-in', complete: Boolean(artist.venue_load_in), prompt: 'Add load-in instructions.' },
+          { label: 'booking policy', complete: Boolean(artist.venue_booking_policy), prompt: 'Add a booking policy.' },
+        ]
+      : []),
   ];
   const completed = checks.filter((check) => check.complete).length;
   return {

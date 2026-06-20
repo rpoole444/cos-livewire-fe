@@ -73,6 +73,15 @@ interface Artist {
   booking_email?: string;
   venue_capacity?: number | null;
   age_policy?: string;
+  venue_stage_size?: string | null;
+  venue_pa_details?: string | null;
+  venue_backline?: string | null;
+  venue_load_in?: string | null;
+  venue_parking?: string | null;
+  venue_green_room?: string | null;
+  venue_sound_contact?: string | null;
+  venue_booking_policy?: string | null;
+  past_events?: Event[];
 }
 
 type WidgetOptions = {
@@ -146,6 +155,20 @@ const ArtistProfilePage = ({ artist }: Props) => {
     date: '',
     eventName: '',
     budget: '',
+    notes: '',
+  });
+  const [venueRequestOpen, setVenueRequestOpen] = useState(false);
+  const [venueRequestSubmitting, setVenueRequestSubmitting] = useState(false);
+  const [venueRequestMessage, setVenueRequestMessage] = useState('');
+  const [venueRequestError, setVenueRequestError] = useState('');
+  const [venueRequestForm, setVenueRequestForm] = useState({
+    artistName: '',
+    email: '',
+    genre: '',
+    drawEstimate: '',
+    links: '',
+    preferredDates: '',
+    supportNeeds: '',
     notes: '',
   });
   const [widgetOptions, setWidgetOptions] = useState<WidgetOptions>({
@@ -308,6 +331,41 @@ const ArtistProfilePage = ({ artist }: Props) => {
     }
   };
 
+  const handleVenueRequestSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!artist) return;
+    setVenueRequestSubmitting(true);
+    setVenueRequestError('');
+    setVenueRequestMessage('');
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist.slug}/venue-booking-request`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(venueRequestForm),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'Unable to send booking request.');
+      }
+      setVenueRequestMessage('Booking request sent to the venue.');
+      setVenueRequestForm({
+        artistName: '',
+        email: '',
+        genre: '',
+        drawEstimate: '',
+        links: '',
+        preferredDates: '',
+        supportNeeds: '',
+        notes: '',
+      });
+    } catch (error) {
+      setVenueRequestError(error instanceof Error ? error.message : 'Unable to send booking request.');
+    } finally {
+      setVenueRequestSubmitting(false);
+    }
+  };
+
   if (!artist) {
     return (
       <>
@@ -380,6 +438,19 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const analyticsTotal = analyticsCounts
     ? Object.values(analyticsCounts).reduce((sum, value) => sum + Number(value || 0), 0)
     : 0;
+  const hasVenuePublicRoomDetails = Boolean(
+    artist.venue_stage_size ||
+    artist.venue_pa_details ||
+    artist.venue_backline ||
+    artist.venue_sound_contact
+  );
+  const hasVenuePlayDetails = Boolean(
+    artist.venue_load_in ||
+    artist.venue_parking ||
+    artist.venue_green_room ||
+    artist.venue_booking_policy
+  );
+  const canViewPlayThisRoom = Boolean(user || canManagePrivateTools);
 
   return (
     <>
@@ -758,54 +829,163 @@ const ArtistProfilePage = ({ artist }: Props) => {
           </section>
 
           {isVenue && (
-            <section className="grid gap-4 md:grid-cols-2">
-              <div className="agg-panel agg-corner-frame p-6">
-                <p className="text-xs font-black uppercase tracking-[0.28em] text-alpine">Plan your visit</p>
-                <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">Venue Details</h2>
-                <div className="mt-5 space-y-4 text-sm text-ivory/75">
-                  {venueFullAddress && (
-                    <a
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueFullAddress)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-start gap-3 transition hover:text-sun-gold"
-                    >
-                      <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-copper" />
-                      <span>
-                        <strong className="block text-ivory">Address</strong>
-                        {venueFullAddress}
-                      </span>
-                    </a>
-                  )}
-                  {artist.venue_phone && (
-                    <a href={`tel:${artist.venue_phone}`} className="flex items-start gap-3 transition hover:text-sun-gold">
-                      <Phone className="mt-0.5 h-5 w-5 shrink-0 text-alpine" />
-                      <span>
-                        <strong className="block text-ivory">Phone</strong>
-                        {artist.venue_phone}
-                      </span>
-                    </a>
+            <section className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="agg-panel agg-corner-frame p-6">
+                  <p className="text-xs font-black uppercase tracking-[0.28em] text-alpine">Plan your visit</p>
+                  <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">Fan Details</h2>
+                  <div className="mt-5 space-y-4 text-sm text-ivory/75">
+                    {venueFullAddress && (
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venueFullAddress)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-3 transition hover:text-sun-gold"
+                      >
+                        <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-copper" />
+                        <span>
+                          <strong className="block text-ivory">Address</strong>
+                          {venueFullAddress}
+                        </span>
+                      </a>
+                    )}
+                    {artist.venue_phone && (
+                      <a href={`tel:${artist.venue_phone}`} className="flex items-start gap-3 transition hover:text-sun-gold">
+                        <Phone className="mt-0.5 h-5 w-5 shrink-0 text-alpine" />
+                        <span>
+                          <strong className="block text-ivory">Phone</strong>
+                          {artist.venue_phone}
+                        </span>
+                      </a>
+                    )}
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="border border-gold/25 bg-black/40 p-4">
+                        <Users className="h-5 w-5 text-alpine" />
+                        <p className="mt-2 text-xs uppercase tracking-wider text-ivory/45">Capacity</p>
+                        <p className="mt-1 font-bold text-ivory">
+                          {artist.venue_capacity ? artist.venue_capacity.toLocaleString() : 'Ask venue'}
+                        </p>
+                      </div>
+                      <div className="border border-gold/25 bg-black/40 p-4">
+                        <Ticket className="h-5 w-5 text-copper" />
+                        <p className="mt-2 text-xs uppercase tracking-wider text-ivory/45">Age policy</p>
+                        <p className="mt-1 font-bold text-ivory">{artist.age_policy || 'Varies by show'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="agg-panel agg-corner-frame p-6">
+                  <p className="text-xs font-black uppercase tracking-[0.28em] text-alpine">Room / stage details</p>
+                  <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">At a Glance</h2>
+                  {hasVenuePublicRoomDetails ? (
+                    <div className="mt-5 space-y-4 text-sm text-ivory/75">
+                      {artist.venue_stage_size && (
+                        <p><strong className="block text-ivory">Stage size</strong>{artist.venue_stage_size}</p>
+                      )}
+                      {artist.venue_pa_details && (
+                        <p><strong className="block text-ivory">PA / sound</strong>{artist.venue_pa_details}</p>
+                      )}
+                      {artist.venue_backline && (
+                        <p><strong className="block text-ivory">Backline</strong>{artist.venue_backline}</p>
+                      )}
+                      {artist.venue_sound_contact && (
+                        <p><strong className="block text-ivory">Sound contact</strong>{artist.venue_sound_contact}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="mt-5 text-sm text-ivory/55">This venue has not added stage or sound details yet.</p>
                   )}
                 </div>
               </div>
+
               <div className="agg-panel agg-corner-frame p-6">
-                <p className="text-xs font-black uppercase tracking-[0.28em] text-alpine">Room information</p>
-                <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">At a Glance</h2>
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  <div className="border border-gold/25 bg-black/40 p-4">
-                    <Users className="h-5 w-5 text-alpine" />
-                    <p className="mt-2 text-xs uppercase tracking-wider text-ivory/45">Capacity</p>
-                    <p className="mt-1 font-bold text-ivory">
-                      {artist.venue_capacity ? artist.venue_capacity.toLocaleString() : 'Ask venue'}
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.28em] text-alpine">Play this room</p>
+                    <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">Artist Booking Details</h2>
+                    <p className="mt-2 max-w-2xl text-sm text-ivory/60">
+                      Venue-specific info for artists and promoters before they request a date.
                     </p>
                   </div>
-                  <div className="border border-gold/25 bg-black/40 p-4">
-                    <Ticket className="h-5 w-5 text-copper" />
-                    <p className="mt-2 text-xs uppercase tracking-wider text-ivory/45">Age policy</p>
-                    <p className="mt-1 font-bold text-ivory">{artist.age_policy || 'Varies by show'}</p>
+                  <button
+                    type="button"
+                    onClick={() => setVenueRequestOpen((open) => !open)}
+                    className="rounded-xl bg-sun-gold px-4 py-2.5 text-sm font-black text-night transition hover:bg-mist"
+                  >
+                    Request a date
+                  </button>
+                </div>
+
+                {canViewPlayThisRoom ? (
+                  hasVenuePlayDetails ? (
+                    <div className="mt-5 grid gap-4 md:grid-cols-2">
+                      {artist.venue_load_in && (
+                        <div className="border border-gold/25 bg-black/35 p-4 text-sm text-ivory/75">
+                          <strong className="block text-ivory">Load-in</strong>{artist.venue_load_in}
+                        </div>
+                      )}
+                      {artist.venue_parking && (
+                        <div className="border border-gold/25 bg-black/35 p-4 text-sm text-ivory/75">
+                          <strong className="block text-ivory">Artist parking</strong>{artist.venue_parking}
+                        </div>
+                      )}
+                      {artist.venue_green_room && (
+                        <div className="border border-gold/25 bg-black/35 p-4 text-sm text-ivory/75">
+                          <strong className="block text-ivory">Green room / hospitality</strong>{artist.venue_green_room}
+                        </div>
+                      )}
+                      {artist.venue_booking_policy && (
+                        <div className="border border-gold/25 bg-black/35 p-4 text-sm text-ivory/75 md:col-span-2">
+                          <strong className="block text-ivory">Booking policy</strong>{artist.venue_booking_policy}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="mt-5 text-sm text-ivory/55">This venue has not added artist-facing room details yet.</p>
+                  )
+                ) : (
+                  <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-sm text-slate-300">
+                    Log in or create an artist profile to view performer-facing load-in, backline, and booking details.
+                  </div>
+                )}
+
+                {venueRequestOpen && (
+                  <form onSubmit={handleVenueRequestSubmit} className="mt-5 space-y-3 rounded-2xl border border-slate-800 bg-black/30 p-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <input value={venueRequestForm.artistName} onChange={(event) => setVenueRequestForm((prev) => ({ ...prev, artistName: event.target.value }))} required placeholder="Artist / band name" className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+                      <input value={venueRequestForm.email} onChange={(event) => setVenueRequestForm((prev) => ({ ...prev, email: event.target.value }))} required type="email" placeholder="Contact email" className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+                      <input value={venueRequestForm.genre} onChange={(event) => setVenueRequestForm((prev) => ({ ...prev, genre: event.target.value }))} placeholder="Genre / style" className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+                      <input value={venueRequestForm.drawEstimate} onChange={(event) => setVenueRequestForm((prev) => ({ ...prev, drawEstimate: event.target.value }))} placeholder="Draw estimate" className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+                    </div>
+                    <textarea value={venueRequestForm.links} onChange={(event) => setVenueRequestForm((prev) => ({ ...prev, links: event.target.value }))} placeholder="Music, website, EPK, or social links" rows={3} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+                    <textarea value={venueRequestForm.preferredDates} onChange={(event) => setVenueRequestForm((prev) => ({ ...prev, preferredDates: event.target.value }))} placeholder="Preferred dates or date range" rows={3} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+                    <textarea value={venueRequestForm.supportNeeds} onChange={(event) => setVenueRequestForm((prev) => ({ ...prev, supportNeeds: event.target.value }))} placeholder="Support needs, bill ideas, backline needs" rows={3} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+                    <textarea value={venueRequestForm.notes} onChange={(event) => setVenueRequestForm((prev) => ({ ...prev, notes: event.target.value }))} placeholder="Additional notes" rows={3} className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
+                    {venueRequestError && <p className="text-xs text-red-300">{venueRequestError}</p>}
+                    {venueRequestMessage && <p className="text-xs text-emerald-300">{venueRequestMessage}</p>}
+                    <button type="submit" disabled={venueRequestSubmitting} className="w-full rounded-xl bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60">
+                      {venueRequestSubmitting ? 'Sending request...' : 'Send booking request'}
+                    </button>
+                  </form>
+                )}
+              </div>
+
+              {artist.past_events && artist.past_events.length > 0 && (
+                <div className="agg-panel agg-corner-frame p-6">
+                  <p className="text-xs font-black uppercase tracking-[0.28em] text-alpine">Recently hosted</p>
+                  <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">Past Shows</h2>
+                  <div className="mt-5 grid gap-3 md:grid-cols-2">
+                    {artist.past_events.slice(0, 8).map((event) => (
+                      <Link key={event.id} href={`/eventRouter/${event.slug}`} className="rounded-xl border border-slate-800 bg-black/35 p-4 transition hover:border-emerald-400/60">
+                        <p className="text-xs uppercase tracking-[0.24em] text-emerald-300">{formatEventDateLine(event)}</p>
+                        <h3 className="mt-1 font-semibold text-white">{event.title}</h3>
+                        <p className="mt-1 text-xs text-slate-400">{event.genre || 'Live music'}</p>
+                      </Link>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </section>
           )}
 
@@ -1097,12 +1277,16 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
           {canEdit && (
             <section className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Website embed</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">
+                {isVenue ? 'Venue calendar embed' : 'Website embed'}
+              </p>
               <h2 className="mt-2 text-2xl font-semibold text-white">
-                Put this {isVenue ? 'venue calendar' : 'schedule'} on your website
+                {isVenue ? 'Put your live music calendar on your venue website' : 'Put this schedule on your website'}
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
-                Copy this iframe into any page builder or HTML block. Approved upcoming shows update automatically, and these settings let you match the widget to your site.
+                {isVenue
+                  ? 'Copy this iframe into your venue site so fans always see your approved upcoming shows without double-entry.'
+                  : 'Copy this iframe into any page builder or HTML block. Approved upcoming shows update automatically, and these settings let you match the widget to your site.'}
               </p>
               <div className="mt-5 grid gap-3 md:grid-cols-5">
                 <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
