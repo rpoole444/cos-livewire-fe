@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import EventReview from '@/components/EventReview';
 import ArtistReview from '@/components/ArtistReview';
+import { getPendingArtists } from '@/pages/api/artists';
 import { useState } from 'react';
 import { CalendarCheck, FileDown, LogOut, Music2, ShieldCheck, Users } from 'lucide-react';
 
@@ -25,6 +26,13 @@ const AdminService: React.FC = () => {
         router.replace('/LoginPage?redirect=/AdminService');
       } else if (!user.is_admin) {
         router.replace('/');
+      } else {
+        getPendingArtists()
+          .then((profiles) => setArtistCount(Array.isArray(profiles) ? profiles.length : 0))
+          .catch((error) => {
+            console.error('Failed to preload pending profile count', error);
+            setArtistCount(0);
+          });
       }
     }
   }, [user, loading, router]);
@@ -57,7 +65,7 @@ const AdminService: React.FC = () => {
   const activeViewCopy =
     view === 'events'
       ? 'Review submitted shows, clean up details, and approve calendar listings.'
-      : 'Review Pro page submissions, media, contact details, and moderation notes.';
+      : 'Review artist, venue, and promoter profile submissions, media, contact details, and moderation notes.';
 
   return (
     <>
@@ -135,7 +143,7 @@ const AdminService: React.FC = () => {
                 >
                   <span className="flex items-center gap-2 text-sm font-semibold">
                     <Music2 className="h-4 w-4" />
-                    Artists
+                    Profiles
                   </span>
                   <span className="mt-2 block text-2xl font-semibold">{artistCount}</span>
                 </button>
@@ -150,7 +158,7 @@ const AdminService: React.FC = () => {
                   {view === 'events' ? 'Calendar moderation' : 'Directory moderation'}
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold text-slate-50">
-                  {view === 'events' ? 'Pending events' : 'Pending artist pages'}
+                  {view === 'events' ? 'Pending events' : 'Pending profiles'}
                 </h2>
                 <p className="mt-1 text-sm text-slate-400">{activeViewCopy}</p>
               </div>
@@ -169,7 +177,7 @@ const AdminService: React.FC = () => {
                     view === 'artists' ? 'bg-purple-400 text-slate-950' : 'text-slate-300 hover:text-white'
                   }`}
                 >
-                  Artists
+                  Profiles
                 </button>
               </div>
             </div>

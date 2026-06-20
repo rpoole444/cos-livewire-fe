@@ -26,7 +26,7 @@ const ArtistReview: React.FC<ArtistReviewProps> = ({ onCountChange }) => {
         onCountChange?.(data.length);
       } catch (err) {
         console.error('Failed to load artists for review', err);
-        setErrorMessage('Unable to load artist submissions. Please refresh or try again in a moment.');
+        setErrorMessage('Unable to load profile submissions. Please refresh or try again in a moment.');
       } finally {
         setLoading(false);
       }
@@ -127,7 +127,7 @@ const ArtistReview: React.FC<ArtistReviewProps> = ({ onCountChange }) => {
       </div>
       {loading ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-950/70 px-5 py-10 text-center text-sm text-slate-300">
-          Loading Pro page submissions...
+          Loading profile submissions...
         </div>
       ) : filteredArtists.length > 0 ? (
         <ul className="space-y-6">
@@ -144,7 +144,7 @@ const ArtistReview: React.FC<ArtistReviewProps> = ({ onCountChange }) => {
         </ul>
       ) : (
         <div className="text-center text-gray-300 py-10">
-          <p className="text-lg">✅ All clear — no pending artists right now.</p>
+          <p className="text-lg">✅ All clear — no pending profiles right now.</p>
         </div>
       )}
     </div>
