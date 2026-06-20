@@ -6,6 +6,7 @@ import { Event } from '@/interfaces/interfaces';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { DEFAULT_REGION, MUSIC_REGIONS, getRegionLabel } from '@/constants/regions';
+import { canManageEvent } from '@/util/eventPermissions';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const EditEventPage = () => {
@@ -30,7 +31,7 @@ const EditEventPage = () => {
 
   useEffect(() => {
     if (!loading && user && eventData) {
-      if (!(user.is_admin || user.id === eventData.user_id)) {
+      if (!canManageEvent(user, eventData)) {
         router.replace('/');
       }
     }
@@ -109,7 +110,7 @@ const EditEventPage = () => {
   
       if (res.ok) {
         const updated = await res.json();
-        router.push(`/eventRouter/${updated.slug || eventData.slug}`);
+        router.push(`/eventRouter/${updated.event?.slug || eventData.slug}`);
       } else {
         const { message } = await res.json();
         alert(`Error: ${message}`);

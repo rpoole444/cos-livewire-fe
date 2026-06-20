@@ -23,6 +23,20 @@ export interface CustomEvent {
   source_fingerprint?: string | null;
   source_import_event_id?: number | null;
   artist_profile_id?: number | null;
+  claimed_by_user_id?: number | null;
+  claimed_at?: string | null;
+  last_edited_by_user_id?: number | null;
+  claimed_artist?: {
+    id: number;
+    display_name: string;
+    slug: string;
+    profile_type?: string;
+    user_id: number;
+  } | null;
+  claimed_by_user_email?: string | null;
+  can_edit_event?: boolean;
+  can_delete_event?: boolean;
+  uses_generic_imported_poster?: boolean;
   eventType: string;
   recurrence?: string,
   repeatCount?: number,
@@ -52,6 +66,20 @@ export interface Event extends CustomEvent {
   website: string;
   poster: string | null;
   region?: string;
+  claimed_by_user_id?: number | null;
+  claimed_at?: string | null;
+  last_edited_by_user_id?: number | null;
+  claimed_artist?: {
+    id: number;
+    display_name: string;
+    slug: string;
+    profile_type?: string;
+    user_id: number;
+  } | null;
+  claimed_by_user_email?: string | null;
+  can_edit_event?: boolean;
+  can_delete_event?: boolean;
+  uses_generic_imported_poster?: boolean;
   recurrence?: string,
   repeatCount?: number,
   is_approved: boolean,

@@ -6,19 +6,23 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import EventReview from '@/components/EventReview';
 import ArtistReview from '@/components/ArtistReview';
+import EventClaimReview from '@/components/EventClaimReview';
 import { getPendingArtists } from '@/pages/api/artists';
+import { getEventClaimRequests } from '@/pages/api/route';
 import { useState } from 'react';
-import { CalendarCheck, FileDown, LogOut, Music2, ShieldCheck, Users } from 'lucide-react';
+import { CalendarCheck, FileDown, Handshake, LogOut, Music2, ShieldCheck, Users } from 'lucide-react';
 
 const AdminService: React.FC = () => {
   const router = useRouter();
   const { user, logout, loading } = useAuth();
-  const [view, setView] = useState<'events' | 'artists'>('events');
+  const [view, setView] = useState<'events' | 'artists' | 'claims'>('events');
   const [eventCount, setEventCount] = useState(0);
   const [artistCount, setArtistCount] = useState(0);
+  const [claimCount, setClaimCount] = useState(0);
 
   const handleEventCountChange = useCallback((count: number) => setEventCount(count), []);
   const handleArtistCountChange = useCallback((count: number) => setArtistCount(count), []);
+  const handleClaimCountChange = useCallback((count: number) => setClaimCount(count), []);
 
   useEffect(() => {
     if (!loading) {
@@ -32,6 +36,12 @@ const AdminService: React.FC = () => {
           .catch((error) => {
             console.error('Failed to preload pending profile count', error);
             setArtistCount(0);
+          });
+        getEventClaimRequests()
+          .then((claims) => setClaimCount(Array.isArray(claims) ? claims.length : 0))
+          .catch((error) => {
+            console.error('Failed to preload pending claim count', error);
+            setClaimCount(0);
           });
       }
     }
@@ -61,11 +71,13 @@ const AdminService: React.FC = () => {
     );
   }
 
-  const totalPending = eventCount + artistCount;
+  const totalPending = eventCount + artistCount + claimCount;
   const activeViewCopy =
     view === 'events'
       ? 'Review submitted shows, clean up details, and approve calendar listings.'
-      : 'Review artist, venue, and promoter profile submissions, media, contact details, and moderation notes.';
+      : view === 'artists'
+        ? 'Review artist, venue, and promoter profile submissions, media, contact details, and moderation notes.'
+        : 'Review artist requests to claim existing imported, venue-created, or promoter-created events.';
 
   return (
     <>
@@ -147,6 +159,20 @@ const AdminService: React.FC = () => {
                   </span>
                   <span className="mt-2 block text-2xl font-semibold">{artistCount}</span>
                 </button>
+                <button
+                  onClick={() => setView('claims')}
+                  className={`rounded-2xl border p-4 text-left transition ${
+                    view === 'claims'
+                      ? 'border-cyan-400/70 bg-cyan-500/15 text-cyan-100'
+                      : 'border-slate-800 bg-slate-950/70 text-slate-300 hover:border-slate-600'
+                  }`}
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold">
+                    <Handshake className="h-4 w-4" />
+                    Claims
+                  </span>
+                  <span className="mt-2 block text-2xl font-semibold">{claimCount}</span>
+                </button>
               </div>
             </div>
           </section>
@@ -155,14 +181,14 @@ const AdminService: React.FC = () => {
             <div className="flex flex-col gap-4 border-b border-slate-800 pb-5 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-                  {view === 'events' ? 'Calendar moderation' : 'Directory moderation'}
+                  {view === 'events' ? 'Calendar moderation' : view === 'artists' ? 'Directory moderation' : 'Claim moderation'}
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold text-slate-50">
-                  {view === 'events' ? 'Pending events' : 'Pending profiles'}
+                  {view === 'events' ? 'Pending events' : view === 'artists' ? 'Pending profiles' : 'Pending event claims'}
                 </h2>
                 <p className="mt-1 text-sm text-slate-400">{activeViewCopy}</p>
               </div>
-              <div className="grid grid-cols-2 rounded-full border border-slate-800 bg-slate-950/80 p-1">
+              <div className="grid grid-cols-3 rounded-full border border-slate-800 bg-slate-950/80 p-1">
                 <button
                   onClick={() => setView('events')}
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
@@ -179,13 +205,23 @@ const AdminService: React.FC = () => {
                 >
                   Profiles
                 </button>
+                <button
+                  onClick={() => setView('claims')}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    view === 'claims' ? 'bg-cyan-400 text-slate-950' : 'text-slate-300 hover:text-white'
+                  }`}
+                >
+                  Claims
+                </button>
               </div>
             </div>
 
             {view === 'events' ? (
               <EventReview onCountChange={handleEventCountChange} />
-            ) : (
+            ) : view === 'artists' ? (
               <ArtistReview onCountChange={handleArtistCountChange} />
+            ) : (
+              <EventClaimReview onCountChange={handleClaimCountChange} />
             )}
           </section>
         </div>

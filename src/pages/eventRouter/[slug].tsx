@@ -1,20 +1,20 @@
 import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getEvents } from "../api/route";
 import EventDetailCard from "@/components/EventDetailCard";
 import WelcomeUser from "@/components/WelcomeUser";
 import UpcomingShows from "@/components/UpcomingShows";
 import LoginForm from "@/components/login";
 import RegistrationForm from "@/components/registration";
-import { Event } from "@/interfaces/interfaces";
+import { Artist, Event } from "@/interfaces/interfaces";
 import { useAuth } from "@/context/AuthContext";
 import { FaFacebookF, FaTwitter, FaLink, FaLocationArrow, FaShareAlt } from "react-icons/fa";
 import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/router";
 import { deleteEvent, fetchEventDetailsBySlug } from "../api/route";
-import { canManageEvent } from "@/util/eventPermissions";
+import { canDeleteEvent, canManageEvent } from "@/util/eventPermissions";
 
 
 interface Props {
@@ -24,28 +24,115 @@ interface Props {
 
 const EventDetailPage = ({ event, events }: Props) => {
   const { user } = useAuth();
+  const [currentEvent, setCurrentEvent] = useState<Event>(event);
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [managedProfiles, setManagedProfiles] = useState<Artist[]>([]);
+  const [selectedProfileId, setSelectedProfileId] = useState<number | "">("");
+  const [claimStatus, setClaimStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [claimMessage, setClaimMessage] = useState("");
+  const [claimImageHint, setClaimImageHint] = useState<string | null>(null);
   const router = useRouter();
-  const canManage = canManageEvent(user, event);
-  const pageTitle = event?.title
-    ? `${event.title} – Event Details – Alpine Groove Guide`
+  const canManage = canManageEvent(user, currentEvent);
+  const canDelete = canDeleteEvent(user, currentEvent);
+  const artistProfiles = useMemo(
+    () => managedProfiles.filter((profile) => (profile.profile_type || "artist") === "artist"),
+    [managedProfiles],
+  );
+  const alreadyClaimedByViewer = Boolean(
+    user && currentEvent.claimed_artist?.user_id === user.id,
+  );
+  const pageTitle = currentEvent?.title
+    ? `${currentEvent.title} – Event Details – Alpine Groove Guide`
     : "Event Details – Alpine Groove Guide";
+
+  useEffect(() => {
+    setCurrentEvent(event);
+  }, [event]);
+
+  useEffect(() => {
+    if (!user) {
+      setManagedProfiles([]);
+      setSelectedProfileId("");
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/mine`, {
+          credentials: "include",
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const profiles = Array.isArray(data.profiles) ? data.profiles : [];
+        if (!cancelled) {
+          setManagedProfiles(profiles);
+          const firstArtist = profiles.find((profile: Artist) => (profile.profile_type || "artist") === "artist");
+          setSelectedProfileId(firstArtist?.id || "");
+        }
+      } catch (error) {
+        console.error("Unable to load managed profiles", error);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const switchAuthMode = () => {
     setAuthMode((prev) => (prev === "login" ? "register" : "login"));
   };
 
   const getDirections = () => {
-    if (!event?.address) return;
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(event.address)}`;
+    if (!currentEvent?.address) return;
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(currentEvent.address)}`;
     window.open(url, "_blank");
+  };
+
+  const handleClaimEvent = async () => {
+    if (!selectedProfileId) {
+      setClaimStatus("error");
+      setClaimMessage("Choose the artist profile that should claim this event.");
+      return;
+    }
+
+    try {
+      setClaimStatus("loading");
+      setClaimMessage("");
+      setClaimImageHint(null);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events/${currentEvent.id}/claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ artist_profile_id: selectedProfileId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || "Unable to claim this event.");
+      }
+
+      setCurrentEvent((prev) => ({
+        ...prev,
+        ...data.event,
+      }));
+      setClaimStatus("success");
+      setClaimMessage(
+        data.prompt ||
+          "Claim request sent. Once an admin approves it, you can edit this event and make the listing stronger.",
+      );
+      setClaimImageHint(data.image_hint || null);
+    } catch (error) {
+      setClaimStatus("error");
+      setClaimMessage(error instanceof Error ? error.message : "Unable to claim this event.");
+    }
   };
 
   const handleDeleteEvent = async () => {
     if (!confirm("Are you sure you want to delete this event?")) return;
 
     try {
-      await deleteEvent(event.id);
+      await deleteEvent(currentEvent.id);
       router.push("/");
     } catch (err) {
       console.error("Failed to delete event", err);
@@ -57,8 +144,8 @@ const EventDetailPage = ({ event, events }: Props) => {
     <>
       <Head>
         <title>{pageTitle}</title>
-        <meta name="description" content={event.description?.slice(0, 150)} />
-        <link rel="canonical" href={`https://app.alpinegrooveguide.com/eventRouter/${event.slug}`} />
+        <meta name="description" content={currentEvent.description?.slice(0, 150)} />
+        <link rel="canonical" href={`https://app.alpinegrooveguide.com/eventRouter/${currentEvent.slug}`} />
       </Head>
 
       <div className="relative min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
@@ -68,38 +155,125 @@ const EventDetailPage = ({ event, events }: Props) => {
             <Link href="/" className="text-sm text-emerald-300 underline-offset-4 hover:text-emerald-200 hover:underline">
               ← Back to all events
             </Link>
-            <EventDetailCard event={event} user={user} expandDescription />
+            <EventDetailCard event={currentEvent} user={user} expandDescription />
+            <section className="rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-6 shadow-xl shadow-black/30 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">Artist claim</p>
+              {currentEvent.claimed_artist ? (
+                <div className="mt-3 space-y-3">
+                  <h2 className="text-xl font-semibold text-slate-50">
+                    Connected to {currentEvent.claimed_artist.display_name}
+                  </h2>
+                  <p className="text-sm text-slate-300">
+                    This event is attached to the artist profile and will appear on that artist&apos;s schedule and embeds.
+                  </p>
+                  {alreadyClaimedByViewer && (
+                    <Link
+                      href={`/events/edit/${currentEvent.id}`}
+                      className="inline-flex items-center justify-center rounded-lg bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300"
+                    >
+                      Improve this listing
+                    </Link>
+                  )}
+                </div>
+              ) : user ? (
+                <div className="mt-3 space-y-4">
+                  <h2 className="text-xl font-semibold text-slate-50">Is this your gig?</h2>
+                  <p className="text-sm text-slate-300">
+                    Claim it with your artist profile so it appears on your schedule and you can improve the public listing.
+                  </p>
+                  {claimStatus === "success" ? (
+                    <div className="rounded-2xl border border-emerald-400/40 bg-emerald-400/10 p-4 text-sm text-emerald-50">
+                      Your claim request is waiting for admin approval.
+                    </div>
+                  ) : artistProfiles.length > 0 ? (
+                    <div className="space-y-3">
+                      <label className="block text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                        Artist profile
+                      </label>
+                      <select
+                        value={selectedProfileId}
+                        onChange={(e) => setSelectedProfileId(e.target.value ? Number(e.target.value) : "")}
+                        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/30"
+                      >
+                        <option value="">Choose artist profile</option>
+                        {artistProfiles.map((profile) => (
+                          <option key={profile.id} value={profile.id}>
+                            {profile.display_name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={handleClaimEvent}
+                        disabled={claimStatus === "loading"}
+                        className="inline-flex items-center justify-center rounded-lg bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {claimStatus === "loading" ? "Claiming…" : "Claim this event"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-300">
+                      You need an artist profile before you can claim gigs.
+                      <Link href="/artist-signup" className="ml-2 font-semibold text-emerald-300 hover:text-emerald-200">
+                        Create an artist page
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-3 space-y-3">
+                  <h2 className="text-xl font-semibold text-slate-50">Is this your gig?</h2>
+                  <p className="text-sm text-slate-300">
+                    Sign in with your artist account to claim this event, add it to your profile, and improve the listing.
+                  </p>
+                </div>
+              )}
+              {claimMessage && (
+                <div
+                  className={`mt-4 rounded-2xl border p-4 text-sm ${
+                    claimStatus === "error"
+                      ? "border-rose-500/40 bg-rose-500/10 text-rose-100"
+                      : "border-emerald-400/40 bg-emerald-400/10 text-emerald-50"
+                  }`}
+                >
+                  <p>{claimMessage}</p>
+                  {claimImageHint && <p className="mt-2 font-semibold">{claimImageHint}</p>}
+                </div>
+              )}
+            </section>
             {canManage && (
               <div className="flex flex-wrap gap-3">
                 <Link
-                  href={`/events/edit/${event.id}`}
+                  href={`/events/edit/${currentEvent.id}`}
                   className="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-400/60 px-4 py-2.5 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-white"
                 >
                   <Pencil className="h-4 w-4" />
                   Edit event
                 </Link>
-                <button
-                  type="button"
-                  onClick={handleDeleteEvent}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-rose-500/60 px-4 py-2.5 text-sm font-semibold text-rose-100 transition hover:border-rose-300 hover:bg-rose-500/10"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete event
-                </button>
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteEvent}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-rose-500/60 px-4 py-2.5 text-sm font-semibold text-rose-100 transition hover:border-rose-300 hover:bg-rose-500/10"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete event
+                  </button>
+                )}
               </div>
             )}
 
-            {event.description && (
+            {currentEvent.description && (
               <section className="rounded-3xl border border-slate-800/80 bg-slate-950/60 p-6 shadow-xl shadow-black/30 sm:p-8">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">About this show</p>
-                <p className="mt-3 text-sm leading-relaxed text-slate-300 whitespace-pre-line">{event.description}</p>
+                <p className="mt-3 text-sm leading-relaxed text-slate-300 whitespace-pre-line">{currentEvent.description}</p>
               </section>
             )}
 
             <section className="rounded-3xl border border-slate-800/80 bg-slate-950/60 p-6 shadow-xl shadow-black/30 sm:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Spread the word</p>
               <div className="mt-4 flex flex-wrap gap-3">
-                {event.address && (
+                {currentEvent.address && (
                   <button
                     onClick={getDirections}
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0 sm:flex-none"
@@ -111,9 +285,9 @@ const EventDetailPage = ({ event, events }: Props) => {
                   onClick={() => {
                     if (navigator.share) {
                       navigator.share({
-                        title: event.title,
-                        text: event.description?.slice(0, 100),
-                        url: `https://app.alpinegrooveguide.com/share/${event.slug}`,
+                        title: currentEvent.title,
+                        text: currentEvent.description?.slice(0, 100),
+                        url: `https://app.alpinegrooveguide.com/share/${currentEvent.slug}`,
                       });
                     }
                   }}
@@ -123,7 +297,7 @@ const EventDetailPage = ({ event, events }: Props) => {
                 </button>
                 <a
                   href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                    `https://app.alpinegrooveguide.com/share/${event.slug}`,
+                    `https://app.alpinegrooveguide.com/share/${currentEvent.slug}`,
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -133,8 +307,8 @@ const EventDetailPage = ({ event, events }: Props) => {
                 </a>
                 <a
                   href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
-                    `https://app.alpinegrooveguide.com/share/${event.slug}`,
-                  )}&text=${encodeURIComponent(event.title)}`}
+                    `https://app.alpinegrooveguide.com/share/${currentEvent.slug}`,
+                  )}&text=${encodeURIComponent(currentEvent.title)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-emerald-400/70 hover:bg-slate-900/60"
@@ -143,7 +317,7 @@ const EventDetailPage = ({ event, events }: Props) => {
                 </a>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(`https://app.alpinegrooveguide.com/share/${event.slug}`);
+                    navigator.clipboard.writeText(`https://app.alpinegrooveguide.com/share/${currentEvent.slug}`);
                     alert("Link copied to clipboard!");
                   }}
                   className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-emerald-400/70 hover:bg-slate-900/60"

@@ -161,6 +161,35 @@ async function updateEventStatus(eventId: number, isApproved: boolean): Promise<
   await response.json().catch(() => null);
 }
 
+async function getEventClaimRequests() {
+  const res = await fetch(`${API_BASE_URL}/api/events/claims/review`, {
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    throw new Error(errorBody?.message || 'Failed to fetch event claim requests');
+  }
+  return res.json();
+}
+
+async function reviewEventClaim(claimId: number, approve: boolean, adminNotes?: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/api/events/claims/${claimId}/review`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ approve, admin_notes: adminNotes || null }),
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    throw new Error(errorBody?.message || `Failed to review claim request (status ${response.status})`);
+  }
+
+  await response.json().catch(() => null);
+}
+
 const updateEventDetails = async (eventId: number, eventData: any) => {
   try {
     const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
@@ -232,6 +261,8 @@ export {
   logoutUser, 
   getEventsForReview,
   updateEventStatus,
+  getEventClaimRequests,
+  reviewEventClaim,
   updateEventDetails,
   fetchEventDetails,
   deleteEvent
