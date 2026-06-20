@@ -89,9 +89,16 @@ interface Artist {
 type WidgetOptions = {
   theme: 'dark' | 'light';
   layout: 'full' | 'compact';
+  embedMode: 'upcoming' | 'top-picks';
+  titleOverride: string;
   showPoster: boolean;
   showTicketButton: boolean;
   limit: number;
+};
+
+type TopPickEvent = Event & {
+  is_top_pick?: boolean;
+  featured_order?: number | null;
 };
 
 type AnalyticsCounts = Record<string, number>;
@@ -176,10 +183,17 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const [widgetOptions, setWidgetOptions] = useState<WidgetOptions>({
     theme: 'dark',
     layout: 'full',
+    embedMode: 'upcoming',
+    titleOverride: 'Top Picks',
     showPoster: true,
     showTicketButton: true,
     limit: 5,
   });
+  const [topPickEvents, setTopPickEvents] = useState<TopPickEvent[]>([]);
+  const [selectedTopPickIds, setSelectedTopPickIds] = useState<number[]>([]);
+  const [topPicksStatus, setTopPicksStatus] = useState('');
+  const [topPicksError, setTopPicksError] = useState('');
+  const [topPicksSaving, setTopPicksSaving] = useState(false);
   const [analyticsCounts, setAnalyticsCounts] = useState<AnalyticsCounts | null>(null);
   const accessState = artist?.access_state ?? 'none';
   const communityAccessActive = isCommunityArtistAccessActive();
@@ -258,6 +272,35 @@ const ArtistProfilePage = ({ artist }: Props) => {
   }, [artist?.slug, canManagePrivateTools]);
 
   useEffect(() => {
+    if (!artist?.slug || !canManagePrivateTools) return;
+
+    const loadTopPicks = async () => {
+      setTopPicksError('');
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist.slug}/top-picks`, {
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          throw new Error('Unable to load Top Picks.');
+        }
+        const data = await response.json();
+        const events = Array.isArray(data?.events) ? data.events : [];
+        setTopPickEvents(events);
+        setSelectedTopPickIds(
+          events
+            .filter((event: TopPickEvent) => event.is_top_pick)
+            .map((event: TopPickEvent) => Number(event.id))
+        );
+      } catch (error) {
+        console.warn('[top picks] load failed', error);
+        setTopPicksError(error instanceof Error ? error.message : 'Unable to load Top Picks.');
+      }
+    };
+
+    loadTopPicks();
+  }, [artist?.slug, canManagePrivateTools]);
+
+  useEffect(() => {
     if (router.query.trial === 'active') {
       setShowTrialToast(true);
       setTimeout(() => setShowTrialToast(false), 5000);
@@ -292,6 +335,46 @@ const ArtistProfilePage = ({ artist }: Props) => {
     if (key) {
       setCopiedPromoKey(key);
       window.setTimeout(() => setCopiedPromoKey(null), 2200);
+    }
+  };
+
+  const toggleTopPick = (eventId: number, checked: boolean) => {
+    setSelectedTopPickIds((prev) => {
+      if (checked) return prev.includes(eventId) ? prev : [...prev, eventId];
+      return prev.filter((id) => id !== eventId);
+    });
+    setTopPicksStatus('');
+  };
+
+  const saveTopPicks = async () => {
+    if (!artist?.slug) return;
+    setTopPicksSaving(true);
+    setTopPicksError('');
+    setTopPicksStatus('');
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist.slug}/top-picks`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_ids: selectedTopPickIds }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'Unable to save Top Picks.');
+      }
+      const events = Array.isArray(data?.events) ? data.events : [];
+      setTopPickEvents(events);
+      setSelectedTopPickIds(
+        events
+          .filter((event: TopPickEvent) => event.is_top_pick)
+          .map((event: TopPickEvent) => Number(event.id))
+      );
+      setTopPicksStatus('Top Picks saved.');
+    } catch (error) {
+      setTopPicksError(error instanceof Error ? error.message : 'Unable to save Top Picks.');
+    } finally {
+      setTopPicksSaving(false);
     }
   };
 
@@ -399,13 +482,20 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const embedParams = new URLSearchParams({
     theme: widgetOptions.theme,
     layout: widgetOptions.layout,
+    mode: widgetOptions.embedMode,
     poster: widgetOptions.showPoster ? '1' : '0',
     tickets: widgetOptions.showTicketButton ? '1' : '0',
     limit: String(widgetOptions.limit),
   });
+  if (widgetOptions.embedMode === 'top-picks' && widgetOptions.titleOverride.trim()) {
+    embedParams.set('title', widgetOptions.titleOverride.trim());
+  }
   const embedUrl = `${siteBaseUrl}/embed/artists/${artist.slug}?${embedParams.toString()}`;
   const embedHeight = widgetOptions.layout === 'compact' ? 360 : 620;
-  const embedSnippet = `<iframe src="${embedUrl}" title="${artist.display_name.replace(/"/g, '&quot;')} upcoming shows" width="100%" height="${embedHeight}" style="border:0;border-radius:16px;overflow:hidden" loading="lazy"></iframe>`;
+  const embedTitle = widgetOptions.embedMode === 'top-picks'
+    ? `${artist.display_name} top picks`
+    : `${artist.display_name} upcoming shows`;
+  const embedSnippet = `<iframe src="${embedUrl}" title="${embedTitle.replace(/"/g, '&quot;')}" width="100%" height="${embedHeight}" style="border:0;border-radius:16px;overflow:hidden" loading="lazy"></iframe>`;
   const description = artist.bio
     ? artist.bio.length > 150
       ? `${artist.bio.slice(0, 147).trim()}…`
@@ -1293,6 +1383,17 @@ const ArtistProfilePage = ({ artist }: Props) => {
               </p>
               <div className="mt-5 grid gap-3 md:grid-cols-5">
                 <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Embed mode
+                  <select
+                    value={widgetOptions.embedMode}
+                    onChange={(event) => setWidgetOptions((prev) => ({ ...prev, embedMode: event.target.value === 'top-picks' ? 'top-picks' : 'upcoming' }))}
+                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-white"
+                  >
+                    <option value="upcoming">Upcoming Events</option>
+                    <option value="top-picks">Top Picks</option>
+                  </select>
+                </label>
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                   Theme
                   <select
                     value={widgetOptions.theme}
@@ -1328,6 +1429,19 @@ const ArtistProfilePage = ({ artist }: Props) => {
                     className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-white"
                   />
                 </label>
+                {widgetOptions.embedMode === 'top-picks' && (
+                  <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400 md:col-span-2">
+                    Title override
+                    <input
+                      type="text"
+                      maxLength={80}
+                      value={widgetOptions.titleOverride}
+                      onChange={(event) => setWidgetOptions((prev) => ({ ...prev, titleOverride: event.target.value }))}
+                      placeholder="Top Picks"
+                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-white"
+                    />
+                  </label>
+                )}
                 <label className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/50 px-3 py-2 text-sm font-semibold text-slate-200">
                   <input
                     type="checkbox"
@@ -1345,6 +1459,70 @@ const ArtistProfilePage = ({ artist }: Props) => {
                   Show ticket button
                 </label>
               </div>
+              {widgetOptions.embedMode === 'top-picks' && (
+                <div className="mt-5 rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-white">Choose Top Picks</h3>
+                      <p className="mt-1 text-xs leading-5 text-slate-400">
+                        Select the approved upcoming events that should appear in this curated embed.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={saveTopPicks}
+                      disabled={topPicksSaving}
+                      className="rounded-xl border border-emerald-400/60 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {topPicksSaving ? 'Saving...' : 'Save Top Picks'}
+                    </button>
+                  </div>
+                  {topPicksError && (
+                    <p className="mt-3 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-100">{topPicksError}</p>
+                  )}
+                  {topPicksStatus && (
+                    <p className="mt-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">{topPicksStatus}</p>
+                  )}
+                  <div className="mt-4 space-y-2">
+                    {topPickEvents.length > 0 ? (
+                      topPickEvents.map((event) => {
+                        const date = event.date ? parseLocalDayjs(event.date) : null;
+                        const dateLabel = date?.isValid() ? date.format('ddd, MMM D') : 'Date TBA';
+                        const time = buildEventDateTime(event.date, event.start_time);
+                        const timeLabel = time && dayjs(time).isValid() ? dayjs(time).format('h:mm A') : null;
+                        return (
+                          <label
+                            key={event.id}
+                            className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/70 p-3 text-sm text-slate-200"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedTopPickIds.includes(event.id)}
+                              onChange={(changeEvent) => toggleTopPick(event.id, changeEvent.target.checked)}
+                              className="mt-1"
+                            />
+                            <span className="min-w-0">
+                              <span className="block font-semibold text-white">{event.title}</span>
+                              <span className="mt-0.5 block text-xs text-slate-400">
+                                {dateLabel}{timeLabel ? ` • ${timeLabel}` : ''}{event.venue_name ? ` • ${event.venue_name}` : ''}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })
+                    ) : (
+                      <p className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400">
+                        No approved upcoming events are available for this profile yet.
+                      </p>
+                    )}
+                  </div>
+                  {selectedTopPickIds.length === 0 && (
+                    <p className="mt-3 text-xs text-slate-500">
+                      Previewing the Top Picks embed will show an empty state until you select and save at least one event.
+                    </p>
+                  )}
+                </div>
+              )}
               <textarea
                 readOnly
                 value={embedSnippet}

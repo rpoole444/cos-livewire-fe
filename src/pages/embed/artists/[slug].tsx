@@ -24,6 +24,7 @@ interface ArtistSchedule {
   slug: string;
   events: ScheduleEvent[];
   profile_type?: 'artist' | 'venue' | 'promoter';
+  mode?: 'upcoming' | 'top-picks';
 }
 
 interface EmbedScheduleProps {
@@ -32,11 +33,21 @@ interface EmbedScheduleProps {
   layout: 'full' | 'compact';
   showPoster: boolean;
   showTicketButton: boolean;
+  embedMode: 'upcoming' | 'top-picks';
+  titleOverride: string;
 }
 
 const APP_URL = 'https://app.alpinegrooveguide.com';
 
-export default function EmbedArtistSchedule({ schedule, theme, layout, showPoster, showTicketButton }: EmbedScheduleProps) {
+export default function EmbedArtistSchedule({
+  schedule,
+  theme,
+  layout,
+  showPoster,
+  showTicketButton,
+  embedMode,
+  titleOverride,
+}: EmbedScheduleProps) {
   const isLight = theme === 'light';
   const isCompact = layout === 'compact';
   const pageClass = isLight
@@ -49,6 +60,13 @@ export default function EmbedArtistSchedule({ schedule, theme, layout, showPoste
   const mutedText = isLight ? 'text-stone-500' : 'text-slate-400';
   const accentText = isLight ? 'text-amber-700' : 'text-emerald-300';
   const isVenue = schedule.profile_type === 'venue';
+  const isTopPicks = embedMode === 'top-picks';
+  const eyebrow = isTopPicks
+    ? 'Top Picks'
+    : isVenue
+    ? 'Upcoming at this venue'
+    : 'Upcoming shows';
+  const displayTitle = titleOverride || schedule.display_name;
 
   const trackEmbedEvent = async (eventType: string, eventId?: number) => {
     try {
@@ -71,16 +89,19 @@ export default function EmbedArtistSchedule({ schedule, theme, layout, showPoste
   return (
     <>
       <Head>
-        <title>{`${schedule.display_name} upcoming shows`}</title>
+        <title>{`${displayTitle} – Alpine Groove Guide`}</title>
         <meta name="robots" content="noindex" />
       </Head>
       <main className={`${pageClass} ${isCompact ? 'p-3' : 'p-4 sm:p-5'}`}>
         <header className="mb-4 flex items-end justify-between gap-4">
           <div>
             <p className={`text-[10px] font-semibold uppercase tracking-[0.28em] ${accentText}`}>
-              {isVenue ? 'Upcoming at this venue' : 'Upcoming shows'}
+              {eyebrow}
             </p>
-            <h1 className="mt-1 text-xl font-semibold sm:text-2xl">{schedule.display_name}</h1>
+            <h1 className="mt-1 text-xl font-semibold sm:text-2xl">{displayTitle}</h1>
+            {titleOverride && (
+              <p className={`mt-0.5 text-xs ${mutedText}`}>{schedule.display_name}</p>
+            )}
           </div>
           <a
             href={`${APP_URL}/artists/${schedule.slug}`}
@@ -158,7 +179,9 @@ export default function EmbedArtistSchedule({ schedule, theme, layout, showPoste
           </div>
         ) : (
           <div className={`rounded-xl border p-6 text-center text-sm ${cardClass} ${secondaryText}`}>
-            No upcoming {isVenue ? 'events' : 'shows'} are listed yet.
+            {isTopPicks
+              ? 'No Top Picks selected yet.'
+              : `No upcoming ${isVenue ? 'events' : 'shows'} are listed yet.`}
           </div>
         )}
 
@@ -179,6 +202,8 @@ export const getServerSideProps: GetServerSideProps<EmbedScheduleProps> = async 
   const layout = context.query.layout === 'compact' ? 'compact' : 'full';
   const showPoster = context.query.poster !== '0';
   const showTicketButton = context.query.tickets !== '0';
+  const embedMode = context.query.mode === 'top-picks' ? 'top-picks' : 'upcoming';
+  const titleOverride = String(context.query.title || '').trim().slice(0, 80);
   const requestedLimit = Number.parseInt(String(context.query.limit || ''), 10);
   const limit = Number.isFinite(requestedLimit)
     ? Math.min(Math.max(requestedLimit, 1), 12)
@@ -186,7 +211,7 @@ export const getServerSideProps: GetServerSideProps<EmbedScheduleProps> = async 
 
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/artists/${encodeURIComponent(slug)}/schedule?limit=${limit}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/artists/${encodeURIComponent(slug)}/schedule?limit=${limit}&mode=${embedMode}`
     );
 
     if (!response.ok) {
@@ -194,7 +219,7 @@ export const getServerSideProps: GetServerSideProps<EmbedScheduleProps> = async 
     }
 
     const schedule = await response.json();
-    return { props: { schedule, theme, layout, showPoster, showTicketButton } };
+    return { props: { schedule, theme, layout, showPoster, showTicketButton, embedMode, titleOverride } };
   } catch (error) {
     console.error('GSSP /embed/artists/[slug] error:', error);
     return { notFound: true };
