@@ -50,7 +50,7 @@ const AdminImportPage = () => {
           <section className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
             <h2 className="text-xl font-semibold">Start a new import</h2>
             <p className="mt-2 text-sm text-slate-400">
-              Paste the raw calendar text and send it to the Moondog parser.
+              Paste raw calendar text and send it to the Moondog parser. Each event should be one line after a date heading.
             </p>
             <form
               onSubmit={async (event) => {
@@ -133,10 +133,19 @@ const AdminImportPage = () => {
           </section>
 
           <section className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
-            <h2 className="text-lg font-semibold text-slate-100">Need a batch link?</h2>
+            <h2 className="text-lg font-semibold text-slate-100">Recommended paste format</h2>
             <p className="mt-2 text-sm text-slate-400">
-              Use the batch ID from your import service to jump to a specific run at
-              <span className="text-slate-200"> /admin/imports/&lt;batchId&gt;</span>.
+              Keep dates as headings, then use <span className="text-slate-200">Venue, Artist, Time</span>. Multiple artists are allowed, but the parser may flag them so an admin can review the row before it moves to the calendar.
+            </p>
+            <pre className="mt-4 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950 p-4 text-xs leading-6 text-slate-300">
+{`Sunday, June 21
+
+Armadillo Ranch, The Broken Rose Unplugged, 1 p.m.
+Buffalo Lodge, RV Casino, Annette & Doug Conlon, Co Spgs Pickers, 2 p.m.
+Cantina Verde, Matt Cravatta, 5 p.m.`}
+            </pre>
+            <p className="mt-4 text-sm text-slate-400">
+              This same staged-review pattern is the right foundation for venue fast-add later: a venue can paste a weekly calendar, apply venue defaults like address, region, age policy, and website, then review before submitting.
             </p>
           </section>
         </div>

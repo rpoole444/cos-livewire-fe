@@ -23,9 +23,12 @@ type ImportEvent = {
   status?: string | null;
   is_rejected?: boolean | null;
   is_accepted?: boolean | null;
+  promoted_event_id?: number | string | null;
+  region?: string | null;
 };
 
 type StatusTone = 'success' | 'error';
+type StatusFilter = 'all' | 'pending' | 'accepted' | 'rejected' | 'duplicates';
 
 const AdminImportBatchPage = () => {
   const router = useRouter();
@@ -42,6 +45,8 @@ const AdminImportBatchPage = () => {
   const [showPromoteModal, setShowPromoteModal] = useState(false);
   const [isPromoting, setIsPromoting] = useState(false);
   const [hasPromoted, setHasPromoted] = useState(false);
+  const [bulkAction, setBulkAction] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const source = 'moondog';
   const redirectAfterPromote = false;
 
@@ -98,6 +103,11 @@ const AdminImportBatchPage = () => {
     };
     return labels[warning] || warning;
   };
+
+  const isDuplicateEvent = (event: ImportEvent) =>
+    getWarnings(event).some((warning) =>
+      ['duplicate_existing_event', 'duplicate_existing_import', 'duplicate_in_batch'].includes(warning)
+    );
 
   const getStatus = (event: ImportEvent) => {
     if (event.status) return event.status;
@@ -188,6 +198,47 @@ const AdminImportBatchPage = () => {
     }
   };
 
+  const handleBulkAction = async (
+    action: 'accept_clean_pending' | 'reject_duplicate_pending' | 'reject_all_pending',
+    successLabel: string
+  ) => {
+    if (!batchIdValue || bulkAction) return;
+    setBulkAction(action);
+    setStatusMessage(null);
+    setStatusTone(null);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/${batchIdValue}/events/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.message || 'Bulk update failed.');
+      }
+
+      const updatedEvents = Array.isArray(data?.events) ? data.events : [];
+      const updatedById = new Map(updatedEvents.map((event: ImportEvent) => [String(event.id), event]));
+      setEvents((prev) =>
+        prev.map((event) => {
+          const updated = updatedById.get(String(event.id));
+          return updated ? { ...event, ...updated } : event;
+        })
+      );
+
+      setStatusMessage(`${successLabel}: ${data?.updatedCount || 0} event${data?.updatedCount === 1 ? '' : 's'} updated.`);
+      setStatusTone('success');
+    } catch (error) {
+      console.error('Bulk import update failed', error);
+      setStatusMessage('Unable to update this batch. Please try again.');
+      setStatusTone('error');
+    } finally {
+      setBulkAction(null);
+    }
+  };
+
   const startEdit = (event: ImportEvent) => {
     setEditingId(event.id);
     setDraft({
@@ -229,10 +280,7 @@ const AdminImportBatchPage = () => {
           item.id === event.id
             ? {
                 ...item,
-                date: draft.date ?? item.date,
-                time: draft.time ?? item.time,
-                venue: draft.venue ?? item.venue,
-                artist_display: draft.artist_display ?? item.artist_display,
+                ...data,
               }
             : item
         )
@@ -249,7 +297,22 @@ const AdminImportBatchPage = () => {
     }
   };
 
+  const pendingCount = events.filter((event) => getStatus(event).toLowerCase() === 'pending').length;
   const acceptedCount = events.filter((event) => getStatus(event).toLowerCase() === 'accepted').length;
+  const rejectedCount = events.filter((event) => getStatus(event).toLowerCase() === 'rejected').length;
+  const duplicateCount = events.filter(isDuplicateEvent).length;
+  const cleanPendingCount = events.filter(
+    (event) => getStatus(event).toLowerCase() === 'pending' && !isDuplicateEvent(event)
+  ).length;
+  const duplicatePendingCount = events.filter(
+    (event) => getStatus(event).toLowerCase() === 'pending' && isDuplicateEvent(event)
+  ).length;
+  const filteredEvents = events.filter((event) => {
+    const status = getStatus(event).toLowerCase();
+    if (statusFilter === 'all') return true;
+    if (statusFilter === 'duplicates') return isDuplicateEvent(event);
+    return status === statusFilter;
+  });
   const canPromote = acceptedCount > 0 && !hasPromoted;
 
   const handlePromoteBatch = async () => {
@@ -304,7 +367,7 @@ const AdminImportBatchPage = () => {
         <title>Import Batch {batchIdValue ?? ''} – Alpine Groove Guide</title>
       </Head>
       <div className="min-h-screen bg-gray-950 px-6 py-12 text-slate-100">
-        <div className="mx-auto max-w-3xl space-y-8">
+        <div className="mx-auto max-w-6xl space-y-8">
           <header className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-8">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">Admin Tools</p>
             <h1 className="mt-3 text-3xl font-semibold">Import batch {batchIdValue}</h1>
@@ -352,6 +415,81 @@ const AdminImportBatchPage = () => {
               </p>
             )}
 
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {[
+                { label: 'Total rows', value: events.length, tone: 'text-slate-100' },
+                { label: 'Pending', value: pendingCount, tone: 'text-slate-100' },
+                { label: 'Accepted', value: acceptedCount, tone: 'text-emerald-200' },
+                { label: 'Rejected', value: rejectedCount, tone: 'text-rose-200' },
+                { label: 'Duplicates', value: duplicateCount, tone: 'text-amber-200' },
+              ].map((item) => (
+                <div key={item.label} className="rounded-2xl border border-slate-800/80 bg-slate-950/70 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
+                  <p className={`mt-2 text-2xl font-semibold ${item.tone}`}>{item.value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-slate-800/80 bg-slate-950/70 p-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-slate-100">Batch guardrails</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Accept clean rows in bulk, reject duplicate rows, then move accepted events into normal admin review.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => handleBulkAction('accept_clean_pending', 'Accepted clean pending rows')}
+                    disabled={bulkAction !== null || cleanPendingCount === 0}
+                    className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {bulkAction === 'accept_clean_pending' ? 'Accepting…' : `Accept clean pending (${cleanPendingCount})`}
+                  </button>
+                  <button
+                    onClick={() => handleBulkAction('reject_duplicate_pending', 'Rejected duplicate pending rows')}
+                    disabled={bulkAction !== null || duplicatePendingCount === 0}
+                    className="rounded-full border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-200 transition hover:border-amber-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {bulkAction === 'reject_duplicate_pending' ? 'Rejecting…' : `Reject duplicates (${duplicatePendingCount})`}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Reject all pending rows in this batch?')) {
+                        handleBulkAction('reject_all_pending', 'Rejected all pending rows');
+                      }
+                    }}
+                    disabled={bulkAction !== null || pendingCount === 0}
+                    className="rounded-full border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-xs font-semibold text-rose-200 transition hover:border-rose-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Reject all pending ({pendingCount})
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              {[
+                ['all', `All (${events.length})`],
+                ['pending', `Pending (${pendingCount})`],
+                ['accepted', `Accepted (${acceptedCount})`],
+                ['rejected', `Rejected (${rejectedCount})`],
+                ['duplicates', `Duplicates (${duplicateCount})`],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  onClick={() => setStatusFilter(value as StatusFilter)}
+                  className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
+                    statusFilter === value
+                      ? 'border-sun-gold bg-sun-gold text-night-black'
+                      : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500 hover:text-white'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
             <div className="mt-6 overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="border-b border-slate-800/70 text-xs uppercase tracking-widest text-slate-500">
@@ -372,25 +510,28 @@ const AdminImportBatchPage = () => {
                       </td>
                     </tr>
                   )}
-                  {!isLoadingEvents && events.length === 0 && (
+                  {!isLoadingEvents && filteredEvents.length === 0 && (
                     <tr>
                       <td className="px-4 py-6 text-slate-400" colSpan={6}>
-                        No staged events found for this batch.
+                        No staged events match this view.
                       </td>
                     </tr>
                   )}
                   {!isLoadingEvents &&
-                    events.map((event) => {
+                    filteredEvents.map((event) => {
                       const warnings = getWarnings(event);
                       const status = getStatus(event);
                       const isRejected = status === 'rejected';
                       const isAccepted = status === 'accepted';
+                      const isDuplicate = isDuplicateEvent(event);
                       const isEditing = editingId === event.id;
                       const disableActions = actionId === event.id;
                       const rowTone = isAccepted
                         ? 'bg-emerald-500/10'
                         : isRejected
                         ? 'bg-rose-500/10'
+                        : isDuplicate
+                        ? 'bg-amber-500/5'
                         : 'bg-transparent';
                       if (process.env.NODE_ENV !== 'production') {
                         const hasTimeInRawBlock = Boolean(event.raw_block?.match(/\b\d{1,2}:\d{2}\b/));
@@ -411,7 +552,14 @@ const AdminImportBatchPage = () => {
                                 placeholder="YYYY-MM-DD"
                               />
                             ) : (
-                              <p className="font-medium">{getDateTimeLabel(event)}</p>
+                              <>
+                                <p className="font-medium">{getDateTimeLabel(event)}</p>
+                                {event.promoted_event_id && (
+                                  <p className="mt-1 text-xs text-emerald-300">
+                                    Moved to review as event #{event.promoted_event_id}
+                                  </p>
+                                )}
+                              </>
                             )}
                             {isEditing && (
                               <input
@@ -499,7 +647,7 @@ const AdminImportBatchPage = () => {
                                 <>
                                   <button
                                     onClick={() => startEdit(event)}
-                                    disabled={disableActions}
+                                    disabled={disableActions || Boolean(event.promoted_event_id)}
                                     className="rounded-full border border-slate-600 px-4 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
                                   >
                                     Edit
@@ -507,7 +655,7 @@ const AdminImportBatchPage = () => {
                                   {!isAccepted && (
                                     <button
                                       onClick={() => handleAccept(event)}
-                                      disabled={disableActions}
+                                      disabled={disableActions || Boolean(event.promoted_event_id)}
                                       className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
                                     >
                                       Accept
@@ -516,7 +664,7 @@ const AdminImportBatchPage = () => {
                                   {!isRejected && (
                                     <button
                                       onClick={() => handleReject(event)}
-                                      disabled={disableActions}
+                                      disabled={disableActions || Boolean(event.promoted_event_id)}
                                       className="rounded-full bg-rose-500 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-60"
                                     >
                                       Reject
