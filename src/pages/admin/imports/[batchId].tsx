@@ -256,7 +256,7 @@ const AdminImportBatchPage = () => {
         throw new Error(data?.message || 'Failed to promote batch.');
       }
       setHasPromoted(true);
-      setStatusMessage(`Published ${acceptedCount} event${acceptedCount === 1 ? '' : 's'} to the live calendar.`);
+      setStatusMessage(`Moved ${acceptedCount} event${acceptedCount === 1 ? '' : 's'} to the admin review queue.`);
       setStatusTone('success');
       if (redirectAfterPromote) {
         router.push('/AdminService');
@@ -316,7 +316,7 @@ const AdminImportBatchPage = () => {
                     disabled={!canPromote}
                     className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Promote batch
+                    Move to review
                   </button>
                 )}
                 <Link
@@ -533,10 +533,10 @@ const AdminImportBatchPage = () => {
       {showPromoteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-3xl border border-slate-700 bg-slate-950 p-6 text-slate-100 shadow-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">Confirm publish</p>
-            <h2 className="mt-3 text-2xl font-semibold">Promote accepted events?</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">Confirm move</p>
+            <h2 className="mt-3 text-2xl font-semibold">Move accepted events to review?</h2>
             <p className="mt-3 text-sm text-slate-400">
-              This will publish {acceptedCount} event{acceptedCount === 1 ? '' : 's'} to the live calendar.
+              This will create {acceptedCount} pending event{acceptedCount === 1 ? '' : 's'} in the normal admin review queue. Approve there when ready to publish live.
             </p>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
               <button
@@ -551,7 +551,7 @@ const AdminImportBatchPage = () => {
                 disabled={isPromoting}
                 className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isPromoting ? 'Publishing…' : 'Confirm publish'}
+                {isPromoting ? 'Moving…' : 'Confirm move'}
               </button>
             </div>
           </div>
