@@ -8,9 +8,55 @@ import EventReview from '@/components/EventReview';
 import ArtistReview from '@/components/ArtistReview';
 import EventClaimReview from '@/components/EventClaimReview';
 import { getPendingArtists } from '@/pages/api/artists';
-import { getEventClaimRequests } from '@/pages/api/route';
+import { getAdminSummary, getEventClaimRequests } from '@/pages/api/route';
 import { useState } from 'react';
-import { CalendarCheck, FileDown, Handshake, LogOut, Music2, ShieldCheck, Users } from 'lucide-react';
+import { CalendarCheck, CheckCircle2, ExternalLink, FileDown, Handshake, LogOut, Music2, ShieldCheck, UploadCloud, Users } from 'lucide-react';
+
+interface AdminSummary {
+  counts: {
+    pending_events: number;
+    pending_profiles: number;
+    pending_claims: number;
+  };
+  recent_approved_events: Array<{
+    id: number;
+    title: string;
+    slug: string;
+    date?: string;
+    start_time?: string;
+    venue_name?: string;
+    source_label?: string;
+  }>;
+  recent_imports: Array<{
+    id: number;
+    source: string;
+    status?: string;
+    created_at?: string;
+    completed_at?: string;
+    event_count: number;
+    pending_count: number;
+    accepted_count: number;
+    rejected_count: number;
+  }>;
+  quick_links: Array<{
+    label: string;
+    href: string;
+  }>;
+}
+
+const formatDate = (value?: string) => {
+  if (!value) return 'Date TBA';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
+const formatDateTime = (value?: string) => {
+  if (!value) return 'Recently';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+};
 
 const AdminService: React.FC = () => {
   const router = useRouter();
@@ -19,6 +65,9 @@ const AdminService: React.FC = () => {
   const [eventCount, setEventCount] = useState(0);
   const [artistCount, setArtistCount] = useState(0);
   const [claimCount, setClaimCount] = useState(0);
+  const [summary, setSummary] = useState<AdminSummary | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [summaryError, setSummaryError] = useState('');
 
   const handleEventCountChange = useCallback((count: number) => setEventCount(count), []);
   const handleArtistCountChange = useCallback((count: number) => setArtistCount(count), []);
@@ -31,6 +80,20 @@ const AdminService: React.FC = () => {
       } else if (!user.is_admin) {
         router.replace('/');
       } else {
+        setSummaryLoading(true);
+        setSummaryError('');
+        getAdminSummary()
+          .then((data) => {
+            setSummary(data);
+            setEventCount(Number(data?.counts?.pending_events || 0));
+            setArtistCount(Number(data?.counts?.pending_profiles || 0));
+            setClaimCount(Number(data?.counts?.pending_claims || 0));
+          })
+          .catch((error) => {
+            console.error('Failed to load admin summary', error);
+            setSummaryError('Unable to load dashboard summary.');
+          })
+          .finally(() => setSummaryLoading(false));
         getPendingArtists()
           .then((profiles) => setArtistCount(Array.isArray(profiles) ? profiles.length : 0))
           .catch((error) => {
@@ -72,6 +135,12 @@ const AdminService: React.FC = () => {
   }
 
   const totalPending = eventCount + artistCount + claimCount;
+  const quickLinks = summary?.quick_links?.length ? summary.quick_links : [
+    { label: 'Public calendar', href: '/' },
+    { label: 'Artist directory', href: '/artists' },
+    { label: 'Import Moondog', href: '/admin/import' },
+    { label: 'User management', href: '/AdminUsersPage' },
+  ];
   const activeViewCopy =
     view === 'events'
       ? 'Review submitted shows, clean up details, and approve calendar listings.'
@@ -174,6 +243,155 @@ const AdminService: React.FC = () => {
                   <span className="mt-2 block text-2xl font-semibold">{claimCount}</span>
                 </button>
               </div>
+            </div>
+          </section>
+
+          <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/20 sm:p-6">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Command center</p>
+                  <h2 className="mt-1 text-2xl font-semibold text-slate-50">What needs attention</h2>
+                </div>
+                {summaryLoading && <span className="text-xs text-slate-400">Refreshing summary...</span>}
+              </div>
+              {summaryError && (
+                <div className="mt-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                  {summaryError}
+                </div>
+              )}
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <button
+                  type="button"
+                  onClick={() => setView('events')}
+                  className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-left transition hover:border-emerald-300/70"
+                >
+                  <CalendarCheck className="h-5 w-5 text-emerald-300" />
+                  <p className="mt-3 text-3xl font-semibold text-slate-50">{eventCount}</p>
+                  <p className="text-sm font-semibold text-emerald-100">Pending events</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView('artists')}
+                  className="rounded-2xl border border-purple-400/30 bg-purple-500/10 p-4 text-left transition hover:border-purple-300/70"
+                >
+                  <Music2 className="h-5 w-5 text-purple-300" />
+                  <p className="mt-3 text-3xl font-semibold text-slate-50">{artistCount}</p>
+                  <p className="text-sm font-semibold text-purple-100">Pending profiles</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setView('claims')}
+                  className="rounded-2xl border border-cyan-400/30 bg-cyan-500/10 p-4 text-left transition hover:border-cyan-300/70"
+                >
+                  <Handshake className="h-5 w-5 text-cyan-300" />
+                  <p className="mt-3 text-3xl font-semibold text-slate-50">{claimCount}</p>
+                  <p className="text-sm font-semibold text-cyan-100">Pending claims</p>
+                </button>
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {quickLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="inline-flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/70 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:border-emerald-400/60 hover:text-white"
+                  >
+                    {link.label}
+                    <ExternalLink className="h-4 w-4 text-slate-500" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/20 sm:p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Recently approved</p>
+              <h2 className="mt-1 text-2xl font-semibold text-slate-50">Latest live events</h2>
+              <div className="mt-5 space-y-3">
+                {(summary?.recent_approved_events || []).length > 0 ? (
+                  summary?.recent_approved_events.map((event) => (
+                    <Link
+                      key={event.id}
+                      href={`/eventRouter/${event.slug}`}
+                      className="block rounded-2xl border border-slate-800 bg-slate-950/70 p-4 transition hover:border-emerald-400/60"
+                    >
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-100">{event.title}</p>
+                          <p className="mt-1 text-xs text-slate-400">
+                            {formatDate(event.date)}
+                            {event.venue_name ? ` • ${event.venue_name}` : ''}
+                            {event.source_label ? ` • ${event.source_label}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                ) : (
+                  <p className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
+                    No approved events found yet.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/20 sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Recent imports</p>
+                <h2 className="mt-1 text-2xl font-semibold text-slate-50">Import activity</h2>
+              </div>
+              <Link
+                href="/admin/import"
+                className="inline-flex items-center gap-2 rounded-full border border-emerald-400/50 px-4 py-2 text-sm font-semibold text-emerald-100 transition hover:border-emerald-300 hover:text-white"
+              >
+                <UploadCloud className="h-4 w-4" />
+                New import
+              </Link>
+            </div>
+            <div className="mt-5 grid gap-3 lg:grid-cols-3">
+              {(summary?.recent_imports || []).length > 0 ? (
+                summary?.recent_imports.map((batch) => (
+                  <Link
+                    key={batch.id}
+                    href={`/admin/imports/${batch.id}`}
+                    className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 transition hover:border-emerald-400/60"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold capitalize text-slate-100">{batch.source}</p>
+                        <p className="mt-1 text-xs text-slate-400">{formatDateTime(batch.created_at)}</p>
+                      </div>
+                      <span className="rounded-full border border-slate-700 px-2 py-1 text-[11px] font-semibold uppercase tracking-widest text-slate-300">
+                        {batch.status || 'draft'}
+                      </span>
+                    </div>
+                    <div className="mt-4 grid grid-cols-4 gap-2 text-center text-xs">
+                      <div className="rounded-lg bg-slate-900 p-2">
+                        <p className="text-lg font-semibold text-slate-50">{batch.event_count}</p>
+                        <p className="text-slate-500">Total</p>
+                      </div>
+                      <div className="rounded-lg bg-slate-900 p-2">
+                        <p className="text-lg font-semibold text-amber-200">{batch.pending_count}</p>
+                        <p className="text-slate-500">Pending</p>
+                      </div>
+                      <div className="rounded-lg bg-slate-900 p-2">
+                        <p className="text-lg font-semibold text-emerald-200">{batch.accepted_count}</p>
+                        <p className="text-slate-500">Accepted</p>
+                      </div>
+                      <div className="rounded-lg bg-slate-900 p-2">
+                        <p className="text-lg font-semibold text-rose-200">{batch.rejected_count}</p>
+                        <p className="text-slate-500">Rejected</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <p className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
+                  No import batches yet.
+                </p>
+              )}
             </div>
           </section>
 

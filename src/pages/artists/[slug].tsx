@@ -573,7 +573,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
           )}
           {communityAccessActive && (
             <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-3 text-center text-sm text-emerald-100 shadow">
-              {COMMUNITY_ARTIST_ACCESS_LABEL}. This profile is available during the community access window.
+              {COMMUNITY_ARTIST_ACCESS_LABEL}. This profile is available while community access is open.
             </div>
           )}
           {isGated && (

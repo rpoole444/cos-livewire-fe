@@ -139,6 +139,17 @@ async function getEventsForReview(): Promise<Events> {
   return data
 }
 
+async function getAdminSummary() {
+  const res = await fetch(`${API_BASE_URL}/api/events/admin/summary`, {
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    throw new Error(errorBody?.message || 'Failed to fetch admin summary');
+  }
+  return res.json();
+}
+
 async function updateEventStatus(eventId: number, isApproved: boolean): Promise<void> {
   const payload: EventStatusUpdatePayload = {
     isApproved,
@@ -260,6 +271,7 @@ export {
   loginUser, 
   logoutUser, 
   getEventsForReview,
+  getAdminSummary,
   updateEventStatus,
   getEventClaimRequests,
   reviewEventClaim,

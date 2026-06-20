@@ -250,7 +250,7 @@ export default function EditArtistProfilePage() {
         <TrialBanner trial_ends_at={user?.trial_ends_at} />
         {communityAccessActive && (
           <div className="mb-5 rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
-            {COMMUNITY_ARTIST_ACCESS_LABEL}. You can keep this profile updated during the community access window.
+            {COMMUNITY_ARTIST_ACCESS_LABEL}. You can keep this profile updated while community access is open.
           </div>
         )}
         <h1 className="text-2xl font-bold mb-4">

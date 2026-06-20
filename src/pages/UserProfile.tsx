@@ -1019,7 +1019,7 @@ const textareaClasses =
               <p className="text-slate-300 text-sm">Alpine Pro is active on your account.</p>
             ) : communityAccessActive ? (
               <p className="text-slate-300 text-sm">
-                Community artist page access is active through 2026. You can still subscribe or tip to support Alpine Groove Guide.
+                Community artist page access is open. You can still subscribe or tip to support Alpine Groove Guide.
               </p>
             ) : shouldShowTrialBanner ? (
               <p className="text-slate-300 text-sm">

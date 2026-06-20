@@ -62,7 +62,7 @@ export default function ForVenuesPage() {
               </Link>
             </div>
             <p className="mt-4 text-sm text-slate-400">
-              {COMMUNITY_ARTIST_ACCESS_LABEL}. Venue pages can be claimed during the same community access window.
+              {COMMUNITY_ARTIST_ACCESS_LABEL}. Venue pages can be claimed right now.
             </p>
           </div>
 

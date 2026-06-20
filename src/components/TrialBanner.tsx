@@ -41,7 +41,7 @@ const TrialBanner: React.FC<TrialBannerProps> = (props) => {
     return (
       <div className="rounded-md p-3 text-white text-center shadow-md mb-4 text-sm font-medium bg-emerald-700">
         🎁 <span className="font-semibold">{COMMUNITY_ARTIST_ACCESS_LABEL}.</span>{' '}
-        Your trial ended, but artist page access remains open during the community access window.
+        Your trial ended, but artist page access remains open right now.
       </div>
     );
   }

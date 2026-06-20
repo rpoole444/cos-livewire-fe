@@ -228,7 +228,7 @@ export default function Home({ initialRegion }: HomeProps = {}) {
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 border border-alpine/60 bg-pine/50 px-3 py-2 text-xs font-black uppercase tracking-wider text-mist">
               <Sparkles className="h-4 w-4" />
-              Free community artist pages through 2026
+              Free community artist pages are open now
             </div>
 
             <div className="space-y-3">
@@ -293,7 +293,7 @@ export default function Home({ initialRegion }: HomeProps = {}) {
               </div>
             </div>
             <p className="mt-4 text-sm leading-6 text-ivory/70">
-              Browse community profiles across the Front Range, or create your own page while artist access is open through 2026.
+              Browse community profiles across the Front Range, or create your own page while community access is open.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               <Link

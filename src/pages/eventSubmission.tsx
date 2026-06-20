@@ -502,7 +502,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             <TrialBanner trial_ends_at={user.trial_ends_at} />
             {communityAccessActive && (
               <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">
-                <span className="font-semibold">{COMMUNITY_ARTIST_ACCESS_LABEL}.</span> Multiple event submissions are open during the community access window.
+                <span className="font-semibold">{COMMUNITY_ARTIST_ACCESS_LABEL}.</span> Multiple event submissions are open right now.
               </div>
             )}
             {venueDefaults.venue_name && (
@@ -643,7 +643,7 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             </ul>
             <div className="mt-6 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-xs text-emerald-100">
               {communityAccessActive
-                ? "Community artist access is open through 2026, including multiple event submissions. Make sure each date is confirmed before submitting."
+                ? "Community artist access is open, including multiple event submissions. Make sure each date is confirmed before submitting."
                 : "Pro or trial members can add up to four recurring dates at a time. Make sure each date is confirmed before submitting."}
             </div>
           </aside>

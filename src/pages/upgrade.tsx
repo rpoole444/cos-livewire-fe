@@ -132,7 +132,7 @@ export default function UpgradePage() {
               {loading ? 'Redirecting…' : communityAccessActive ? `Support (${plans.find(p => p.id === selectedPlan)?.price})` : `Subscribe (${plans.find(p => p.id === selectedPlan)?.price})`}
             </button>
             <p className="mt-4 text-sm text-gray-300">
-              {communityAccessActive ? 'Artist page creation is free through 2026; this is optional support.' : 'Save over 15% with the annual plan.'}
+              {communityAccessActive ? 'Artist page creation is free while community access is open; this is optional support.' : 'Save over 15% with the annual plan.'}
             </p>
           </div>
         </section>

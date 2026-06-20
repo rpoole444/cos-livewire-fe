@@ -424,7 +424,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         </header>
       {communityAccessActive && (
         <div className="mb-5 border border-alpine/50 bg-pine/30 p-4 text-sm text-mist">
-          Alpine Pro billing is still available for supporters, but profile creation is open to the community through 2026.
+          Alpine Pro billing is still available for supporters, but profile creation is open to the community right now.
         </div>
       )}
       <form onSubmit={handleSubmit} className="agg-profile-form agg-panel space-y-5 p-5 sm:p-8">
