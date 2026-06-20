@@ -130,6 +130,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const isPending = router.query.pending === 'true';
   const isOwner = artist?.is_owner ?? user?.id === artist?.user_id;
   const canEdit = artist && user && (user.id === artist.user_id || user.is_admin);
+  const canManagePrivateTools = Boolean(artist && (artist.is_owner || user?.id === artist.user_id || user?.is_admin));
   const [showTrialToast, setShowTrialToast] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
@@ -215,7 +216,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   }, [artist?.slug, isOwner]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!artist?.slug || !canEdit) return;
+    if (!artist?.slug || !canManagePrivateTools) return;
     const loadAnalytics = async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/artists/${artist.slug}/analytics`, {
@@ -229,7 +230,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
       }
     };
     loadAnalytics();
-  }, [artist?.slug, canEdit]);
+  }, [artist?.slug, canManagePrivateTools]);
 
   useEffect(() => {
     if (router.query.trial === 'active') {
@@ -825,7 +826,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
             </div>
           )}
 
-          {canEdit && (
+          {canManagePrivateTools && (
             <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Profile completeness</p>
