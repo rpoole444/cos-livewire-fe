@@ -47,7 +47,7 @@ interface Event {
 interface Artist {
   id: number;
   display_name: string;
-  user_id: number;
+  user_id?: number | null;
   bio: string;
   contact_email: string;
   profile_image: string;
@@ -65,7 +65,9 @@ interface Artist {
   events: Event[];
   trial_ends_at?: string | null;
   is_approved?: boolean;
-  access_state?: 'pro' | 'trial' | 'gated' | 'none';
+  access_state?: 'pro' | 'trial' | 'gated' | 'community' | 'shell' | 'none';
+  is_shell?: boolean;
+  is_admin_editor?: boolean;
   is_owner?: boolean;
   pro_cancelled_at?: string | null;
   profile_type?: 'artist' | 'venue' | 'promoter';
@@ -199,6 +201,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const [topPicksSaving, setTopPicksSaving] = useState(false);
   const [analyticsCounts, setAnalyticsCounts] = useState<AnalyticsCounts | null>(null);
   const accessState = artist?.access_state ?? 'none';
+  const isShellProfile = Boolean(artist?.is_shell || accessState === 'shell');
   const communityAccessActive = isCommunityArtistAccessActive();
   const isProAccess = accessState === 'pro';
   const isTrialAccess = accessState === 'trial';
@@ -543,6 +546,126 @@ const ArtistProfilePage = ({ artist }: Props) => {
   );
   const canViewPlayThisRoom = Boolean(user || canManagePrivateTools);
 
+  if (isShellProfile) {
+    const shellLocation = venueFullAddress || venueLocation || getRegionLabel(artist.home_region);
+    const shellDescription = artist.bio || `${artist.display_name} is an unclaimed venue listing on Alpine Groove Guide.`;
+    const shellImage = artist.profile_image || defaultSocialImage;
+
+    return (
+      <>
+        <Head>
+          <title>{artist.display_name} – Unclaimed Venue</title>
+          <meta name="description" content={shellDescription} />
+          <meta property="og:site_name" content="Alpine Groove Guide" />
+          <meta property="og:title" content={`${artist.display_name} – Unclaimed Venue`} />
+          <meta property="og:description" content={shellDescription} />
+          <meta property="og:type" content="profile" />
+          <meta property="og:url" content={artistUrl} />
+          <meta property="og:image" content={shellImage} />
+          <meta property="og:image:secure_url" content={shellImage} />
+          <meta property="og:image:alt" content={`${artist.display_name} on Alpine Groove Guide`} />
+          <link rel="canonical" href={artistUrl} />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={`${artist.display_name} – Unclaimed Venue`} />
+          <meta name="twitter:description" content={shellDescription} />
+          <meta name="twitter:image" content={shellImage} />
+        </Head>
+
+        <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-50">
+          <section className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/75 shadow-2xl shadow-black/30">
+            <div className="grid gap-0 lg:grid-cols-[320px_1fr]">
+              <div className="relative min-h-[260px] bg-slate-950">
+                {artist.profile_image ? (
+                  <Image
+                    src={artist.profile_image}
+                    alt={artist.display_name}
+                    fill
+                    className="object-cover"
+                    sizes="(min-width: 1024px) 320px, 100vw"
+                  />
+                ) : (
+                  <div className="flex h-full min-h-[260px] items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 text-6xl font-black text-slate-300">
+                    {artist.display_name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 sm:p-8">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-100">
+                    Unclaimed venue
+                  </span>
+                  {artist.home_region && (
+                    <span className="rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-amber-100">
+                      {getRegionLabel(artist.home_region)}
+                    </span>
+                  )}
+                </div>
+
+                <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+                  {artist.display_name}
+                </h1>
+                <p className="mt-4 text-sm leading-7 text-slate-300 sm:text-base">
+                  {shellDescription}
+                </p>
+
+                <div className="mt-6 space-y-3 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-sm text-slate-300">
+                  {shellLocation && (
+                    <p className="flex gap-2">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-amber-200" />
+                      <span>{shellLocation}</span>
+                    </p>
+                  )}
+                  {artist.venue_phone && (
+                    <p className="flex gap-2">
+                      <Phone className="mt-0.5 h-4 w-4 shrink-0 text-emerald-200" />
+                      <span>{artist.venue_phone}</span>
+                    </p>
+                  )}
+                  {artist.website && (
+                    <p className="flex gap-2">
+                      <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-emerald-200" />
+                      <a
+                        href={artist.website.startsWith('http') ? artist.website : `https://${artist.website}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-emerald-200 underline-offset-4 hover:underline"
+                      >
+                        Venue website
+                      </a>
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/40 p-4 text-sm text-slate-400">
+                  This is a lightweight venue listing created from community calendar data. Full venue tools, booking
+                  details, embeds, and enhanced profile features unlock after the venue is claimed and completed.
+                </div>
+
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {user?.is_admin && (
+                    <Link
+                      href={`/artists/edit/${artist.slug}`}
+                      className="rounded-xl bg-amber-400 px-4 py-2.5 text-sm font-black text-slate-950 transition hover:bg-amber-300"
+                    >
+                      Admin edit shell venue
+                    </Link>
+                  )}
+                  <Link
+                    href="/venues/colorado-springs"
+                    className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-emerald-400/60 hover:text-white"
+                  >
+                    Browse venues
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </>
+    );
+  }
+
   return (
     <>
       <Head>
@@ -590,7 +713,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
             </div>
           )}
 
-          <TrialBanner artist_user_id={artist.user_id} trial_ends_at={artist.trial_ends_at} is_pro={isProAccess} />
+          <TrialBanner artist_user_id={artist.user_id || undefined} trial_ends_at={artist.trial_ends_at} is_pro={isProAccess} />
 
           <section className="agg-corner-frame overflow-hidden border border-gold/40 bg-gradient-to-br from-[#171a12] via-black to-[#11130e] p-6 shadow-2xl shadow-black/40">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start">

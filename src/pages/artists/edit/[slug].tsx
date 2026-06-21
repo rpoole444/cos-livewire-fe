@@ -66,6 +66,7 @@ export default function EditArtistProfilePage() {
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isShellProfile, setIsShellProfile] = useState(false);
   const [mediaInputs, setMediaInputs] = useState({
     youtube: '',
     soundcloud: '',
@@ -85,6 +86,7 @@ export default function EditArtistProfilePage() {
           credentials: 'include',
         });
         const data = await res.json();
+        setIsShellProfile(Boolean(data.is_shell || data.access_state === 'shell'));
         const nextForm = {
           profile_type: data.profile_type || 'artist',
           display_name: data.display_name,
@@ -188,7 +190,11 @@ export default function EditArtistProfilePage() {
       setError("Fix the highlighted media links before saving.");
       return;
     }
-    if (form.profile_type === 'venue' && (!form.venue_address.trim() || !form.venue_city.trim())) {
+    if (
+      form.profile_type === 'venue' &&
+      !(user?.is_admin && isShellProfile) &&
+      (!form.venue_address.trim() || !form.venue_city.trim())
+    ) {
       setError("Venue address and city are required.");
       return;
     }
@@ -256,6 +262,12 @@ export default function EditArtistProfilePage() {
         <h1 className="text-2xl font-bold mb-4">
           Edit {form.profile_type === 'venue' ? 'Venue' : 'Pro'} Profile
         </h1>
+        {isShellProfile && user?.is_admin && (
+          <div className="mb-5 rounded-2xl border border-amber-400/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+            This is an unclaimed shell venue. You can add a photo, description, location, and contact basics now; the
+            full venue tools stay limited until the venue is claimed.
+          </div>
+        )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <label className="block">
           Profile Type
@@ -301,9 +313,9 @@ export default function EditArtistProfilePage() {
         {form.profile_type === 'venue' && (
           <div className="space-y-4 rounded-xl border border-emerald-400/30 bg-emerald-500/5 p-4">
             <h2 className="font-semibold text-emerald-100">Venue details</h2>
-            <input name="venue_address" required value={form.venue_address} onChange={handleChange} placeholder="Street Address" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+            <input name="venue_address" required={!(user?.is_admin && isShellProfile)} value={form.venue_address} onChange={handleChange} placeholder="Street Address" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
             <div className="grid gap-3 sm:grid-cols-3">
-              <input name="venue_city" required value={form.venue_city} onChange={handleChange} placeholder="City" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
+              <input name="venue_city" required={!(user?.is_admin && isShellProfile)} value={form.venue_city} onChange={handleChange} placeholder="City" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
               <input name="venue_state" value={form.venue_state} onChange={handleChange} placeholder="State" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
               <input name="venue_postal_code" value={form.venue_postal_code} onChange={handleChange} placeholder="ZIP" className="w-full p-2 rounded bg-gray-800 border border-gray-600" />
             </div>

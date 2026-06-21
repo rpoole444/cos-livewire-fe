@@ -20,8 +20,9 @@ interface Artist {
   profile_image?: string;
   genres?: string[];
   bio?: string;
-  access_state?: 'pro' | 'trial' | 'gated' | 'none';
+  access_state?: 'pro' | 'trial' | 'gated' | 'community' | 'shell' | 'none';
   profile_type?: 'artist' | 'venue' | 'promoter';
+  is_shell?: boolean;
   home_region?: string;
   venue_city?: string;
   venue_state?: string;
@@ -228,18 +229,18 @@ export default function ArtistDirectoryPage({
               const genresList = Array.isArray(artist.genres) ? artist.genres : [];
               const accessState = artist.access_state ?? 'none';
               const isLocked = accessState === 'gated';
+              const isShell = Boolean(artist.is_shell || accessState === 'shell');
               const profileType = artist.profile_type || 'artist';
               const profileLabel = profileType.charAt(0).toUpperCase() + profileType.slice(1);
-
-              return (
-                <Link
-                  key={artist.slug}
-                  href={`/artists/${artist.slug}`}
-                  aria-label={`View artist profile for ${displayName}`}
-                  className={`flex gap-4 rounded-3xl border p-4 text-left transition transform hover:scale-[1.02] hover:border-emerald-400/70 hover:bg-slate-900 hover:shadow-emerald-500/25 ${
-                    isLocked ? 'border-amber-400/30 bg-slate-900/70' : 'border-slate-800/80 bg-slate-900/80'
-                  }`}
-                >
+              const cardClasses = `flex gap-4 rounded-3xl border p-4 text-left transition ${
+                isShell
+                  ? 'border-slate-800/80 bg-slate-900/60'
+                  : `transform hover:scale-[1.02] hover:border-emerald-400/70 hover:bg-slate-900 hover:shadow-emerald-500/25 ${
+                      isLocked ? 'border-amber-400/30 bg-slate-900/70' : 'border-slate-800/80 bg-slate-900/80'
+                    }`
+              }`;
+              const cardContent = (
+                <>
                   <div className="relative h-16 w-16 flex-shrink-0 rounded-2xl border border-slate-700/80 bg-slate-800/80 sm:h-20 sm:w-20">
                     {hasImage ? (
                       <Image
@@ -265,8 +266,13 @@ export default function ArtistDirectoryPage({
                         {displayName}
                       </h2>
                       <span className="rounded-full border border-slate-600 bg-slate-800/70 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-300">
-                      {profileLabel}
+                        {profileLabel}
                       </span>
+                      {isShell && (
+                        <span className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-100">
+                          Unclaimed
+                        </span>
+                      )}
                       {artist.home_region && (
                         <span className="rounded-full border border-amber-400/50 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-100">
                           {getRegionLabel(artist.home_region)}
@@ -286,6 +292,12 @@ export default function ArtistDirectoryPage({
                     {truncatedBio && (
                       <p className={`mt-1 text-xs sm:text-sm ${isLocked ? 'text-slate-500' : 'text-slate-400'}`}>{truncatedBio}</p>
                     )}
+                    {isShell && (
+                      <p className="mt-2 text-xs leading-5 text-slate-500">
+                        This venue is listed from imported community calendars. The public profile will open after the
+                        venue is claimed or completed.
+                      </p>
+                    )}
                     {profileType === 'venue' && (artist.venue_city || artist.venue_state) && (
                       <p className="mt-1 text-xs text-amber-100/80">
                         {[artist.venue_city, artist.venue_state].filter(Boolean).join(', ')}
@@ -303,12 +315,25 @@ export default function ArtistDirectoryPage({
                         ))}
                       </div>
                     )}
-                    <span
-                      className={`mt-auto text-xs ${isLocked ? 'text-amber-200' : 'text-emerald-300'} flex items-center gap-1`}
-                    >
-                      {isLocked ? '🔒 Profile locked' : 'View profile →'}
-                    </span>
+                    <div className="mt-auto flex flex-wrap items-center gap-3 pt-3">
+                      <span
+                        className={`text-xs ${isShell ? 'text-slate-500' : isLocked ? 'text-amber-200' : 'text-emerald-300'} flex items-center gap-1`}
+                      >
+                        {isShell ? 'View unclaimed venue →' : isLocked ? '🔒 Profile locked' : 'View profile →'}
+                      </span>
+                    </div>
                   </div>
+                </>
+              );
+
+              return (
+                <Link
+                  key={artist.slug}
+                  href={`/artists/${artist.slug}`}
+                  aria-label={isShell ? `View unclaimed venue listing for ${displayName}` : `View artist profile for ${displayName}`}
+                  className={cardClasses}
+                >
+                  {cardContent}
                 </Link>
               );
             })}

@@ -55,6 +55,13 @@ type BackfillPreview = {
 type DryRunReport = {
   generated_at?: string;
   summary?: {
+    photo_count?: number;
+    venue_profile_count?: number;
+    scanned_event_count?: number;
+    high_confidence_matches?: number;
+    medium_confidence_matches?: number;
+    needs_review?: number;
+    broken_or_default_event_images?: number;
     photo_files_checked?: number;
     venue_photo_matches?: number;
     missing_venue_candidates?: number;
@@ -412,10 +419,17 @@ const AdminVenuePhotosPage = () => {
                 {report ? (
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     {[
-                      ['Photo files checked', report.summary?.photo_files_checked || 0],
-                      ['Venue matches', report.summary?.venue_photo_matches || 0],
+                      ['Photo files checked', report.summary?.photo_count ?? report.summary?.photo_files_checked ?? 0],
+                      ['Venue profiles scanned', report.summary?.venue_profile_count || 0],
+                      [
+                        'Venue matches',
+                        (report.summary?.high_confidence_matches || 0) + (report.summary?.medium_confidence_matches || 0),
+                      ],
                       ['Missing venue candidates', report.summary?.missing_venue_candidates || 0],
-                      ['Broken event images', report.summary?.broken_event_images || 0],
+                      [
+                        'Broken event images',
+                        report.summary?.broken_or_default_event_images ?? report.summary?.broken_event_images ?? 0,
+                      ],
                       ['Fallback candidates', report.summary?.event_image_backfill_candidates || 0],
                     ].map(([label, value]) => (
                       <div key={label} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
