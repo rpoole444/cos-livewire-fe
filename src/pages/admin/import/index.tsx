@@ -19,6 +19,7 @@ type ProfileOption = {
   website?: string | null;
   age_policy?: string | null;
   profile_image?: string | null;
+  is_shell?: boolean | null;
 };
 
 type ImportMode = 'profile' | 'moondog';
@@ -59,11 +60,25 @@ const AdminImportPage = () => {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [rawText, setRawText] = useState('');
+  const [sourceName, setSourceName] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
   const [profileOptions, setProfileOptions] = useState<ProfileOption[]>([]);
   const [selectedProfileId, setSelectedProfileId] = useState('');
   const [importMode, setImportMode] = useState<ImportMode>('profile');
   const [importDefaults, setImportDefaults] = useState<ImportDefaults>(blankDefaults);
+  const [shellDraft, setShellDraft] = useState({
+    display_name: '',
+    profile_type: 'venue',
+    home_region: DEFAULT_REGION,
+    profile_image: '',
+    website: '',
+    venue_address: '',
+    venue_city: '',
+    venue_state: 'CO',
+    age_policy: '',
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCreatingShell, setIsCreatingShell] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<'success' | 'error' | null>(null);
 
@@ -108,6 +123,18 @@ const AdminImportPage = () => {
     fetchProfileOptions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, user]);
+
+  const refreshProfileOptions = async () => {
+    const endpoint = isAdmin ? '/api/artists/admin/options' : '/api/artists/mine';
+    const res = await fetch(`${API_BASE_URL}${endpoint}`, { credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data?.message || 'Unable to load profile options.');
+    const profiles = isAdmin
+      ? (Array.isArray(data) ? data : [])
+      : (Array.isArray(data?.profiles) ? data.profiles : []);
+    setProfileOptions(profiles);
+    return profiles as ProfileOption[];
+  };
 
   useEffect(() => {
     if (!router.isReady || !profileOptions.length || selectedProfileId) return;
@@ -214,6 +241,8 @@ const AdminImportPage = () => {
                     credentials: 'include',
                     body: JSON.stringify({
                       raw_text: rawText,
+                      source_name: sourceName,
+                      source_url: sourceUrl,
                       defaults: importDefaults,
                     }),
                   });
@@ -276,13 +305,34 @@ const AdminImportPage = () => {
                     }}
                     className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
                   >
-                    <option value="">No profile defaults</option>
+                      <option value="">No profile defaults</option>
                     {profileOptions.map((profile) => (
                       <option key={profile.id} value={profile.id}>
-                        {profile.display_name} ({profileTypeLabel(profile.profile_type)})
+                        {profile.display_name} ({profileTypeLabel(profile.profile_type)}{profile.is_shell ? ' shell' : ''})
                       </option>
                     ))}
                   </select>
+                </label>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Source name
+                  <input
+                    value={sourceName}
+                    onChange={(event) => setSourceName(event.target.value)}
+                    placeholder="Alpine Groove Guide, venue calendar, partner calendar..."
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                  />
+                </label>
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Source URL
+                  <input
+                    value={sourceUrl}
+                    onChange={(event) => setSourceUrl(event.target.value)}
+                    placeholder="https://..."
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                  />
                 </label>
               </div>
 
@@ -368,6 +418,99 @@ const AdminImportPage = () => {
               )}
             </form>
           </section>
+
+          {isAdmin && (
+            <section className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
+              <h2 className="text-lg font-semibold text-slate-100">Create shell profile</h2>
+              <p className="mt-2 text-sm text-slate-400">
+                Create an unclaimed artist or venue profile before importing. Events can attach to it now, and the real
+                artist or venue can claim the same profile later without losing those event connections.
+              </p>
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Type
+                  <select
+                    value={shellDraft.profile_type}
+                    onChange={(event) => setShellDraft((prev) => ({ ...prev, profile_type: event.target.value }))}
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                  >
+                    <option value="venue">Venue</option>
+                    <option value="artist">Artist</option>
+                    <option value="promoter">Promoter</option>
+                  </select>
+                </label>
+                {[
+                  ['display_name', 'Display name'],
+                  ['profile_image', 'Default image URL'],
+                  ['website', 'Website'],
+                  ['venue_address', 'Venue address'],
+                  ['venue_city', 'Venue city'],
+                  ['venue_state', 'Venue state'],
+                  ['age_policy', 'Age policy'],
+                ].map(([field, label]) => (
+                  <label key={field} className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {label}
+                    <input
+                      value={shellDraft[field as keyof typeof shellDraft]}
+                      onChange={(event) => setShellDraft((prev) => ({ ...prev, [field]: event.target.value }))}
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                    />
+                  </label>
+                ))}
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Home region
+                  <select
+                    value={shellDraft.home_region}
+                    onChange={(event) => setShellDraft((prev) => ({ ...prev, home_region: event.target.value }))}
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                  >
+                    {MUSIC_REGIONS.map((region) => (
+                      <option key={region.slug} value={region.slug}>
+                        {region.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <button
+                type="button"
+                disabled={isCreatingShell || !shellDraft.display_name.trim()}
+                onClick={async () => {
+                  setIsCreatingShell(true);
+                  setStatusMessage(null);
+                  setStatusTone(null);
+                  try {
+                    const res = await fetch(`${API_BASE_URL}/api/admin/imports/shell-profiles`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify(shellDraft),
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok) {
+                      throw new Error(data?.message || 'Unable to create shell profile.');
+                    }
+                    const profiles = await refreshProfileOptions();
+                    const profileId = data?.profile?.id ? String(data.profile.id) : '';
+                    if (profileId) {
+                      applySelectedProfile(profileId, profiles);
+                    }
+                    setStatusMessage(data?.message || 'Shell profile ready. It can now be used as an import default.');
+                    setStatusTone('success');
+                  } catch (error) {
+                    console.error('Shell profile creation failed:', error);
+                    setStatusMessage(error instanceof Error ? error.message : 'Unable to create shell profile.');
+                    setStatusTone('error');
+                  } finally {
+                    setIsCreatingShell(false);
+                  }
+                }}
+                className="mt-5 rounded-full border border-sun-gold/50 bg-sun-gold/10 px-5 py-2 text-sm font-semibold text-sun-gold transition hover:border-sun-gold hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isCreatingShell ? 'Creating...' : 'Create shell profile'}
+              </button>
+            </section>
+          )}
 
           <section className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
             <h2 className="text-lg font-semibold text-slate-100">Recommended paste format</h2>
