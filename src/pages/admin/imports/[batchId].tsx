@@ -25,6 +25,18 @@ type ImportEvent = {
   is_accepted?: boolean | null;
   promoted_event_id?: number | string | null;
   region?: string | null;
+  artist_profile_id?: number | string | null;
+  venue_profile_id?: number | string | null;
+};
+
+type ProfileOption = {
+  id: number;
+  display_name: string;
+  slug: string;
+  profile_type: 'artist' | 'venue' | 'promoter';
+  home_region?: string | null;
+  venue_city?: string | null;
+  venue_state?: string | null;
 };
 
 type StatusTone = 'success' | 'error';
@@ -36,6 +48,7 @@ const AdminImportBatchPage = () => {
   const { isAuthorized, loading } = useAdminRouteGuard();
   const batchIdValue = Array.isArray(batchId) ? batchId[0] : batchId;
   const [events, setEvents] = useState<ImportEvent[]>([]);
+  const [profileOptions, setProfileOptions] = useState<ProfileOption[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<StatusTone | null>(null);
@@ -79,6 +92,25 @@ const AdminImportBatchPage = () => {
 
     fetchEvents();
   }, [apiBasePath, batchIdValue, isAuthorized]);
+
+  useEffect(() => {
+    if (!isAuthorized) return;
+
+    const fetchProfileOptions = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/artists/admin/options`, { credentials: 'include' });
+        const data = await res.json().catch(() => []);
+        if (!res.ok) {
+          throw new Error(data?.message || 'Failed to load profile options.');
+        }
+        setProfileOptions(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Failed to load profile options', error);
+      }
+    };
+
+    fetchProfileOptions();
+  }, [isAuthorized]);
 
   const getWarnings = (event: ImportEvent): string[] => {
     const warnings = event.parse_warnings ?? event.warnings ?? [];
@@ -246,6 +278,8 @@ const AdminImportBatchPage = () => {
       time: event.time ?? event.start_time ?? '',
       venue: event.venue ?? event.venue_name ?? '',
       artist_display: event.artist_display ?? event.artist ?? '',
+      artist_profile_id: event.artist_profile_id ?? '',
+      venue_profile_id: event.venue_profile_id ?? '',
     });
   };
 
@@ -269,6 +303,8 @@ const AdminImportBatchPage = () => {
           time: draft.time ?? event.time ?? event.start_time,
           venue: draft.venue ?? event.venue ?? event.venue_name,
           artist_display: draft.artist_display ?? event.artist_display ?? event.artist,
+          artist_profile_id: draft.artist_profile_id ?? event.artist_profile_id ?? null,
+          venue_profile_id: draft.venue_profile_id ?? event.venue_profile_id ?? null,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -314,6 +350,8 @@ const AdminImportBatchPage = () => {
     return status === statusFilter;
   });
   const canPromote = acceptedCount > 0 && !hasPromoted;
+  const artistOptions = profileOptions.filter((profile) => profile.profile_type === 'artist');
+  const venueOptions = profileOptions.filter((profile) => profile.profile_type === 'venue');
 
   const handlePromoteBatch = async () => {
     if (!apiBasePath || !batchIdValue) return;
@@ -572,28 +610,68 @@ const AdminImportBatchPage = () => {
                           </td>
                           <td className="px-4 py-4 text-slate-200">
                             {isEditing ? (
-                              <input
-                                value={draft.venue ?? ''}
-                                onChange={(e) => setDraft((prev) => ({ ...prev, venue: e.target.value }))}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-sm text-slate-100"
-                                placeholder="Venue"
-                              />
+                              <div className="space-y-2">
+                                <input
+                                  value={draft.venue ?? ''}
+                                  onChange={(e) => setDraft((prev) => ({ ...prev, venue: e.target.value }))}
+                                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-sm text-slate-100"
+                                  placeholder="Venue"
+                                />
+                                <select
+                                  value={draft.venue_profile_id ?? ''}
+                                  onChange={(e) => setDraft((prev) => ({ ...prev, venue_profile_id: e.target.value }))}
+                                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-xs text-slate-100"
+                                  aria-label="Attach venue profile"
+                                >
+                                  <option value="">No venue profile</option>
+                                  {venueOptions.map((profile) => (
+                                    <option key={profile.id} value={profile.id}>
+                                      {profile.display_name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             ) : (
-                              event.venue ?? event.venue_name ?? '—'
+                              <div>
+                                <p>{event.venue ?? event.venue_name ?? '—'}</p>
+                                {event.venue_profile_id && (
+                                  <p className="mt-1 text-xs text-emerald-300">Venue profile #{event.venue_profile_id}</p>
+                                )}
+                              </div>
                             )}
                           </td>
                           <td className="px-4 py-4 text-slate-200">
                             {isEditing ? (
-                              <input
-                                value={draft.artist_display ?? ''}
-                                onChange={(e) =>
-                                  setDraft((prev) => ({ ...prev, artist_display: e.target.value }))
-                                }
-                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-sm text-slate-100"
-                                placeholder="Artist display"
-                              />
+                              <div className="space-y-2">
+                                <input
+                                  value={draft.artist_display ?? ''}
+                                  onChange={(e) =>
+                                    setDraft((prev) => ({ ...prev, artist_display: e.target.value }))
+                                  }
+                                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-sm text-slate-100"
+                                  placeholder="Artist display"
+                                />
+                                <select
+                                  value={draft.artist_profile_id ?? ''}
+                                  onChange={(e) => setDraft((prev) => ({ ...prev, artist_profile_id: e.target.value }))}
+                                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-xs text-slate-100"
+                                  aria-label="Attach artist profile"
+                                >
+                                  <option value="">No artist profile</option>
+                                  {artistOptions.map((profile) => (
+                                    <option key={profile.id} value={profile.id}>
+                                      {profile.display_name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
                             ) : (
-                              event.artist_display ?? event.artist ?? '—'
+                              <div>
+                                <p>{event.artist_display ?? event.artist ?? '—'}</p>
+                                {event.artist_profile_id && (
+                                  <p className="mt-1 text-xs text-emerald-300">Artist profile #{event.artist_profile_id}</p>
+                                )}
+                              </div>
                             )}
                           </td>
                           <td className="px-4 py-4">
