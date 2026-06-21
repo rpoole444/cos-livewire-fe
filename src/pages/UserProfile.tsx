@@ -1009,6 +1009,13 @@ const textareaClasses =
                           >
                             Manage Pro Page
                           </button>
+                          <button
+                            onClick={() => router.push(`/admin/import?profile=${profile.id || ''}`)}
+                            disabled={!profile.id}
+                            className="inline-flex items-center justify-center rounded-lg border border-emerald-400/50 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-100 hover:border-emerald-300 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            Bulk Add Shows
+                          </button>
                         </div>
                       </div>
 

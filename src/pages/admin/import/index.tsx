@@ -1,8 +1,8 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useAdminRouteGuard } from '@/hooks/useAdminRouteGuard';
+import { useAuth } from '@/context/AuthContext';
 import { DEFAULT_REGION, MUSIC_REGIONS } from '@/constants/regions';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
@@ -21,34 +21,84 @@ type ProfileOption = {
   profile_image?: string | null;
 };
 
+type ImportMode = 'profile' | 'moondog';
+
+type ImportDefaults = {
+  artist_profile_id: string;
+  venue_profile_id: string;
+  artist_display: string;
+  venue_name: string;
+  address: string;
+  city: string;
+  website: string;
+  age_policy: string;
+  poster: string;
+  region: string;
+};
+
+const blankDefaults = (): ImportDefaults => ({
+  artist_profile_id: '',
+  venue_profile_id: '',
+  artist_display: '',
+  venue_name: '',
+  address: '',
+  city: '',
+  website: '',
+  age_policy: '',
+  poster: '',
+  region: DEFAULT_REGION,
+});
+
+const profileTypeLabel = (type: ProfileOption['profile_type']) => {
+  if (type === 'venue') return 'Venue';
+  if (type === 'promoter') return 'Promoter';
+  return 'Artist';
+};
+
 const AdminImportPage = () => {
-  const { isAuthorized, loading, user } = useAdminRouteGuard();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [rawText, setRawText] = useState('');
   const [profileOptions, setProfileOptions] = useState<ProfileOption[]>([]);
-  const [selectedVenueId, setSelectedVenueId] = useState('');
-  const [venueDefaults, setVenueDefaults] = useState({
-    venue_name: '',
-    address: '',
-    city: '',
-    website: '',
-    age_policy: '',
-    poster: '',
-    region: DEFAULT_REGION,
-  });
+  const [selectedProfileId, setSelectedProfileId] = useState('');
+  const [importMode, setImportMode] = useState<ImportMode>('profile');
+  const [importDefaults, setImportDefaults] = useState<ImportDefaults>(blankDefaults);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<'success' | 'error' | null>(null);
 
+  const isAdmin = Boolean(user?.is_admin);
+  const selectedProfile = useMemo(
+    () => profileOptions.find((profile) => String(profile.id) === selectedProfileId) || null,
+    [profileOptions, selectedProfileId]
+  );
+
   useEffect(() => {
-    if (!isAuthorized) return;
+    if (!router.isReady || loading) return;
+    if (!user) {
+      router.replace(`/LoginPage?redirect=${encodeURIComponent(router.asPath)}`);
+    }
+  }, [loading, router, user]);
+
+  useEffect(() => {
+    if (!user) return;
 
     const fetchProfileOptions = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/artists/admin/options`, { credentials: 'include' });
-        const data = await res.json().catch(() => []);
-        if (res.ok && Array.isArray(data)) {
-          setProfileOptions(data);
+        const endpoint = isAdmin ? '/api/artists/admin/options' : '/api/artists/mine';
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data?.message || 'Unable to load profile options.');
+        }
+
+        const profiles = isAdmin
+          ? (Array.isArray(data) ? data : [])
+          : (Array.isArray(data?.profiles) ? data.profiles : []);
+        setProfileOptions(profiles);
+
+        if (!isAdmin && profiles.length === 1) {
+          applySelectedProfile(String(profiles[0].id), profiles);
         }
       } catch (error) {
         console.error('Unable to load import profile options', error);
@@ -56,48 +106,67 @@ const AdminImportPage = () => {
     };
 
     fetchProfileOptions();
-  }, [isAuthorized]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, user]);
 
-  const venueOptions = profileOptions.filter((profile) => profile.profile_type === 'venue');
+  useEffect(() => {
+    if (!router.isReady || !profileOptions.length || selectedProfileId) return;
+    const profileId = Array.isArray(router.query.profile) ? router.query.profile[0] : router.query.profile;
+    if (profileId && profileOptions.some((profile) => String(profile.id) === String(profileId))) {
+      setImportMode('profile');
+      applySelectedProfile(String(profileId));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileOptions, router.isReady, router.query.profile, selectedProfileId]);
 
-  const applySelectedVenue = (venueId: string) => {
-    setSelectedVenueId(venueId);
-    const venue = venueOptions.find((profile) => String(profile.id) === venueId);
-    if (!venue) {
-      setVenueDefaults({
-        venue_name: '',
-        address: '',
-        city: '',
-        website: '',
-        age_policy: '',
-        poster: '',
-        region: DEFAULT_REGION,
-      });
+  const applySelectedProfile = (profileId: string, options = profileOptions) => {
+    setSelectedProfileId(profileId);
+    const profile = options.find((item) => String(item.id) === profileId);
+    if (!profile) {
+      setImportDefaults(blankDefaults());
       return;
     }
 
-    setVenueDefaults({
-      venue_name: venue.display_name || '',
-      address: venue.venue_address || '',
-      city: venue.venue_city || '',
-      website: venue.website || '',
-      age_policy: venue.age_policy || '',
-      poster: venue.profile_image || '',
-      region: venue.home_region || DEFAULT_REGION,
-    });
+    const nextDefaults = blankDefaults();
+    nextDefaults.website = profile.website || '';
+    nextDefaults.poster = profile.profile_image || '';
+    nextDefaults.region = profile.home_region || DEFAULT_REGION;
+
+    if (profile.profile_type === 'artist') {
+      nextDefaults.artist_profile_id = String(profile.id);
+      nextDefaults.artist_display = profile.display_name || '';
+    }
+
+    if (profile.profile_type === 'venue') {
+      nextDefaults.venue_profile_id = String(profile.id);
+      nextDefaults.venue_name = profile.display_name || '';
+      nextDefaults.address = profile.venue_address || '';
+      nextDefaults.city = profile.venue_city || '';
+      nextDefaults.age_policy = profile.age_policy || '';
+    }
+
+    setImportDefaults(nextDefaults);
   };
 
-  if (loading || !isAuthorized) {
+  const submitLabel = isSubmitting
+    ? 'Parsing...'
+    : selectedProfile
+    ? `Parse for ${selectedProfile.display_name}`
+    : importMode === 'moondog'
+    ? 'Parse Moondog listings'
+    : 'Parse bulk listings';
+
+  if (loading || !user) {
     return (
       <>
         <Head>
-          <title>Admin Import – Alpine Groove Guide</title>
+          <title>Bulk Import – Alpine Groove Guide</title>
         </Head>
         <div className="min-h-screen bg-gray-950 px-6 py-12 text-slate-100">
           <div className="mx-auto max-w-3xl rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
-            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Admin</p>
-            <h1 className="mt-2 text-2xl font-semibold">Checking access…</h1>
-            <p className="mt-2 text-sm text-slate-400">Verifying your admin session.</p>
+            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Import</p>
+            <h1 className="mt-2 text-2xl font-semibold">Checking access...</h1>
+            <p className="mt-2 text-sm text-slate-400">Log in to bulk-add events with your profile defaults.</p>
           </div>
         </div>
       </>
@@ -107,23 +176,26 @@ const AdminImportPage = () => {
   return (
     <>
       <Head>
-        <title>Admin Import – Alpine Groove Guide</title>
+        <title>Bulk Import – Alpine Groove Guide</title>
       </Head>
       <div className="min-h-screen bg-gray-950 px-6 py-12 text-slate-100">
-        <div className="mx-auto max-w-3xl space-y-8">
+        <div className="mx-auto max-w-4xl space-y-8">
           <header className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">Admin Tools</p>
-            <h1 className="mt-3 text-3xl font-semibold">Import pipeline</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">
+              {isAdmin ? 'Admin + Profile Tools' : 'Profile Tools'}
+            </p>
+            <h1 className="mt-3 text-3xl font-semibold">Bulk event import</h1>
             <p className="mt-2 text-sm text-slate-400">
-              Hi {user?.displayName || user?.display_name || 'admin'}, upload curated CSVs and track the batch
-              status before they go live.
+              Paste a weekly schedule, apply profile defaults, review the staged rows, then send clean events into the
+              normal calendar review process.
             </p>
           </header>
 
           <section className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
             <h2 className="text-xl font-semibold">Start a new import</h2>
             <p className="mt-2 text-sm text-slate-400">
-              Paste raw calendar text and send it to the Moondog parser. Each event should be one line after a date heading.
+              The parser accepts the simple Moondog-style format, but your selected profile can prefill images, links,
+              region, artist links, or venue details.
             </p>
             <form
               onSubmit={async (event) => {
@@ -134,23 +206,20 @@ const AdminImportPage = () => {
                 setStatusTone(null);
 
                 try {
-                  const res = await fetch(`${API_BASE_URL}/api/admin/imports/moondog`, {
+                  const source = isAdmin && importMode === 'moondog' ? 'moondog' : 'profile';
+                  const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
                     body: JSON.stringify({
                       raw_text: rawText,
-                      defaults: {
-                        venue_profile_id: selectedVenueId || null,
-                        ...venueDefaults,
-                      },
+                      defaults: importDefaults,
                     }),
                   });
 
                   const data = await res.json().catch(() => ({}));
                   if (!res.ok) {
-                    const message = data?.message || `Import failed with status ${res.status}`;
-                    setStatusMessage(message);
+                    setStatusMessage(data?.message || `Import failed with status ${res.status}`);
                     setStatusTone('error');
                     return;
                   }
@@ -162,9 +231,9 @@ const AdminImportPage = () => {
                     return;
                   }
 
-                  setStatusMessage('Import started. Redirecting to batch details…');
+                  setStatusMessage('Import started. Redirecting to staged rows...');
                   setStatusTone('success');
-                  router.push(`/admin/imports/${batchId}`);
+                  router.push(`/admin/imports/${batchId}?source=${source}`);
                 } catch (error) {
                   console.error('Import request failed:', error);
                   setStatusMessage('Something went wrong submitting the import.');
@@ -175,39 +244,67 @@ const AdminImportPage = () => {
               }}
               className="mt-6 space-y-4"
             >
+              <div className="grid gap-4 md:grid-cols-2">
+                {isAdmin && (
+                  <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    Import source
+                    <select
+                      value={importMode}
+                      onChange={(event) => {
+                        const nextMode = event.target.value as ImportMode;
+                        setImportMode(nextMode);
+                        if (nextMode === 'moondog') {
+                          setSelectedProfileId('');
+                          setImportDefaults(blankDefaults());
+                        }
+                      }}
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                    >
+                      <option value="profile">Profile bulk import</option>
+                      <option value="moondog">Moondog third-party calendar</option>
+                    </select>
+                  </label>
+                )}
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Use profile defaults
+                  <select
+                    value={selectedProfileId}
+                    onChange={(event) => {
+                      setImportMode('profile');
+                      applySelectedProfile(event.target.value);
+                    }}
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                  >
+                    <option value="">No profile defaults</option>
+                    {profileOptions.map((profile) => (
+                      <option key={profile.id} value={profile.id}>
+                        {profile.display_name} ({profileTypeLabel(profile.profile_type)})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
               <textarea
                 value={rawText}
                 onChange={(event) => setRawText(event.target.value)}
-                placeholder="Paste Moondog calendar listings here…"
+                placeholder="Paste calendar listings here..."
                 rows={10}
                 className="w-full rounded-2xl border border-slate-800/80 bg-slate-950/80 p-4 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400 focus:outline-none"
               />
+
               <div className="rounded-2xl border border-slate-800/80 bg-slate-950/70 p-4">
-                <h3 className="text-sm font-semibold text-slate-100">Venue fast-import defaults</h3>
+                <h3 className="text-sm font-semibold text-slate-100">Defaults applied to parsed rows</h3>
                 <p className="mt-1 text-xs text-slate-400">
-                  Optional: choose a venue profile to prefill venue metadata across every parsed row. You can still edit individual rows before moving them to review.
+                  These defaults fill missing fields only. After parsing, customize each event with its real show poster,
+                  ticket link, description, and any details that make the listing stronger.
                 </p>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Venue profile
-                    <select
-                      value={selectedVenueId}
-                      onChange={(event) => applySelectedVenue(event.target.value)}
-                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
-                    >
-                      <option value="">No venue defaults</option>
-                      {venueOptions.map((venue) => (
-                        <option key={venue.id} value={venue.id}>
-                          {venue.display_name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Region
                     <select
-                      value={venueDefaults.region}
-                      onChange={(event) => setVenueDefaults((prev) => ({ ...prev, region: event.target.value }))}
+                      value={importDefaults.region}
+                      onChange={(event) => setImportDefaults((prev) => ({ ...prev, region: event.target.value }))}
                       className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
                     >
                       {MUSIC_REGIONS.map((region) => (
@@ -218,37 +315,39 @@ const AdminImportPage = () => {
                     </select>
                   </label>
                   {[
+                    ['artist_display', 'Artist display'],
                     ['venue_name', 'Venue name'],
                     ['address', 'Address'],
                     ['city', 'City'],
                     ['website', 'Website'],
                     ['age_policy', 'Age policy'],
-                    ['poster', 'Default poster URL'],
+                    ['poster', 'Default image/poster URL'],
                   ].map(([field, label]) => (
                     <label key={field} className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                       {label}
                       <input
-                        value={venueDefaults[field as keyof typeof venueDefaults]}
-                        onChange={(event) => setVenueDefaults((prev) => ({ ...prev, [field]: event.target.value }))}
+                        value={importDefaults[field as keyof ImportDefaults]}
+                        onChange={(event) => setImportDefaults((prev) => ({ ...prev, [field]: event.target.value }))}
                         className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
                       />
                     </label>
                   ))}
                 </div>
               </div>
+
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <button
                   type="submit"
                   disabled={isSubmitting || !rawText.trim()}
                   className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-5 py-2 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Parsing…' : 'Parse Moondog Listings'}
+                  {submitLabel}
                 </button>
                 <Link
-                  href="/AdminService"
+                  href={isAdmin ? '/AdminService' : '/UserProfile'}
                   className="rounded-full border border-slate-700/80 bg-slate-900 px-5 py-2 text-center text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white"
                 >
-                  Review submissions
+                  {isAdmin ? 'Review admin queue' : 'Back to profile'}
                 </Link>
               </div>
               {statusMessage && (
@@ -268,7 +367,8 @@ const AdminImportPage = () => {
           <section className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
             <h2 className="text-lg font-semibold text-slate-100">Recommended paste format</h2>
             <p className="mt-2 text-sm text-slate-400">
-              Keep dates as headings, then use <span className="text-slate-200">Venue, Artist, Time</span>. Multiple artists are allowed, but the parser may flag them so an admin can review the row before it moves to the calendar.
+              Minimum required: keep dates as headings, then use{' '}
+              <span className="text-slate-200">Venue, Artist, Time</span>. That is enough to stage events.
             </p>
             <pre className="mt-4 overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950 p-4 text-xs leading-6 text-slate-300">
 {`Sunday, June 21
@@ -277,8 +377,28 @@ Armadillo Ranch, The Broken Rose Unplugged, 1 p.m.
 Buffalo Lodge, RV Casino, Annette & Doug Conlon, Co Spgs Pickers, 2 p.m.
 Cantina Verde, Matt Cravatta, 5 p.m.`}
             </pre>
+            <div className="mt-6 rounded-2xl border border-sun-gold/30 bg-sun-gold/10 p-4">
+              <h3 className="text-sm font-semibold text-sun-gold">Richer listings work better</h3>
+              <p className="mt-2 text-sm text-slate-300">
+                Add optional detail lines under a show when you have them. The parser will still accept the minimum
+                format, and staged review is where missing fields can be cleaned up.
+              </p>
+              <pre className="mt-4 overflow-x-auto rounded-xl border border-slate-800 bg-slate-950 p-4 text-xs leading-6 text-slate-300">
+{`Wednesday, July 9
+
+Lulu's Downtown, Poole & The Gang, 8 p.m.
+Title: Scoop of Jazz with Poole & The Gang
+Tickets: https://example.com/tickets
+Website: https://example.com/show
+Region: Colorado Springs
+Age: 21+
+Description: Summer jazz, funk, and dance-floor grooves.
+Poster: https://example.com/show-poster.jpg`}
+              </pre>
+            </div>
             <p className="mt-4 text-sm text-slate-400">
-              This same staged-review pattern is the right foundation for venue fast-add later: a venue can paste a weekly calendar, apply venue defaults like address, region, age policy, and website, then review before submitting.
+              Profile defaults are good for speed, but event-specific posters and descriptions are what make listings
+              feel real. After parsing, replace generic profile images with show posters whenever possible.
             </p>
           </section>
         </div>

@@ -2,7 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import { useAdminRouteGuard } from '@/hooks/useAdminRouteGuard';
+import { useAuth } from '@/context/AuthContext';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
@@ -11,364 +11,184 @@ type ImportEvent = {
   date?: string | null;
   time?: string | null;
   start_time?: string | null;
-  date_time?: string | null;
   start_at?: string | null;
   venue?: string | null;
   venue_name?: string | null;
   artist_display?: string | null;
   artist?: string | null;
-  warnings?: string[] | string | null;
+  title?: string | null;
+  description?: string | null;
+  website?: string | null;
+  website_link?: string | null;
+  poster?: string | null;
+  genre?: string | null;
+  age_policy?: string | null;
   parse_warnings?: string[] | string | null;
   raw_block?: string | null;
   status?: string | null;
-  is_rejected?: boolean | null;
-  is_accepted?: boolean | null;
   promoted_event_id?: number | string | null;
-  region?: string | null;
   artist_profile_id?: number | string | null;
   venue_profile_id?: number | string | null;
 };
 
-type ProfileOption = {
-  id: number;
-  display_name: string;
-  slug: string;
-  profile_type: 'artist' | 'venue' | 'promoter';
-  home_region?: string | null;
-  venue_address?: string | null;
-  venue_city?: string | null;
-  venue_state?: string | null;
-  website?: string | null;
-  age_policy?: string | null;
-  profile_image?: string | null;
+type BatchPayload = {
+  batch?: {
+    id: number;
+    source: string;
+    status?: string | null;
+    created_at?: string | null;
+  };
+  canPromote?: boolean;
+  events?: ImportEvent[];
 };
 
 type StatusTone = 'success' | 'error';
-type StatusFilter = 'all' | 'pending' | 'accepted' | 'rejected' | 'duplicates';
+
+const warningLabel = (warning: string) => {
+  const labels: Record<string, string> = {
+    duplicate_existing_event: 'Already on calendar',
+    duplicate_existing_import: 'Already imported',
+    duplicate_in_batch: 'Duplicate in this batch',
+    multiple_artists: 'Multiple artists',
+    multiple_times: 'Multiple times',
+    artist_missing: 'Artist missing',
+  };
+  return labels[warning] || warning;
+};
+
+const getWarnings = (event: ImportEvent): string[] => {
+  const value = event.parse_warnings || [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value !== 'string') return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed.filter(Boolean);
+  } catch {
+    // Fall through to newline split.
+  }
+  return value.split('\n').map((item) => item.trim()).filter(Boolean);
+};
+
+const getStatus = (event: ImportEvent) => event.status || 'pending';
+
+const formatDateTime = (event: ImportEvent) => {
+  if (event.date && event.start_time) {
+    return `${event.date} ${event.start_time.slice(0, 5)}`;
+  }
+  if (!event.start_at) return '-';
+  const date = new Date(event.start_at);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+};
 
 const AdminImportBatchPage = () => {
   const router = useRouter();
-  const { batchId } = router.query;
-  const { isAuthorized, loading } = useAdminRouteGuard();
-  const batchIdValue = Array.isArray(batchId) ? batchId[0] : batchId;
+  const { user, loading } = useAuth();
+  const batchId = Array.isArray(router.query.batchId) ? router.query.batchId[0] : router.query.batchId;
+  const source = Array.isArray(router.query.source) ? router.query.source[0] : router.query.source || 'moondog';
   const [events, setEvents] = useState<ImportEvent[]>([]);
-  const [profileOptions, setProfileOptions] = useState<ProfileOption[]>([]);
+  const [canPromote, setCanPromote] = useState(false);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<StatusTone | null>(null);
-  const [actionId, setActionId] = useState<number | string | null>(null);
+  const [actionKey, setActionKey] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | string | null>(null);
   const [draft, setDraft] = useState<Partial<ImportEvent>>({});
-  const [showPromoteModal, setShowPromoteModal] = useState(false);
-  const [isPromoting, setIsPromoting] = useState(false);
-  const [hasPromoted, setHasPromoted] = useState(false);
-  const [bulkAction, setBulkAction] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const source = 'moondog';
-  const redirectAfterPromote = false;
 
   const apiBasePath = useMemo(() => {
-    if (!batchIdValue) return null;
-    return `${API_BASE_URL}/api/admin/imports/moondog/${batchIdValue}`;
-  }, [batchIdValue]);
+    if (!batchId || !source) return null;
+    return `${API_BASE_URL}/api/admin/imports/${source}/${batchId}`;
+  }, [batchId, source]);
 
   useEffect(() => {
-    if (!isAuthorized || !apiBasePath) return;
+    if (!router.isReady || loading) return;
+    if (!user) {
+      router.replace(`/LoginPage?redirect=${encodeURIComponent(router.asPath)}`);
+    }
+  }, [loading, router, user]);
 
-    const fetchEvents = async () => {
-      setIsLoadingEvents(true);
-      try {
-        const res = await fetch(apiBasePath, { credentials: 'include' });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          throw new Error(data?.message || `Failed to load batch ${batchIdValue}`);
-        }
-        const list = Array.isArray(data) ? data : data?.import_events ?? data?.events ?? [];
-        setEvents(list);
-      } catch (error) {
-        console.error('Failed to load import batch', error);
-        setStatusMessage('Unable to load import events for this batch.');
-        setStatusTone('error');
-      } finally {
-        setIsLoadingEvents(false);
+  const loadBatch = async () => {
+    if (!apiBasePath) return;
+    setIsLoadingEvents(true);
+    try {
+      const res = await fetch(apiBasePath, { credentials: 'include' });
+      const data: BatchPayload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error((data as any)?.message || 'Failed to load import batch.');
       }
-    };
-
-    fetchEvents();
-  }, [apiBasePath, batchIdValue, isAuthorized]);
+      setEvents(Array.isArray(data.events) ? data.events : []);
+      setCanPromote(Boolean(data.canPromote));
+    } catch (error) {
+      console.error('Failed to load import batch', error);
+      setStatusMessage('Unable to load this import batch.');
+      setStatusTone('error');
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  };
 
   useEffect(() => {
-    if (!isAuthorized) return;
+    if (!user || !apiBasePath) return;
+    loadBatch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [apiBasePath, user]);
 
-    const fetchProfileOptions = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/artists/admin/options`, { credentials: 'include' });
-        const data = await res.json().catch(() => []);
-        if (!res.ok) {
-          throw new Error(data?.message || 'Failed to load profile options.');
-        }
-        setProfileOptions(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Failed to load profile options', error);
-      }
-    };
-
-    fetchProfileOptions();
-  }, [isAuthorized]);
-
-  const getWarnings = (event: ImportEvent): string[] => {
-    const warnings = event.parse_warnings ?? event.warnings ?? [];
-    if (Array.isArray(warnings)) return warnings.filter(Boolean);
-    if (typeof warnings === 'string') {
-      return warnings
-        .split('\n')
-        .map((entry) => entry.trim())
-        .filter(Boolean);
-    }
-    return [];
+  const updateEventInState = (updated: ImportEvent) => {
+    setEvents((prev) => prev.map((event) => (String(event.id) === String(updated.id) ? { ...event, ...updated } : event)));
   };
 
-  const formatWarning = (warning: string) => {
-    const labels: Record<string, string> = {
-      duplicate_existing_event: 'Already on calendar',
-      duplicate_existing_import: 'Already imported',
-      duplicate_in_batch: 'Duplicate in this batch',
-      multiple_artists: 'Multiple artists',
-      multiple_times: 'Multiple times',
-      artist_missing: 'Artist missing',
-    };
-    return labels[warning] || warning;
-  };
-
-  const isDuplicateEvent = (event: ImportEvent) =>
-    getWarnings(event).some((warning) =>
-      ['duplicate_existing_event', 'duplicate_existing_import', 'duplicate_in_batch'].includes(warning)
-    );
-
-  const getStatus = (event: ImportEvent) => {
-    if (event.status) return event.status;
-    if (event.is_accepted) return 'accepted';
-    if (event.is_rejected) return 'rejected';
-    return 'pending';
-  };
-
-  const normalizeMatchText = (value?: string | null) =>
-    String(value || '')
-      .toLowerCase()
-      .replace(/&/g, ' and ')
-      .replace(/[^a-z0-9\s]/g, ' ')
-      .replace(/\b(the|and|band|duo|trio|quartet|music|colorado|springs|co)\b/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-  const getMatchScore = (candidate: string, target: string) => {
-    const normalizedCandidate = normalizeMatchText(candidate);
-    const normalizedTarget = normalizeMatchText(target);
-    if (!normalizedCandidate || !normalizedTarget) return 0;
-    if (normalizedCandidate === normalizedTarget) return 100;
-    if (normalizedCandidate.includes(normalizedTarget) || normalizedTarget.includes(normalizedCandidate)) return 82;
-
-    const candidateTokens = new Set(normalizedCandidate.split(' ').filter(Boolean));
-    const targetTokens = new Set(normalizedTarget.split(' ').filter(Boolean));
-    const overlap = Array.from(candidateTokens).filter((token) => targetTokens.has(token)).length;
-    const denominator = Math.max(candidateTokens.size, targetTokens.size);
-    return denominator ? Math.round((overlap / denominator) * 70) : 0;
-  };
-
-  const findProfileSuggestion = (
-    text: string | null | undefined,
-    profileType: 'artist' | 'venue',
-    existingProfileId?: number | string | null
-  ) => {
-    if (existingProfileId) return null;
-
-    const match = profileOptions
-      .filter((profile) => profile.profile_type === profileType)
-      .map((profile) => ({
-        profile,
-        score: getMatchScore(profile.display_name, text || ''),
-      }))
-      .filter((entry) => entry.score >= 55)
-      .sort((a, b) => b.score - a.score)[0];
-
-    return match || null;
-  };
-
-  const attachSuggestedProfile = async (
-    event: ImportEvent,
-    payload: Pick<ImportEvent, 'artist_profile_id' | 'venue_profile_id'>
-  ) => {
-    if (!apiBasePath) return;
-    setActionId(event.id);
-    setStatusMessage(null);
-    setStatusTone(null);
-
-    try {
-      const res = await fetch(`${apiBasePath}/events/${event.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.message || 'Failed to attach profile.');
-      }
-      setEvents((prev) => prev.map((item) => (item.id === event.id ? { ...item, ...data } : item)));
-      setStatusMessage('Profile attached to import row.');
-      setStatusTone('success');
-    } catch (error) {
-      console.error('Attach profile failed', error);
-      setStatusMessage('Unable to attach the suggested profile.');
-      setStatusTone('error');
-    } finally {
-      setActionId(null);
-    }
-  };
-
-  const getDateTimeLabel = (event: ImportEvent) => {
-    const rawValue = event.start_at ?? event.date_time;
-    if (!rawValue) return '—';
-    const parsed = new Date(rawValue);
-    if (Number.isNaN(parsed.getTime())) return '—';
-    return parsed.toLocaleString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
-  };
-
-  const handleAccept = async (event: ImportEvent) => {
-    if (!apiBasePath) return;
-    setActionId(event.id);
+  const acceptOrReject = async (event: ImportEvent, nextAction: 'accept' | 'reject') => {
+    setActionKey(`${nextAction}-${event.id}`);
     setStatusMessage(null);
     setStatusTone(null);
     try {
-      // Per-event accept endpoint to avoid batch-level 404s.
-      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/events/${event.id}/accept`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/events/${event.id}/${nextAction}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data?.message || 'Failed to accept event.');
+        throw new Error(data?.message || `Unable to ${nextAction} row.`);
       }
-      setEvents((prev) =>
-        prev.map((item) =>
-          item.id === event.id
-            ? { ...item, ...data, status: data?.status ?? 'accepted', is_accepted: true, is_rejected: false }
-            : item
-        )
-      );
-      setStatusMessage('Event accepted.');
+      updateEventInState(data);
+      setStatusMessage(nextAction === 'accept' ? 'Row accepted for admin review.' : 'Row rejected.');
       setStatusTone('success');
     } catch (error) {
-      console.error('Accept failed', error);
-      setStatusMessage('Unable to accept this event.');
+      console.error('Import row action failed', error);
+      setStatusMessage(nextAction === 'accept' ? 'Unable to accept this row.' : 'Unable to reject this row.');
       setStatusTone('error');
     } finally {
-      setActionId(null);
-    }
-  };
-
-  const handleReject = async (event: ImportEvent) => {
-    if (!apiBasePath) return;
-    setActionId(event.id);
-    setStatusMessage(null);
-    setStatusTone(null);
-    try {
-      // Per-event reject endpoint to avoid batch-level 404s.
-      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/events/${event.id}/reject`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.message || 'Failed to reject event.');
-      }
-      setEvents((prev) =>
-        prev.map((item) =>
-          item.id === event.id
-            ? { ...item, ...data, status: data?.status ?? 'rejected', is_accepted: false, is_rejected: true }
-            : item
-        )
-      );
-      setStatusMessage('Event rejected.');
-      setStatusTone('success');
-    } catch (error) {
-      console.error('Reject failed', error);
-      setStatusMessage('Unable to reject this event.');
-      setStatusTone('error');
-    } finally {
-      setActionId(null);
-    }
-  };
-
-  const handleBulkAction = async (
-    action: 'accept_clean_pending' | 'reject_duplicate_pending' | 'reject_all_pending',
-    successLabel: string
-  ) => {
-    if (!batchIdValue || bulkAction) return;
-    setBulkAction(action);
-    setStatusMessage(null);
-    setStatusTone(null);
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/${batchIdValue}/events/bulk`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ action }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.message || 'Bulk update failed.');
-      }
-
-      const updatedEvents = Array.isArray(data?.events) ? data.events : [];
-      const updatedById = new Map(updatedEvents.map((event: ImportEvent) => [String(event.id), event]));
-      setEvents((prev) =>
-        prev.map((event) => {
-          const updated = updatedById.get(String(event.id));
-          return updated ? { ...event, ...updated } : event;
-        })
-      );
-
-      setStatusMessage(`${successLabel}: ${data?.updatedCount || 0} event${data?.updatedCount === 1 ? '' : 's'} updated.`);
-      setStatusTone('success');
-    } catch (error) {
-      console.error('Bulk import update failed', error);
-      setStatusMessage('Unable to update this batch. Please try again.');
-      setStatusTone('error');
-    } finally {
-      setBulkAction(null);
+      setActionKey(null);
     }
   };
 
   const startEdit = (event: ImportEvent) => {
     setEditingId(event.id);
     setDraft({
-      date: event.date ?? '',
-      time: event.time ?? event.start_time ?? '',
-      venue: event.venue ?? event.venue_name ?? '',
-      artist_display: event.artist_display ?? event.artist ?? '',
-      artist_profile_id: event.artist_profile_id ?? '',
-      venue_profile_id: event.venue_profile_id ?? '',
+      date: event.date || '',
+      time: event.start_time || event.time || '',
+      venue: event.venue || event.venue_name || '',
+      artist_display: event.artist_display || event.artist || '',
+      title: event.title || '',
+      description: event.description || '',
+      website: event.website || '',
+      website_link: event.website_link || '',
+      poster: event.poster || '',
+      genre: event.genre || '',
+      age_policy: event.age_policy || '',
     });
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
-    setDraft({});
-  };
-
-  const handleUpdate = async (event: ImportEvent) => {
+  const saveEdit = async (event: ImportEvent) => {
     if (!apiBasePath) return;
-    setActionId(event.id);
+    setActionKey(`save-${event.id}`);
     setStatusMessage(null);
     setStatusTone(null);
     try {
@@ -377,100 +197,77 @@ const AdminImportBatchPage = () => {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          date: draft.date ?? event.date,
-          time: draft.time ?? event.time ?? event.start_time,
-          venue: draft.venue ?? event.venue ?? event.venue_name,
-          artist_display: draft.artist_display ?? event.artist_display ?? event.artist,
-          artist_profile_id: draft.artist_profile_id ?? event.artist_profile_id ?? null,
-          venue_profile_id: draft.venue_profile_id ?? event.venue_profile_id ?? null,
+          date: draft.date,
+          time: draft.time,
+          venue: draft.venue,
+          artist_display: draft.artist_display,
+          title: draft.title,
+          description: draft.description,
+          website: draft.website,
+          website_link: draft.website_link,
+          poster: draft.poster,
+          genre: draft.genre,
+          age_policy: draft.age_policy,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data?.message || 'Failed to update event.');
+        throw new Error(data?.message || 'Unable to update row.');
       }
-      setEvents((prev) =>
-        prev.map((item) =>
-          item.id === event.id
-            ? {
-                ...item,
-                ...data,
-              }
-            : item
-        )
-      );
-      setStatusMessage('Event updated.');
+      updateEventInState(data);
+      setEditingId(null);
+      setDraft({});
+      setStatusMessage('Row updated.');
       setStatusTone('success');
-      cancelEdit();
     } catch (error) {
-      console.error('Update failed', error);
-      setStatusMessage('Unable to update this event.');
+      console.error('Import row update failed', error);
+      setStatusMessage('Unable to save this row.');
       setStatusTone('error');
     } finally {
-      setActionId(null);
+      setActionKey(null);
     }
   };
 
-  const pendingCount = events.filter((event) => getStatus(event).toLowerCase() === 'pending').length;
-  const acceptedCount = events.filter((event) => getStatus(event).toLowerCase() === 'accepted').length;
-  const rejectedCount = events.filter((event) => getStatus(event).toLowerCase() === 'rejected').length;
-  const duplicateCount = events.filter(isDuplicateEvent).length;
-  const cleanPendingCount = events.filter(
-    (event) => getStatus(event).toLowerCase() === 'pending' && !isDuplicateEvent(event)
-  ).length;
-  const duplicatePendingCount = events.filter(
-    (event) => getStatus(event).toLowerCase() === 'pending' && isDuplicateEvent(event)
-  ).length;
-  const filteredEvents = events.filter((event) => {
-    const status = getStatus(event).toLowerCase();
-    if (statusFilter === 'all') return true;
-    if (statusFilter === 'duplicates') return isDuplicateEvent(event);
-    return status === statusFilter;
-  });
-  const canPromote = acceptedCount > 0 && !hasPromoted;
-  const artistOptions = profileOptions.filter((profile) => profile.profile_type === 'artist');
-  const venueOptions = profileOptions.filter((profile) => profile.profile_type === 'venue');
-
-  const handlePromoteBatch = async () => {
-    if (!apiBasePath || !batchIdValue) return;
-    setIsPromoting(true);
+  const promoteBatch = async () => {
+    setActionKey('promote');
     setStatusMessage(null);
     setStatusTone(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/${batchIdValue}/promote`, {
+      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/${batchId}/promote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data?.message || 'Failed to promote batch.');
+        throw new Error(data?.message || 'Unable to move batch to review.');
       }
-      setHasPromoted(true);
-      setStatusMessage(`Moved ${acceptedCount} event${acceptedCount === 1 ? '' : 's'} to the admin review queue.`);
+      setStatusMessage(`Moved ${data?.promoted_count || 0} event${data?.promoted_count === 1 ? '' : 's'} to normal admin review.`);
       setStatusTone('success');
-      if (redirectAfterPromote) {
-        router.push('/AdminService');
-      }
+      await loadBatch();
     } catch (error) {
-      console.error('Promote batch failed', error);
-      setStatusMessage('Unable to promote this batch. Please try again.');
+      console.error('Import promotion failed', error);
+      setStatusMessage('Unable to move this batch to admin review.');
       setStatusTone('error');
     } finally {
-      setIsPromoting(false);
-      setShowPromoteModal(false);
+      setActionKey(null);
     }
   };
-  if (loading || !isAuthorized || !router.isReady) {
+
+  const pendingCount = events.filter((event) => getStatus(event) === 'pending').length;
+  const acceptedCount = events.filter((event) => getStatus(event) === 'accepted' && !event.promoted_event_id).length;
+  const promotedCount = events.filter((event) => event.promoted_event_id).length;
+
+  if (loading || !user || !router.isReady) {
     return (
       <>
         <Head>
-        <title>Import Batch – Alpine Groove Guide</title>
-      </Head>
+          <title>Import Batch – Alpine Groove Guide</title>
+        </Head>
         <div className="min-h-screen bg-gray-950 px-6 py-12 text-slate-100">
           <div className="mx-auto max-w-3xl rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
-            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Admin</p>
-            <h1 className="mt-2 text-2xl font-semibold">Loading import batch…</h1>
+            <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Import</p>
+            <h1 className="mt-2 text-2xl font-semibold">Loading import batch...</h1>
           </div>
         </div>
       </>
@@ -480,429 +277,229 @@ const AdminImportBatchPage = () => {
   return (
     <>
       <Head>
-        <title>Import Batch {batchIdValue ?? ''} – Alpine Groove Guide</title>
+        <title>Import Batch {batchId || ''} – Alpine Groove Guide</title>
       </Head>
       <div className="min-h-screen bg-gray-950 px-6 py-12 text-slate-100">
         <div className="mx-auto max-w-6xl space-y-8">
           <header className="rounded-3xl border border-slate-800/70 bg-slate-950/70 p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">Admin Tools</p>
-            <h1 className="mt-3 text-3xl font-semibold">Import batch {batchIdValue}</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">
+              {canPromote ? 'Admin Import Review' : 'Profile Import Review'}
+            </p>
+            <h1 className="mt-3 text-3xl font-semibold">Import batch {batchId}</h1>
             <p className="mt-2 text-sm text-slate-400">
-              Track the status, errors, and imported records for this batch.
+              Source: <span className="capitalize text-slate-200">{source}</span>. Accept clean rows here. Admins then move accepted rows into normal event review before anything appears publicly.
             </p>
           </header>
 
+          {statusMessage && (
+            <p
+              className={`rounded-2xl border px-4 py-3 text-sm ${
+                statusTone === 'success'
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+                  : 'border-rose-500/40 bg-rose-500/10 text-rose-200'
+              }`}
+            >
+              {statusMessage}
+            </p>
+          )}
+
           <section className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-lg font-semibold">Staged import events</h2>
+                <h2 className="text-lg font-semibold">Staged rows</h2>
                 <p className="mt-1 text-sm text-slate-400">
-                  Review parsed records before they are committed to the live calendar.
+                  Pending: {pendingCount} • Accepted for review: {acceptedCount} • Already moved: {promotedCount}
                 </p>
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                {acceptedCount > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {canPromote && acceptedCount > 0 && (
                   <button
-                    onClick={() => setShowPromoteModal(true)}
-                    disabled={!canPromote}
+                    type="button"
+                    onClick={promoteBatch}
+                    disabled={actionKey === 'promote'}
                     className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    Move to review
+                    {actionKey === 'promote' ? 'Moving...' : 'Move accepted to admin review'}
                   </button>
                 )}
                 <Link
                   href="/admin/import"
                   className="rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white"
                 >
-                  ← Back to import
+                  Back to import
                 </Link>
               </div>
             </div>
 
-            {statusMessage && (
-              <p
-                className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${
-                  statusTone === 'success'
-                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
-                    : 'border-rose-500/40 bg-rose-500/10 text-rose-200'
-                }`}
-              >
-                {statusMessage}
+            {!canPromote && acceptedCount > 0 && (
+              <p className="mt-5 rounded-2xl border border-sun-gold/30 bg-sun-gold/10 px-4 py-3 text-sm text-slate-200">
+                Your accepted rows are ready for admin review. An admin will move them into the normal event review queue, then approve them for the public calendar.
               </p>
             )}
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              {[
-                { label: 'Total rows', value: events.length, tone: 'text-slate-100' },
-                { label: 'Pending', value: pendingCount, tone: 'text-slate-100' },
-                { label: 'Accepted', value: acceptedCount, tone: 'text-emerald-200' },
-                { label: 'Rejected', value: rejectedCount, tone: 'text-rose-200' },
-                { label: 'Duplicates', value: duplicateCount, tone: 'text-amber-200' },
-              ].map((item) => (
-                <div key={item.label} className="rounded-2xl border border-slate-800/80 bg-slate-950/70 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
-                  <p className={`mt-2 text-2xl font-semibold ${item.tone}`}>{item.value}</p>
-                </div>
-              ))}
-            </div>
+            <div className="mt-6 space-y-4">
+              {isLoadingEvents && (
+                <p className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
+                  Loading staged events...
+                </p>
+              )}
 
-            <div className="mt-6 rounded-2xl border border-slate-800/80 bg-slate-950/70 p-4">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-100">Batch guardrails</p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Accept clean rows in bulk, reject duplicate rows, then move accepted events into normal admin review.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => handleBulkAction('accept_clean_pending', 'Accepted clean pending rows')}
-                    disabled={bulkAction !== null || cleanPendingCount === 0}
-                    className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {bulkAction === 'accept_clean_pending' ? 'Accepting…' : `Accept clean pending (${cleanPendingCount})`}
-                  </button>
-                  <button
-                    onClick={() => handleBulkAction('reject_duplicate_pending', 'Rejected duplicate pending rows')}
-                    disabled={bulkAction !== null || duplicatePendingCount === 0}
-                    className="rounded-full border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-200 transition hover:border-amber-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {bulkAction === 'reject_duplicate_pending' ? 'Rejecting…' : `Reject duplicates (${duplicatePendingCount})`}
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (window.confirm('Reject all pending rows in this batch?')) {
-                        handleBulkAction('reject_all_pending', 'Rejected all pending rows');
-                      }
-                    }}
-                    disabled={bulkAction !== null || pendingCount === 0}
-                    className="rounded-full border border-rose-500/40 bg-rose-500/10 px-4 py-2 text-xs font-semibold text-rose-200 transition hover:border-rose-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Reject all pending ({pendingCount})
-                  </button>
-                </div>
-              </div>
-            </div>
+              {!isLoadingEvents && events.length === 0 && (
+                <p className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
+                  No staged rows found for this batch.
+                </p>
+              )}
 
-            <div className="mt-6 flex flex-wrap gap-2">
-              {[
-                ['all', `All (${events.length})`],
-                ['pending', `Pending (${pendingCount})`],
-                ['accepted', `Accepted (${acceptedCount})`],
-                ['rejected', `Rejected (${rejectedCount})`],
-                ['duplicates', `Duplicates (${duplicateCount})`],
-              ].map(([value, label]) => (
-                <button
-                  key={value}
-                  onClick={() => setStatusFilter(value as StatusFilter)}
-                  className={`rounded-full border px-4 py-2 text-xs font-semibold transition ${
-                    statusFilter === value
-                      ? 'border-sun-gold bg-sun-gold text-night-black'
-                      : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-500 hover:text-white'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+              {events.map((event) => {
+                const warnings = getWarnings(event);
+                const status = getStatus(event);
+                const isEditing = String(editingId) === String(event.id);
+                const disabled = actionKey?.endsWith(`-${event.id}`) || Boolean(event.promoted_event_id);
 
-            <div className="mt-6 overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-slate-800/70 text-xs uppercase tracking-widest text-slate-500">
-                  <tr>
-                    <th className="px-4 py-3">Date/time</th>
-                    <th className="px-4 py-3">Venue</th>
-                    <th className="px-4 py-3">Artist</th>
-                    <th className="px-4 py-3">Parse warnings</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/70">
-                  {isLoadingEvents && (
-                    <tr>
-                      <td className="px-4 py-6 text-slate-400" colSpan={6}>
-                        Loading staged events…
-                      </td>
-                    </tr>
-                  )}
-                  {!isLoadingEvents && filteredEvents.length === 0 && (
-                    <tr>
-                      <td className="px-4 py-6 text-slate-400" colSpan={6}>
-                        No staged events match this view.
-                      </td>
-                    </tr>
-                  )}
-                  {!isLoadingEvents &&
-                    filteredEvents.map((event) => {
-                      const warnings = getWarnings(event);
-                      const status = getStatus(event);
-                      const isRejected = status === 'rejected';
-                      const isAccepted = status === 'accepted';
-                      const isDuplicate = isDuplicateEvent(event);
-                      const isEditing = editingId === event.id;
-                      const disableActions = actionId === event.id;
-                      const venueSuggestion = findProfileSuggestion(
-                        event.venue ?? event.venue_name,
-                        'venue',
-                        event.venue_profile_id
-                      );
-                      const artistSuggestion = findProfileSuggestion(
-                        event.artist_display ?? event.artist,
-                        'artist',
-                        event.artist_profile_id
-                      );
-                      const rowTone = isAccepted
-                        ? 'bg-emerald-500/10'
-                        : isRejected
-                        ? 'bg-rose-500/10'
-                        : isDuplicate
-                        ? 'bg-amber-500/5'
-                        : 'bg-transparent';
-                      if (process.env.NODE_ENV !== 'production') {
-                        const hasTimeInRawBlock = Boolean(event.raw_block?.match(/\b\d{1,2}:\d{2}\b/));
-                        const startAtInvalid = !event.start_at || Number.isNaN(new Date(event.start_at).getTime());
-                        if (hasTimeInRawBlock && startAtInvalid) {
-                          console.warn('[AdminImport] Invalid or missing start_at for staged event:', event);
-                        }
-                      }
-
-                      return (
-                        <tr key={event.id} className={`${rowTone}`}>
-                          <td className="px-4 py-4 text-slate-200">
-                            {isEditing ? (
-                              <input
-                                value={draft.date ?? ''}
-                                onChange={(e) => setDraft((prev) => ({ ...prev, date: e.target.value }))}
-                                className="mb-2 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-sm text-slate-100"
-                                placeholder="YYYY-MM-DD"
-                              />
-                            ) : (
-                              <>
-                                <p className="font-medium">{getDateTimeLabel(event)}</p>
-                                {event.promoted_event_id && (
-                                  <p className="mt-1 text-xs text-emerald-300">
-                                    Moved to review as event #{event.promoted_event_id}
-                                  </p>
-                                )}
-                              </>
-                            )}
-                            {isEditing && (
-                              <input
-                                value={draft.time ?? ''}
-                                onChange={(e) => setDraft((prev) => ({ ...prev, time: e.target.value }))}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-sm text-slate-100"
-                                placeholder="HH:MM"
-                              />
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-slate-200">
-                            {isEditing ? (
-                              <div className="space-y-2">
-                                <input
-                                  value={draft.venue ?? ''}
-                                  onChange={(e) => setDraft((prev) => ({ ...prev, venue: e.target.value }))}
-                                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-sm text-slate-100"
-                                  placeholder="Venue"
-                                />
-                                <select
-                                  value={draft.venue_profile_id ?? ''}
-                                  onChange={(e) => setDraft((prev) => ({ ...prev, venue_profile_id: e.target.value }))}
-                                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-xs text-slate-100"
-                                  aria-label="Attach venue profile"
-                                >
-                                  <option value="">No venue profile</option>
-                                  {venueOptions.map((profile) => (
-                                    <option key={profile.id} value={profile.id}>
-                                      {profile.display_name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            ) : (
-                              <div>
-                                <p>{event.venue ?? event.venue_name ?? '—'}</p>
-                                {event.venue_profile_id && (
-                                  <p className="mt-1 text-xs text-emerald-300">Venue profile #{event.venue_profile_id}</p>
-                                )}
-                                {venueSuggestion && !event.promoted_event_id && (
-                                  <button
-                                    type="button"
-                                    disabled={disableActions}
-                                    onClick={() => attachSuggestedProfile(event, { venue_profile_id: venueSuggestion.profile.id })}
-                                    className="mt-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-left text-[11px] font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                                  >
-                                    Suggested: {venueSuggestion.profile.display_name} ({venueSuggestion.score}%)
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-4 py-4 text-slate-200">
-                            {isEditing ? (
-                              <div className="space-y-2">
-                                <input
-                                  value={draft.artist_display ?? ''}
-                                  onChange={(e) =>
-                                    setDraft((prev) => ({ ...prev, artist_display: e.target.value }))
-                                  }
-                                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-sm text-slate-100"
-                                  placeholder="Artist display"
-                                />
-                                <select
-                                  value={draft.artist_profile_id ?? ''}
-                                  onChange={(e) => setDraft((prev) => ({ ...prev, artist_profile_id: e.target.value }))}
-                                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-1 text-xs text-slate-100"
-                                  aria-label="Attach artist profile"
-                                >
-                                  <option value="">No artist profile</option>
-                                  {artistOptions.map((profile) => (
-                                    <option key={profile.id} value={profile.id}>
-                                      {profile.display_name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            ) : (
-                              <div>
-                                <p>{event.artist_display ?? event.artist ?? '—'}</p>
-                                {event.artist_profile_id && (
-                                  <p className="mt-1 text-xs text-emerald-300">Artist profile #{event.artist_profile_id}</p>
-                                )}
-                                {artistSuggestion && !event.promoted_event_id && (
-                                  <button
-                                    type="button"
-                                    disabled={disableActions}
-                                    onClick={() => attachSuggestedProfile(event, { artist_profile_id: artistSuggestion.profile.id })}
-                                    className="mt-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-left text-[11px] font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                                  >
-                                    Suggested: {artistSuggestion.profile.display_name} ({artistSuggestion.score}%)
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-4 py-4">
-                            {warnings.length > 0 ? (
-                              <div className="flex flex-wrap gap-2">
-                                {warnings.map((warning, index) => (
-                                  <span
-                                    key={`${event.id}-warning-${index}`}
-                                    className="rounded-full border border-amber-400/60 bg-amber-500/10 px-2 py-1 text-xs font-semibold text-amber-200"
-                                  >
-                                    {formatWarning(warning)}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="text-sm text-slate-500">None</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-4">
-                            <span
-                              className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
-                                isAccepted
-                                  ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-200'
-                                  : isRejected
-                                  ? 'border-rose-500/40 bg-rose-500/15 text-rose-200'
-                                  : 'border-slate-600/60 bg-slate-800/40 text-slate-300'
-                              }`}
-                            >
-                              {status}
+                return (
+                  <article key={event.id} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300">
+                            {status}
+                          </span>
+                          {event.promoted_event_id && (
+                            <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+                              Moved to review #{event.promoted_event_id}
                             </span>
-                          </td>
-                          <td className="px-4 py-4 text-right">
-                            <div className="flex flex-wrap justify-end gap-2">
-                              {isEditing ? (
-                                <>
-                                  <button
-                                    onClick={() => handleUpdate(event)}
-                                    disabled={actionId === event.id}
-                                    className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-                                  >
-                                    Save
-                                  </button>
-                                  <button
-                                    onClick={cancelEdit}
-                                    className="rounded-full border border-slate-600 px-4 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-slate-400"
-                                  >
-                                    Cancel
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button
-                                    onClick={() => startEdit(event)}
-                                    disabled={disableActions || Boolean(event.promoted_event_id)}
-                                    className="rounded-full border border-slate-600 px-4 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-slate-400 disabled:cursor-not-allowed disabled:opacity-60"
-                                  >
-                                    Edit
-                                  </button>
-                                  {!isAccepted && (
-                                    <button
-                                      onClick={() => handleAccept(event)}
-                                      disabled={disableActions || Boolean(event.promoted_event_id)}
-                                      className="rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-                                    >
-                                      Accept
-                                    </button>
-                                  )}
-                                  {!isRejected && (
-                                    <button
-                                      onClick={() => handleReject(event)}
-                                      disabled={disableActions || Boolean(event.promoted_event_id)}
-                                      className="rounded-full bg-rose-500 px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-60"
-                                    >
-                                      Reject
-                                    </button>
-                                  )}
-                                </>
-                              )}
+                          )}
+                          {warnings.map((warning) => (
+                            <span key={`${event.id}-${warning}`} className="rounded-full border border-amber-400/50 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
+                              {warningLabel(warning)}
+                            </span>
+                          ))}
+                        </div>
+
+                        {isEditing ? (
+                          <div className="mt-4 grid gap-3 md:grid-cols-2">
+                            {[
+                              ['date', 'Date'],
+                              ['time', 'Start time'],
+                              ['venue', 'Venue'],
+                              ['artist_display', 'Artist'],
+                              ['title', 'Event title'],
+                              ['website_link', 'Ticket / RSVP link'],
+                              ['website', 'Website'],
+                              ['poster', 'Poster URL'],
+                              ['genre', 'Genre / tags'],
+                              ['age_policy', 'Age policy'],
+                            ].map(([field, label]) => (
+                              <label key={field} className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                                {label}
+                                <input
+                                  value={String(draft[field as keyof ImportEvent] || '')}
+                                  onChange={(e) => setDraft((prev) => ({ ...prev, [field]: e.target.value }))}
+                                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                                />
+                              </label>
+                            ))}
+                            <label className="md:col-span-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                              Description
+                              <textarea
+                                value={String(draft.description || '')}
+                                onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
+                                rows={3}
+                                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                              />
+                            </label>
+                          </div>
+                        ) : (
+                          <div className="mt-4">
+                            <p className="text-sm text-slate-400">{formatDateTime(event)}</p>
+                            <h3 className="mt-1 text-xl font-semibold text-slate-100">
+                              {event.title || event.artist_display || event.artist || 'Untitled event'}
+                            </h3>
+                            <p className="mt-1 text-sm text-slate-300">
+                              {event.venue_name || event.venue || 'Venue TBA'}
+                              {event.artist_display || event.artist ? ` • ${event.artist_display || event.artist}` : ''}
+                            </p>
+                            {event.description && <p className="mt-3 text-sm text-slate-400">{event.description}</p>}
+                            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
+                              {event.website_link && <span>Tickets: {event.website_link}</span>}
+                              {event.poster && <span>Poster set</span>}
+                              {event.artist_profile_id && <span>Artist profile #{event.artist_profile_id}</span>}
+                              {event.venue_profile_id && <span>Venue profile #{event.venue_profile_id}</span>}
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 lg:justify-end">
+                        {isEditing ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => saveEdit(event)}
+                              disabled={disabled}
+                              className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingId(null);
+                                setDraft({});
+                              }}
+                              className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => startEdit(event)}
+                              disabled={disabled}
+                              className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-200 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              Edit
+                            </button>
+                            {status !== 'accepted' && (
+                              <button
+                                type="button"
+                                onClick={() => acceptOrReject(event, 'accept')}
+                                disabled={disabled}
+                                className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                Accept
+                              </button>
+                            )}
+                            {status !== 'rejected' && (
+                              <button
+                                type="button"
+                                onClick={() => acceptOrReject(event, 'reject')}
+                                disabled={disabled}
+                                className="rounded-full bg-rose-500 px-4 py-2 text-xs font-semibold text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                Reject
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </section>
 
           <Link
-            href="/AdminService"
+            href={canPromote ? '/AdminService' : '/UserProfile'}
             className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900 px-5 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white"
           >
-            Review submissions
+            {canPromote ? 'Review submissions' : 'Back to profile'}
           </Link>
         </div>
       </div>
-      {showPromoteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-3xl border border-slate-700 bg-slate-950 p-6 text-slate-100 shadow-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">Confirm move</p>
-            <h2 className="mt-3 text-2xl font-semibold">Move accepted events to review?</h2>
-            <p className="mt-3 text-sm text-slate-400">
-              This will create {acceptedCount} pending event{acceptedCount === 1 ? '' : 's'} in the normal admin review queue. Approve there when ready to publish live.
-            </p>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                onClick={() => setShowPromoteModal(false)}
-                disabled={isPromoting}
-                className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handlePromoteBatch}
-                disabled={isPromoting}
-                className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isPromoting ? 'Moving…' : 'Confirm move'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

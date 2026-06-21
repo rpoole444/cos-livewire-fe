@@ -356,7 +356,7 @@ const AdminService: React.FC = () => {
                 summary?.recent_imports.map((batch) => (
                   <Link
                     key={batch.id}
-                    href={`/admin/imports/${batch.id}`}
+                    href={`/admin/imports/${batch.id}?source=${encodeURIComponent(batch.source || 'moondog')}`}
                     className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 transition hover:border-emerald-400/60"
                   >
                     <div className="flex items-start justify-between gap-3">
