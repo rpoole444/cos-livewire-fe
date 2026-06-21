@@ -35,8 +35,12 @@ type ProfileOption = {
   slug: string;
   profile_type: 'artist' | 'venue' | 'promoter';
   home_region?: string | null;
+  venue_address?: string | null;
   venue_city?: string | null;
   venue_state?: string | null;
+  website?: string | null;
+  age_policy?: string | null;
+  profile_image?: string | null;
 };
 
 type StatusTone = 'success' | 'error';
@@ -146,6 +150,80 @@ const AdminImportBatchPage = () => {
     if (event.is_accepted) return 'accepted';
     if (event.is_rejected) return 'rejected';
     return 'pending';
+  };
+
+  const normalizeMatchText = (value?: string | null) =>
+    String(value || '')
+      .toLowerCase()
+      .replace(/&/g, ' and ')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .replace(/\b(the|and|band|duo|trio|quartet|music|colorado|springs|co)\b/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const getMatchScore = (candidate: string, target: string) => {
+    const normalizedCandidate = normalizeMatchText(candidate);
+    const normalizedTarget = normalizeMatchText(target);
+    if (!normalizedCandidate || !normalizedTarget) return 0;
+    if (normalizedCandidate === normalizedTarget) return 100;
+    if (normalizedCandidate.includes(normalizedTarget) || normalizedTarget.includes(normalizedCandidate)) return 82;
+
+    const candidateTokens = new Set(normalizedCandidate.split(' ').filter(Boolean));
+    const targetTokens = new Set(normalizedTarget.split(' ').filter(Boolean));
+    const overlap = Array.from(candidateTokens).filter((token) => targetTokens.has(token)).length;
+    const denominator = Math.max(candidateTokens.size, targetTokens.size);
+    return denominator ? Math.round((overlap / denominator) * 70) : 0;
+  };
+
+  const findProfileSuggestion = (
+    text: string | null | undefined,
+    profileType: 'artist' | 'venue',
+    existingProfileId?: number | string | null
+  ) => {
+    if (existingProfileId) return null;
+
+    const match = profileOptions
+      .filter((profile) => profile.profile_type === profileType)
+      .map((profile) => ({
+        profile,
+        score: getMatchScore(profile.display_name, text || ''),
+      }))
+      .filter((entry) => entry.score >= 55)
+      .sort((a, b) => b.score - a.score)[0];
+
+    return match || null;
+  };
+
+  const attachSuggestedProfile = async (
+    event: ImportEvent,
+    payload: Pick<ImportEvent, 'artist_profile_id' | 'venue_profile_id'>
+  ) => {
+    if (!apiBasePath) return;
+    setActionId(event.id);
+    setStatusMessage(null);
+    setStatusTone(null);
+
+    try {
+      const res = await fetch(`${apiBasePath}/events/${event.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.message || 'Failed to attach profile.');
+      }
+      setEvents((prev) => prev.map((item) => (item.id === event.id ? { ...item, ...data } : item)));
+      setStatusMessage('Profile attached to import row.');
+      setStatusTone('success');
+    } catch (error) {
+      console.error('Attach profile failed', error);
+      setStatusMessage('Unable to attach the suggested profile.');
+      setStatusTone('error');
+    } finally {
+      setActionId(null);
+    }
   };
 
   const getDateTimeLabel = (event: ImportEvent) => {
@@ -564,6 +642,16 @@ const AdminImportBatchPage = () => {
                       const isDuplicate = isDuplicateEvent(event);
                       const isEditing = editingId === event.id;
                       const disableActions = actionId === event.id;
+                      const venueSuggestion = findProfileSuggestion(
+                        event.venue ?? event.venue_name,
+                        'venue',
+                        event.venue_profile_id
+                      );
+                      const artistSuggestion = findProfileSuggestion(
+                        event.artist_display ?? event.artist,
+                        'artist',
+                        event.artist_profile_id
+                      );
                       const rowTone = isAccepted
                         ? 'bg-emerald-500/10'
                         : isRejected
@@ -637,6 +725,16 @@ const AdminImportBatchPage = () => {
                                 {event.venue_profile_id && (
                                   <p className="mt-1 text-xs text-emerald-300">Venue profile #{event.venue_profile_id}</p>
                                 )}
+                                {venueSuggestion && !event.promoted_event_id && (
+                                  <button
+                                    type="button"
+                                    disabled={disableActions}
+                                    onClick={() => attachSuggestedProfile(event, { venue_profile_id: venueSuggestion.profile.id })}
+                                    className="mt-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-left text-[11px] font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    Suggested: {venueSuggestion.profile.display_name} ({venueSuggestion.score}%)
+                                  </button>
+                                )}
                               </div>
                             )}
                           </td>
@@ -670,6 +768,16 @@ const AdminImportBatchPage = () => {
                                 <p>{event.artist_display ?? event.artist ?? '—'}</p>
                                 {event.artist_profile_id && (
                                   <p className="mt-1 text-xs text-emerald-300">Artist profile #{event.artist_profile_id}</p>
+                                )}
+                                {artistSuggestion && !event.promoted_event_id && (
+                                  <button
+                                    type="button"
+                                    disabled={disableActions}
+                                    onClick={() => attachSuggestedProfile(event, { artist_profile_id: artistSuggestion.profile.id })}
+                                    className="mt-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-left text-[11px] font-semibold text-emerald-200 transition hover:border-emerald-300 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                  >
+                                    Suggested: {artistSuggestion.profile.display_name} ({artistSuggestion.score}%)
+                                  </button>
                                 )}
                               </div>
                             )}

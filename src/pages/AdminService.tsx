@@ -139,6 +139,7 @@ const AdminService: React.FC = () => {
     { label: 'Public calendar', href: '/' },
     { label: 'Artist directory', href: '/artists' },
     { label: 'Import Moondog', href: '/admin/import' },
+    { label: 'Weekly promoter packet', href: '/admin/promoter-packet' },
     { label: 'User management', href: '/AdminUsersPage' },
   ];
   const activeViewCopy =
