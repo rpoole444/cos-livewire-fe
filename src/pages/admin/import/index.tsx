@@ -195,7 +195,8 @@ const AdminImportPage = () => {
             <h2 className="text-xl font-semibold">Start a new import</h2>
             <p className="mt-2 text-sm text-slate-400">
               The parser accepts the simple Moondog-style format, but your selected profile can prefill images, links,
-              region, artist links, or venue details.
+              region, artist links, or venue details. If a pasted venue matches an Alpine venue profile, we will use
+              that venue image before falling back to the selected profile image or Alpine Groove Guide cover art.
             </p>
             <form
               onSubmit={async (event) => {
@@ -299,6 +300,10 @@ const AdminImportPage = () => {
                   These defaults fill missing fields only. After parsing, customize each event with its real show poster,
                   ticket link, description, and any details that make the listing stronger.
                 </p>
+                <p className="mt-2 text-xs text-sun-gold/90">
+                  Image fallback order: event poster URL → matched venue profile image → selected profile image → source
+                  fallback art. Create venue profiles with good photos to make calendar imports feel less generic.
+                </p>
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Region
@@ -397,8 +402,8 @@ Poster: https://example.com/show-poster.jpg`}
               </pre>
             </div>
             <p className="mt-4 text-sm text-slate-400">
-              Profile defaults are good for speed, but event-specific posters and descriptions are what make listings
-              feel real. After parsing, replace generic profile images with show posters whenever possible.
+              Profile and venue defaults are good for speed, but event-specific posters and descriptions are still the
+              strongest version. After parsing, replace generic images with show posters whenever possible.
             </p>
           </section>
         </div>
