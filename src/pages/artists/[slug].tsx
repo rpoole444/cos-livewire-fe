@@ -504,12 +504,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
     : isVenue
     ? `${artist.display_name} is a Front Range live music venue featured on Alpine Groove Guide.`
     : `${artist.display_name} is featured on Alpine Groove Guide. Discover their upcoming shows.`;
-  const ogImage =
-    artist.profile_image && artist.profile_image.trim().length > 0
-      ? artist.profile_image.startsWith('http')
-        ? artist.profile_image
-        : `${siteBaseUrl}${artist.profile_image}`
-      : defaultSocialImage;
+  const ogImage = defaultSocialImage;
   const limitedHeadline = isOwner
     ? 'Your public profile is locked until you reactivate Alpine Pro.'
     : 'This profile is locked.';
