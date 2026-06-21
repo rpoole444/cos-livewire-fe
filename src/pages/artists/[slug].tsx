@@ -477,6 +477,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   }
 
   const siteBaseUrl = 'https://app.alpinegrooveguide.com';
+  const defaultSocialImage = `${siteBaseUrl}/alpine-groove-social-cover.png`;
   const shareUrl = `${siteBaseUrl}/share/artist/${artist.slug}`;
   const artistUrl = `${siteBaseUrl}/artists/${artist.slug}`;
   const embedParams = new URLSearchParams({
@@ -508,7 +509,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
       ? artist.profile_image.startsWith('http')
         ? artist.profile_image
         : `${siteBaseUrl}${artist.profile_image}`
-      : `${siteBaseUrl}/alpine_groove_guide_icon.png`;
+      : defaultSocialImage;
   const limitedHeadline = isOwner
     ? 'Your public profile is locked until you reactivate Alpine Pro.'
     : 'This profile is locked.';
@@ -555,6 +556,11 @@ const ArtistProfilePage = ({ artist }: Props) => {
         <meta property="og:type" content="profile" />
         <meta property="og:url" content={artistUrl} />
         <meta property="og:image" content={ogImage} />
+        <meta property="og:image:secure_url" content={ogImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="628" />
+        <meta property="og:image:alt" content={`${artist.display_name} on Alpine Groove Guide`} />
+        <link rel="canonical" href={artistUrl} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={description} />

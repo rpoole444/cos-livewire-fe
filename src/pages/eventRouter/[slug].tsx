@@ -62,6 +62,21 @@ const EventDetailPage = ({ event, events }: Props) => {
   const pageTitle = currentEvent?.title
     ? `${currentEvent.title} – Event Details – Alpine Groove Guide`
     : "Event Details – Alpine Groove Guide";
+  const siteBaseUrl = "https://app.alpinegrooveguide.com";
+  const eventUrl = `${siteBaseUrl}/eventRouter/${currentEvent.slug}`;
+  const defaultSocialImage = `${siteBaseUrl}/alpine-groove-social-cover.png`;
+  const eventImage =
+    currentEvent.poster && currentEvent.poster.trim() && !["tbd", "tba", "none", "null"].includes(currentEvent.poster.trim().toLowerCase())
+      ? currentEvent.poster.startsWith("http")
+        ? currentEvent.poster
+        : `${siteBaseUrl}${currentEvent.poster}`
+      : defaultSocialImage;
+  const eventDescription = currentEvent.description
+    ? currentEvent.description.slice(0, 180)
+    : [
+        currentEvent.venue_name || currentEvent.location,
+        currentEvent.date ? new Date(currentEvent.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : null,
+      ].filter(Boolean).join(" • ") || "Discover this Front Range live music event on Alpine Groove Guide.";
 
   useEffect(() => {
     setCurrentEvent(event);
@@ -178,8 +193,22 @@ const EventDetailPage = ({ event, events }: Props) => {
     <>
       <Head>
         <title>{pageTitle}</title>
-        <meta name="description" content={currentEvent.description?.slice(0, 150)} />
-        <link rel="canonical" href={`https://app.alpinegrooveguide.com/eventRouter/${currentEvent.slug}`} />
+        <meta name="description" content={eventDescription} />
+        <meta property="og:site_name" content="Alpine Groove Guide" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={eventDescription} />
+        <meta property="og:type" content="event" />
+        <meta property="og:url" content={eventUrl} />
+        <meta property="og:image" content={eventImage} />
+        <meta property="og:image:secure_url" content={eventImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="628" />
+        <meta property="og:image:alt" content={`${currentEvent.title} on Alpine Groove Guide`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={eventDescription} />
+        <meta name="twitter:image" content={eventImage} />
+        <link rel="canonical" href={eventUrl} />
       </Head>
 
       <div className="relative min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">

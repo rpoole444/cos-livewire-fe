@@ -3,7 +3,6 @@ import Head from 'next/head';
 import type { AppProps } from 'next/app';
 
 import { AuthProvider } from '@/context/AuthContext';
-import ClientOnly       from '@/components/ClientOnly';
 import Layout from '@/components/Layout';
 import Router from 'next/router';
 import NProgress from 'nprogress';
@@ -24,15 +23,13 @@ export default function MyApp({ Component, pageProps, router }: AppProps) {
   }
 
   return (
-    <ClientOnly>
-      <AuthProvider>
-        <Layout>
-          <Head>
-            <title>Alpine Groove Guide</title>
-          </Head>
-          <Component {...pageProps} />
-        </Layout>
-      </AuthProvider>
-    </ClientOnly>
+    <AuthProvider>
+      <Layout>
+        <Head>
+          <title>Alpine Groove Guide</title>
+        </Head>
+        <Component {...pageProps} />
+      </Layout>
+    </AuthProvider>
   );
 }
