@@ -3,6 +3,7 @@ import { DEFAULT_EVENT_POSTER } from '@/constants/media';
 type Posterish = {
   poster?: string | null;
   poster_url?: string | null;
+  display_image_url?: string | null;
   imageUrl?: string | null;
   image_url?: string | null;
 };
@@ -12,6 +13,7 @@ export function getEventImageSrc(input?: Posterish | string | null): string {
   if (typeof input === 'string') return input || DEFAULT_EVENT_POSTER;
 
   return (
+    input.display_image_url ||
     input.imageUrl ||
     input.image_url ||
     input.poster_url ||

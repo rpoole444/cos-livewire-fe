@@ -11,8 +11,9 @@ export const getServerSideProps = async (context:any) => {
     return { props: {} };
   }
 
-  const imageUrl = event.poster?.startsWith("http")
-    ? event.poster
+  const shareImage = event.display_image_url || event.poster;
+  const imageUrl = shareImage?.startsWith("http")
+    ? shareImage
     : "https://app.alpinegrooveguide.com/alpine_groove_guide_icon.png";
 
   const description =

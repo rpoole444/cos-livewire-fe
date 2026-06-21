@@ -14,6 +14,7 @@ interface ScheduleEvent {
   venue_profile_id?: number | null;
   location?: string | null;
   poster?: string | null;
+  display_image_url?: string | null;
   website_link?: string | null;
   slug: string;
 }
@@ -122,6 +123,7 @@ export default function EmbedArtistSchedule({
               const dateLabel = date?.isValid() ? date.format('ddd, MMM D') : 'Date TBA';
               const timeLabel = time?.isValid() ? time.format('h:mm A') : null;
               const venueLine = [event.venue_name, event.location].filter(Boolean).join(' · ');
+              const eventImage = event.display_image_url || event.poster;
 
               return (
                 <div
@@ -130,8 +132,9 @@ export default function EmbedArtistSchedule({
                     showPoster && !isCompact ? 'grid-cols-[5rem_1fr_auto]' : 'grid-cols-[4.75rem_1fr_auto]'
                   }`}
                 >
-                  {showPoster && !isCompact && event.poster ? (
-                    <img src={event.poster} alt="" className="h-16 w-20 rounded-lg object-cover" />
+                  {showPoster && !isCompact && eventImage ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={eventImage} alt="" className="h-16 w-20 rounded-lg object-cover" />
                   ) : (
                   <div>
                     <p className={`text-[11px] font-bold uppercase tracking-[0.12em] ${accentText}`}>
@@ -141,7 +144,7 @@ export default function EmbedArtistSchedule({
                   </div>
                   )}
                   <div className="min-w-0">
-                    {showPoster && !isCompact && event.poster && (
+                    {showPoster && !isCompact && eventImage && (
                       <p className={`text-[11px] font-bold uppercase tracking-[0.12em] ${accentText}`}>
                         {dateLabel}{timeLabel ? ` · ${timeLabel}` : ''}
                       </p>

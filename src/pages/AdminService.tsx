@@ -10,7 +10,7 @@ import EventClaimReview from '@/components/EventClaimReview';
 import { getPendingArtists } from '@/pages/api/artists';
 import { getAdminSummary, getEventClaimRequests } from '@/pages/api/route';
 import { useState } from 'react';
-import { CalendarCheck, CheckCircle2, ExternalLink, FileDown, Handshake, LogOut, Music2, ShieldCheck, UploadCloud, Users } from 'lucide-react';
+import { CalendarCheck, CheckCircle2, ExternalLink, FileDown, Handshake, ImagePlus, LogOut, Music2, ShieldCheck, UploadCloud, Users } from 'lucide-react';
 
 interface AdminSummary {
   counts: {
@@ -139,6 +139,7 @@ const AdminService: React.FC = () => {
     { label: 'Public calendar', href: '/' },
     { label: 'Artist directory', href: '/artists' },
     { label: 'Import Moondog', href: '/admin/import' },
+    { label: 'Venue image cleanup', href: '/admin/venues/photos' },
     { label: 'Weekly promoter packet', href: '/admin/promoter-packet' },
     { label: 'User management', href: '/AdminUsersPage' },
   ];
@@ -185,6 +186,13 @@ const AdminService: React.FC = () => {
                   >
                     <FileDown className="h-4 w-4" />
                     Import batches
+                  </Link>
+                  <Link
+                    href="/admin/venues/photos"
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-950/70 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-amber-400/60 hover:text-white"
+                  >
+                    <ImagePlus className="h-4 w-4" />
+                    Venue images
                   </Link>
                   <button
                     onClick={handleLogout}

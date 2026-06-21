@@ -65,11 +65,12 @@ const EventDetailPage = ({ event, events }: Props) => {
   const siteBaseUrl = "https://app.alpinegrooveguide.com";
   const eventUrl = `${siteBaseUrl}/eventRouter/${currentEvent.slug}`;
   const defaultSocialImage = `${siteBaseUrl}/alpine-groove-social-cover.png`;
+  const rawEventImage = currentEvent.display_image_url || currentEvent.poster;
   const eventImage =
-    currentEvent.poster && currentEvent.poster.trim() && !["tbd", "tba", "none", "null"].includes(currentEvent.poster.trim().toLowerCase())
-      ? currentEvent.poster.startsWith("http")
-        ? currentEvent.poster
-        : `${siteBaseUrl}${currentEvent.poster}`
+    rawEventImage && rawEventImage.trim() && !["tbd", "tba", "none", "null"].includes(rawEventImage.trim().toLowerCase())
+      ? rawEventImage.startsWith("http")
+        ? rawEventImage
+        : `${siteBaseUrl}${rawEventImage}`
       : defaultSocialImage;
   const eventDescription = currentEvent.description
     ? currentEvent.description.slice(0, 180)

@@ -60,7 +60,7 @@ const UpcomingShows: React.FC<UpcomingShowsProps> = ({ user, userGenres, events 
                   aria-label={`View details for ${event.title}`}
                 >
                   <EventPoster
-                    posterUrl={event.poster}
+                    posterUrl={event.display_image_url || event.poster}
                     title={event.title}
                     variant="square"
                     className="w-16 flex-shrink-0 sm:w-20"

@@ -34,6 +34,9 @@ interface Event {
   genre: string;
   slug: string;
   poster?: string | null;
+  display_image_url?: string | null;
+  display_image_source?: string | null;
+  event_poster_status?: string | null;
   source?: string | null;
   source_label?: string | null;
   start_time?: string;
@@ -1290,7 +1293,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
                           <Link href={`/eventRouter/${event.slug}`} className="contents">
                             <EventPoster
-                              posterUrl={event.poster}
+                              posterUrl={event.display_image_url || event.poster}
                               title={event.title}
                               variant="card"
                               fit={event.source || event.source_label ? 'contain' : 'cover'}

@@ -17,6 +17,11 @@ export interface CustomEvent {
   customTicketPrice?: string;
   website_link: string;
   poster: string | null;
+  venue_profile_image?: string | null;
+  venue_profile_display_name?: string | null;
+  display_image_url?: string | null;
+  display_image_source?: 'event_poster' | 'venue_profile_image' | 'default' | string | null;
+  event_poster_status?: string | null;
   region?: string;
   source?: string | null;
   source_label?: string | null;
@@ -65,6 +70,11 @@ export interface Event extends CustomEvent {
   venue_profile_id?: number | null;
   website: string;
   poster: string | null;
+  venue_profile_image?: string | null;
+  venue_profile_display_name?: string | null;
+  display_image_url?: string | null;
+  display_image_source?: 'event_poster' | 'venue_profile_image' | 'default' | string | null;
+  event_poster_status?: string | null;
   region?: string;
   claimed_by_user_id?: number | null;
   claimed_at?: string | null;
