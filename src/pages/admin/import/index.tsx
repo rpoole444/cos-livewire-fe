@@ -23,6 +23,7 @@ type ProfileOption = {
 };
 
 type ImportMode = 'profile' | 'moondog';
+type OwnerPolicy = 'no_owner' | 'personal_calendar';
 
 type ImportDefaults = {
   artist_profile_id: string;
@@ -65,6 +66,7 @@ const AdminImportPage = () => {
   const [profileOptions, setProfileOptions] = useState<ProfileOption[]>([]);
   const [selectedProfileId, setSelectedProfileId] = useState('');
   const [importMode, setImportMode] = useState<ImportMode>('profile');
+  const [ownerPolicy, setOwnerPolicy] = useState<OwnerPolicy>('no_owner');
   const [importDefaults, setImportDefaults] = useState<ImportDefaults>(blankDefaults);
   const [shellDraft, setShellDraft] = useState({
     display_name: '',
@@ -183,6 +185,15 @@ const AdminImportPage = () => {
     ? 'Parse Moondog listings'
     : 'Parse bulk listings';
 
+  const ownershipLabel = ownerPolicy === 'personal_calendar'
+    ? 'My Personal Calendar'
+    : 'No Owner — Public Calendar Only';
+  const estimatedEventCount = rawText
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line && line.includes(','))
+    .length;
+
   if (loading || !user) {
     return (
       <>
@@ -243,7 +254,10 @@ const AdminImportPage = () => {
                       raw_text: rawText,
                       source_name: sourceName,
                       source_url: sourceUrl,
-                      defaults: importDefaults,
+                      defaults: {
+                        ...importDefaults,
+                        owner_policy: ownerPolicy,
+                      },
                     }),
                   });
 
@@ -296,6 +310,21 @@ const AdminImportPage = () => {
                   </label>
                 )}
                 <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Event ownership
+                  <select
+                    value={ownerPolicy}
+                    onChange={(event) => setOwnerPolicy(event.target.value as OwnerPolicy)}
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                  >
+                    <option value="no_owner">No Owner — Public Calendar Only</option>
+                    <option value="personal_calendar">My Personal Calendar</option>
+                  </select>
+                  <span className="mt-2 block text-[11px] normal-case leading-5 tracking-normal text-slate-400">
+                    Use No Owner for Dazzle, venue calendars, public listings, and imported events that should not attach
+                    to your private calendar.
+                  </span>
+                </label>
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                   Use profile defaults
                   <select
                     value={selectedProfileId}
@@ -312,8 +341,19 @@ const AdminImportPage = () => {
                       </option>
                     ))}
                   </select>
+                  <span className="mt-2 block text-[11px] normal-case leading-5 tracking-normal text-slate-400">
+                    Profile defaults prefill venue/artist details and images. They do not make the event privately owned
+                    unless Event ownership is set to My Personal Calendar.
+                  </span>
                 </label>
               </div>
+
+              {ownerPolicy === 'personal_calendar' && (
+                <p className="rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+                  Warning: these imported events will be attached to your personal/private calendar. Only use this for
+                  your own gigs or events you intentionally want tied to your account.
+                </p>
+              )}
 
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
@@ -345,6 +385,27 @@ const AdminImportPage = () => {
               />
 
               <div className="rounded-2xl border border-slate-800/80 bg-slate-950/70 p-4">
+                <div className="mb-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                  <h3 className="text-sm font-semibold text-emerald-100">Import summary</h3>
+                  <dl className="mt-3 grid gap-2 text-xs text-slate-300 sm:grid-cols-2">
+                    <div>
+                      <dt className="font-semibold uppercase tracking-[0.18em] text-slate-500">Estimated rows</dt>
+                      <dd className="mt-1">{estimatedEventCount || 'Paste listings to estimate'}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold uppercase tracking-[0.18em] text-slate-500">Owner</dt>
+                      <dd className="mt-1">{ownershipLabel}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold uppercase tracking-[0.18em] text-slate-500">Visibility</dt>
+                      <dd className="mt-1">Public calendar review</dd>
+                    </div>
+                    <div>
+                      <dt className="font-semibold uppercase tracking-[0.18em] text-slate-500">Image fallback</dt>
+                      <dd className="mt-1">Event image → Venue photo → Alpine default</dd>
+                    </div>
+                  </dl>
+                </div>
                 <h3 className="text-sm font-semibold text-slate-100">Defaults applied to parsed rows</h3>
                 <p className="mt-1 text-xs text-slate-400">
                   These defaults fill missing fields only. After parsing, customize each event with its real show poster,
