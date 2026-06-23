@@ -184,6 +184,11 @@ export default function Home({ initialRegion }: HomeProps = {}) {
     setCurrentDate(date);
     setSearchQuery('');
     setSearchAllUpcoming(false);
+    if (typeof window !== 'undefined' && window.innerWidth < 1280) {
+      window.setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
   };
 
   const handleDeleteEvent = async (id: number) => {
@@ -199,20 +204,28 @@ export default function Home({ initialRegion }: HomeProps = {}) {
 
   const siteUrl = 'https://app.alpinegrooveguide.com';
   const homeDescription =
-    'Alpine Groove Guide is a community-powered live music calendar for Colorado’s Front Range—discover shows by region, artist, venue, and date.';
+    'Community-powered live music calendar for Colorado’s Front Range and beyond.';
+  const selectedDateLabel = currentDate.format('MMMM D');
+  const selectedDaySummary = searchAllUpcoming
+    ? 'Upcoming shows'
+    : filteredEvents.length === 1
+    ? `1 show on ${selectedDateLabel}`
+    : filteredEvents.length > 1
+    ? `${filteredEvents.length} shows on ${selectedDateLabel}`
+    : `No shows listed for ${selectedDateLabel}`;
 
   return (
     <>
       <Head>
-        <title>Alpine Groove Guide – Home</title>
+        <title>Find Live Music in Colorado – Alpine Groove Guide</title>
         <meta name="description" content={homeDescription} />
-        <meta property="og:title" content="Alpine Groove Guide – Live Music on the Colorado Front Range" />
+        <meta property="og:title" content="Find Live Music in Colorado" />
         <meta property="og:description" content={homeDescription} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={siteUrl} />
         <meta property="og:image" content={`${siteUrl}/alpine_groove_guide_icon.png`} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Alpine Groove Guide – Live Music on the Colorado Front Range" />
+        <meta name="twitter:title" content="Find Live Music in Colorado" />
         <meta name="twitter:description" content={homeDescription} />
         <meta name="twitter:image" content={`${siteUrl}/alpine_groove_guide_icon.png`} />
       </Head>
@@ -233,10 +246,10 @@ export default function Home({ initialRegion }: HomeProps = {}) {
 
             <div className="space-y-3">
               <h1 className="agg-display max-w-3xl text-4xl font-semibold leading-[1.08] text-sun-gold md:text-5xl">
-                The scene is local. The guide should be too.
+                Find Live Music in Colorado
               </h1>
               <p className="max-w-2xl text-base leading-7 text-ivory/70 md:text-lg">
-                Alpine Groove Guide is a community-powered live music calendar for Colorado’s Front Range, built for fans and working musicians.
+                Community-powered live music calendar for Colorado’s Front Range and beyond.
               </p>
             </div>
 
@@ -316,7 +329,7 @@ export default function Home({ initialRegion }: HomeProps = {}) {
 
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-14 pt-8 lg:flex-row lg:items-start lg:gap-8">
         <section className="flex-1 min-w-0">
-          <div className="flex flex-col gap-6">
+          <div className="grid gap-6 xl:grid-cols-[390px_minmax(0,1fr)] xl:items-start">
             <aside className="agg-panel agg-corner-frame w-full p-5 sm:p-6">
               <EventsCalendar
                 currentDate={currentDate}
@@ -331,9 +344,8 @@ export default function Home({ initialRegion }: HomeProps = {}) {
                   <p className="text-xs font-black uppercase tracking-[0.3em] text-alpine">Live Music Calendar</p>
                   <h1 className="agg-display mt-1 text-3xl font-semibold text-sun-gold">Find your next show</h1>
                   <p className="mt-1 text-sm text-ivory/55">
-                    {selectedRegion === REGION_ALL
-                      ? 'Showing all Front Range events.'
-                      : `Showing events in ${getRegionLabel(selectedRegion)}.`}
+                    {selectedDaySummary}
+                    {selectedRegion !== REGION_ALL ? ` · ${getRegionLabel(selectedRegion)}` : ''}
                   </p>
                 </div>
                 <div className="flex flex-col md:flex-row gap-2 md:items-center w-full md:w-auto">
@@ -399,10 +411,12 @@ export default function Home({ initialRegion }: HomeProps = {}) {
                     <header className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div>
                         <h2 className="agg-display text-2xl font-semibold text-ivory">
-                          Live Music Calendar
+                          {selectedDaySummary}
                         </h2>
                         <p className="text-sm text-ivory/50">
-                          Discover live music from Colorado Springs to Denver, Boulder, Fort Collins, Pueblo, and beyond.
+                          {searchAllUpcoming
+                            ? 'Upcoming approved shows across the selected region.'
+                            : `Events selected for ${currentDate.format('dddd, MMMM D, YYYY')}.`}
                         </p>
                       </div>
                     </header>
@@ -440,9 +454,9 @@ export default function Home({ initialRegion }: HomeProps = {}) {
                       className="animate-pulse object-contain opacity-80"
                     />
                     <p className="text-lg font-medium text-ivory/55">
-                      No events to display.
+                      {selectedDaySummary}
                       <br className="hidden sm:inline" />
-                      Try adjusting your search or clicking another date!
+                      Try another date, region, or search.
                     </p>
                   </div>
                 )}

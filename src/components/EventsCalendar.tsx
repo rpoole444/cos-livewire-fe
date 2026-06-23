@@ -58,22 +58,28 @@ export default function Calendar({
           {months[viewDate.month()]} {viewDate.year()}
         </h1>
         <div className="flex items-center gap-3 text-ivory/70">
-          <GrFormPrevious
-            className="w-6 h-6 cursor-pointer hover:scale-110 transition"
+          <button
+            type="button"
             onClick={handlePrevious}
             aria-label="Previous"
-          />
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent hover:border-gold/50 hover:text-sun-gold"
+          >
+            <GrFormPrevious className="w-6 h-6" />
+          </button>
           <button
             onClick={handleToday}
             className="border border-gold/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-ivory/70 transition hover:border-sun-gold hover:text-sun-gold"
           >
             Today
           </button>
-          <GrFormNext
-            className="w-6 h-6 cursor-pointer hover:scale-110 transition"
+          <button
+            type="button"
             onClick={handleNext}
             aria-label="Next"
-          />
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-transparent hover:border-gold/50 hover:text-sun-gold"
+          >
+            <GrFormNext className="w-6 h-6" />
+          </button>
         </div>
       </div>
 
@@ -115,6 +121,7 @@ export default function Calendar({
                     : `No events on ${date.format("MMM D")}`
                 }
                 title={title}
+                aria-pressed={isSelected}
               >
                 {date.date()}
               </button>

@@ -124,6 +124,7 @@ const shouldShowManageBilling = canUseProFeatures || hadProBefore;
 const isPublicLocked = hasArtistProfile && !canUseArtistAccess;
 const profileTypeLabel = profileType === 'venue' ? 'Venue' : profileType === 'promoter' ? 'Promoter' : 'Artist';
 const trialEndDate = user?.trial_ends_at ? new Date(user.trial_ends_at).toLocaleDateString() : null;
+const isAdminUser = Boolean(user?.is_admin);
 
 const formatClaimDate = (value?: string) => {
   if (!value) return "Date TBA";
@@ -614,6 +615,8 @@ const getClaimStatusCopy = (status: EventClaimStatus["status"]) => {
 // after
 const gotoCreateProfile = () => router.push('/artist-signup?from=profile');
 const gotoCreateVenueProfile = () => router.push('/venue-signup?from=profile');
+const gotoCreatePromoterProfile = () => router.push('/artist-signup?type=promoter&from=profile');
+const gotoSubmitEvent = () => router.push('/eventSubmission');
 const startAccountSetup = () => {
   setIsEditing(true);
   accountSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -868,6 +871,84 @@ const textareaClasses =
                 </button>
               </div>
             </div>
+          </div>
+        </section>
+
+        {isAdminUser && (
+          <section className="rounded-3xl border border-amber-400/40 bg-amber-500/10 p-6 shadow-xl shadow-black/30 sm:p-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-amber-200">Admin Tools</p>
+                <h2 className="mt-1 text-2xl font-semibold text-white">Manage Site</h2>
+                <p className="mt-1 text-sm text-amber-50/80">
+                  Quick links for review queues, imports, and image cleanup.
+                </p>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <Link href="/AdminService" className="rounded-lg bg-amber-400 px-4 py-2.5 text-center text-sm font-black text-slate-950 hover:bg-amber-300">
+                  Admin Dashboard
+                </Link>
+                <Link href="/admin/venues/photos" className="rounded-lg border border-amber-300/60 px-4 py-2.5 text-center text-sm font-semibold text-amber-100 hover:bg-amber-500/20">
+                  Venue/Image Tools
+                </Link>
+                <Link href="/admin/import" className="rounded-lg border border-amber-300/60 px-4 py-2.5 text-center text-sm font-semibold text-amber-100 hover:bg-amber-500/20">
+                  Import Calendar
+                </Link>
+                <Link href="/admin/promoter-packet" className="rounded-lg border border-amber-300/60 px-4 py-2.5 text-center text-sm font-semibold text-amber-100 hover:bg-amber-500/20">
+                  Promoter Packet
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section className="rounded-3xl border border-slate-800/80 bg-slate-950/70 p-6 shadow-xl shadow-black/30 sm:p-8">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Get Started</p>
+            <h2 className="mt-1 text-2xl font-semibold text-white">Your login account is private. Public pages are separate.</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+              Use this account to submit shows, claim events, and manage any artist, venue, or promoter pages you create.
+            </p>
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              {
+                title: 'I’m an Artist / Band',
+                body: 'Create a public artist page, claim gigs, and manage your show listings.',
+                action: 'Create artist page',
+                onClick: gotoCreateProfile,
+              },
+              {
+                title: 'I manage a Venue',
+                body: 'Create or claim a venue page, add room details, and post shows faster.',
+                action: 'Create venue page',
+                onClick: gotoCreateVenueProfile,
+              },
+              {
+                title: 'I promote shows',
+                body: 'Create a promoter page for series, imports, and recurring calendar work.',
+                action: 'Create promoter page',
+                onClick: gotoCreatePromoterProfile,
+              },
+              {
+                title: 'I just want to submit an event',
+                body: 'Send a show to the review queue without making a public profile first.',
+                action: 'Submit event',
+                onClick: gotoSubmitEvent,
+              },
+            ].map((item) => (
+              <div key={item.title} className="flex flex-col rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                <h3 className="font-semibold text-white">{item.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-6 text-slate-400">{item.body}</p>
+                <button
+                  type="button"
+                  onClick={item.onClick}
+                  className="mt-4 rounded-lg border border-emerald-400/50 bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-100 hover:border-emerald-300 hover:bg-emerald-500/20"
+                >
+                  {item.action}
+                </button>
+              </div>
+            ))}
           </div>
         </section>
 

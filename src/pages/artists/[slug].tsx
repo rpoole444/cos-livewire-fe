@@ -553,25 +553,25 @@ const ArtistProfilePage = ({ artist }: Props) => {
         </Head>
 
         <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-50">
-          <section className="mx-auto max-w-4xl overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/75 shadow-2xl shadow-black/30">
-            <div className="grid gap-0 lg:grid-cols-[320px_1fr]">
-              <div className="relative min-h-[260px] bg-slate-950">
+          <section className="mx-auto max-w-6xl overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/75 shadow-2xl shadow-black/30">
+            <div className="grid gap-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
+              <div className="relative min-h-[320px] bg-gradient-to-br from-slate-950 via-slate-900 to-black sm:min-h-[420px] lg:min-h-full">
                 {artist.profile_image ? (
                   <Image
                     src={artist.profile_image}
                     alt={artist.display_name}
                     fill
-                    className="object-cover"
-                    sizes="(min-width: 1024px) 320px, 100vw"
+                    className="object-contain p-6 sm:p-8"
+                    sizes="(min-width: 1024px) 58vw, 100vw"
                   />
                 ) : (
-                  <div className="flex h-full min-h-[260px] items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 text-6xl font-black text-slate-300">
+                  <div className="flex h-full min-h-[320px] items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 text-6xl font-black text-slate-300 sm:min-h-[420px]">
                     {artist.display_name.slice(0, 2).toUpperCase()}
                   </div>
                 )}
               </div>
 
-              <div className="p-6 sm:p-8">
+              <div className="p-6 sm:p-8 lg:p-10">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-100">
                     Unclaimed venue

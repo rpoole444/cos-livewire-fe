@@ -17,16 +17,16 @@ const HeroSection = ({ user }: { user: any; setAuthMode: (mode: string) => void 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_40%,rgba(201,150,46,0.13),transparent_34%),radial-gradient(circle_at_18%_10%,rgba(79,120,112,0.16),transparent_28%)]" />
       <div className="mx-auto grid min-h-[620px] max-w-7xl items-center gap-10 px-6 py-14 lg:grid-cols-[minmax(0,0.85fr)_minmax(420px,1.15fr)] lg:px-8 lg:py-20">
         <div className="relative z-10 space-y-7 text-left">
-          <p className="text-xs font-black uppercase tracking-[0.42em] text-alpine">Colorado Front Range</p>
+          <p className="text-xs font-black uppercase tracking-[0.42em] text-alpine">Colorado Music Calendar</p>
           <div className="space-y-3">
             <h1 className="agg-display agg-text-shadow text-5xl font-semibold leading-[0.98] text-sun-gold sm:text-6xl lg:text-7xl">
-              Find the
-              <span className="block text-ivory">good set.</span>
+              Find Live Music
+              <span className="block text-ivory">in Colorado</span>
             </h1>
             <div className="h-px w-40 bg-copper" />
           </div>
           <p className="max-w-xl text-base leading-7 text-ivory/75 sm:text-lg">
-            Discover live music across Colorado’s Front Range and nearby southern Colorado music communities.
+            Community-powered live music calendar for Colorado’s Front Range and beyond.
           </p>
 
           <div className="flex flex-col gap-3 sm:flex-row">
@@ -46,7 +46,7 @@ const HeroSection = ({ user }: { user: any; setAuthMode: (mode: string) => void 
             </Link>
           </div>
           <p className="text-xs font-bold uppercase tracking-[0.24em] text-ivory/45">
-            Artist pages • Regional gigs • Real humans
+            Shows • Artists • Venues
           </p>
         </div>
 

@@ -195,6 +195,14 @@ const AdminVenuePhotosPage = () => {
   }, [report, selectedEvents, selectedPhotos, selectedShellVenues]);
 
   const selectedCount = countApplyItems(buildApprovals);
+  const totalSelectableCount =
+    (report?.photo_matches || []).filter((match) => match.existing_profile_id).length +
+    (report?.broken_event_images || []).length +
+    (report?.missing_venues || []).length;
+  const skippedCount = Math.max(totalSelectableCount - selectedCount, 0);
+  const manualReviewCount =
+    (report?.photo_matches || []).filter((match) => !match.existing_profile_id).length +
+    (report?.missing_venues || []).filter((venue) => venue.confidence === 'low').length;
 
   const setStatus = (message: string, tone: 'success' | 'error' | 'info' = 'info') => {
     setStatusMessage(message);
@@ -348,6 +356,9 @@ const AdminVenuePhotosPage = () => {
                   Match venue logo files to venue profiles, find imported events with missing or broken posters, and
                   repair them using venue images or the Alpine Groove Guide fallback.
                 </p>
+                <p className="mt-3 text-sm leading-6 text-slate-400">
+                  Checked rows are included in the next preview/apply batch. Unchecked rows are skipped and left unchanged.
+                </p>
               </div>
               <Link
                 href="/AdminService"
@@ -447,7 +458,9 @@ const AdminVenuePhotosPage = () => {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h2 className="text-xl font-semibold text-white">Selected actions</h2>
-                    <p className="mt-1 text-sm text-slate-400">{selectedCount} selected change{selectedCount === 1 ? '' : 's'}.</p>
+                    <p className="mt-1 text-sm text-slate-400">
+                      {selectedCount} selected for repair · {skippedCount} skipped · {manualReviewCount} need manual review
+                    </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -487,6 +500,13 @@ const AdminVenuePhotosPage = () => {
                     {JSON.stringify(applyResult, null, 2)}
                   </pre>
                 )}
+                <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-xs leading-5 text-slate-400">
+                  <p className="font-semibold uppercase tracking-[0.18em] text-slate-300">How selection works</p>
+                  <p className="mt-2">
+                    Checked means “include in repair batch.” Unchecked means “skip this item.” Use Preview apply to see
+                    exactly what would change before writing to the live database.
+                  </p>
+                </div>
               </div>
             </div>
           </section>
@@ -503,13 +523,18 @@ const AdminVenuePhotosPage = () => {
                         const selected = selectedPhotos.has(key);
                         return (
                           <label key={key} className="flex cursor-pointer gap-4 bg-slate-950/50 p-4 transition hover:bg-slate-900">
-                            <input
-                              type="checkbox"
-                              className="mt-1 h-4 w-4 accent-emerald-400"
-                              checked={selected}
-                              disabled={!match.existing_profile_id}
-                              onChange={() => togglePhoto(match)}
-                            />
+                            <div className="mt-1 flex min-w-[8.5rem] items-start gap-2">
+                              <input
+                                type="checkbox"
+                                className="mt-0.5 h-4 w-4 accent-emerald-400"
+                                checked={selected}
+                                disabled={!match.existing_profile_id}
+                                onChange={() => togglePhoto(match)}
+                              />
+                              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">
+                                {selected ? 'Include in repair batch' : match.existing_profile_id ? 'Skip this item' : 'Needs manual review'}
+                              </span>
+                            </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-2">
                                 <p className="font-semibold text-white">{match.suggested_venue || match.filename_hint || 'Unknown venue'}</p>
@@ -556,6 +581,9 @@ const AdminVenuePhotosPage = () => {
                             onChange={() => toggleEvent(event.event_id)}
                           />
                           <div className="min-w-0 flex-1">
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                              {selectedEvents.has(event.event_id) ? 'Include in repair batch' : 'Skip this item'}
+                            </p>
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="font-semibold text-white">{event.title || `Event #${event.event_id}`}</p>
                               <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-300">
@@ -597,6 +625,9 @@ const AdminVenuePhotosPage = () => {
                             onChange={() => toggleShellVenue(venue.name)}
                           />
                           <div className="min-w-0 flex-1">
+                            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                              {selectedShellVenues.has(venue.name) ? 'Create shell venue' : 'Skip this item'}
+                            </p>
                             <div className="flex flex-wrap items-center gap-2">
                               <p className="font-semibold text-white">{venue.name}</p>
                               <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-300">
