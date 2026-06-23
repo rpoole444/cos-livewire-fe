@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
+import EventPoster from '@/components/EventPoster';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
@@ -21,6 +22,11 @@ type ImportEvent = {
   website?: string | null;
   website_link?: string | null;
   poster?: string | null;
+  venue_profile_image?: string | null;
+  venue_profile_display_name?: string | null;
+  display_image_url?: string | null;
+  display_image_source?: string | null;
+  event_poster_status?: string | null;
   genre?: string | null;
   age_policy?: string | null;
   parse_warnings?: string[] | string | null;
@@ -73,6 +79,14 @@ const getWarnings = (event: ImportEvent): string[] => {
 };
 
 const getStatus = (event: ImportEvent) => event.status || 'pending';
+
+const imageSourceLabel = (event: ImportEvent) => {
+  if (event.display_image_source === 'event_poster') return 'Event poster';
+  if (event.display_image_source === 'venue_profile_image') return 'Using venue photo';
+  if (event.display_image_source === 'source_image') return 'Using source image';
+  if (event.display_image_source === 'default') return 'Using Alpine default';
+  return null;
+};
 
 const formatDateTime = (event: ImportEvent) => {
   if (event.date && event.start_time) {
@@ -362,6 +376,20 @@ const AdminImportBatchPage = () => {
                 return (
                   <article key={event.id} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="w-full shrink-0 lg:w-36">
+                        <EventPoster
+                          posterUrl={event.display_image_url || event.poster}
+                          title={event.title || event.artist_display || 'Imported event'}
+                          variant="square"
+                          fit={event.display_image_source === 'event_poster' ? 'cover' : 'contain'}
+                          className="w-full"
+                        />
+                        {imageSourceLabel(event) && (
+                          <p className="mt-2 rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-center text-[11px] font-semibold text-slate-300">
+                            {imageSourceLabel(event)}
+                          </p>
+                        )}
+                      </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300">
@@ -426,6 +454,7 @@ const AdminImportBatchPage = () => {
                             <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
                               {event.website_link && <span>Tickets: {event.website_link}</span>}
                               {event.poster && <span>Poster set</span>}
+                              {event.venue_profile_display_name && <span>Venue match: {event.venue_profile_display_name}</span>}
                               {event.artist_profile_id && <span>Artist profile #{event.artist_profile_id}</span>}
                               {event.venue_profile_id && <span>Venue profile #{event.venue_profile_id}</span>}
                             </div>
