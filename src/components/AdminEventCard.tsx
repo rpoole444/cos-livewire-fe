@@ -19,6 +19,10 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
   const [formattedEndTime, setFormattedEndTime] = useState('');
   const [isApproving, setIsApproving] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const posterPreviewUrl = editedEvent.display_image_url || editedEvent.poster;
+  const isShowingFallbackPoster = Boolean(
+    editedEvent.display_image_url && editedEvent.display_image_url !== editedEvent.poster
+  );
 
   useEffect(() => {
     if (event.date) {
@@ -109,11 +113,16 @@ const AdminEventCard: React.FC<AdminEventCardProps> = ({ event, onApprove, onDen
           <div className="w-full">
             <p className="text-sm font-medium text-gray-700 mb-1">Poster Image</p>
             <EventPoster
-              posterUrl={editedEvent.poster}
+              posterUrl={posterPreviewUrl}
               title={event.title}
               variant="card"
               className="mx-auto w-full max-w-xs"
             />
+            {isShowingFallbackPoster && (
+              <p className="mt-2 text-center text-xs text-gray-500">
+                Showing the resolved fallback image public visitors will see.
+              </p>
+            )}
             {isEditing && (
               <div className="mt-2 flex flex-col items-center gap-2">
                 {editedEvent.poster && (
