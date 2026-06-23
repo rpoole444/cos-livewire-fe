@@ -46,7 +46,6 @@ const ForgotPassword: React.FC = () => {
     if(!response.ok){
       throw new Error(data.message || "Failed To Submit To User Email");
     }
-    console.log("FP response received:", data);
     setSuccessMessage("If an account exists for that email, we've sent a password reset link."); // Mirrors backend response copy so users know to look for the /reset-password/${token} email link.
     setEmail('');
     return data;

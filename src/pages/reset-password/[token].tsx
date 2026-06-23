@@ -35,7 +35,6 @@ const ResetPassword: React.FC = () => {
     if(!response.ok){
       throw new Error(data.message || "Something Went Wrong, Try Again!");
     }
-    console.log("Password Reset Succesfully:", data);
     router.push("/")
     return data;
     } catch (error) {

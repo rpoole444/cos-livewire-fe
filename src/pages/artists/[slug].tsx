@@ -1,6 +1,6 @@
 // pages/artists/[slug].tsx
 import { GetServerSideProps } from 'next';
-import { type FormEvent, useEffect, useRef, useState } from 'react';
+import { type FormEvent, useEffect, useState } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
@@ -208,8 +208,6 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const isGated = !communityAccessActive && !isOwner && accessState === 'gated';
   const shouldBlur = isGated;
   const showPendingBanner = isPending && isOwner && artist && artist.is_approved === false;
-  const logRef = useRef(false);
-  const eventsLoggedRef = useRef(false);
   const profileType = artist?.profile_type || 'artist';
   const isVenue = profileType === 'venue';
   const profileLabel = isVenue ? 'Venue' : profileType === 'promoter' ? 'Promoter' : 'Artist';
@@ -237,23 +235,6 @@ const ArtistProfilePage = ({ artist }: Props) => {
       console.warn('[artist analytics] tracking failed', error);
     }
   };
-
-  useEffect(() => {
-    if (artist && !logRef.current) {
-      console.log('[ArtistProfilePage] loaded', { artistId: artist.id, slug: artist.slug });
-      logRef.current = true;
-    }
-  }, [artist]);
-
-  useEffect(() => {
-    if (artist && !eventsLoggedRef.current) {
-      console.log('[ArtistProfilePage] upcomingEvents', {
-        count: artist.events?.length ?? 0,
-        sample: artist.events?.slice(0, 2) ?? [],
-      });
-      eventsLoggedRef.current = true;
-    }
-  }, [artist]);
 
   useEffect(() => {
     if (!artist?.slug || isOwner) return;
@@ -652,7 +633,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                     </Link>
                   )}
                   <Link
-                    href="/venues/colorado-springs"
+                    href={`/venues/${artist.home_region || 'colorado-springs'}`}
                     className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:border-emerald-400/60 hover:text-white"
                   >
                     Browse venues

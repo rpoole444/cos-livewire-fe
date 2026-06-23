@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { MUSIC_REGIONS } from '@/constants/regions';
 
 interface Event {
@@ -54,18 +54,6 @@ const EventForm: React.FC<Props> = ({
   onRemove,
   canRemove,
 }) => {
-  const loggedRef = useRef(false);
-
-  useEffect(() => {
-    if (!loggedRef.current) {
-      console.log("[EventForm] mount", {
-        index,
-        hasPoster: Boolean(event.poster || event.posterFile),
-      });
-      loggedRef.current = true;
-    }
-  }, [event.poster, event.posterFile, index]);
-
   const ticketOptions = useMemo(() => Array.from(Array(20).keys()).map((i) => (i + 1) * 5), []);
 
   return (
