@@ -39,9 +39,16 @@ const normalizeProfileTypeFilter = (value: unknown): ProfileTypeFilter => {
   return value === 'artist' || value === 'venue' || value === 'promoter' ? value : 'all';
 };
 
+const profileTypeFilters: Array<{ value: ProfileTypeFilter; label: string; description: string }> = [
+  { value: 'artist', label: 'Artists', description: 'Bands, solo artists, DJs, and performers' },
+  { value: 'venue', label: 'Venues', description: 'Rooms, stages, bars, theaters, and halls' },
+  { value: 'promoter', label: 'Promoters', description: 'Series, presenters, and music organizations' },
+  { value: 'all', label: 'All', description: 'Every public profile type' },
+];
+
 export default function ArtistDirectoryPage({
   initialRegion = REGION_ALL,
-  initialProfileType = 'all',
+  initialProfileType = 'artist',
 }: ArtistDirectoryPageProps = {}) {
   const [artists, setArtists] = useState<Artist[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,9 +138,10 @@ export default function ArtistDirectoryPage({
       </Head>
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 sm:py-10">
         <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6 text-center shadow-2xl ring-1 ring-slate-800">
-          <h1 className="text-3xl font-semibold text-slate-50 sm:text-4xl">Pro Directory: Artists, Venues &amp; Promoters</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Community Directory</p>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-50 sm:text-4xl">Browse the Colorado music community</h1>
           <p className="mt-2 text-sm text-slate-400 sm:text-base">
-            Discover Alpine Groove Guide Pro pages for artists, venues, and promoters across Colorado’s Front Range.
+            Find artists, venues, and music organizations across Colorado’s Front Range.
             {selectedRegion !== REGION_ALL ? ` Currently showing ${getRegionLabel(selectedRegion)}.` : ''}
           </p>
           {canCreateArtistPage ? (
@@ -163,7 +171,32 @@ export default function ArtistDirectoryPage({
           )}
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="mt-6 rounded-3xl border border-slate-800 bg-slate-900/60 p-3">
+          <p className="px-2 pb-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Show me</p>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {profileTypeFilters.map((filter) => {
+              const active = profileTypeFilter === filter.value;
+              return (
+                <button
+                  key={filter.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => updateFilters(selectedRegion, filter.value)}
+                  className={`rounded-2xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-emerald-400 ${
+                    active
+                      ? 'border-emerald-400/70 bg-emerald-500/15 text-emerald-100'
+                      : 'border-slate-700 bg-slate-950/60 text-slate-300 hover:border-slate-500 hover:text-slate-50'
+                  }`}
+                >
+                  <span className="block text-sm font-semibold">{filter.label}</span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-500">{filter.description}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
           <select
             aria-label="Filter directory by region"
             value={selectedRegion}
@@ -175,17 +208,6 @@ export default function ArtistDirectoryPage({
                 {region.label}
               </option>
             ))}
-          </select>
-          <select
-            aria-label="Filter directory by profile type"
-            value={profileTypeFilter}
-            onChange={(event) => updateFilters(selectedRegion, normalizeProfileTypeFilter(event.target.value))}
-            className="w-full rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-100 focus:border-emerald-400 focus:outline-none sm:max-w-44"
-          >
-            <option value="all">All profiles</option>
-            <option value="artist">Artists</option>
-            <option value="venue">Venues</option>
-            <option value="promoter">Promoters</option>
           </select>
           <div className="relative w-full sm:max-w-md">
             <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">🔍</span>

@@ -5,7 +5,11 @@ import { useMemo } from "react";
 import { UserType } from "@/types";
 import { CalendarPlus, ClipboardList, Crown, LayoutDashboard, LogOut, Settings, ShieldCheck, Upload } from "lucide-react";
 
-const WelcomeUser = () => {
+type WelcomeUserProps = {
+  compact?: boolean;
+};
+
+const WelcomeUser = ({ compact = false }: WelcomeUserProps) => {
   const { user, logout } = useAuth() as { user: UserType | null; logout: () => void };
   const router = useRouter();
 
@@ -48,6 +52,73 @@ const WelcomeUser = () => {
     { href: "/AdminUsersPage", label: "Admin users", icon: ShieldCheck },
     { href: "/admin/import", label: "Import batches", icon: Upload },
   ];
+
+  if (compact) {
+    return (
+      <section className="rounded-3xl border border-slate-800/80 bg-slate-950/85 p-4 text-slate-50 shadow-xl shadow-black/30 backdrop-blur sm:p-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+          <header className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-400">Welcome back</p>
+              <span
+                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
+                  isPro
+                    ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-300'
+                    : 'border-purple-400/40 bg-purple-500/15 text-purple-100'
+                }`}
+              >
+                <Crown className="h-3.5 w-3.5" />
+                {isPro ? 'Alpine Pro' : 'Community Member'}
+              </span>
+              {user?.is_admin && (
+                <Link
+                  href="/AdminService"
+                  className="inline-flex items-center gap-1 rounded-full border border-indigo-400/30 bg-indigo-500/10 px-2.5 py-1 text-[11px] font-semibold text-indigo-100 transition hover:border-indigo-300"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Admin tools
+                </Link>
+              )}
+            </div>
+            <h2 className="mt-2 text-xl font-semibold leading-tight text-slate-50 sm:text-2xl">
+              Hey {greetingName}, manage your music presence.
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm text-slate-400">
+              Submit shows, update Pro pages, and review admin work without crowding the calendar.
+            </p>
+          </header>
+
+          <div className="grid gap-2 sm:grid-cols-2 xl:w-[360px]">
+            {primaryActions.map(({ href, label, icon: Icon, className }) => (
+              <Link
+                key={href}
+                href={href}
+                className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-semibold transition hover:text-white ${className}`}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {user?.is_admin && (
+          <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-800/80 pt-3">
+            {adminActions.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="inline-flex items-center gap-2 rounded-full border border-indigo-400/20 bg-slate-950/50 px-3 py-2 text-xs font-medium text-indigo-100 transition hover:border-indigo-300/60 hover:text-white"
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+    );
+  }
 
   return (
     <section className="flex min-h-[720px] flex-col rounded-3xl border border-slate-800/80 bg-slate-950/85 px-6 py-6 text-slate-50 shadow-2xl shadow-black/40 backdrop-blur lg:min-h-[calc(100vh-7rem)]">

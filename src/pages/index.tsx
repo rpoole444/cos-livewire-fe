@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
-import { Switch } from '@headlessui/react';
 import { ArrowRight, CalendarDays, CalendarSearch, Music2, Search, Sparkles, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -10,7 +9,6 @@ import LoginForm from '@/components/login';
 import RegistrationForm from '@/components/registration';
 import WelcomeUser from '@/components/WelcomeUser';
 import EventsCalendar from '@/components/EventsCalendar';
-import UpcomingShows from '@/components/UpcomingShows';
 import { useAuth } from '@/context/AuthContext';
 import { useHomeState } from '@/hooks/useHomeState';
 import { deleteEvent, getEvents } from './api/route';
@@ -42,6 +40,8 @@ type HomeProps = {
   initialRegion?: RegionFilterValue;
 };
 
+const UPCOMING_PAGE_SIZE = 12;
+
 export default function Home({ initialRegion }: HomeProps = {}) {
   const {
     selectedDate: currentDate,
@@ -64,6 +64,7 @@ export default function Home({ initialRegion }: HomeProps = {}) {
     }
     return false;
   });
+  const [visibleUpcomingCount, setVisibleUpcomingCount] = useState(UPCOMING_PAGE_SIZE);
   const [showHero, setShowHero] = useState(true);
   const router = useRouter();
 
@@ -158,6 +159,10 @@ export default function Home({ initialRegion }: HomeProps = {}) {
     }
   }, [events, currentDate, searchQuery, searchAllUpcoming, selectedRegion]);
 
+  useEffect(() => {
+    setVisibleUpcomingCount(UPCOMING_PAGE_SIZE);
+  }, [currentDate, searchQuery, searchAllUpcoming, selectedRegion]);
+
   const regionScopedEvents = selectedRegion === REGION_ALL
     ? events
     : events.filter((event) => event.region === selectedRegion);
@@ -191,6 +196,15 @@ export default function Home({ initialRegion }: HomeProps = {}) {
     }
   };
 
+  const handleViewModeChange = (showAllUpcoming: boolean) => {
+    setSearchAllUpcoming(showAllUpcoming);
+    if (showAllUpcoming && typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  };
+
   const handleDeleteEvent = async (id: number) => {
     try {
       await deleteEvent(id);
@@ -207,7 +221,7 @@ export default function Home({ initialRegion }: HomeProps = {}) {
     'Community-powered live music calendar for Colorado’s Front Range and beyond.';
   const selectedDateLabel = currentDate.format('MMMM D');
   const selectedDaySummary = searchAllUpcoming
-    ? 'Upcoming shows'
+    ? `${filteredEvents.length} upcoming ${filteredEvents.length === 1 ? 'show' : 'shows'}`
     : filteredEvents.length === 1
     ? `1 show on ${selectedDateLabel}`
     : filteredEvents.length > 1
@@ -327,8 +341,11 @@ export default function Home({ initialRegion }: HomeProps = {}) {
       </section>
 
 
-      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-14 pt-8 lg:flex-row lg:items-start lg:gap-8">
-        <section className="flex-1 min-w-0">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 pb-14 pt-8">
+        {user && <WelcomeUser compact />}
+
+        <div className={classNames("grid gap-6 lg:items-start", user ? "" : "lg:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[minmax(0,1fr)_360px]")}>
+        <section className="min-w-0">
           <div className="grid gap-6 xl:grid-cols-[390px_minmax(0,1fr)] xl:items-start">
             <aside className="agg-panel agg-corner-frame w-full p-5 sm:p-6">
               <EventsCalendar
@@ -371,27 +388,38 @@ export default function Home({ initialRegion }: HomeProps = {}) {
                     />
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-alpine" />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={searchAllUpcoming}
-                      onChange={setSearchAllUpcoming}
-                      className={classNames(
-                        searchAllUpcoming ? 'bg-gold' : 'bg-pine',
-                        'relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none'
-                      )}
-                    >
-                      <span
-                        className={classNames(
-                          searchAllUpcoming ? 'translate-x-6' : 'translate-x-1',
-                          'inline-block h-4 w-4 transform bg-white rounded-full transition-transform duration-200'
-                        )}
-                      />
-                    </Switch>
-                    <span className="flex items-center gap-1 text-sm text-ivory/70">
-                      <CalendarSearch className="w-4 h-4" /> All Upcoming
-                    </span>
-                  </div>
                 </div>
+              </div>
+
+              <div className="mb-4 flex w-full flex-col gap-2 rounded-2xl border border-gold/25 bg-black/30 p-2 sm:w-auto sm:flex-row">
+                <button
+                  type="button"
+                  aria-pressed={!searchAllUpcoming}
+                  onClick={() => handleViewModeChange(false)}
+                  className={classNames(
+                    "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black uppercase tracking-wider transition focus:outline-none focus:ring-2 focus:ring-sun-gold",
+                    !searchAllUpcoming
+                      ? "bg-gold text-black shadow-lg shadow-gold/15"
+                      : "border border-gold/20 text-ivory/70 hover:border-gold/50 hover:text-sun-gold"
+                  )}
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  Selected Date
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={searchAllUpcoming}
+                  onClick={() => handleViewModeChange(true)}
+                  className={classNames(
+                    "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black uppercase tracking-wider transition focus:outline-none focus:ring-2 focus:ring-sun-gold",
+                    searchAllUpcoming
+                      ? "bg-gold text-black shadow-lg shadow-gold/15"
+                      : "border border-gold/20 text-ivory/70 hover:border-gold/50 hover:text-sun-gold"
+                  )}
+                >
+                  <CalendarSearch className="h-4 w-4" />
+                  View All Upcoming Gigs
+                </button>
               </div>
 
               {searchAllUpcoming && searchQuery && (
@@ -420,8 +448,8 @@ export default function Home({ initialRegion }: HomeProps = {}) {
                         </p>
                       </div>
                     </header>
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                      {filteredEvents.map((event) => {
+                    <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                      {(searchAllUpcoming ? filteredEvents.slice(0, visibleUpcomingCount) : filteredEvents).map((event) => {
                         const startTimeISO = buildEventDateTime(event.date, event.start_time);
                         return (
                           <EventCard
@@ -443,6 +471,17 @@ export default function Home({ initialRegion }: HomeProps = {}) {
                         );
                       })}
                     </div>
+                    {searchAllUpcoming && filteredEvents.length > visibleUpcomingCount && (
+                      <div className="mt-6 flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setVisibleUpcomingCount((count) => count + UPCOMING_PAGE_SIZE)}
+                          className="inline-flex items-center justify-center border border-gold bg-gold px-5 py-3 text-sm font-black uppercase tracking-wider text-black transition hover:bg-sun-gold focus:outline-none focus:ring-2 focus:ring-sun-gold focus:ring-offset-2 focus:ring-offset-black"
+                        >
+                          Load More Gigs
+                        </button>
+                      </div>
+                    )}
                   </section>
                 ) : (
                   <div className="text-center mt-12 flex flex-col items-center gap-6">
@@ -465,24 +504,11 @@ export default function Home({ initialRegion }: HomeProps = {}) {
           </div>
         </section>
 
+        {!user && (
         <aside id="auth-section" className="w-full lg:w-[320px] xl:w-[360px] lg:flex-shrink-0">
           <div className="lg:sticky lg:top-24">
             <div className="agg-panel agg-corner-frame space-y-6 p-6 backdrop-blur-md sm:p-8">
-              {user ? (
-                <div className="space-y-6">
-                  <WelcomeUser />
-                  <UpcomingShows
-                    user={user}
-                    userGenres={
-                      Array.isArray(user.top_music_genres)
-                        ? user.top_music_genres
-                        : JSON.parse(user.top_music_genres || '[]')
-                    }
-                    events={events}
-                  />
-                </div>
-              ) : (
-                <>
+              <>
                   <div className="text-center space-y-2">
                     <p className="text-[11px] font-black uppercase tracking-[0.28em] text-alpine">
                       Alpine Groove Guide
@@ -501,11 +527,12 @@ export default function Home({ initialRegion }: HomeProps = {}) {
                   ) : (
                     <RegistrationForm setAuthMode={switchAuthMode} />
                   )}
-                </>
-              )}
+              </>
             </div>
           </div>
         </aside>
+        )}
+        </div>
       </main>
     </div>
     </>

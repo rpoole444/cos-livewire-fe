@@ -50,7 +50,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
   const cardContent = (
     <>
-      <div className="relative h-72 w-full">
+      <div className="relative h-80 w-full sm:h-[21rem]">
         <EventPoster
           posterUrl={imageSrc}
           title={title}
@@ -60,28 +60,28 @@ const EventCard: React.FC<EventCardProps> = ({
         />
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent">
-          <div className="pointer-events-auto px-4 pb-4 pt-3 space-y-1">
-            <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-mist">
+          <div className="pointer-events-auto space-y-2 px-4 pb-5 pt-4 sm:px-5">
+            <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-wider text-mist">
               <span>{formattedDate}</span>
               {region && (
-                <span className="border border-alpine/60 bg-pine/70 px-2 py-0.5 text-[10px] text-mist">
+                <span className="border border-alpine/60 bg-pine/70 px-2.5 py-1 text-[10px] text-mist">
                   {getRegionLabel(region)}
                 </span>
               )}
               {isFeatured && (
-                <span className="border border-gold/60 bg-gold/15 px-2 py-0.5 text-[10px] text-sun-gold">
+                <span className="border border-gold/60 bg-gold/15 px-2.5 py-1 text-[10px] text-sun-gold">
                   Featured
                 </span>
               )}
               {sourceLabel && (
-                <span className="border border-copper/60 bg-copper/15 px-2 py-0.5 text-[10px] text-mist">
+                <span className="border border-copper/60 bg-copper/15 px-2.5 py-1 text-[10px] text-mist">
                   {sourceLabel}
                 </span>
               )}
             </div>
-            <h2 className="agg-display text-lg font-semibold text-ivory line-clamp-2">{title}</h2>
+            <h2 className="agg-display text-xl font-semibold leading-tight text-ivory line-clamp-2 sm:text-2xl">{title}</h2>
             {(venueName || city) && (
-              <p className="text-sm text-ivory/65 line-clamp-1">
+              <p className="text-sm font-medium text-ivory/70 line-clamp-1 sm:text-base">
                 {venueName}
                 {venueName && city ? " • " : ""}
                 {city}
