@@ -100,20 +100,25 @@ const [mediaErrors, setMediaErrors] = useState({
 });
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!authLoading && !user && router.isReady) {
       const inviteQuery = inviteCode ? `&invite=${encodeURIComponent(inviteCode)}` : '';
-      const signupPath = initialProfileType === 'venue' ? '/venue-signup' : '/artist-signup';
+      const requestedType = router.query.type || router.query.profile_type;
+      const profileTypeQuery =
+        requestedType === 'promoter' || requestedType === 'artist'
+          ? `?type=${requestedType}`
+          : '';
+      const signupPath = initialProfileType === 'venue' ? '/venue-signup' : `/artist-signup${profileTypeQuery}`;
       router.replace(`/RegisterPage?redirect=${encodeURIComponent(signupPath)}${inviteQuery}`);
     }
-  }, [authLoading, user, router, inviteCode, initialProfileType]);
+  }, [authLoading, user, router, router.isReady, router.query.type, router.query.profile_type, inviteCode, initialProfileType]);
 
   useEffect(() => {
     if (!router.isReady) return;
-    const requestedType = router.query.type;
+    const requestedType = router.query.type || router.query.profile_type;
     if (requestedType === 'venue' || requestedType === 'promoter' || requestedType === 'artist') {
       setForm((prev) => ({ ...prev, profile_type: requestedType }));
     }
-  }, [router.isReady, router.query.type]);
+  }, [router.isReady, router.query.type, router.query.profile_type]);
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

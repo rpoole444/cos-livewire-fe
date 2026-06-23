@@ -134,7 +134,7 @@ export default function EditArtistProfilePage() {
   useEffect(() => {
     if (router.isReady && user === null) {
       setError("You must be logged in to access this page.");
-      router.push('/login');
+      router.push(`/LoginPage?redirect=${encodeURIComponent(router.asPath)}`);
     }
   }, [user, router]);
   
@@ -219,7 +219,7 @@ export default function EditArtistProfilePage() {
   
       if (res.status === 401) {
         setError("Your session has expired. Redirecting to login...");
-        setTimeout(() => router.push('/login'), 2000);
+        setTimeout(() => router.push(`/LoginPage?redirect=${encodeURIComponent(router.asPath)}`), 2000);
         return;
       }
   

@@ -59,7 +59,7 @@ export default function ForArtistsPage() {
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/artist-signup?profile_type=artist"
+                href="/artist-signup?type=artist"
                 className="inline-flex items-center justify-center rounded-full bg-gold px-6 py-3 text-sm font-black uppercase tracking-wider text-black transition hover:bg-sun-gold"
               >
                 Create artist page
