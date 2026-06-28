@@ -528,6 +528,44 @@ const ArtistProfilePage = ({ artist }: Props) => {
     artist.venue_booking_policy
   );
   const canViewPlayThisRoom = Boolean(user || canManagePrivateTools);
+  const profileActionPlan = [
+    {
+      title: completeness.percent >= 85 ? 'Profile foundation looks strong' : 'Finish the booking basics',
+      body: completeness.missing.length
+        ? completeness.missing.slice(0, 2).join(' ')
+        : 'Core booking fields, media, and profile basics are in place.',
+      href: `/artists/edit/${artist.slug}`,
+      action: completeness.percent >= 85 ? 'Review profile' : 'Improve profile',
+      tone: completeness.percent >= 85 ? 'emerald' : 'amber',
+    },
+    {
+      title: artist.events?.length ? `${artist.events.length} upcoming ${artist.events.length === 1 ? 'show' : 'shows'} connected` : 'Add upcoming shows',
+      body: artist.events?.length
+        ? 'Keep dates, ticket links, and posters current so fans and embeds stay accurate.'
+        : 'Submit or bulk-add upcoming shows so this page has a useful schedule.',
+      href: artist.events?.length ? `/embed/artists/${artist.slug}` : '/eventSubmission',
+      action: artist.events?.length ? 'Preview embed' : 'Submit event',
+      tone: artist.events?.length ? 'emerald' : 'amber',
+    },
+    {
+      title: isVenue ? 'Venue booking workflow' : 'Booking snapshot',
+      body: isVenue
+        ? 'Artists can request dates from this venue page. Add booking policy and room details to make those requests better.'
+        : 'Copy your booking link or download the EPK snapshot when pitching venues and private clients.',
+      href: isVenue ? `/artists/edit/${artist.slug}` : `${artistUrl}#booking-snapshot`,
+      action: isVenue ? 'Edit venue details' : 'Open booking tools',
+      tone: 'cyan',
+    },
+    {
+      title: analyticsTotal ? `${analyticsTotal} tracked interactions` : 'Analytics will start simple',
+      body: analyticsTotal
+        ? 'Use clicks and views to see which profile assets are getting attention.'
+        : 'As people view your profile, clicks and views will show here for owner/admin accounts.',
+      href: `/artists/${artist.slug}`,
+      action: 'View analytics',
+      tone: 'slate',
+    },
+  ];
 
   if (isShellProfile) {
     const shellLocation = venueFullAddress || venueLocation || getRegionLabel(artist.home_region);
@@ -1245,8 +1283,50 @@ const ArtistProfilePage = ({ artist }: Props) => {
           )}
 
           {canManagePrivateTools && (
-            <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-              <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-6">
+            <section className="space-y-4">
+              <div className="rounded-2xl border border-gold/30 bg-gradient-to-br from-gold/10 via-slate-950/80 to-black p-6">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sun-gold">Owner dashboard</p>
+                    <h2 className="mt-2 text-2xl font-semibold text-white">Profile Action Plan</h2>
+                    <p className="mt-2 max-w-2xl text-sm text-slate-300">
+                      The most useful next steps for turning this page into a stronger booking, discovery, and promotion asset.
+                    </p>
+                  </div>
+                  <Link
+                    href={`/artists/edit/${artist.slug}`}
+                    className="inline-flex items-center justify-center rounded-xl border border-gold/50 px-4 py-2.5 text-sm font-semibold text-sun-gold transition hover:border-sun-gold hover:text-ivory"
+                  >
+                    Manage page
+                  </Link>
+                </div>
+                <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  {profileActionPlan.map((item) => (
+                    <Link
+                      key={item.title}
+                      href={item.href}
+                      className={`rounded-2xl border p-4 transition hover:-translate-y-0.5 ${
+                        item.tone === 'emerald'
+                          ? 'border-emerald-400/30 bg-emerald-500/10 hover:border-emerald-300'
+                          : item.tone === 'amber'
+                          ? 'border-amber-400/30 bg-amber-500/10 hover:border-amber-300'
+                          : item.tone === 'cyan'
+                          ? 'border-cyan-400/30 bg-cyan-500/10 hover:border-cyan-300'
+                          : 'border-slate-700 bg-slate-900/60 hover:border-slate-500'
+                      }`}
+                    >
+                      <h3 className="text-sm font-semibold text-white">{item.title}</h3>
+                      <p className="mt-2 min-h-[3.75rem] text-xs leading-5 text-slate-300">{item.body}</p>
+                      <span className="mt-3 inline-flex text-xs font-semibold text-sun-gold">
+                        {item.action} →
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Profile completeness</p>
                 <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center">
                   <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-4 border-emerald-300/70 bg-slate-950 text-2xl font-black text-white">
@@ -1291,6 +1371,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 ) : (
                   <p className="mt-4 text-sm text-slate-400">Analytics will appear here once the profile starts receiving public traffic.</p>
                 )}
+              </div>
               </div>
             </section>
           )}
