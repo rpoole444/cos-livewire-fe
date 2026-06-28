@@ -220,8 +220,8 @@ const EventDetailPage = ({ event, events }: Props) => {
               ← Back to all events
             </Link>
             <EventDetailCard event={currentEvent} user={user} expandDescription />
-            <section className="rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-6 shadow-xl shadow-black/30 sm:p-8">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">Artist claim</p>
+            <section className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 via-slate-950/80 to-slate-950 p-6 shadow-xl shadow-black/30 sm:p-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">Claim / improve listing</p>
               {currentEvent.claimed_artist ? (
                 <div className="mt-3 space-y-3">
                   <h2 className="text-xl font-semibold text-slate-50">
@@ -247,10 +247,16 @@ const EventDetailPage = ({ event, events }: Props) => {
                 </div>
               ) : user ? (
                 <div className="mt-3 space-y-4">
-                  <h2 className="text-xl font-semibold text-slate-50">Is this your gig?</h2>
+                  <h2 className="text-2xl font-semibold text-slate-50">Artists: is this your gig?</h2>
                   <p className="text-sm text-slate-300">
-                    Claim it with your artist profile so it appears on your schedule and you can improve the public listing.
+                    Request a claim to attach this show to your artist page. After admin approval, you can update the poster,
+                    title, description, date/time, venue, links, ticket info, and other public details.
                   </p>
+                  <div className="grid gap-2 rounded-2xl border border-slate-700 bg-slate-950/70 p-4 text-xs text-slate-300 sm:grid-cols-3">
+                    <span><strong className="block text-emerald-200">1. Request</strong>Select your artist profile.</span>
+                    <span><strong className="block text-emerald-200">2. Admin approves</strong>This prevents bad claims.</span>
+                    <span><strong className="block text-emerald-200">3. Improve</strong>Make the listing stronger.</span>
+                  </div>
                   {pendingClaimForViewer ? (
                     <div className="rounded-2xl border border-amber-400/40 bg-amber-400/10 p-4 text-sm text-amber-50">
                       <p className="font-semibold">Claim pending.</p>
@@ -283,15 +289,15 @@ const EventDetailPage = ({ event, events }: Props) => {
                         type="button"
                         onClick={handleClaimEvent}
                         disabled={claimStatus === "loading"}
-                        className="inline-flex items-center justify-center rounded-lg bg-emerald-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-400 px-4 py-3 text-sm font-black text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                       >
-                        {claimStatus === "loading" ? "Claiming…" : "Claim this event"}
+                        {claimStatus === "loading" ? "Sending claim…" : "Claim this event"}
                       </button>
                     </div>
                   ) : (
                     <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-300">
                       You need an artist profile before you can claim gigs.
-                      <Link href="/artist-signup" className="ml-2 font-semibold text-emerald-300 hover:text-emerald-200">
+                      <Link href="/artist-signup?type=artist" className="ml-2 font-semibold text-emerald-300 hover:text-emerald-200">
                         Create an artist page
                       </Link>
                     </div>
@@ -307,10 +313,25 @@ const EventDetailPage = ({ event, events }: Props) => {
                 </div>
               ) : (
                 <div className="mt-3 space-y-3">
-                  <h2 className="text-xl font-semibold text-slate-50">Is this your gig?</h2>
+                  <h2 className="text-2xl font-semibold text-slate-50">Artists: is this your gig?</h2>
                   <p className="text-sm text-slate-300">
-                    Sign in with your artist account to claim this event, add it to your profile, and improve the listing.
+                    Log in to request a claim. Once approved, this event can appear on your artist page and you can improve
+                    the public listing with the right poster, links, and details.
                   </p>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Link
+                      href="/LoginPage"
+                      className="inline-flex items-center justify-center rounded-lg bg-emerald-400 px-4 py-2.5 text-sm font-black text-slate-950 transition hover:bg-emerald-300"
+                    >
+                      Log in to claim
+                    </Link>
+                    <Link
+                      href="/artist-signup?type=artist"
+                      className="inline-flex items-center justify-center rounded-lg border border-emerald-400/60 px-4 py-2.5 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/10"
+                    >
+                      Create artist page
+                    </Link>
+                  </div>
                 </div>
               )}
               {claimMessage && (

@@ -1136,17 +1136,18 @@ const ArtistProfilePage = ({ artist }: Props) => {
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <p className="text-xs font-black uppercase tracking-[0.28em] text-alpine">Play this room</p>
-                    <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">Artist Booking Details</h2>
+                    <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">Request to Play This Venue</h2>
                     <p className="mt-2 max-w-2xl text-sm text-ivory/60">
-                      Venue-specific info for artists and promoters before they request a date.
+                      Artists can send a clean booking request with genre, draw, links, preferred dates, and support needs.
+                      This is a premium-value venue workflow that is open during community access.
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setVenueRequestOpen((open) => !open)}
-                    className="rounded-xl bg-sun-gold px-4 py-2.5 text-sm font-black text-night transition hover:bg-mist"
+                    className="rounded-xl bg-sun-gold px-5 py-3 text-sm font-black text-night shadow-lg shadow-gold/20 transition hover:bg-mist"
                   >
-                    Request a date
+                    {venueRequestOpen ? 'Close request form' : 'Request a date'}
                   </button>
                 </div>
 
@@ -1185,6 +1186,10 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
                 {venueRequestOpen && (
                   <form onSubmit={handleVenueRequestSubmit} className="mt-5 space-y-3 rounded-2xl border border-slate-800 bg-black/30 p-4">
+                    <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm text-emerald-50">
+                      <strong className="block">Send one useful booking email.</strong>
+                      Include your best links, realistic draw, preferred dates, and any support needs so the venue can answer quickly.
+                    </div>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <input value={venueRequestForm.artistName} onChange={(event) => setVenueRequestForm((prev) => ({ ...prev, artistName: event.target.value }))} required placeholder="Artist / band name" className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500" />
                       <input value={venueRequestForm.email} onChange={(event) => setVenueRequestForm((prev) => ({ ...prev, email: event.target.value }))} required type="email" placeholder="Contact email" className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500" />

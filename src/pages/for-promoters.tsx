@@ -70,6 +70,12 @@ export default function ForPromotersPage() {
               >
                 Import calendar
               </Link>
+              <Link
+                href="/weekly-poster"
+                className="inline-flex items-center justify-center rounded-full border border-emerald-300/50 px-6 py-3 text-sm font-black uppercase tracking-wider text-emerald-100 transition hover:border-emerald-200 hover:text-white"
+              >
+                Weekly poster
+              </Link>
             </div>
             <p className="mt-4 text-sm text-slate-400">
               {COMMUNITY_ARTIST_ACCESS_LABEL}. Promoter pages can be created while access is open.

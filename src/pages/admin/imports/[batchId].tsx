@@ -451,12 +451,35 @@ const AdminImportBatchPage = () => {
                               {event.artist_display || event.artist ? ` • ${event.artist_display || event.artist}` : ''}
                             </p>
                             {event.description && <p className="mt-3 text-sm text-slate-400">{event.description}</p>}
-                            <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
-                              {event.website_link && <span>Tickets: {event.website_link}</span>}
-                              {event.poster && <span>Poster set</span>}
-                              {event.venue_profile_display_name && <span>Venue match: {event.venue_profile_display_name}</span>}
-                              {event.artist_profile_id && <span>Artist profile #{event.artist_profile_id}</span>}
-                              {event.venue_profile_id && <span>Venue profile #{event.venue_profile_id}</span>}
+                            <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-3">
+                              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Matching signals</p>
+                              <div className="mt-2 flex flex-wrap gap-2 text-xs">
+                                {event.venue_profile_display_name && (
+                                  <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 font-semibold text-emerald-200">
+                                    Venue match: {event.venue_profile_display_name}
+                                  </span>
+                                )}
+                                {event.artist_profile_id && (
+                                  <span className="rounded-full border border-cyan-400/40 bg-cyan-500/10 px-2.5 py-1 font-semibold text-cyan-200">
+                                    Artist profile #{event.artist_profile_id}
+                                  </span>
+                                )}
+                                {event.venue_profile_id && (
+                                  <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2.5 py-1 font-semibold text-emerald-200">
+                                    Venue profile #{event.venue_profile_id}
+                                  </span>
+                                )}
+                                {imageSourceLabel(event) && (
+                                  <span className="rounded-full border border-slate-700 bg-slate-950 px-2.5 py-1 font-semibold text-slate-300">
+                                    {imageSourceLabel(event)}
+                                  </span>
+                                )}
+                                {event.website_link && <span className="rounded-full border border-slate-700 bg-slate-950 px-2.5 py-1 text-slate-300">Ticket link present</span>}
+                                {event.poster && <span className="rounded-full border border-slate-700 bg-slate-950 px-2.5 py-1 text-slate-300">Poster URL present</span>}
+                                {!event.venue_profile_display_name && !event.artist_profile_id && !event.venue_profile_id && !imageSourceLabel(event) && (
+                                  <span className="text-slate-500">No profile match yet. Edit this row or accept it as an unclaimed public listing.</span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         )}

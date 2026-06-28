@@ -1029,8 +1029,9 @@ const textareaClasses =
                     <p className="text-sm font-semibold text-white">
                       You manage {ownedProfiles.length} Pro {ownedProfiles.length === 1 ? "page" : "pages"}.
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-slate-400">
                       Add another artist project, venue, or promoter series without replacing your existing page.
+                      Premium-value tools are available during community access.
                     </p>
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">
@@ -1099,6 +1100,9 @@ const textareaClasses =
                           </button>
                         </div>
                       </div>
+                      <p className="text-xs text-slate-500">
+                        Alpine Pro value tools: profile analytics, completeness guidance, event claiming, embeds, booking workflows, and bulk show intake.
+                      </p>
 
                       {!profile.is_approved && (
                         <div className="rounded-lg border border-amber-400/60 bg-amber-500/10 p-4 text-sm text-amber-100">
