@@ -9,8 +9,8 @@ import { Event } from '@/interfaces/interfaces';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 const POSTER_WIDTH = 1080;
 const POSTER_HEIGHT = 1350;
-const POSTER_CONTENT_TOP = 340;
-const POSTER_CONTENT_BOTTOM = 1160;
+const POSTER_CONTENT_TOP = 378;
+const POSTER_CONTENT_BOTTOM = 1148;
 
 const escapeXml = (value: string) =>
   value
@@ -54,7 +54,7 @@ const formatEventLine = (event: Event) => {
 
 type PosterRow =
   | { type: 'day'; label: string; height: number }
-  | { type: 'event'; event: Event; titleLines: string[]; venueLine: string; height: number };
+  | { type: 'event'; event: Event; dayLabel: string; titleLines: string[]; venueLine: string; height: number };
 
 const buildPosterRows = (events: Event[]): PosterRow[] => {
   const grouped = groupEventsByDay(events);
@@ -70,6 +70,7 @@ const buildPosterRows = (events: Event[]): PosterRow[] => {
       rows.push({
         type: 'event',
         event,
+        dayLabel: day,
         titleLines,
         venueLine,
         height: titleLines[1] ? 108 : 80,
@@ -100,6 +101,12 @@ const paginatePosterRows = (rows: PosterRow[]) => {
       pages.push(current);
       current = [];
       y = POSTER_CONTENT_TOP;
+
+      if (row.type === 'event') {
+        const repeatedHeader: PosterRow = { type: 'day', label: row.dayLabel, height: 60 };
+        current.push(repeatedHeader);
+        y += repeatedHeader.height;
+      }
     }
 
     current.push(row);
@@ -146,7 +153,7 @@ const buildPosterSvgPage = (
   pageCount: number
 ) => {
   const pageLabel = pageCount > 1
-    ? `<text x="540" y="1194" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#F4E7B8">Page ${pageNumber} of ${pageCount}</text>`
+    ? `<text x="540" y="1178" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#F4E7B8">Page ${pageNumber} of ${pageCount}</text>`
     : '';
 
   return `
@@ -178,14 +185,14 @@ const buildPosterSvgPage = (
     return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#C9962E" stroke-width="3"/>`;
   }).join('')}
   <text x="540" y="150" text-anchor="middle" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#F4E7B8">AGG</text>
-  <text x="540" y="228" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="7" fill="#4F7870">THIS WEEK IN LIVE MUSIC</text>
-  <text x="540" y="286" text-anchor="middle" font-family="Georgia, serif" font-size="58" font-weight="700" fill="#E0B861">Front Range Shows</text>
-  <text x="540" y="320" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="#F4E7B8">${escapeXml(`${weekStart.format('MMM D')} - ${weekEnd.format('MMM D')}`)}</text>
+  <text x="540" y="226" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="800" letter-spacing="8" fill="#9FC8BF">THIS WEEK IN LIVE MUSIC</text>
+  <text x="540" y="290" text-anchor="middle" font-family="Georgia, serif" font-size="58" font-weight="700" fill="#E0B861">Front Range Shows</text>
+  <text x="540" y="335" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#F4E7B8">${escapeXml(`${weekStart.format('MMM D')} - ${weekEnd.format('MMM D')}`)}</text>
   ${renderPosterRows(rows)}
   ${pageLabel}
-  <line x1="190" y1="1234" x2="890" y2="1234" stroke="#C9962E" stroke-width="2"/>
-  <text x="540" y="1272" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#E0B861">ALPINEGROOVEGUIDE.COM</text>
-  <text x="540" y="1302" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="16" letter-spacing="4" fill="#4F7870">LOCAL MUSIC - HUMAN CURATED</text>
+  <line x1="190" y1="1220" x2="890" y2="1220" stroke="#C9962E" stroke-width="2"/>
+  <text x="540" y="1258" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#E0B861">ALPINEGROOVEGUIDE.COM</text>
+  <text x="540" y="1286" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="800" letter-spacing="4" fill="#9FC8BF">LOCAL MUSIC - HUMAN CURATED</text>
 </svg>`;
 };
 
@@ -288,6 +295,11 @@ const AdminPromoterPacketPage = () => {
       <Head>
         <title>Weekly Promoter Packet - Alpine Groove Guide</title>
         <style>{`
+          .weekly-poster-print-page svg {
+            display: block;
+            width: 100%;
+            height: auto;
+          }
           @media print {
             body * { visibility: hidden !important; }
             #weekly-poster-print, #weekly-poster-print *, .weekly-poster-print-page, .weekly-poster-print-page * {
@@ -412,7 +424,7 @@ const AdminPromoterPacketPage = () => {
             <div className="mt-6 overflow-auto rounded-2xl border border-amber-500/30 bg-black/50 p-4">
               <div
                 id="weekly-poster-print"
-                className="mx-auto flex max-w-[560px] flex-col gap-6"
+                className="mx-auto flex w-full max-w-[620px] flex-col gap-6"
               >
                 {posterSvgs.map((posterSvg, index) => (
                   <div
