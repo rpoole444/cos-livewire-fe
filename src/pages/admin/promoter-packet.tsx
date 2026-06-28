@@ -9,6 +9,8 @@ import { Event } from '@/interfaces/interfaces';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 const POSTER_WIDTH = 1080;
 const POSTER_HEIGHT = 1350;
+const POSTER_CONTENT_TOP = 340;
+const POSTER_CONTENT_BOTTOM = 1160;
 
 const escapeXml = (value: string) =>
   value
@@ -50,38 +52,101 @@ const formatEventLine = (event: Event) => {
   return `${date} - ${time} - ${event.title} at ${venue}${region}`;
 };
 
-const buildPosterSvg = (events: Event[], weekStart: dayjs.Dayjs, weekEnd: dayjs.Dayjs) => {
+type PosterRow =
+  | { type: 'day'; label: string; height: number }
+  | { type: 'event'; event: Event; titleLines: string[]; venueLine: string; height: number };
+
+const buildPosterRows = (events: Event[]): PosterRow[] => {
   const grouped = groupEventsByDay(events);
-  const visibleEntries = Object.entries(grouped).slice(0, 7);
-  let y = 340;
-  const rows: string[] = [];
+  const rows: PosterRow[] = [];
 
-  visibleEntries.forEach(([day, dayEvents]) => {
-    rows.push(`
-      <text x="112" y="${y}" font-family="Georgia, serif" font-size="34" font-weight="700" fill="#E0B861" letter-spacing="1">${escapeXml(day)}</text>
-      <line x1="112" y1="${y + 18}" x2="968" y2="${y + 18}" stroke="#B86432" stroke-width="3" opacity="0.85"/>
-    `);
-    y += 58;
-
-    dayEvents.slice(0, 5).forEach((event) => {
+  Object.entries(grouped).forEach(([day, dayEvents]) => {
+    rows.push({ type: 'day', label: day, height: 60 });
+    dayEvents.forEach((event) => {
       const time = event.start_time ? dayjs(`1970-01-01T${event.start_time}`).format('h:mm A') : 'Time TBA';
       const venue = event.venue_name || event.location || 'Venue TBA';
       const titleLines = wrapText(event.title || 'Untitled show', 38).slice(0, 2);
       const venueLine = `${time} - ${venue}`;
-      rows.push(`
-        <circle cx="124" cy="${y - 8}" r="6" fill="#4F7870"/>
-        <text x="146" y="${y}" font-family="Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="#F4E7B8">${escapeXml(titleLines[0] || '')}</text>
-        ${titleLines[1] ? `<text x="146" y="${y + 30}" font-family="Helvetica, Arial, sans-serif" font-size="23" font-weight="700" fill="#F4E7B8">${escapeXml(titleLines[1])}</text>` : ''}
-        <text x="146" y="${y + (titleLines[1] ? 62 : 34)}" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="#9FC8BF">${escapeXml(venueLine)}</text>
-      `);
-      y += titleLines[1] ? 106 : 78;
+      rows.push({
+        type: 'event',
+        event,
+        titleLines,
+        venueLine,
+        height: titleLines[1] ? 108 : 80,
+      });
     });
-    y += 18;
+    rows.push({ type: 'day', label: '', height: 16 });
   });
 
-  const overflowCount = events.length - visibleEntries.reduce((sum, [, dayEvents]) => sum + Math.min(dayEvents.length, 5), 0);
-  const overflowText = overflowCount > 0
-    ? `<text x="540" y="1194" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="#F4E7B8">+ ${overflowCount} more shows on the full calendar</text>`
+  return rows;
+};
+
+const paginatePosterRows = (rows: PosterRow[]) => {
+  const pages: PosterRow[][] = [];
+  let current: PosterRow[] = [];
+  let y = POSTER_CONTENT_TOP;
+
+  rows.forEach((row) => {
+    if (row.type === 'day' && !row.label) {
+      if (current.length) {
+        current.push(row);
+        y += row.height;
+      }
+      return;
+    }
+
+    const wouldOverflow = y + row.height > POSTER_CONTENT_BOTTOM;
+    if (wouldOverflow && current.length) {
+      pages.push(current);
+      current = [];
+      y = POSTER_CONTENT_TOP;
+    }
+
+    current.push(row);
+    y += row.height;
+  });
+
+  if (current.length) pages.push(current);
+  return pages.length ? pages : [[]];
+};
+
+const renderPosterRows = (rows: PosterRow[]) => {
+  let y = POSTER_CONTENT_TOP;
+  return rows.map((row) => {
+    if (row.type === 'day' && !row.label) {
+      y += row.height;
+      return '';
+    }
+
+    if (row.type === 'day') {
+      const markup = `
+      <text x="112" y="${y}" font-family="Georgia, serif" font-size="34" font-weight="700" fill="#E0B861" letter-spacing="1">${escapeXml(row.label)}</text>
+      <line x1="112" y1="${y + 18}" x2="968" y2="${y + 18}" stroke="#B86432" stroke-width="3" opacity="0.85"/>
+      `;
+      y += row.height;
+      return markup;
+    }
+
+    const markup = `
+        <circle cx="124" cy="${y - 8}" r="6" fill="#4F7870"/>
+        <text x="146" y="${y}" font-family="Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="#F4E7B8">${escapeXml(row.titleLines[0] || '')}</text>
+        ${row.titleLines[1] ? `<text x="146" y="${y + 30}" font-family="Helvetica, Arial, sans-serif" font-size="23" font-weight="700" fill="#F4E7B8">${escapeXml(row.titleLines[1])}</text>` : ''}
+        <text x="146" y="${y + (row.titleLines[1] ? 62 : 34)}" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="#9FC8BF">${escapeXml(row.venueLine)}</text>
+      `;
+    y += row.height;
+    return markup;
+  }).join('');
+};
+
+const buildPosterSvgPage = (
+  rows: PosterRow[],
+  weekStart: dayjs.Dayjs,
+  weekEnd: dayjs.Dayjs,
+  pageNumber: number,
+  pageCount: number
+) => {
+  const pageLabel = pageCount > 1
+    ? `<text x="540" y="1194" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="20" fill="#F4E7B8">Page ${pageNumber} of ${pageCount}</text>`
     : '';
 
   return `
@@ -116,12 +181,17 @@ const buildPosterSvg = (events: Event[], weekStart: dayjs.Dayjs, weekEnd: dayjs.
   <text x="540" y="228" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="7" fill="#4F7870">THIS WEEK IN LIVE MUSIC</text>
   <text x="540" y="286" text-anchor="middle" font-family="Georgia, serif" font-size="58" font-weight="700" fill="#E0B861">Front Range Shows</text>
   <text x="540" y="320" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="22" fill="#F4E7B8">${escapeXml(`${weekStart.format('MMM D')} - ${weekEnd.format('MMM D')}`)}</text>
-  ${rows.join('')}
-  ${overflowText}
+  ${renderPosterRows(rows)}
+  ${pageLabel}
   <line x1="190" y1="1234" x2="890" y2="1234" stroke="#C9962E" stroke-width="2"/>
   <text x="540" y="1272" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#E0B861">ALPINEGROOVEGUIDE.COM</text>
   <text x="540" y="1302" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="16" letter-spacing="4" fill="#4F7870">LOCAL MUSIC - HUMAN CURATED</text>
 </svg>`;
+};
+
+const buildPosterSvgPages = (events: Event[], weekStart: dayjs.Dayjs, weekEnd: dayjs.Dayjs) => {
+  const pages = paginatePosterRows(buildPosterRows(events));
+  return pages.map((rows, index) => buildPosterSvgPage(rows, weekStart, weekEnd, index + 1, pages.length));
 };
 
 const AdminPromoterPacketPage = () => {
@@ -165,34 +235,38 @@ const AdminPromoterPacketPage = () => {
     '',
     'Full calendar: https://app.alpinegrooveguide.com',
   ].join('\n');
-  const posterSvg = useMemo(() => buildPosterSvg(weeklyEvents, weekStart, weekEnd), [weeklyEvents, weekEnd, weekStart]);
+  const posterSvgs = useMemo(() => buildPosterSvgPages(weeklyEvents, weekStart, weekEnd), [weeklyEvents, weekEnd, weekStart]);
 
   const downloadPosterPng = async () => {
     try {
-      const svgBlob = new Blob([posterSvg], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svgBlob);
-      const image = new Image();
-      image.crossOrigin = 'anonymous';
-      await new Promise<void>((resolve, reject) => {
-        image.onload = () => resolve();
-        image.onerror = reject;
-        image.src = url;
-      });
+      for (let index = 0; index < posterSvgs.length; index += 1) {
+        const svgBlob = new Blob([posterSvgs[index]], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        await new Promise<void>((resolve, reject) => {
+          image.onload = () => resolve();
+          image.onerror = reject;
+          image.src = url;
+        });
 
-      const canvas = document.createElement('canvas');
-      canvas.width = POSTER_WIDTH;
-      canvas.height = POSTER_HEIGHT;
-      const context = canvas.getContext('2d');
-      if (!context) throw new Error('Unable to create poster canvas.');
-      context.drawImage(image, 0, 0, POSTER_WIDTH, POSTER_HEIGHT);
-      URL.revokeObjectURL(url);
+        const canvas = document.createElement('canvas');
+        canvas.width = POSTER_WIDTH;
+        canvas.height = POSTER_HEIGHT;
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Unable to create poster canvas.');
+        context.drawImage(image, 0, 0, POSTER_WIDTH, POSTER_HEIGHT);
+        URL.revokeObjectURL(url);
 
-      const pngUrl = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = pngUrl;
-      link.download = `alpine-groove-weekly-poster-${weekStart.format('YYYY-MM-DD')}.png`;
-      link.click();
-      setStatusMessage('Poster PNG downloaded.');
+        const pngUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.href = pngUrl;
+        link.download = `alpine-groove-weekly-poster-${weekStart.format('YYYY-MM-DD')}${posterSvgs.length > 1 ? `-page-${index + 1}` : ''}.png`;
+        link.click();
+        await new Promise((resolve) => window.setTimeout(resolve, 150));
+      }
+
+      setStatusMessage(`${posterSvgs.length} poster page${posterSvgs.length === 1 ? '' : 's'} downloaded.`);
     } catch (error) {
       console.error('Unable to download poster', error);
       setStatusMessage('Unable to download poster image.');
@@ -216,7 +290,9 @@ const AdminPromoterPacketPage = () => {
         <style>{`
           @media print {
             body * { visibility: hidden !important; }
-            #weekly-poster-print, #weekly-poster-print * { visibility: visible !important; }
+            #weekly-poster-print, #weekly-poster-print *, .weekly-poster-print-page, .weekly-poster-print-page * {
+              visibility: visible !important;
+            }
             #weekly-poster-print {
               position: absolute !important;
               inset: 0 !important;
@@ -226,7 +302,18 @@ const AdminPromoterPacketPage = () => {
               padding: 0 !important;
               background: white !important;
             }
-            #weekly-poster-print svg {
+            .weekly-poster-print-page {
+              page-break-after: always;
+              break-after: page;
+              box-shadow: none !important;
+              border-radius: 0 !important;
+              overflow: visible !important;
+            }
+            .weekly-poster-print-page:last-child {
+              page-break-after: auto;
+              break-after: auto;
+            }
+            .weekly-poster-print-page svg {
               width: 100% !important;
               height: auto !important;
               max-height: 100vh !important;
@@ -298,7 +385,10 @@ const AdminPromoterPacketPage = () => {
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">Shareable poster</p>
                 <h2 className="mt-2 text-2xl font-semibold text-white">This week&apos;s gigs, poster style</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-                  Save this as a PNG for social posts, or print it to PDF. It uses the same approved events as the text packet.
+                  Save this as PNG pages for social posts, or print the full set to PDF. Long weeks automatically split across pages.
+                </p>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">
+                  {posterSvgs.length} poster page{posterSvgs.length === 1 ? '' : 's'} generated
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -307,7 +397,7 @@ const AdminPromoterPacketPage = () => {
                   onClick={downloadPosterPng}
                   className="rounded-full bg-amber-400 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-amber-300"
                 >
-                  Download PNG
+                  Download PNG pages
                 </button>
                 <button
                   type="button"
@@ -322,9 +412,16 @@ const AdminPromoterPacketPage = () => {
             <div className="mt-6 overflow-auto rounded-2xl border border-amber-500/30 bg-black/50 p-4">
               <div
                 id="weekly-poster-print"
-                className="mx-auto max-w-[540px] overflow-hidden rounded-xl shadow-2xl shadow-black/60"
-                dangerouslySetInnerHTML={{ __html: posterSvg }}
-              />
+                className="mx-auto flex max-w-[560px] flex-col gap-6"
+              >
+                {posterSvgs.map((posterSvg, index) => (
+                  <div
+                    key={index}
+                    className="weekly-poster-print-page overflow-hidden rounded-xl shadow-2xl shadow-black/60"
+                    dangerouslySetInnerHTML={{ __html: posterSvg }}
+                  />
+                ))}
+              </div>
             </div>
           </section>
 
