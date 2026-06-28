@@ -123,6 +123,77 @@ export const buildBookingSnapshotText = (artist: ProfileValueArtist, profileUrl:
   ].join('\n');
 };
 
+export const buildLuxuryBookingPacketOutline = (artist: ProfileValueArtist, profileUrl: string) => {
+  const bookingEmail = artist.booking_email || artist.contact_email || 'Not provided';
+  const styles = artist.genres?.length ? artist.genres.join(', ') : 'Not listed';
+  const region = artist.home_region ? getRegionLabel(artist.home_region) : 'Not set';
+
+  return [
+    `${artist.display_name} - Luxury Booking Packet Outline`,
+    '',
+    'Use this as a client-ready packet structure for weddings, private events, venues, festivals, and corporate bookings.',
+    '',
+    'Cover Page',
+    `Artist / ensemble: ${artist.display_name}`,
+    `Styles: ${styles}`,
+    `Home region: ${region}`,
+    `Booking email: ${bookingEmail}`,
+    `Profile: ${profileUrl}`,
+    '',
+    'Welcome Letter',
+    'Thank the client, confirm the tone of the event, and explain that the packet keeps agreement terms, music planning, and logistics in one place.',
+    '',
+    'Performance Agreement Fields',
+    '- Client name',
+    '- Event date',
+    '- Venue and address',
+    '- Performance time',
+    '- Ensemble size',
+    '- Total fee',
+    '- Deposit amount',
+    '- Remaining balance',
+    '- Sound system / production notes',
+    '- Special notes',
+    '',
+    'Core Terms',
+    '- Deposit reserves the date',
+    '- Remaining balance due before first performance unless otherwise agreed',
+    '- Safe performance area and power required',
+    '- Weather protection required for outdoor events',
+    '- Custom arrangements available with advance notice',
+    '- Overtime billed only if available and approved',
+    '- Cancellation and emergency terms clearly stated',
+    '',
+    'Wedding Music Planning Questionnaire',
+    '- Ceremony music',
+    '- Cocktail hour music',
+    '- Grand entrance',
+    '- First dance',
+    '- Parent dances',
+    '- Cake cutting',
+    '- Last dance',
+    '- Must-play songs',
+    '- Do-not-play songs',
+    '- Special dedications or announcements',
+    '- Timeline and special moments',
+    '',
+    'Venue Logistics',
+    '- Load-in instructions',
+    '- Parking',
+    '- Power location',
+    '- Rain / weather plan',
+    '- Accessibility notes',
+    '- Planner or venue contact',
+    '',
+    'Luxury Packet Extras',
+    '- Sample set lists',
+    '- Song request guide',
+    '- FAQ',
+    '- Final checklist',
+    '- Signature page',
+  ].join('\n');
+};
+
 export const buildPromoCopy = (event: ProfileValueEvent, artistName: string) => {
   const dateLine = formatEventDateLine(event);
   const venueLine = [event.venue_name, event.location].filter(Boolean).join(' in ');

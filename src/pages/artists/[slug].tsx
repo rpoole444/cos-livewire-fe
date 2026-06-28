@@ -17,6 +17,7 @@ import { Building2, ExternalLink, MapPin, Phone, Ticket, Users } from 'lucide-re
 import { getRegionLabel, isMusicRegionSlug } from '@/constants/regions';
 import {
   buildBookingSnapshotText,
+  buildLuxuryBookingPacketOutline,
   buildPromoCopy,
   formatEventDateLine,
   getProfileCompleteness,
@@ -508,6 +509,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const bookingEmail = artist.booking_email || artist.contact_email;
   const completeness = getProfileCompleteness(artist);
   const epkText = buildBookingSnapshotText(artist, artistUrl);
+  const bookingPacketOutlineText = buildLuxuryBookingPacketOutline(artist, artistUrl);
   const bookingAnchorUrl = `${artistUrl}#booking-inquiry`;
   const latestVideoLabel = artist.embed_youtube ? 'Video ready' : 'Add a YouTube video';
   const analyticsTotal = analyticsCounts
@@ -1019,6 +1021,41 @@ const ArtistProfilePage = ({ artist }: Props) => {
               <a href="#upcoming-dates" className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-semibold text-emerald-200 hover:border-emerald-300">
                 Upcoming dates
               </a>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-gold/30 bg-black/35 p-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.24em] text-alpine">Booking packet</p>
+                  <h3 className="mt-2 text-xl font-semibold text-sun-gold">Agreement and planning templates</h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-ivory/65">
+                    Download a polished booking packet template with a performance agreement, wedding questionnaire,
+                    song request guide, sample set lists, FAQ, and final checklist. Use the outline download as the
+                    future form-builder map for this profile.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+                  <a
+                    href="/templates/reid-poole-music-booking-packet-template.pdf"
+                    className="rounded-xl border border-sun-gold/60 px-4 py-2.5 text-center text-sm font-semibold text-sun-gold transition hover:bg-sun-gold hover:text-night"
+                  >
+                    Download PDF
+                  </a>
+                  <a
+                    href="/templates/reid-poole-music-booking-packet-template.docx"
+                    className="rounded-xl border border-alpine/60 px-4 py-2.5 text-center text-sm font-semibold text-mist transition hover:border-alpine hover:text-white"
+                  >
+                    Download DOCX
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => downloadEpk(`${artist.slug}-booking-packet-outline.txt`, bookingPacketOutlineText)}
+                    className="rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-emerald-200 transition hover:border-emerald-300"
+                  >
+                    Download outline
+                  </button>
+                </div>
+              </div>
             </div>
               </>
             )}
