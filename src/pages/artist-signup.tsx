@@ -103,14 +103,38 @@ const [mediaErrors, setMediaErrors] = useState({
     if (!authLoading && !user && router.isReady) {
       const inviteQuery = inviteCode ? `&invite=${encodeURIComponent(inviteCode)}` : '';
       const requestedType = router.query.type || router.query.profile_type;
+      const signupParams = new URLSearchParams();
+      if (requestedType === 'promoter' || requestedType === 'artist' || requestedType === 'venue') {
+        signupParams.set('type', requestedType);
+      }
+      const prefillDisplayName = router.query.displayName || router.query.display_name;
+      if (typeof prefillDisplayName === 'string') signupParams.set('displayName', prefillDisplayName);
+      if (typeof router.query.slug === 'string') signupParams.set('slug', router.query.slug);
+      if (typeof router.query.source === 'string') signupParams.set('source', router.query.source);
       const profileTypeQuery =
         requestedType === 'promoter' || requestedType === 'artist'
           ? `?type=${requestedType}`
           : '';
-      const signupPath = initialProfileType === 'venue' ? '/venue-signup' : `/artist-signup${profileTypeQuery}`;
+      const queryString = signupParams.toString();
+      const signupPath = initialProfileType === 'venue'
+        ? `/venue-signup${queryString ? `?${queryString}` : ''}`
+        : `/artist-signup${queryString ? `?${queryString}` : profileTypeQuery}`;
       router.replace(`/RegisterPage?redirect=${encodeURIComponent(signupPath)}${inviteQuery}`);
     }
-  }, [authLoading, user, router, router.isReady, router.query.type, router.query.profile_type, inviteCode, initialProfileType]);
+  }, [
+    authLoading,
+    user,
+    router,
+    router.isReady,
+    router.query.type,
+    router.query.profile_type,
+    router.query.displayName,
+    router.query.display_name,
+    router.query.slug,
+    router.query.source,
+    inviteCode,
+    initialProfileType,
+  ]);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -119,6 +143,21 @@ const [mediaErrors, setMediaErrors] = useState({
       setForm((prev) => ({ ...prev, profile_type: requestedType }));
     }
   }, [router.isReady, router.query.type, router.query.profile_type]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    const prefillDisplayName = router.query.displayName || router.query.display_name;
+    const prefillSlug = router.query.slug;
+    const displayName = typeof prefillDisplayName === 'string' ? prefillDisplayName.trim() : '';
+    const slug = typeof prefillSlug === 'string' ? prefillSlug.trim() : '';
+    if (!displayName && !slug) return;
+
+    setForm((prev) => ({
+      ...prev,
+      display_name: prev.display_name || displayName,
+      slug: prev.slug || slug,
+    }));
+  }, [router.isReady, router.query.displayName, router.query.display_name, router.query.slug]);
 
 const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

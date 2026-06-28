@@ -215,6 +215,9 @@ const ArtistProfilePage = ({ artist }: Props) => {
   const pageTitle = artist?.display_name
     ? `${artist.display_name} – ${profileLabel}`
     : `${profileLabel} Profile – Alpine Groove Guide`;
+  const shellClaimHref = artist
+    ? `/artist-signup?type=venue&displayName=${encodeURIComponent(artist.display_name)}&slug=${encodeURIComponent(artist.slug)}&source=shell-venue`
+    : '/artist-signup?type=venue';
 
   const trackArtistEvent = async (
     eventType: string,
@@ -658,6 +661,24 @@ const ArtistProfilePage = ({ artist }: Props) => {
                   details, embeds, and enhanced profile features unlock after the venue is claimed and completed.
                 </div>
 
+                <div className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.24em] text-emerald-200">Manage this venue?</p>
+                  <h2 className="mt-2 text-xl font-semibold text-white">Claim this venue page</h2>
+                  <p className="mt-2 text-sm leading-6 text-emerald-50/80">
+                    Keep the existing listing, then add venue photos, booking details, calendar embeds, room info,
+                    and faster event submission tools from your account.
+                  </p>
+                  <Link
+                    href={shellClaimHref}
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-emerald-400 px-4 py-3 text-sm font-black text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-300 sm:w-auto"
+                  >
+                    Claim / complete venue page
+                  </Link>
+                  <p className="mt-3 text-xs leading-5 text-emerald-50/60">
+                    You&apos;ll need a free account, a venue image, and basic address details to submit the claim.
+                  </p>
+                </div>
+
                 <div className="mt-6 flex flex-wrap gap-3">
                   {user?.is_admin && (
                     <Link
@@ -704,8 +725,10 @@ const ArtistProfilePage = ({ artist }: Props) => {
         <meta name="twitter:image" content={ogImage} />
       </Head>
 
-      <div className="min-h-screen bg-slate-950 px-4 py-8 text-slate-50">
-        <div className="mx-auto flex max-w-5xl flex-col gap-8">
+      <div className="relative min-h-screen overflow-hidden bg-[#050806] px-4 py-8 text-slate-50">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_8%,rgba(224,184,97,0.18),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(79,120,112,0.18),transparent_32%),linear-gradient(180deg,rgba(11,12,9,0),rgba(11,12,9,0.75))]" />
+        <div className="pointer-events-none absolute left-1/2 top-0 h-px w-[80vw] -translate-x-1/2 bg-gradient-to-r from-transparent via-gold/60 to-transparent" />
+        <div className="relative mx-auto flex max-w-6xl flex-col gap-8">
           {showPendingBanner && (
             <div className="rounded bg-yellow-400 p-3 text-center text-sm font-medium text-black shadow">
               ⏳ Your Pro page is currently <strong>pending admin approval</strong>. You’ll be notified when approved.
@@ -731,22 +754,24 @@ const ArtistProfilePage = ({ artist }: Props) => {
 
           <TrialBanner artist_user_id={artist.user_id || undefined} trial_ends_at={artist.trial_ends_at} is_pro={isProAccess} />
 
-          <section className="agg-corner-frame overflow-hidden border border-gold/40 bg-gradient-to-br from-[#171a12] via-black to-[#11130e] p-6 shadow-2xl shadow-black/40">
-            <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-              <div className="flex flex-1 flex-col gap-5 sm:flex-row sm:items-center">
-                <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-3xl bg-slate-900 shadow-xl ring-1 ring-slate-700 sm:mx-0">
+          <section className="agg-corner-frame relative overflow-hidden border border-gold/40 bg-gradient-to-br from-[#192018] via-black to-[#0b0c09] p-5 shadow-2xl shadow-black/50 sm:p-7">
+            <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-gold/10 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-28 left-12 h-72 w-72 rounded-full bg-alpine/10 blur-3xl" />
+            <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center">
+              <div className="flex flex-1 flex-col gap-6 sm:flex-row sm:items-start">
+                <div className="mx-auto flex h-44 w-44 shrink-0 items-center justify-center overflow-hidden rounded-[2rem] bg-slate-900 shadow-2xl shadow-black/50 ring-1 ring-gold/30 sm:mx-0 lg:h-56 lg:w-56">
                   <ProfileImage
                     src={artist.profile_image}
                     alt={artist.display_name}
-                    width={128}
-                    height={128}
+                    width={224}
+                    height={224}
                     fallbackSubLabel={isVenue ? 'Venue' : artist.profile_type === 'promoter' ? 'Promoter' : 'Artist'}
                     className="h-full w-full object-cover"
                   />
                 </div>
-                <div className="flex-1 space-y-3">
+                <div className="flex-1 space-y-4">
                   <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="agg-display text-3xl font-semibold text-sun-gold sm:text-4xl">{artist.display_name}</h1>
+                    <h1 className="agg-display text-4xl font-semibold leading-[0.95] text-sun-gold drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] sm:text-5xl lg:text-6xl">{artist.display_name}</h1>
                     <span className="inline-flex items-center gap-1.5 border border-alpine/60 bg-pine/50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-mist">
                       {isVenue && <Building2 className="h-3.5 w-3.5" />}
                       {profileLabel}
@@ -779,14 +804,14 @@ const ArtistProfilePage = ({ artist }: Props) => {
                     </p>
                   )}
                   {artist.bio ? (
-                    <p className="mt-4 mb-6 text-sm leading-relaxed text-slate-300">{artist.bio}</p>
+                    <p className="max-w-3xl text-base leading-8 text-ivory/78">{artist.bio}</p>
                   ) : (
-                    <p className="mt-4 mb-6 text-sm text-slate-400">This {profileType} hasn’t added a bio yet.</p>
+                    <p className="max-w-3xl text-base leading-8 text-ivory/55">This {profileType} hasn&apos;t added a bio yet.</p>
                   )}
                   {artist.genres.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {artist.genres.map((genre) => (
-                        <span key={genre} className="rounded-full border border-slate-700/80 px-3 py-1 text-xs font-medium text-slate-100">
+                        <span key={genre} className="rounded-full border border-alpine/35 bg-alpine/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] text-mist">
                           {genre}
                         </span>
                       ))}
@@ -794,7 +819,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                   )}
                 </div>
               </div>
-              <div className="w-full rounded-2xl border border-slate-800 bg-slate-950/70 p-5 lg:max-w-sm">
+              <div className="w-full rounded-[1.5rem] border border-gold/25 bg-black/45 p-5 shadow-xl shadow-black/30 lg:max-w-sm">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">
                   {isVenue ? 'Booking / Venue Contact' : 'Contact / Book'}
                 </h3>
@@ -944,11 +969,11 @@ const ArtistProfilePage = ({ artist }: Props) => {
               </div>
             </section>
 
-          <section className="agg-panel agg-corner-frame p-6">
+          <section id="booking-snapshot" className="agg-corner-frame border border-gold/30 bg-gradient-to-br from-[#11170f] via-black to-[#0b0f13] p-6 shadow-2xl shadow-black/40">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.28em] text-alpine">Smart EPK</p>
-                <h2 className="agg-display mt-2 text-2xl font-semibold text-sun-gold">Booking Snapshot</h2>
+                <h2 className="agg-display mt-2 text-3xl font-semibold text-sun-gold">Booking Snapshot</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-ivory/65">
                   A clean, booker-friendly snapshot with the details venues, presenters, and media usually need first.
                 </p>
@@ -988,21 +1013,21 @@ const ArtistProfilePage = ({ artist }: Props) => {
             ) : (
               <>
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <div className="border border-gold/25 bg-black/35 p-4">
+              <div className="rounded-2xl border border-gold/25 bg-black/45 p-4 shadow-lg shadow-black/20">
                 <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Genre / style</p>
                 <p className="mt-2 font-semibold text-ivory">{artist.genres?.length ? artist.genres.join(', ') : 'Not listed'}</p>
               </div>
-              <div className="border border-gold/25 bg-black/35 p-4">
+              <div className="rounded-2xl border border-gold/25 bg-black/45 p-4 shadow-lg shadow-black/20">
                 <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Hometown / region</p>
                 <p className="mt-2 font-semibold text-ivory">
                   {[artist.venue_city, artist.venue_state].filter(Boolean).join(', ') || (artist.home_region ? getRegionLabel(artist.home_region) : 'Not set')}
                 </p>
               </div>
-              <div className="border border-gold/25 bg-black/35 p-4">
+              <div className="rounded-2xl border border-gold/25 bg-black/45 p-4 shadow-lg shadow-black/20">
                 <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Booking email</p>
                 <p className="mt-2 break-words font-semibold text-ivory">{bookingEmail || 'Not provided'}</p>
               </div>
-              <div className="border border-gold/25 bg-black/35 p-4">
+              <div className="rounded-2xl border border-gold/25 bg-black/45 p-4 shadow-lg shadow-black/20">
                 <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Website</p>
                 {artist.website ? (
                   <a
@@ -1018,7 +1043,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                   <p className="mt-2 font-semibold text-ivory">Not provided</p>
                 )}
               </div>
-              <div className="border border-gold/25 bg-black/35 p-4">
+              <div className="rounded-2xl border border-gold/25 bg-black/45 p-4 shadow-lg shadow-black/20">
                 <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Tip jar</p>
                 {artist.tip_jar_url ? (
                   <a
@@ -1034,7 +1059,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
                   <p className="mt-2 font-semibold text-ivory">Not provided</p>
                 )}
               </div>
-              <div className="border border-gold/25 bg-black/35 p-4">
+              <div className="rounded-2xl border border-gold/25 bg-black/45 p-4 shadow-lg shadow-black/20">
                 <p className="text-xs uppercase tracking-[0.2em] text-ivory/45">Latest video</p>
                 <p className="mt-2 font-semibold text-ivory">{latestVideoLabel}</p>
               </div>
