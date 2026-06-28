@@ -49,7 +49,14 @@ const EventReview: React.FC<EventReviewProps> = ({ onCountChange }) => {
 
   const handleDeny = async (eventId: number) => {
     try {
-      await deleteEvent(eventId);
+      const adminNotes = window.prompt(
+        'Optional: add a short note for the submitter about why this event was not approved.',
+        ''
+      );
+      await deleteEvent(eventId, {
+        adminNotes: adminNotes || undefined,
+        notifySubmitter: true,
+      });
       setEvents(prev => {
         const next = prev.filter(event => event.id !== eventId);
         onCountChange?.(next.length);

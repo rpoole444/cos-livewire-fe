@@ -54,10 +54,12 @@ export async function approveArtist(id: number) {
   return res.json();
 }
 
-export async function deleteArtist(slug: string) {
+export async function deleteArtist(slug: string, options?: { adminNotes?: string }) {
   const res = await fetch(`${API_BASE_URL}/api/artists/${slug}`, {
     method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
+    body: JSON.stringify({ admin_notes: options?.adminNotes || null }),
   });
   if (!res.ok) {
     const err = await res.json();

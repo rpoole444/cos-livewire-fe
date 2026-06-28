@@ -50,7 +50,11 @@ const ArtistReview: React.FC<ArtistReviewProps> = ({ onCountChange }) => {
 
   const handleDeny = async (slug: string) => {
     try {
-      await deleteArtist(slug);
+      const adminNotes = window.prompt(
+        'Optional: add a short note for the profile owner about why this profile was not approved.',
+        ''
+      );
+      await deleteArtist(slug, { adminNotes: adminNotes || undefined });
       setArtists(prev => {
         const next = prev.filter(a => a.slug !== slug);
         onCountChange?.(next.length);

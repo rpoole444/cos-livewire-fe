@@ -256,13 +256,17 @@ export async function fetchEventDetailsBySlug(slug: string) {
 }
 
 
-async function deleteEvent(eventId: number): Promise<void> {
+async function deleteEvent(eventId: number, options?: { adminNotes?: string; notifySubmitter?: boolean }): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
     },
     credentials: 'include',
+    body: JSON.stringify({
+      admin_notes: options?.adminNotes || null,
+      notify_submitter: options?.notifySubmitter === true,
+    }),
   });
 
   if (!res.ok) {

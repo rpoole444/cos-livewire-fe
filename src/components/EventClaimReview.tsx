@@ -66,7 +66,13 @@ const EventClaimReview = ({ onCountChange }: EventClaimReviewProps) => {
   const handleReview = async (claimId: number, approve: boolean) => {
     try {
       setReviewingId(claimId);
-      await reviewEventClaim(claimId, approve);
+      const adminNotes = window.prompt(
+        approve
+          ? 'Optional: add a note for the artist with the approved claim.'
+          : 'Optional: add a note explaining why this claim was not approved.',
+        ''
+      );
+      await reviewEventClaim(claimId, approve, adminNotes || undefined);
       setClaims((prev) => {
         const next = prev.filter((claim) => claim.id !== claimId);
         onCountChange?.(next.length);

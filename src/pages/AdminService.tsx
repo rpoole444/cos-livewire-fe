@@ -10,7 +10,7 @@ import EventClaimReview from '@/components/EventClaimReview';
 import { getPendingArtists } from '@/pages/api/artists';
 import { getAdminSummary, getEventClaimRequests } from '@/pages/api/route';
 import { useState } from 'react';
-import { CalendarCheck, CheckCircle2, ExternalLink, FileDown, Handshake, ImagePlus, LogOut, Music2, ShieldCheck, UploadCloud, Users } from 'lucide-react';
+import { CalendarCheck, CheckCircle2, ExternalLink, FileDown, Handshake, ImagePlus, LogOut, Mail, Music2, ShieldCheck, UploadCloud, Users } from 'lucide-react';
 
 interface AdminSummary {
   counts: {
@@ -68,6 +68,11 @@ const AdminService: React.FC = () => {
   const [summary, setSummary] = useState<AdminSummary | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(true);
   const [summaryError, setSummaryError] = useState('');
+  const [newsletterSubject, setNewsletterSubject] = useState('');
+  const [newsletterPreview, setNewsletterPreview] = useState('');
+  const [newsletterMessage, setNewsletterMessage] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState('');
+  const [newsletterSending, setNewsletterSending] = useState(false);
 
   const handleEventCountChange = useCallback((count: number) => setEventCount(count), []);
   const handleArtistCountChange = useCallback((count: number) => setArtistCount(count), []);
@@ -116,6 +121,39 @@ const AdminService: React.FC = () => {
       router.push('/');
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleNewsletter = async (dryRun = false) => {
+    if (!newsletterSubject.trim() || !newsletterMessage.trim()) {
+      setNewsletterStatus('Add a subject and message before sending.');
+      return;
+    }
+
+    try {
+      setNewsletterSending(true);
+      setNewsletterStatus(dryRun ? 'Checking recipient count...' : 'Sending newsletter...');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/newsletter`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          subject: newsletterSubject,
+          preview_text: newsletterPreview,
+          message: newsletterMessage,
+          dry_run: dryRun,
+        }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(data?.message || 'Unable to send newsletter.');
+      }
+      setNewsletterStatus(data?.message || (dryRun ? 'Preview complete.' : 'Newsletter sent.'));
+    } catch (error) {
+      console.error('Newsletter failed', error);
+      setNewsletterStatus(error instanceof Error ? error.message : 'Unable to send newsletter.');
+    } finally {
+      setNewsletterSending(false);
     }
   };
 
@@ -401,6 +439,78 @@ const AdminService: React.FC = () => {
                   No import batches yet.
                 </p>
               )}
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl shadow-black/20 sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">User newsletter</p>
+                <h2 className="mt-1 flex items-center gap-2 text-2xl font-semibold text-slate-50">
+                  <Mail className="h-5 w-5 text-amber-200" />
+                  Send a platform update
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                  Write one short update for registered users. Use this for feature announcements, onboarding notes,
+                  and “here is what you can do now” messages.
+                </p>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-4">
+              <label className="block">
+                <span className="text-sm font-semibold text-slate-200">Subject</span>
+                <input
+                  value={newsletterSubject}
+                  onChange={(event) => setNewsletterSubject(event.target.value)}
+                  placeholder="What’s new on Alpine Groove Guide"
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-300"
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-semibold text-slate-200">Preview line optional</span>
+                <input
+                  value={newsletterPreview}
+                  onChange={(event) => setNewsletterPreview(event.target.value)}
+                  placeholder="New profile tools, claim requests, calendar imports, and more."
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-amber-300"
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-semibold text-slate-200">Message</span>
+                <textarea
+                  value={newsletterMessage}
+                  onChange={(event) => setNewsletterMessage(event.target.value)}
+                  rows={8}
+                  placeholder={"Hi everyone,\n\nHere are the newest Alpine Groove Guide tools available to you..."}
+                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm leading-6 text-slate-100 outline-none transition focus:border-amber-300"
+                />
+              </label>
+              {newsletterStatus && (
+                <div className="rounded-xl border border-slate-700 bg-slate-950/70 px-4 py-3 text-sm text-slate-200">
+                  {newsletterStatus}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  disabled={newsletterSending}
+                  onClick={() => handleNewsletter(true)}
+                  className="rounded-full border border-slate-600 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-amber-300 disabled:opacity-60"
+                >
+                  Preview recipient count
+                </button>
+                <button
+                  type="button"
+                  disabled={newsletterSending}
+                  onClick={() => {
+                    const confirmed = window.confirm('Send this newsletter to all registered users?');
+                    if (confirmed) handleNewsletter(false);
+                  }}
+                  className="rounded-full bg-amber-400 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-amber-300 disabled:opacity-60"
+                >
+                  {newsletterSending ? 'Working...' : 'Send newsletter'}
+                </button>
+              </div>
             </div>
           </section>
 

@@ -2,7 +2,6 @@
 import { GetServerSideProps } from 'next';
 import { type FormEvent, useEffect, useState } from 'react';
 import Head from 'next/head';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
@@ -11,6 +10,7 @@ import { FaFacebookF, FaTwitter, FaLink, FaShareAlt } from 'react-icons/fa';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import EventPoster from '@/components/EventPoster';
+import ProfileImage from '@/components/ProfileImage';
 import { buildEventDateTime, parseLocalDayjs } from '@/util/dateHelper';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, isCommunityArtistAccessActive } from '@/util/communityAccess';
 import { Building2, ExternalLink, MapPin, Phone, Ticket, Users } from 'lucide-react';
@@ -556,19 +556,14 @@ const ArtistProfilePage = ({ artist }: Props) => {
           <section className="mx-auto max-w-6xl overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/75 shadow-2xl shadow-black/30">
             <div className="grid gap-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)]">
               <div className="relative min-h-[320px] bg-gradient-to-br from-slate-950 via-slate-900 to-black sm:min-h-[420px] lg:min-h-full">
-                {artist.profile_image ? (
-                  <Image
-                    src={artist.profile_image}
-                    alt={artist.display_name}
-                    fill
-                    className="object-contain p-6 sm:p-8"
-                    sizes="(min-width: 1024px) 58vw, 100vw"
-                  />
-                ) : (
-                  <div className="flex h-full min-h-[320px] items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950 text-6xl font-black text-slate-300 sm:min-h-[420px]">
-                    {artist.display_name.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
+                <ProfileImage
+                  src={artist.profile_image}
+                  alt={artist.display_name}
+                  fill
+                  fallbackSubLabel="Venue"
+                  className="object-contain p-6 sm:p-8"
+                  sizes="(min-width: 1024px) 58vw, 100vw"
+                />
               </div>
 
               <div className="p-6 sm:p-8 lg:p-10">
@@ -700,13 +695,14 @@ const ArtistProfilePage = ({ artist }: Props) => {
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
               <div className="flex flex-1 flex-col gap-5 sm:flex-row sm:items-center">
                 <div className="mx-auto flex h-32 w-32 items-center justify-center overflow-hidden rounded-3xl bg-slate-900 shadow-xl ring-1 ring-slate-700 sm:mx-0">
-                  {artist.profile_image ? (
-                    <Image src={artist.profile_image} alt={artist.display_name} width={128} height={128} className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-4xl font-bold text-emerald-200">
-                      {artist.display_name.slice(0, 1).toUpperCase()}
-                    </span>
-                  )}
+                  <ProfileImage
+                    src={artist.profile_image}
+                    alt={artist.display_name}
+                    width={128}
+                    height={128}
+                    fallbackSubLabel={isVenue ? 'Venue' : artist.profile_type === 'promoter' ? 'Promoter' : 'Artist'}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div className="flex-1 space-y-3">
                   <div className="flex flex-wrap items-center gap-3">

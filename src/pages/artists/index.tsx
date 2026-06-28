@@ -2,9 +2,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
+import ProfileImage from '@/components/ProfileImage';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
 import {
   REGION_ALL,
@@ -239,7 +239,7 @@ export default function ArtistDirectoryPage({
             {filteredArtists.map((artist) => {
               const displayName = artist.display_name || 'Untitled Profile';
               const hasImage = Boolean(artist.profile_image);
-              const imageSrc = hasImage ? (artist.profile_image as string) : '/alpine_groove_guide_icon.png';
+              const imageSrc = hasImage ? (artist.profile_image as string) : null;
               const initials = displayName
                 .split(' ')
                 .map((word) => word[0])
@@ -265,11 +265,13 @@ export default function ArtistDirectoryPage({
                 <>
                   <div className="relative h-16 w-16 flex-shrink-0 rounded-2xl border border-slate-700/80 bg-slate-800/80 sm:h-20 sm:w-20">
                     {hasImage ? (
-                      <Image
+                      <ProfileImage
                         src={imageSrc}
                         alt={displayName}
                         fill
+                        fallbackSubLabel={profileType === 'venue' ? 'Venue' : profileType === 'promoter' ? 'Promoter' : 'Artist'}
                         className={`rounded-2xl object-cover ${isLocked ? 'opacity-60 blur-[1px]' : ''}`}
+                        sizes="80px"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 text-sm font-semibold text-slate-200">
