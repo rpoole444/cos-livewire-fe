@@ -5,6 +5,8 @@ import { Pencil, Trash2 } from "lucide-react";
 import EventPoster from "./EventPoster";
 import { getEventImageSrc } from "@/util/getEventImageSrc";
 import { getRegionLabel } from "@/constants/regions";
+import { getEventTrustLabels } from "@/util/eventTrust";
+import EventTrustLabels from "./EventTrustLabels";
 
 type EventCardProps = {
   id: number;
@@ -17,6 +19,11 @@ type EventCardProps = {
   imageUrl?: string | null;
   source?: string | null;
   sourceLabel?: string | null;
+  claimedArtist?: { id: number; display_name: string; slug: string; user_id: number } | null;
+  artistProfileId?: number | null;
+  venueProfileId?: number | null;
+  submitterUserId?: number | null;
+  lastEditedByUserId?: number | null;
   isFeatured?: boolean;
   canManage?: boolean;
   onDelete?: (id: number) => void | Promise<void>;
@@ -33,6 +40,11 @@ const EventCard: React.FC<EventCardProps> = ({
   imageUrl,
   source,
   sourceLabel,
+  claimedArtist,
+  artistProfileId,
+  venueProfileId,
+  submitterUserId,
+  lastEditedByUserId,
   isFeatured,
   canManage,
   onDelete,
@@ -47,6 +59,15 @@ const EventCard: React.FC<EventCardProps> = ({
   const formattedDate = isValidDate ? parsed!.format("ddd, MMM D • h:mm A") : "Date TBA";
   const imageSrc = getEventImageSrc(imageUrl);
   const shouldContainPoster = Boolean(source || sourceLabel);
+  const trustLabels = getEventTrustLabels({
+    source,
+    source_label: sourceLabel,
+    claimed_artist: claimedArtist as any,
+    artist_profile_id: artistProfileId || undefined,
+    venue_profile_id: venueProfileId || undefined,
+    user_id: submitterUserId || undefined,
+    last_edited_by_user_id: lastEditedByUserId || undefined,
+  });
 
   const cardContent = (
     <>
@@ -73,12 +94,8 @@ const EventCard: React.FC<EventCardProps> = ({
                   Featured
                 </span>
               )}
-              {sourceLabel && (
-                <span className="border border-copper/60 bg-copper/15 px-2.5 py-1 text-[10px] text-mist">
-                  {sourceLabel}
-                </span>
-              )}
             </div>
+            <EventTrustLabels labels={trustLabels.slice(0, 2)} compact />
             <h2 className="agg-display text-xl font-semibold leading-tight text-ivory line-clamp-2 sm:text-2xl">{title}</h2>
             {(venueName || city) && (
               <p className="text-sm font-medium text-ivory/70 line-clamp-1 sm:text-base">

@@ -16,6 +16,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/router";
 import { deleteEvent, fetchEventDetailsBySlug } from "../api/route";
 import { canDeleteEvent, canManageEvent } from "@/util/eventPermissions";
+import { shouldShowPublicClaimCta } from "@/util/eventTrust";
 
 type EventClaimStatus = {
   id: number;
@@ -50,6 +51,14 @@ const EventDetailPage = ({ event, events }: Props) => {
     () => managedProfiles.filter((profile) => (profile.profile_type || "artist") === "artist"),
     [managedProfiles],
   );
+  const venueProfiles = useMemo(
+    () => managedProfiles.filter((profile) => profile.profile_type === "venue"),
+    [managedProfiles],
+  );
+  const linkedManagedVenueProfile = useMemo(
+    () => venueProfiles.find((profile) => Number(profile.id) === Number(currentEvent.venue_profile_id)),
+    [currentEvent.venue_profile_id, venueProfiles],
+  );
   const alreadyClaimedByViewer = Boolean(
     user && currentEvent.claimed_artist?.user_id === user.id,
   );
@@ -64,6 +73,10 @@ const EventDetailPage = ({ event, events }: Props) => {
     : "Event Details – Alpine Groove Guide";
   const siteBaseUrl = "https://app.alpinegrooveguide.com";
   const eventUrl = `${siteBaseUrl}/eventRouter/${currentEvent.slug}`;
+  const authRedirect = `/eventRouter/${currentEvent.slug}`;
+  const loginClaimHref = `/LoginPage?redirect=${encodeURIComponent(authRedirect)}`;
+  const artistSignupClaimHref = `/artist-signup?type=artist&redirect=${encodeURIComponent(authRedirect)}`;
+  const venueSignupClaimHref = `/artist-signup?type=venue&displayName=${encodeURIComponent(currentEvent.venue_name || "")}&source=event-claim&redirect=${encodeURIComponent(authRedirect)}`;
   const defaultSocialImage = `${siteBaseUrl}/alpine-groove-social-cover.png`;
   const rawEventImage = currentEvent.display_image_url || currentEvent.poster;
   const eventImage =
@@ -245,12 +258,12 @@ const EventDetailPage = ({ event, events }: Props) => {
                     </div>
                   )}
                 </div>
-              ) : user ? (
+              ) : user && shouldShowPublicClaimCta(currentEvent) ? (
                 <div className="mt-3 space-y-4">
-                  <h2 className="text-2xl font-semibold text-slate-50">Artists: is this your gig?</h2>
+                  <h2 className="text-2xl font-semibold text-slate-50">Claim this listing</h2>
                   <p className="text-sm text-slate-300">
-                    Request a claim to attach this show to your artist page. After admin approval, you can update the poster,
-                    title, description, date/time, venue, links, ticket info, and other public details.
+                    Claim this listing to update the poster, ticket link, description, lineup, time, and event details.
+                    Artist claims go through admin review so the public calendar stays trustworthy.
                   </p>
                   <div className="grid gap-2 rounded-2xl border border-slate-700 bg-slate-950/70 p-4 text-xs text-slate-300 sm:grid-cols-3">
                     <span><strong className="block text-emerald-200">1. Request</strong>Select your artist profile.</span>
@@ -297,11 +310,34 @@ const EventDetailPage = ({ event, events }: Props) => {
                   ) : (
                     <div className="rounded-2xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-300">
                       You need an artist profile before you can claim gigs.
-                      <Link href="/artist-signup?type=artist" className="ml-2 font-semibold text-emerald-300 hover:text-emerald-200">
+                      <Link href={artistSignupClaimHref} className="ml-2 font-semibold text-emerald-300 hover:text-emerald-200">
                         Create an artist page
                       </Link>
                     </div>
                   )}
+                  <div className="rounded-2xl border border-cyan-400/30 bg-cyan-500/10 p-4 text-sm text-cyan-50">
+                    <p className="font-semibold">Do you manage this venue?</p>
+                    <p className="mt-1 text-cyan-50/75">
+                      Venue managers can connect a venue profile, keep room details current, and edit linked venue events.
+                    </p>
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                      {linkedManagedVenueProfile ? (
+                        <Link
+                          href={`/artists/edit/${linkedManagedVenueProfile.slug}`}
+                          className="inline-flex items-center justify-center rounded-lg border border-cyan-300/60 px-4 py-2 text-xs font-semibold text-cyan-50 transition hover:bg-cyan-400/10"
+                        >
+                          Manage venue profile
+                        </Link>
+                      ) : (
+                        <Link
+                          href={venueSignupClaimHref}
+                          className="inline-flex items-center justify-center rounded-lg border border-cyan-300/60 px-4 py-2 text-xs font-semibold text-cyan-50 transition hover:bg-cyan-400/10"
+                        >
+                          Create / claim venue page
+                        </Link>
+                      )}
+                    </div>
+                  </div>
                   {rejectedClaimForViewer && (
                     <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100">
                       <p className="font-semibold">Claim rejected.</p>
@@ -311,27 +347,37 @@ const EventDetailPage = ({ event, events }: Props) => {
                     </div>
                   )}
                 </div>
-              ) : (
+              ) : !user && shouldShowPublicClaimCta(currentEvent) ? (
                 <div className="mt-3 space-y-3">
-                  <h2 className="text-2xl font-semibold text-slate-50">Artists: is this your gig?</h2>
+                  <h2 className="text-2xl font-semibold text-slate-50">Are you the artist or venue?</h2>
                   <p className="text-sm text-slate-300">
-                    Log in to request a claim. Once approved, this event can appear on your artist page and you can improve
-                    the public listing with the right poster, links, and details.
+                    Log in to claim this listing. Once approved, artists can improve the public listing with the right
+                    poster, ticket link, description, lineup, and event details.
                   </p>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Link
-                      href="/LoginPage"
+                      href={loginClaimHref}
                       className="inline-flex items-center justify-center rounded-lg bg-emerald-400 px-4 py-2.5 text-sm font-black text-slate-950 transition hover:bg-emerald-300"
                     >
                       Log in to claim
                     </Link>
                     <Link
-                      href="/artist-signup?type=artist"
+                      href={artistSignupClaimHref}
                       className="inline-flex items-center justify-center rounded-lg border border-emerald-400/60 px-4 py-2.5 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/10"
                     >
                       Create artist page
                     </Link>
+                    <Link
+                      href={venueSignupClaimHref}
+                      className="inline-flex items-center justify-center rounded-lg border border-cyan-400/60 px-4 py-2.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/10"
+                    >
+                      Create venue page
+                    </Link>
                   </div>
+                </div>
+              ) : (
+                <div className="mt-3 rounded-2xl border border-slate-700 bg-slate-950/70 p-4 text-sm text-slate-300">
+                  This listing is already connected or verified. Admins and approved profile owners can keep it updated.
                 </div>
               )}
               {claimMessage && (

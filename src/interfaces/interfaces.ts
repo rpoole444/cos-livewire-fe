@@ -9,6 +9,8 @@ export interface CustomEvent {
   end_time: string;
   venue_name: string;
   venue_profile_id?: number | null;
+  venue_profile_slug?: string | null;
+  venue_profile_user_id?: number | null;
   address: string;
   website: string;
   genre: string;
@@ -68,6 +70,8 @@ export interface Event extends CustomEvent {
   address: string;
   venue_name: string; 
   venue_profile_id?: number | null;
+  venue_profile_slug?: string | null;
+  venue_profile_user_id?: number | null;
   website: string;
   poster: string | null;
   venue_profile_image?: string | null;
