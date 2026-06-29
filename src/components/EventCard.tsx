@@ -22,7 +22,9 @@ type EventCardProps = {
   claimedArtist?: { id: number; display_name: string; slug: string; user_id: number } | null;
   artistProfileId?: number | null;
   venueProfileId?: number | null;
+  venueProfileUserId?: number | null;
   submitterUserId?: number | null;
+  claimedByUserId?: number | null;
   lastEditedByUserId?: number | null;
   isFeatured?: boolean;
   canManage?: boolean;
@@ -43,7 +45,9 @@ const EventCard: React.FC<EventCardProps> = ({
   claimedArtist,
   artistProfileId,
   venueProfileId,
+  venueProfileUserId,
   submitterUserId,
+  claimedByUserId,
   lastEditedByUserId,
   isFeatured,
   canManage,
@@ -65,7 +69,9 @@ const EventCard: React.FC<EventCardProps> = ({
     claimed_artist: claimedArtist as any,
     artist_profile_id: artistProfileId || undefined,
     venue_profile_id: venueProfileId || undefined,
+    venue_profile_user_id: venueProfileUserId || undefined,
     user_id: submitterUserId || undefined,
+    claimed_by_user_id: claimedByUserId || undefined,
     last_edited_by_user_id: lastEditedByUserId || undefined,
   });
 

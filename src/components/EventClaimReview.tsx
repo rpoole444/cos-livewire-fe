@@ -19,8 +19,12 @@ interface EventClaimRequest {
   event_source_label?: string | null;
   current_artist_profile_id?: number | null;
   current_artist_display_name?: string | null;
+  claim_type?: "artist" | "venue";
   artist_display_name: string;
+  profile_display_name?: string;
   artist_slug: string;
+  profile_slug?: string;
+  profile_type?: "artist" | "venue" | "promoter";
   requester_first_name?: string | null;
   requester_last_name?: string | null;
   requester_email?: string | null;
@@ -68,7 +72,7 @@ const EventClaimReview = ({ onCountChange }: EventClaimReviewProps) => {
       setReviewingId(claimId);
       const adminNotes = window.prompt(
         approve
-          ? 'Optional: add a note for the artist with the approved claim.'
+          ? 'Optional: add a note for the profile owner with the approved claim.'
           : 'Optional: add a note explaining why this claim was not approved.',
         ''
       );
@@ -105,7 +109,7 @@ const EventClaimReview = ({ onCountChange }: EventClaimReviewProps) => {
                 <div className="space-y-3">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">
-                      Event claim request
+                      {(claim.claim_type || "artist") === "venue" ? "Venue claim request" : "Artist claim request"}
                     </p>
                     <h3 className="mt-1 text-xl font-semibold">{claim.event_title}</h3>
                     <p className="text-sm text-slate-400">
@@ -116,10 +120,15 @@ const EventClaimReview = ({ onCountChange }: EventClaimReviewProps) => {
                   </div>
                   <div className="grid gap-3 text-sm sm:grid-cols-2">
                     <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
-                      <p className="text-xs uppercase tracking-widest text-slate-500">Requested artist</p>
-                      <Link href={`/artists/${claim.artist_slug}`} className="mt-1 block font-semibold text-emerald-200 hover:text-emerald-100">
-                        {claim.artist_display_name}
+                      <p className="text-xs uppercase tracking-widest text-slate-500">
+                        Requested {(claim.claim_type || "artist") === "venue" ? "venue" : "artist"}
+                      </p>
+                      <Link href={`/artists/${claim.profile_slug || claim.artist_slug}`} className="mt-1 block font-semibold text-emerald-200 hover:text-emerald-100">
+                        {claim.profile_display_name || claim.artist_display_name}
                       </Link>
+                      <p className="mt-1 text-xs uppercase tracking-widest text-slate-500">
+                        {(claim.profile_type || claim.claim_type || "artist").replace("-", " ")}
+                      </p>
                     </div>
                     <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-3">
                       <p className="text-xs uppercase tracking-widest text-slate-500">Requester</p>

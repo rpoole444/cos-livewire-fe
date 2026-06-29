@@ -22,10 +22,13 @@ type EventClaimStatus = {
   id: number;
   event_id: number;
   artist_profile_id: number;
+  claim_type?: "artist" | "venue";
   status: "pending" | "approved" | "rejected";
   event_title: string;
   event_slug: string;
   artist_display_name: string;
+  profile_display_name?: string;
+  profile_type?: "artist" | "venue" | "promoter";
   admin_notes?: string | null;
 };
 
@@ -40,6 +43,8 @@ const EventDetailPage = ({ event, events }: Props) => {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [managedProfiles, setManagedProfiles] = useState<Artist[]>([]);
   const [selectedProfileId, setSelectedProfileId] = useState<number | "">("");
+  const [selectedVenueProfileId, setSelectedVenueProfileId] = useState<number | "">("");
+  const [claimIntent, setClaimIntent] = useState<"artist" | "venue">("artist");
   const [claimStatus, setClaimStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [claimMessage, setClaimMessage] = useState("");
   const [claimImageHint, setClaimImageHint] = useState<string | null>(null);
@@ -62,12 +67,25 @@ const EventDetailPage = ({ event, events }: Props) => {
   const alreadyClaimedByViewer = Boolean(
     user && currentEvent.claimed_artist?.user_id === user.id,
   );
+  const canRequestArtistClaim = shouldShowPublicClaimCta(currentEvent);
+  const canRequestVenueClaim = !currentEvent.venue_profile_id;
+  const canRequestAnyClaim = canRequestArtistClaim || canRequestVenueClaim;
   const eventClaimsForViewer = useMemo(
     () => myClaims.filter((claim) => Number(claim.event_id) === Number(currentEvent.id)),
     [currentEvent.id, myClaims],
   );
-  const pendingClaimForViewer = eventClaimsForViewer.find((claim) => claim.status === "pending");
-  const rejectedClaimForViewer = eventClaimsForViewer.find((claim) => claim.status === "rejected");
+  const pendingArtistClaimForViewer = eventClaimsForViewer.find(
+    (claim) => claim.status === "pending" && (claim.claim_type || "artist") === "artist",
+  );
+  const pendingVenueClaimForViewer = eventClaimsForViewer.find(
+    (claim) => claim.status === "pending" && claim.claim_type === "venue",
+  );
+  const rejectedArtistClaimForViewer = eventClaimsForViewer.find(
+    (claim) => claim.status === "rejected" && (claim.claim_type || "artist") === "artist",
+  );
+  const rejectedVenueClaimForViewer = eventClaimsForViewer.find(
+    (claim) => claim.status === "rejected" && claim.claim_type === "venue",
+  );
   const pageTitle = currentEvent?.title
     ? `${currentEvent.title} – Event Details – Alpine Groove Guide`
     : "Event Details – Alpine Groove Guide";
@@ -118,7 +136,9 @@ const EventDetailPage = ({ event, events }: Props) => {
           setManagedProfiles(profiles);
           setMyClaims(Array.isArray(claimsData) ? claimsData : []);
           const firstArtist = profiles.find((profile: Artist) => (profile.profile_type || "artist") === "artist");
+          const firstVenue = profiles.find((profile: Artist) => profile.profile_type === "venue");
           setSelectedProfileId(firstArtist?.id || "");
+          setSelectedVenueProfileId(firstVenue?.id || "");
         }
       } catch (error) {
         console.error("Unable to load managed profiles", error);
@@ -140,14 +160,20 @@ const EventDetailPage = ({ event, events }: Props) => {
     window.open(url, "_blank");
   };
 
-  const handleClaimEvent = async () => {
-    if (!selectedProfileId) {
+  const handleClaimEvent = async (claimType: "artist" | "venue") => {
+    const selectedId = claimType === "venue" ? selectedVenueProfileId : selectedProfileId;
+    if (!selectedId) {
       setClaimStatus("error");
-      setClaimMessage("Choose the artist profile that should claim this event.");
+      setClaimMessage(
+        claimType === "venue"
+          ? "Choose the venue profile that should claim this event."
+          : "Choose the artist profile that should claim this event.",
+      );
       return;
     }
 
     try {
+      setClaimIntent(claimType);
       setClaimStatus("loading");
       setClaimMessage("");
       setClaimImageHint(null);
@@ -155,7 +181,7 @@ const EventDetailPage = ({ event, events }: Props) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ artist_profile_id: selectedProfileId }),
+        body: JSON.stringify({ artist_profile_id: selectedId, claim_type: claimType }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -167,14 +193,15 @@ const EventDetailPage = ({ event, events }: Props) => {
         ...data.event,
       }));
       if (data.claim) {
+        const selectedProfile = managedProfiles.find((profile) => Number(profile.id) === Number(selectedId));
         setMyClaims((prev) => [
           {
             ...data.claim,
             event_title: currentEvent.title,
             event_slug: currentEvent.slug,
-            artist_display_name:
-              artistProfiles.find((profile) => Number(profile.id) === Number(selectedProfileId))?.display_name ||
-              "Your artist profile",
+            artist_display_name: selectedProfile?.display_name || "Your profile",
+            profile_display_name: selectedProfile?.display_name || "Your profile",
+            profile_type: selectedProfile?.profile_type,
           },
           ...prev.filter((claim) => Number(claim.id) !== Number(data.claim.id)),
         ]);
@@ -235,7 +262,7 @@ const EventDetailPage = ({ event, events }: Props) => {
             <EventDetailCard event={currentEvent} user={user} expandDescription />
             <section className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 via-slate-950/80 to-slate-950 p-6 shadow-xl shadow-black/30 sm:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">Claim / improve listing</p>
-              {currentEvent.claimed_artist ? (
+              {currentEvent.claimed_artist && currentEvent.venue_profile_id ? (
                 <div className="mt-3 space-y-3">
                   <h2 className="text-xl font-semibold text-slate-50">
                     Connected to {currentEvent.claimed_artist.display_name}
@@ -258,7 +285,7 @@ const EventDetailPage = ({ event, events }: Props) => {
                     </div>
                   )}
                 </div>
-              ) : user && shouldShowPublicClaimCta(currentEvent) ? (
+              ) : user && canRequestAnyClaim ? (
                 <div className="mt-3 space-y-4">
                   <h2 className="text-2xl font-semibold text-slate-50">Claim this listing</h2>
                   <p className="text-sm text-slate-300">
@@ -270,15 +297,22 @@ const EventDetailPage = ({ event, events }: Props) => {
                     <span><strong className="block text-emerald-200">2. Admin approves</strong>This prevents bad claims.</span>
                     <span><strong className="block text-emerald-200">3. Improve</strong>Make the listing stronger.</span>
                   </div>
-                  {pendingClaimForViewer ? (
-                    <div className="rounded-2xl border border-amber-400/40 bg-amber-400/10 p-4 text-sm text-amber-50">
-                      <p className="font-semibold">Claim pending.</p>
+                  {!canRequestArtistClaim && currentEvent.claimed_artist ? (
+                    <div className="rounded-2xl border border-emerald-400/40 bg-emerald-400/10 p-4 text-sm text-emerald-50">
+                      <p className="font-semibold">Artist connected.</p>
                       <p className="mt-1">
-                        Your request for {pendingClaimForViewer.artist_display_name} is waiting for admin approval.
+                        This event is attached to {currentEvent.claimed_artist.display_name}. Venue managers can still claim the venue side if needed.
+                      </p>
+                    </div>
+                  ) : pendingArtistClaimForViewer ? (
+                    <div className="rounded-2xl border border-amber-400/40 bg-amber-400/10 p-4 text-sm text-amber-50">
+                      <p className="font-semibold">Artist claim pending.</p>
+                      <p className="mt-1">
+                        Your request for {pendingArtistClaimForViewer.profile_display_name || pendingArtistClaimForViewer.artist_display_name} is waiting for admin approval.
                       </p>
                     </div>
                   ) : claimStatus === "success" ? (
-                    <div className="rounded-2xl border border-emerald-400/40 bg-emerald-400/10 p-4 text-sm text-emerald-50">
+                    <div className={`rounded-2xl border border-emerald-400/40 bg-emerald-400/10 p-4 text-sm text-emerald-50 ${claimIntent === "artist" ? "" : "hidden"}`}>
                       Your claim request is waiting for admin approval.
                     </div>
                   ) : artistProfiles.length > 0 ? (
@@ -300,11 +334,11 @@ const EventDetailPage = ({ event, events }: Props) => {
                       </select>
                       <button
                         type="button"
-                        onClick={handleClaimEvent}
-                        disabled={claimStatus === "loading"}
+                        onClick={() => handleClaimEvent("artist")}
+                        disabled={claimStatus === "loading" && claimIntent === "artist"}
                         className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-400 px-4 py-3 text-sm font-black text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                       >
-                        {claimStatus === "loading" ? "Sending claim…" : "Claim this event"}
+                        {claimStatus === "loading" && claimIntent === "artist" ? "Sending claim…" : "Claim as artist"}
                       </button>
                     </div>
                   ) : (
@@ -320,14 +354,54 @@ const EventDetailPage = ({ event, events }: Props) => {
                     <p className="mt-1 text-cyan-50/75">
                       Venue managers can connect a venue profile, keep room details current, and edit linked venue events.
                     </p>
-                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                      {linkedManagedVenueProfile ? (
+                    <div className="mt-3 space-y-3">
+                      {!canRequestVenueClaim && currentEvent.venue_profile_id ? (
+                        <div className="rounded-xl border border-emerald-300/40 bg-emerald-300/10 p-3 text-emerald-50">
+                          <p className="font-semibold">Venue connected.</p>
+                          <p className="mt-1 text-emerald-50/80">
+                            This event is already linked to a venue profile.
+                          </p>
+                        </div>
+                      ) : pendingVenueClaimForViewer ? (
+                        <div className="rounded-xl border border-amber-300/40 bg-amber-300/10 p-3 text-amber-50">
+                          <p className="font-semibold">Venue claim pending.</p>
+                          <p className="mt-1 text-amber-50/80">
+                            Your request for {pendingVenueClaimForViewer.profile_display_name || pendingVenueClaimForViewer.artist_display_name} is waiting for admin approval.
+                          </p>
+                        </div>
+                      ) : linkedManagedVenueProfile ? (
                         <Link
                           href={`/artists/edit/${linkedManagedVenueProfile.slug}`}
                           className="inline-flex items-center justify-center rounded-lg border border-cyan-300/60 px-4 py-2 text-xs font-semibold text-cyan-50 transition hover:bg-cyan-400/10"
                         >
                           Manage venue profile
                         </Link>
+                      ) : venueProfiles.length > 0 ? (
+                        <div className="space-y-3">
+                          <label className="block text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
+                            Venue profile
+                          </label>
+                          <select
+                            value={selectedVenueProfileId}
+                            onChange={(e) => setSelectedVenueProfileId(e.target.value ? Number(e.target.value) : "")}
+                            className="w-full rounded-xl border border-cyan-300/30 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus:border-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"
+                          >
+                            <option value="">Choose venue profile</option>
+                            {venueProfiles.map((profile) => (
+                              <option key={profile.id} value={profile.id}>
+                                {profile.display_name}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => handleClaimEvent("venue")}
+                            disabled={claimStatus === "loading" && claimIntent === "venue"}
+                            className="inline-flex w-full items-center justify-center rounded-lg border border-cyan-300/70 px-4 py-2.5 text-xs font-semibold text-cyan-50 transition hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                          >
+                            {claimStatus === "loading" && claimIntent === "venue" ? "Sending venue claim…" : "Claim as venue"}
+                          </button>
+                        </div>
                       ) : (
                         <Link
                           href={venueSignupClaimHref}
@@ -336,18 +410,23 @@ const EventDetailPage = ({ event, events }: Props) => {
                           Create / claim venue page
                         </Link>
                       )}
+                      {claimStatus === "success" && claimIntent === "venue" && (
+                        <div className="rounded-xl border border-emerald-400/40 bg-emerald-400/10 p-3 text-emerald-50">
+                          Your venue claim request is waiting for admin approval.
+                        </div>
+                      )}
                     </div>
                   </div>
-                  {rejectedClaimForViewer && (
+                  {(rejectedArtistClaimForViewer || rejectedVenueClaimForViewer) && (
                     <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-sm text-rose-100">
                       <p className="font-semibold">Claim rejected.</p>
                       <p className="mt-1">
-                        This request was not approved{rejectedClaimForViewer.admin_notes ? `: ${rejectedClaimForViewer.admin_notes}` : "."}
+                        This request was not approved{(rejectedArtistClaimForViewer || rejectedVenueClaimForViewer)?.admin_notes ? `: ${(rejectedArtistClaimForViewer || rejectedVenueClaimForViewer)?.admin_notes}` : "."}
                       </p>
                     </div>
                   )}
                 </div>
-              ) : !user && shouldShowPublicClaimCta(currentEvent) ? (
+              ) : !user && canRequestAnyClaim ? (
                 <div className="mt-3 space-y-3">
                   <h2 className="text-2xl font-semibold text-slate-50">Are you the artist or venue?</h2>
                   <p className="text-sm text-slate-300">

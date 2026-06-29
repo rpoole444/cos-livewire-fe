@@ -7,7 +7,9 @@ type EventTrustInput = Partial<Pick<
   | "claimed_artist"
   | "artist_profile_id"
   | "venue_profile_id"
+  | "venue_profile_user_id"
   | "user_id"
+  | "claimed_by_user_id"
   | "last_edited_by_user_id"
 >>;
 
@@ -52,12 +54,24 @@ export const getEventTrustLabels = (event: EventTrustInput): EventTrustLabel[] =
     });
   }
 
-  if (event.venue_profile_id && source === "profile") {
+  if (
+    event.venue_profile_id &&
+    event.venue_profile_user_id &&
+    event.claimed_by_user_id &&
+    Number(event.venue_profile_user_id) === Number(event.claimed_by_user_id)
+  ) {
     labels.push({
       key: "venue-verified",
       label: "Verified by venue",
       tone: "emerald",
       priority: 20,
+    });
+  } else if (event.venue_profile_id) {
+    labels.push({
+      key: "venue-linked",
+      label: "Venue linked",
+      tone: "blue",
+      priority: 25,
     });
   }
 
@@ -106,4 +120,3 @@ export const getPrimaryEventTrustLabel = (event: EventTrustInput) => getEventTru
 export const shouldShowPublicClaimCta = (event: EventTrustInput) => (
   !event.claimed_artist && !event.artist_profile_id
 );
-
