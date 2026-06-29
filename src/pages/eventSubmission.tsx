@@ -167,7 +167,12 @@ const EventSubmission = () => {
             : [];
         const venueList = profiles.filter((item: any) => item?.profile_type === 'venue');
         setVenueProfiles(venueList);
-        const profile = venueList[0];
+        const requestedVenueProfileId = Array.isArray(router.query.venueProfileId)
+          ? router.query.venueProfileId[0]
+          : router.query.venueProfileId;
+        const profile = requestedVenueProfileId
+          ? venueList.find((item: any) => String(item?.id || '') === String(requestedVenueProfileId)) || venueList[0]
+          : venueList[0];
         if (profile?.profile_type !== 'venue') return;
 
         setSelectedVenueProfileId(String(profile.id || ''));
@@ -178,7 +183,7 @@ const EventSubmission = () => {
     };
 
     loadVenueDefaults();
-  }, [user]);
+  }, [user, router.query.venueProfileId]);
 
 const initializeAutocomplete = (index: number) => {
   if (

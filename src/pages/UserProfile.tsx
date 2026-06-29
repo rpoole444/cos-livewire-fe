@@ -1055,6 +1055,12 @@ const textareaClasses =
                   const profileSlug = profile.slug || "";
                   const canVisitProfile = Boolean(profileSlug);
                   const profileLocked = Boolean(profileSlug && !canUseArtistAccess);
+                  const profileId = profile.id ? String(profile.id) : "";
+                  const isVenueProfile = profile.profile_type === "venue";
+                  const profilePublicHref = profileSlug ? `/artists/${profileSlug}` : "";
+                  const profileEditHref = profileSlug ? `/artists/edit/${profileSlug}` : "";
+                  const eventSubmissionHref = profileId ? `/eventSubmission?venueProfileId=${profileId}` : "/eventSubmission";
+                  const bulkImportHref = profileId ? `/admin/import?profile=${profileId}` : "/admin/import";
                   return (
                     <div key={profile.id || profileSlug} className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
                       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -1071,7 +1077,7 @@ const textareaClasses =
                         </div>
                         <div className="flex flex-col gap-2 sm:flex-row">
                           <button
-                            onClick={() => router.push(`/artists/${profileSlug}`)}
+                            onClick={() => router.push(profilePublicHref)}
                             disabled={!canVisitProfile}
                             title={profileLocked ? "Visitors currently see a blurred version until you reactivate Alpine Pro." : "View your public page"}
                             className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold ${
@@ -1085,14 +1091,14 @@ const textareaClasses =
                             {profileLocked ? "View page (locked preview)" : "View Public Page"}
                           </button>
                           <button
-                            onClick={() => router.push(`/artists/edit/${profileSlug}`)}
+                            onClick={() => router.push(profileEditHref)}
                             disabled={!profileSlug}
                             className="inline-flex items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/60 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             Manage Pro Page
                           </button>
                           <button
-                            onClick={() => router.push(`/admin/import?profile=${profile.id || ''}`)}
+                            onClick={() => router.push(bulkImportHref)}
                             disabled={!profile.id}
                             className="inline-flex items-center justify-center rounded-lg border border-emerald-400/50 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-100 hover:border-emerald-300 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                           >
@@ -1103,6 +1109,53 @@ const textareaClasses =
                       <p className="text-xs text-slate-500">
                         Alpine Pro value tools: profile analytics, completeness guidance, event claiming, embeds, booking workflows, and bulk show intake.
                       </p>
+
+                      {isVenueProfile && (
+                        <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+                          <div className="flex flex-col gap-1">
+                            <p className="text-sm font-semibold text-emerald-100">Venue tools</p>
+                            <p className="text-xs leading-5 text-emerald-50/70">
+                              Use this venue as the default for faster show entry, weekly imports, and booking-room updates.
+                            </p>
+                          </div>
+                          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                            <Link
+                              href={eventSubmissionHref}
+                              className="rounded-lg border border-emerald-300/50 bg-slate-950/50 px-3 py-2 text-center text-xs font-semibold text-emerald-100 hover:border-emerald-200 hover:bg-emerald-500/20"
+                            >
+                              Fast add show
+                            </Link>
+                            <Link
+                              href={bulkImportHref}
+                              className="rounded-lg border border-emerald-300/50 bg-slate-950/50 px-3 py-2 text-center text-xs font-semibold text-emerald-100 hover:border-emerald-200 hover:bg-emerald-500/20"
+                            >
+                              Import weekly schedule
+                            </Link>
+                            <Link
+                              href={profileEditHref || "#"}
+                              aria-disabled={!profileEditHref}
+                              className={`rounded-lg border px-3 py-2 text-center text-xs font-semibold ${
+                                profileEditHref
+                                  ? "border-emerald-300/50 bg-slate-950/50 text-emerald-100 hover:border-emerald-200 hover:bg-emerald-500/20"
+                                  : "pointer-events-none border-slate-700 bg-slate-950/40 text-slate-500"
+                              }`}
+                            >
+                              Room + booking details
+                            </Link>
+                            <Link
+                              href={profilePublicHref || "#"}
+                              aria-disabled={!profilePublicHref}
+                              className={`rounded-lg border px-3 py-2 text-center text-xs font-semibold ${
+                                profilePublicHref
+                                  ? "border-emerald-300/50 bg-slate-950/50 text-emerald-100 hover:border-emerald-200 hover:bg-emerald-500/20"
+                                  : "pointer-events-none border-slate-700 bg-slate-950/40 text-slate-500"
+                              }`}
+                            >
+                              View venue page
+                            </Link>
+                          </div>
+                        </div>
+                      )}
 
                       {!profile.is_approved && (
                         <div className="rounded-lg border border-amber-400/60 bg-amber-500/10 p-4 text-sm text-amber-100">
