@@ -103,8 +103,9 @@ const AdminPromoterPacketPage = () => {
         <style>{`
           .weekly-poster-print-page svg {
             display: block;
-            width: 100%;
-            height: auto;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
           }
           @media print {
             body * { visibility: hidden !important; }
@@ -230,7 +231,7 @@ const AdminPromoterPacketPage = () => {
             <div className="mt-6 overflow-auto rounded-2xl border border-amber-500/30 bg-black/50 p-4">
               <div
                 id="weekly-poster-print"
-                className="mx-auto flex w-full max-w-[520px] flex-col gap-6"
+                className="mx-auto flex w-full max-w-full flex-col gap-6 sm:max-w-[620px]"
               >
                 {posterSvgs.map((posterSvg, index) => (
                   <div

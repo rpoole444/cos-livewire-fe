@@ -5,8 +5,8 @@ import { Event } from '@/interfaces/interfaces';
 export const POSTER_WIDTH = 1080;
 export const POSTER_HEIGHT = 1350;
 
-const POSTER_CONTENT_TOP = 378;
-const POSTER_CONTENT_BOTTOM = 1148;
+const POSTER_CONTENT_TOP = 410;
+const POSTER_CONTENT_BOTTOM = 1118;
 
 const escapeXml = (value: string) =>
   value
@@ -159,11 +159,11 @@ const buildPosterSvgPage = (
   pageCount: number,
 ) => {
   const pageLabel = pageCount > 1
-    ? `<text x="540" y="1178" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#F4E7B8">Page ${pageNumber} of ${pageCount}</text>`
+    ? `<text x="540" y="1158" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#F4E7B8">Page ${pageNumber} of ${pageCount}</text>`
     : '';
 
   return `
-<svg xmlns="http://www.w3.org/2000/svg" width="${POSTER_WIDTH}" height="${POSTER_HEIGHT}" viewBox="0 0 ${POSTER_WIDTH} ${POSTER_HEIGHT}">
+<svg xmlns="http://www.w3.org/2000/svg" width="${POSTER_WIDTH}" height="${POSTER_HEIGHT}" viewBox="0 0 ${POSTER_WIDTH} ${POSTER_HEIGHT}" style="display:block;width:100%;height:auto;max-width:100%;">
   <defs>
     <radialGradient id="sun" cx="50%" cy="18%" r="65%">
       <stop offset="0%" stop-color="#263F38"/>
@@ -191,14 +191,14 @@ const buildPosterSvgPage = (
     return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#C9962E" stroke-width="3"/>`;
   }).join('')}
   <text x="540" y="150" text-anchor="middle" font-family="Georgia, serif" font-size="30" font-weight="700" fill="#F4E7B8">AGG</text>
-  <text x="540" y="226" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="800" letter-spacing="8" fill="#9FC8BF" stroke="#0B0C09" stroke-width="1.5" paint-order="stroke">THIS WEEK IN LIVE MUSIC</text>
+  <text x="540" y="226" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="19" font-weight="800" letter-spacing="8" fill="#CDEBE5" stroke="#050806" stroke-width="2" paint-order="stroke">THIS WEEK IN LIVE MUSIC</text>
   <text x="540" y="290" text-anchor="middle" font-family="Georgia, serif" font-size="58" font-weight="700" fill="#E0B861" stroke="#0B0C09" stroke-width="2" paint-order="stroke">Front Range Shows</text>
   <text x="540" y="335" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#F4E7B8" stroke="#0B0C09" stroke-width="1.5" paint-order="stroke">${escapeXml(`${weekStart.format('MMM D')} - ${weekEnd.format('MMM D')}`)}</text>
   ${renderPosterRows(rows)}
   ${pageLabel}
-  <line x1="190" y1="1220" x2="890" y2="1220" stroke="#C9962E" stroke-width="2"/>
-  <text x="540" y="1258" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#E0B861">ALPINEGROOVEGUIDE.COM</text>
-  <text x="540" y="1286" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="800" letter-spacing="4" fill="#9FC8BF" stroke="#0B0C09" stroke-width="1.5" paint-order="stroke">LOCAL MUSIC - HUMAN CURATED</text>
+  <line x1="190" y1="1202" x2="890" y2="1202" stroke="#C9962E" stroke-width="2"/>
+  <text x="540" y="1240" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="700" fill="#E0B861">ALPINEGROOVEGUIDE.COM</text>
+  <text x="540" y="1268" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="800" letter-spacing="4" fill="#CDEBE5" stroke="#050806" stroke-width="2" paint-order="stroke">LOCAL MUSIC - HUMAN CURATED</text>
 </svg>`;
 };
 

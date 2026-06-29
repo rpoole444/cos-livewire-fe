@@ -49,8 +49,9 @@ const WeeklyPosterPage = () => {
         <style>{`
           .weekly-poster-public svg {
             display: block;
-            width: 100%;
-            height: auto;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
           }
         `}</style>
       </Head>
@@ -98,7 +99,7 @@ const WeeklyPosterPage = () => {
             </div>
 
             <div className="rounded-3xl border border-amber-500/30 bg-black/50 p-3 sm:p-5">
-              <div className="mx-auto flex w-full max-w-[520px] flex-col gap-6">
+              <div className="mx-auto flex w-full max-w-full flex-col gap-6 sm:max-w-[620px]">
                 {posterSvgs.map((posterSvg, index) => (
                   <div
                     key={index}
