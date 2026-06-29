@@ -35,6 +35,28 @@ type ImportEvent = {
   promoted_event_id?: number | string | null;
   artist_profile_id?: number | string | null;
   venue_profile_id?: number | string | null;
+  duplicate_candidates?: Array<{
+    level: 'exact' | 'likely' | 'possible' | string;
+    score?: number;
+    reason?: string | null;
+    event?: {
+      id: number | string;
+      title?: string | null;
+      slug?: string | null;
+      date?: string | null;
+      start_time?: string | null;
+      venue_name?: string | null;
+      location?: string | null;
+      source_label?: string | null;
+    } | null;
+  }>;
+  artist_suggestions?: Array<{
+    id: number | string;
+    display_name: string;
+    slug?: string | null;
+    home_region?: string | null;
+    score?: number;
+  }>;
 };
 
 type BatchPayload = {
@@ -200,10 +222,16 @@ const AdminImportBatchPage = () => {
       poster: event.poster || '',
       genre: event.genre || '',
       age_policy: event.age_policy || '',
+      artist_profile_id: event.artist_profile_id || '',
+      venue_profile_id: event.venue_profile_id || '',
     });
   };
 
-  const saveEdit = async (event: ImportEvent) => {
+  const patchImportEvent = async (
+    event: ImportEvent,
+    payload: Record<string, unknown>,
+    successMessage = 'Row updated.',
+  ) => {
     if (!apiBasePath) return;
     setActionKey(`save-${event.id}`);
     setStatusMessage(null);
@@ -213,19 +241,7 @@ const AdminImportBatchPage = () => {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          date: draft.date,
-          time: draft.time,
-          venue: draft.venue,
-          artist_display: draft.artist_display,
-          title: draft.title,
-          description: draft.description,
-          website: draft.website,
-          website_link: draft.website_link,
-          poster: draft.poster,
-          genre: draft.genre,
-          age_policy: draft.age_policy,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -234,7 +250,7 @@ const AdminImportBatchPage = () => {
       updateEventInState(data);
       setEditingId(null);
       setDraft({});
-      setStatusMessage('Row updated.');
+      setStatusMessage(successMessage);
       setStatusTone('success');
     } catch (error) {
       console.error('Import row update failed', error);
@@ -243,6 +259,28 @@ const AdminImportBatchPage = () => {
     } finally {
       setActionKey(null);
     }
+  };
+
+  const saveEdit = async (event: ImportEvent) => {
+    await patchImportEvent(event, {
+      date: draft.date,
+      time: draft.time,
+      venue: draft.venue,
+      artist_display: draft.artist_display,
+      title: draft.title,
+      description: draft.description,
+      website: draft.website,
+      website_link: draft.website_link,
+      poster: draft.poster,
+      genre: draft.genre,
+      age_policy: draft.age_policy,
+      artist_profile_id: draft.artist_profile_id,
+      venue_profile_id: draft.venue_profile_id,
+    });
+  };
+
+  const attachArtistSuggestion = async (event: ImportEvent, artistId: number | string) => {
+    await patchImportEvent(event, { artist_profile_id: artistId }, 'Artist profile attached to staged row.');
   };
 
   const promoteBatch = async () => {
@@ -420,6 +458,8 @@ const AdminImportBatchPage = () => {
                               ['poster', 'Poster URL'],
                               ['genre', 'Genre / tags'],
                               ['age_policy', 'Age policy'],
+                              ['artist_profile_id', 'Artist profile ID'],
+                              ['venue_profile_id', 'Venue profile ID'],
                             ].map(([field, label]) => (
                               <label key={field} className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                                 {label}
@@ -451,6 +491,105 @@ const AdminImportBatchPage = () => {
                               {event.artist_display || event.artist ? ` • ${event.artist_display || event.artist}` : ''}
                             </p>
                             {event.description && <p className="mt-3 text-sm text-slate-400">{event.description}</p>}
+                            {Boolean(event.duplicate_candidates?.length || event.artist_suggestions?.length) && (
+                              <div className="mt-4 rounded-2xl border border-amber-400/25 bg-amber-500/10 p-3">
+                                <div className="flex flex-col gap-4 xl:flex-row">
+                                  {Boolean(event.duplicate_candidates?.length) && (
+                                    <div className="flex-1">
+                                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-amber-200">
+                                        Duplicate candidates
+                                      </p>
+                                      <div className="mt-2 space-y-2">
+                                        {event.duplicate_candidates!.slice(0, 3).map((candidate) => (
+                                          <div
+                                            key={`${event.id}-${candidate.event?.id}-${candidate.level}`}
+                                            className="rounded-xl border border-amber-400/25 bg-slate-950/70 p-3 text-xs text-slate-300"
+                                          >
+                                            <div className="flex flex-wrap items-center gap-2">
+                                              <span className="rounded-full border border-amber-300/50 px-2 py-0.5 font-semibold uppercase text-amber-100">
+                                                {candidate.level === 'exact'
+                                                  ? 'High confidence duplicate'
+                                                  : candidate.level === 'likely'
+                                                    ? 'Likely duplicate'
+                                                    : 'Possible duplicate'}
+                                              </span>
+                                              {candidate.score !== undefined && (
+                                                <span className="text-slate-500">
+                                                  {Math.round(Number(candidate.score) * 100)}% match
+                                                </span>
+                                              )}
+                                            </div>
+                                            <p className="mt-2 font-semibold text-slate-100">
+                                              {candidate.event?.title || 'Existing event'}
+                                            </p>
+                                            <p className="mt-1 text-slate-400">
+                                              {[candidate.event?.date, candidate.event?.start_time?.slice(0, 5), candidate.event?.venue_name || candidate.event?.location]
+                                                .filter(Boolean)
+                                                .join(' • ')}
+                                            </p>
+                                            <div className="mt-2 flex flex-wrap gap-2">
+                                              {candidate.event?.slug && (
+                                                <Link
+                                                  href={`/eventRouter/${candidate.event.slug}`}
+                                                  target="_blank"
+                                                  className="font-semibold text-amber-100 underline-offset-4 hover:underline"
+                                                >
+                                                  View existing
+                                                </Link>
+                                              )}
+                                              {status !== 'rejected' && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => acceptOrReject(event, 'reject')}
+                                                  disabled={disabled}
+                                                  className="font-semibold text-rose-200 underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                                                >
+                                                  Reject staged duplicate
+                                                </button>
+                                              )}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {Boolean(event.artist_suggestions?.length) && (
+                                    <div className="flex-1">
+                                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">
+                                        Likely artist matches
+                                      </p>
+                                      <div className="mt-2 space-y-2">
+                                        {event.artist_suggestions!.map((artist) => (
+                                          <div
+                                            key={`${event.id}-artist-${artist.id}`}
+                                            className="rounded-xl border border-cyan-400/25 bg-slate-950/70 p-3 text-xs text-slate-300"
+                                          >
+                                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                              <div>
+                                                <p className="font-semibold text-slate-100">{artist.display_name}</p>
+                                                <p className="text-slate-500">
+                                                  Profile #{artist.id}
+                                                  {artist.score !== undefined ? ` • ${Math.round(Number(artist.score) * 100)}% match` : ''}
+                                                </p>
+                                              </div>
+                                              <button
+                                                type="button"
+                                                onClick={() => attachArtistSuggestion(event, artist.id)}
+                                                disabled={disabled || String(event.artist_profile_id || '') === String(artist.id)}
+                                                className="rounded-full border border-cyan-300/60 px-3 py-1 font-semibold text-cyan-100 transition hover:bg-cyan-400/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                              >
+                                                {String(event.artist_profile_id || '') === String(artist.id) ? 'Attached' : 'Attach'}
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
                             <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/50 p-3">
                               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">Matching signals</p>
                               <div className="mt-2 flex flex-wrap gap-2 text-xs">
