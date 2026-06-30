@@ -574,6 +574,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
     const shellLocation = venueFullAddress || venueLocation || getRegionLabel(artist.home_region);
     const shellDescription = artist.bio || `${artist.display_name} is an unclaimed venue listing on Alpine Groove Guide.`;
     const shellImage = artist.profile_image || defaultSocialImage;
+    const shellTeaserEvents = (artist.events || []).slice(0, 5);
 
     return (
       <>
@@ -661,18 +662,89 @@ const ArtistProfilePage = ({ artist }: Props) => {
                   details, embeds, and enhanced profile features unlock after the venue is claimed and completed.
                 </div>
 
+                <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-200">
+                        Public teaser schedule
+                      </p>
+                      <h2 className="mt-2 text-xl font-semibold text-white">Upcoming at this venue</h2>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Showing up to 5 upcoming shows
+                    </p>
+                  </div>
+
+                  {shellTeaserEvents.length ? (
+                    <div className="mt-4 space-y-3">
+                      {shellTeaserEvents.map((event) => {
+                        const dateLine = formatEventDateLine(event);
+                        const ticketUrl = normalizeExternalUrl(event.website_link);
+
+                        return (
+                          <div
+                            key={event.id}
+                            className="rounded-xl border border-slate-800 bg-slate-900/70 p-3 transition hover:border-emerald-400/50"
+                          >
+                            <div className="flex gap-3">
+                              <Link href={`/eventRouter/${event.slug}`} className="shrink-0">
+                                <EventPoster
+                                  posterUrl={event.display_image_url || event.poster}
+                                  title={event.title}
+                                  variant="square"
+                                  fit={event.source || event.source_label ? 'contain' : 'cover'}
+                                  className="h-20 w-20"
+                                />
+                              </Link>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-300">
+                                  {dateLine}
+                                </p>
+                                <Link
+                                  href={`/eventRouter/${event.slug}`}
+                                  className="mt-1 block text-sm font-semibold leading-tight text-white underline-offset-4 hover:underline"
+                                >
+                                  {event.title}
+                                </Link>
+                                {(event.venue_name || event.location) && (
+                                  <p className="mt-1 text-xs text-slate-400">
+                                    {[event.venue_name, event.location].filter(Boolean).join(' · ')}
+                                  </p>
+                                )}
+                                {ticketUrl && (
+                                  <a
+                                    href={ticketUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="mt-2 inline-flex text-xs font-semibold text-amber-100 underline-offset-4 hover:underline"
+                                  >
+                                    Tickets / info
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-sm leading-6 text-slate-400">
+                      No upcoming shows listed yet. Claim this venue to add and manage your schedule.
+                    </p>
+                  )}
+                </div>
+
                 <div className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 p-5">
                   <p className="text-xs font-black uppercase tracking-[0.24em] text-emerald-200">Manage this venue?</p>
-                  <h2 className="mt-2 text-xl font-semibold text-white">Claim this venue page</h2>
+                  <h2 className="mt-2 text-xl font-semibold text-white">Is this your venue?</h2>
                   <p className="mt-2 text-sm leading-6 text-emerald-50/80">
-                    Keep the existing listing, then add venue photos, booking details, calendar embeds, room info,
-                    and faster event submission tools from your account.
+                    Claim this page to manage your profile, show your full schedule, and embed your calendar anywhere.
                   </p>
                   <Link
                     href={shellClaimHref}
                     className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-emerald-400 px-4 py-3 text-sm font-black text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-300 sm:w-auto"
                   >
-                    Claim / complete venue page
+                    Claim this venue
                   </Link>
                   <p className="mt-3 text-xs leading-5 text-emerald-50/60">
                     You&apos;ll need a free account, a venue image, and basic address details to submit the claim.
