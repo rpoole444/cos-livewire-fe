@@ -11,6 +11,7 @@ import { getPendingArtists } from '@/pages/api/artists';
 import { getAdminSummary, getEventClaimRequests } from '@/pages/api/route';
 import { useState } from 'react';
 import { CalendarCheck, CheckCircle2, ExternalLink, FileDown, Handshake, ImagePlus, LogOut, Mail, Music2, ShieldCheck, UploadCloud, Users } from 'lucide-react';
+import { parseLocalDayjs } from '@/util/dateHelper';
 
 interface AdminSummary {
   counts: {
@@ -46,9 +47,9 @@ interface AdminSummary {
 
 const formatDate = (value?: string) => {
   if (!value) return 'Date TBA';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const parsed = parseLocalDayjs(value);
+  if (!parsed.isValid()) return value;
+  return parsed.format('MMM D');
 };
 
 const formatDateTime = (value?: string) => {

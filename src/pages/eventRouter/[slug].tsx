@@ -17,6 +17,7 @@ import { useRouter } from "next/router";
 import { deleteEvent, fetchEventDetailsBySlug } from "../api/route";
 import { canDeleteEvent, canManageEvent } from "@/util/eventPermissions";
 import { shouldShowPublicClaimCta } from "@/util/eventTrust";
+import { parseLocalDayjs } from "@/util/dateHelper";
 
 type EventClaimStatus = {
   id: number;
@@ -107,7 +108,12 @@ const EventDetailPage = ({ event, events }: Props) => {
     ? currentEvent.description.slice(0, 180)
     : [
         currentEvent.venue_name || currentEvent.location,
-        currentEvent.date ? new Date(currentEvent.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : null,
+        currentEvent.date
+          ? (() => {
+              const parsed = parseLocalDayjs(currentEvent.date);
+              return parsed.isValid() ? parsed.format("MMMM D, YYYY") : null;
+            })()
+          : null,
       ].filter(Boolean).join(" • ") || "Discover this Front Range live music event on Alpine Groove Guide.";
 
   useEffect(() => {

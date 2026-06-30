@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getEventClaimRequests, reviewEventClaim } from "@/pages/api/route";
+import { parseLocalDayjs } from "@/util/dateHelper";
 
 interface EventClaimRequest {
   id: number;
@@ -36,9 +37,9 @@ interface EventClaimReviewProps {
 
 const formatDate = (value?: string) => {
   if (!value) return "Date TBA";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const date = parseLocalDayjs(value);
+  if (!date.isValid()) return value;
+  return date.format("MMM D, YYYY");
 };
 
 const EventClaimReview = ({ onCountChange }: EventClaimReviewProps) => {

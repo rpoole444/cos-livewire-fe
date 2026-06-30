@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { AlertTriangle, CheckCircle2, ExternalLink, ImagePlus, Loader2, RefreshCcw, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { parseLocalDayjs } from '@/util/dateHelper';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
@@ -130,9 +131,9 @@ const isRemoteUrl = (value: string) => /^https?:\/\//i.test(value);
 
 const formatDate = (value?: string) => {
   if (!value) return 'Date TBA';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const parsed = parseLocalDayjs(value);
+  if (!parsed.isValid()) return value;
+  return parsed.format('MMM D, YYYY');
 };
 
 const countApplyItems = (approvals: Approvals) =>

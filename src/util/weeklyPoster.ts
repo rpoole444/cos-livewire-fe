@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import { getRegionLabel } from '@/constants/regions';
 import { Event } from '@/interfaces/interfaces';
+import { parseLocalDayjs } from '@/util/dateHelper';
 
 export const POSTER_WIDTH = 1080;
 export const POSTER_HEIGHT = 1350;
@@ -36,14 +37,16 @@ const wrapText = (value: string, maxChars: number) => {
 };
 
 const groupEventsByDay = (events: Event[]) => events.reduce<Record<string, Event[]>>((acc, event) => {
-  const key = dayjs(event.date).isValid() ? dayjs(event.date).format('dddd, MMM D') : 'Date TBA';
+  const eventDate = parseLocalDayjs(event.date);
+  const key = eventDate.isValid() ? eventDate.format('dddd, MMM D') : 'Date TBA';
   acc[key] = acc[key] || [];
   acc[key].push(event);
   return acc;
 }, {});
 
 export const formatWeeklyEventLine = (event: Event) => {
-  const date = dayjs(event.date).isValid() ? dayjs(event.date).format('ddd, MMM D') : 'Date TBA';
+  const eventDate = parseLocalDayjs(event.date);
+  const date = eventDate.isValid() ? eventDate.format('ddd, MMM D') : 'Date TBA';
   const time = event.start_time ? dayjs(`1970-01-01T${event.start_time}`).format('h:mm A') : 'time TBA';
   const region = event.region ? ` (${getRegionLabel(event.region)})` : '';
   const venue = event.venue_name || event.location || 'Venue TBA';
@@ -53,10 +56,19 @@ export const formatWeeklyEventLine = (event: Event) => {
 export const getWeeklyEvents = (events: Event[], weekStart: dayjs.Dayjs, weekEnd: dayjs.Dayjs) => (
   events
     .filter((event) => {
-      const parsed = dayjs(event.date);
-      return parsed.isValid() && parsed.isAfter(weekStart.subtract(1, 'day')) && parsed.isBefore(weekEnd);
+      const parsed = parseLocalDayjs(event.date);
+      if (!parsed.isValid()) return false;
+      return (
+        (parsed.isSame(weekStart, 'day') || parsed.isAfter(weekStart, 'day')) &&
+        (parsed.isSame(weekEnd, 'day') || parsed.isBefore(weekEnd, 'day'))
+      );
     })
-    .sort((a, b) => `${a.date} ${a.start_time || ''}`.localeCompare(`${b.date} ${b.start_time || ''}`))
+    .sort((a, b) => {
+      const aDate = parseLocalDayjs(a.date);
+      const bDate = parseLocalDayjs(b.date);
+      return `${aDate.isValid() ? aDate.format('YYYY-MM-DD') : a.date} ${a.start_time || ''}`
+        .localeCompare(`${bDate.isValid() ? bDate.format('YYYY-MM-DD') : b.date} ${b.start_time || ''}`);
+    })
 );
 
 type PosterRow =
