@@ -387,10 +387,16 @@ const AdminVenuePhotosPage = () => {
 
           <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
             <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-              <h2 className="text-xl font-semibold text-white">Scan inputs</h2>
+              <h2 className="text-xl font-semibold text-white">Advanced scan inputs</h2>
               <p className="mt-2 text-sm leading-6 text-slate-400">
-                Paste one local file path or public image URL per line. The dry run uses the filename to suggest venue
-                matches and scans recent events for missing/broken images.
+                Optional helper for batch image cleanup. Paste one public image URL per line in production, or one local
+                file path per line only when the backend is running on your Mac. The dry scan reads the filename, suggests
+                venue profile matches, and also scans recent events for missing/broken images.
+              </p>
+              <p className="mt-2 rounded-2xl border border-slate-700/70 bg-slate-950/70 px-4 py-3 text-xs leading-5 text-slate-300">
+                Example: paste <span className="font-mono text-slate-100">/Users/reidpoole/Downloads/Black Sheep Logo.jpg</span>{' '}
+                for local maintenance, or an <span className="font-mono text-slate-100">https://...</span> image URL for
+                production-safe matching. Nothing writes to the database until you run Preview apply or Apply selected.
               </p>
               <label className="mt-5 block text-sm font-semibold text-slate-200" htmlFor="photo-inputs">
                 Venue image files or URLs

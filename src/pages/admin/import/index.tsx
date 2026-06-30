@@ -25,6 +25,21 @@ type ProfileOption = {
 type ImportMode = 'profile' | 'moondog';
 type OwnerPolicy = 'no_owner' | 'personal_calendar';
 
+type RecentImportBatch = {
+  id: number | string;
+  source: string;
+  source_name?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+  completed_at?: string | null;
+  last_activity_at?: string | null;
+  event_count?: number;
+  pending_count?: number;
+  accepted_count?: number;
+  rejected_count?: number;
+  promoted_count?: number;
+};
+
 type ImportDefaults = {
   artist_profile_id: string;
   venue_profile_id: string;
@@ -83,6 +98,8 @@ const AdminImportPage = () => {
   const [isCreatingShell, setIsCreatingShell] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusTone, setStatusTone] = useState<'success' | 'error' | null>(null);
+  const [recentBatches, setRecentBatches] = useState<RecentImportBatch[]>([]);
+  const [recentLoading, setRecentLoading] = useState(false);
 
   const isAdmin = Boolean(user?.is_admin);
   const selectedProfile = useMemo(
@@ -125,6 +142,27 @@ const AdminImportPage = () => {
     fetchProfileOptions();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, user]);
+
+  const fetchRecentBatches = async () => {
+    if (!user) return;
+    setRecentLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/imports/recent?limit=12`, { credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || 'Unable to load recent imports.');
+      setRecentBatches(Array.isArray(data?.batches) ? data.batches : []);
+    } catch (error) {
+      console.error('Unable to load recent import batches', error);
+    } finally {
+      setRecentLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    fetchRecentBatches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const refreshProfileOptions = async () => {
     const endpoint = isAdmin ? '/api/artists/admin/options' : '/api/artists/mine';
@@ -230,6 +268,94 @@ const AdminImportPage = () => {
           </header>
 
           <section className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">Recent import batches</h2>
+                <p className="mt-2 text-sm text-slate-400">
+                  Parsed rows are saved on the server. If you leave or refresh the review screen, continue from here.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fetchRecentBatches}
+                disabled={recentLoading}
+                className="rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {recentLoading ? 'Refreshing...' : 'Refresh'}
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {recentLoading && !recentBatches.length && (
+                <p className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
+                  Loading saved batches...
+                </p>
+              )}
+              {!recentLoading && !recentBatches.length && (
+                <p className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
+                  No saved import batches yet.
+                </p>
+              )}
+              {recentBatches.map((batch) => {
+                const pending = Number(batch.pending_count || 0);
+                const accepted = Number(batch.accepted_count || 0);
+                const rejected = Number(batch.rejected_count || 0);
+                const promoted = Number(batch.promoted_count || 0);
+                const total = Number(batch.event_count || 0);
+                const isDone = batch.status === 'completed';
+                const label = batch.source_name || (batch.source === 'moondog' ? 'Moondog import' : 'Profile import');
+
+                return (
+                  <Link
+                    key={`${batch.source}-${batch.id}`}
+                    href={`/admin/imports/${batch.id}?source=${batch.source || 'profile'}`}
+                    className="block rounded-2xl border border-slate-800 bg-slate-950/70 p-4 transition hover:border-emerald-400/50 hover:bg-slate-900/80"
+                  >
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold text-slate-100">{label}</p>
+                          <span className="rounded-full border border-slate-700 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-300">
+                            {batch.source}
+                          </span>
+                          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${
+                            isDone
+                              ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-200'
+                              : pending
+                                ? 'border-amber-400/40 bg-amber-500/10 text-amber-200'
+                                : 'border-cyan-400/40 bg-cyan-500/10 text-cyan-200'
+                          }`}>
+                            {isDone ? 'completed' : pending ? 'unfinished' : 'ready'}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Batch #{batch.id}
+                          {batch.created_at ? ` · created ${new Date(batch.created_at).toLocaleString()}` : ''}
+                          {batch.last_activity_at ? ` · last activity ${new Date(batch.last_activity_at).toLocaleString()}` : ''}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 sm:grid-cols-5">
+                        {[
+                          ['Rows', total],
+                          ['Pending', pending],
+                          ['Accepted', accepted],
+                          ['Rejected', rejected],
+                          ['Moved', promoted],
+                        ].map(([itemLabel, value]) => (
+                          <div key={itemLabel} className="rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-2 text-center">
+                            <p className="font-semibold text-slate-100">{value}</p>
+                            <p className="mt-0.5 uppercase tracking-wide text-slate-500">{itemLabel}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
             <h2 className="text-xl font-semibold">Start a new import</h2>
             <p className="mt-2 text-sm text-slate-400">
               The parser accepts the simple Moondog-style format, but your selected profile can prefill images, links,
@@ -277,6 +403,7 @@ const AdminImportPage = () => {
 
                   setStatusMessage('Import started. Redirecting to staged rows...');
                   setStatusTone('success');
+                  fetchRecentBatches();
                   router.push(`/admin/imports/${batchId}?source=${source}`);
                 } catch (error) {
                   console.error('Import request failed:', error);
