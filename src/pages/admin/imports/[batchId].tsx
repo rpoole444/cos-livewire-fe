@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import EventPoster from '@/components/EventPoster';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+const IMPORT_API_BASE = `${API_BASE_URL}/api/imports`;
 
 type ImportEvent = {
   id: number | string;
@@ -142,7 +143,7 @@ const AdminImportBatchPage = () => {
 
   const apiBasePath = useMemo(() => {
     if (!batchId || !source) return null;
-    return `${API_BASE_URL}/api/admin/imports/${source}/${batchId}`;
+    return `${IMPORT_API_BASE}/${source}/${batchId}`;
   }, [batchId, source]);
 
   useEffect(() => {
@@ -187,7 +188,7 @@ const AdminImportBatchPage = () => {
     setStatusMessage(null);
     setStatusTone(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/events/${event.id}/${nextAction}`, {
+      const res = await fetch(`${IMPORT_API_BASE}/${source}/events/${event.id}/${nextAction}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -288,7 +289,7 @@ const AdminImportBatchPage = () => {
     setStatusMessage(null);
     setStatusTone(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}/${batchId}/promote`, {
+      const res = await fetch(`${IMPORT_API_BASE}/${source}/${batchId}/promote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { DEFAULT_REGION, MUSIC_REGIONS } from '@/constants/regions';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
+const IMPORT_API_BASE = `${API_BASE_URL}/api/imports`;
 
 type ProfileOption = {
   id: number;
@@ -38,6 +39,40 @@ type RecentImportBatch = {
   accepted_count?: number;
   rejected_count?: number;
   promoted_count?: number;
+};
+
+type GoogleCalendarOption = {
+  id: string;
+  summary: string;
+  description?: string | null;
+  primary?: boolean;
+  accessRole?: string;
+};
+
+type GooglePreviewEvent = {
+  google_event_id?: string | null;
+  google_calendar_id?: string | null;
+  title: string;
+  artist_display?: string | null;
+  venue_name?: string | null;
+  location?: string | null;
+  description?: string | null;
+  website?: string | null;
+  website_link?: string | null;
+  poster?: string | null;
+  start_at?: string;
+  date: string;
+  start_time: string;
+  end_time?: string | null;
+  raw_block?: string | null;
+  parse_warnings?: string[];
+  duplicate_warnings?: Array<{
+    level?: string;
+    reason?: string;
+    existing_event_id?: number | null;
+    existing_title?: string | null;
+  }>;
+  fingerprint?: string;
 };
 
 type ImportDefaults = {
@@ -100,6 +135,19 @@ const AdminImportPage = () => {
   const [statusTone, setStatusTone] = useState<'success' | 'error' | null>(null);
   const [recentBatches, setRecentBatches] = useState<RecentImportBatch[]>([]);
   const [recentLoading, setRecentLoading] = useState(false);
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleCalendars, setGoogleCalendars] = useState<GoogleCalendarOption[]>([]);
+  const [googleCalendarId, setGoogleCalendarId] = useState('');
+  const [googleDateStart, setGoogleDateStart] = useState(() => new Date().toISOString().slice(0, 10));
+  const [googleDateEnd, setGoogleDateEnd] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 60);
+    return date.toISOString().slice(0, 10);
+  });
+  const [googlePreviewEvents, setGooglePreviewEvents] = useState<GooglePreviewEvent[]>([]);
+  const [selectedGoogleEventIds, setSelectedGoogleEventIds] = useState<string[]>([]);
+  const [googleImporting, setGoogleImporting] = useState(false);
 
   const isAdmin = Boolean(user?.is_admin);
   const selectedProfile = useMemo(
@@ -147,7 +195,7 @@ const AdminImportPage = () => {
     if (!user) return;
     setRecentLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/imports/recent?limit=12`, { credentials: 'include' });
+      const res = await fetch(`${IMPORT_API_BASE}/recent?limit=12`, { credentials: 'include' });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.message || 'Unable to load recent imports.');
       setRecentBatches(Array.isArray(data?.batches) ? data.batches : []);
@@ -163,6 +211,38 @@ const AdminImportPage = () => {
     fetchRecentBatches();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const checkGoogleStatus = async () => {
+      try {
+        const res = await fetch(`${IMPORT_API_BASE}/google/status`, { credentials: 'include' });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok) setGoogleConnected(Boolean(data?.connected));
+      } catch (error) {
+        console.error('Unable to check Google Calendar status', error);
+      }
+    };
+
+    checkGoogleStatus();
+  }, [user]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    const googleState = Array.isArray(router.query.google) ? router.query.google[0] : router.query.google;
+    const message = Array.isArray(router.query.message) ? router.query.message[0] : router.query.message;
+    if (googleState === 'connected') {
+      setGoogleConnected(true);
+      setStatusMessage('Google Calendar connected. Choose a calendar and preview events.');
+      setStatusTone('success');
+      router.replace('/admin/import', undefined, { shallow: true });
+    } else if (googleState === 'error') {
+      setStatusMessage(message || 'Google Calendar connection failed.');
+      setStatusTone('error');
+      router.replace('/admin/import', undefined, { shallow: true });
+    }
+  }, [router]);
 
   const refreshProfileOptions = async () => {
     const endpoint = isAdmin ? '/api/artists/admin/options' : '/api/artists/mine';
@@ -213,6 +293,125 @@ const AdminImportPage = () => {
     }
 
     setImportDefaults(nextDefaults);
+  };
+
+  const selectedGoogleCalendar = useMemo(
+    () => googleCalendars.find((calendar) => calendar.id === googleCalendarId) || null,
+    [googleCalendarId, googleCalendars]
+  );
+
+  const googleSelectedEvents = useMemo(
+    () => googlePreviewEvents.filter((event) => selectedGoogleEventIds.includes(event.google_event_id || event.fingerprint || event.title)),
+    [googlePreviewEvents, selectedGoogleEventIds]
+  );
+
+  const connectGoogleCalendar = async () => {
+    setGoogleLoading(true);
+    setStatusMessage(null);
+    setStatusTone(null);
+    try {
+      const res = await fetch(`${IMPORT_API_BASE}/google/connect`, { credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.authUrl) throw new Error(data?.message || 'Unable to start Google Calendar connection.');
+      window.location.href = data.authUrl;
+    } catch (error) {
+      console.error('Google Calendar connect failed:', error);
+      setStatusMessage(error instanceof Error ? error.message : 'Unable to connect Google Calendar.');
+      setStatusTone('error');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const loadGoogleCalendars = async () => {
+    setGoogleLoading(true);
+    setStatusMessage(null);
+    setStatusTone(null);
+    try {
+      const res = await fetch(`${IMPORT_API_BASE}/google/calendars`, { credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || 'Unable to load Google calendars.');
+      const calendars = Array.isArray(data?.calendars) ? data.calendars : [];
+      setGoogleCalendars(calendars);
+      if (!googleCalendarId && calendars.length) {
+        const primary = calendars.find((calendar: GoogleCalendarOption) => calendar.primary) || calendars[0];
+        setGoogleCalendarId(primary.id);
+      }
+    } catch (error) {
+      console.error('Google Calendar load failed:', error);
+      setStatusMessage(error instanceof Error ? error.message : 'Unable to load Google calendars.');
+      setStatusTone('error');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const previewGoogleEvents = async () => {
+    if (!googleCalendarId || !googleDateStart || !googleDateEnd) return;
+    setGoogleLoading(true);
+    setStatusMessage(null);
+    setStatusTone(null);
+    try {
+      const start = new Date(`${googleDateStart}T00:00:00`);
+      const end = new Date(`${googleDateEnd}T23:59:59`);
+      const params = new URLSearchParams({
+        calendarId: googleCalendarId,
+        calendarSummary: selectedGoogleCalendar?.summary || '',
+        timeMin: start.toISOString(),
+        timeMax: end.toISOString(),
+      });
+      const res = await fetch(`${IMPORT_API_BASE}/google/events?${params.toString()}`, { credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || 'Unable to preview Google Calendar events.');
+      const events = Array.isArray(data?.events) ? data.events : [];
+      setGooglePreviewEvents(events);
+      setSelectedGoogleEventIds(events.map((event: GooglePreviewEvent) => event.google_event_id || event.fingerprint || event.title));
+      setStatusMessage(events.length ? `${events.length} Google Calendar events ready to review.` : 'No Google Calendar events found in that range.');
+      setStatusTone(events.length ? 'success' : null);
+    } catch (error) {
+      console.error('Google Calendar preview failed:', error);
+      setStatusMessage(error instanceof Error ? error.message : 'Unable to preview Google Calendar events.');
+      setStatusTone('error');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
+  const stageGoogleEvents = async () => {
+    if (!googleSelectedEvents.length || googleImporting) return;
+    setGoogleImporting(true);
+    setStatusMessage(null);
+    setStatusTone(null);
+    try {
+      const res = await fetch(`${IMPORT_API_BASE}/google/stage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          calendar_id: googleCalendarId,
+          calendar_summary: selectedGoogleCalendar?.summary || '',
+          events: googleSelectedEvents,
+          defaults: {
+            ...importDefaults,
+            owner_policy: ownerPolicy,
+          },
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || 'Unable to stage Google Calendar events.');
+      const batchId = data?.batchId ?? data?.batch_id ?? data?.id;
+      if (!batchId) throw new Error('Google Calendar import succeeded but no batch ID was returned.');
+      setStatusMessage('Google Calendar events staged. Redirecting to review...');
+      setStatusTone('success');
+      fetchRecentBatches();
+      router.push(`/admin/imports/${batchId}?source=google_calendar`);
+    } catch (error) {
+      console.error('Google Calendar stage failed:', error);
+      setStatusMessage(error instanceof Error ? error.message : 'Unable to stage Google Calendar events.');
+      setStatusTone('error');
+    } finally {
+      setGoogleImporting(false);
+    }
   };
 
   const submitLabel = isSubmitting
@@ -355,6 +554,204 @@ const AdminImportPage = () => {
             </div>
           </section>
 
+          <section className="rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-8 shadow-2xl shadow-emerald-950/20">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-300">Recommended import path</p>
+                <h2 className="mt-2 text-2xl font-semibold text-white">Import from Google Calendar</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-emerald-50/80">
+                  Connect a calendar, choose a date range, preview the events, select only what belongs on Alpine Groove
+                  Guide, then stage them for the same review flow as paste imports.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={googleConnected ? loadGoogleCalendars : connectGoogleCalendar}
+                disabled={googleLoading}
+                className="rounded-full bg-emerald-300 px-5 py-3 text-sm font-black text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {googleLoading
+                  ? 'Working...'
+                  : googleConnected
+                    ? 'Load calendars'
+                    : 'Connect Google Calendar'}
+              </button>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-emerald-400/20 bg-slate-950/70 p-4 text-sm text-slate-300">
+              <p>
+                Privacy note: Alpine Groove Guide requests read-only calendar access. Nothing goes live automatically,
+                and only selected preview rows are saved into the import review queue.
+              </p>
+            </div>
+
+            {googleConnected && (
+              <div className="mt-6 space-y-5">
+                <div className="grid gap-4 md:grid-cols-3">
+                  <label className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+                    Calendar
+                    <select
+                      value={googleCalendarId}
+                      onChange={(event) => setGoogleCalendarId(event.target.value)}
+                      className="mt-1 w-full rounded-xl border border-emerald-500/30 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                    >
+                      {!googleCalendars.length && <option value="">Load calendars first</option>}
+                      {googleCalendars.map((calendar) => (
+                        <option key={calendar.id} value={calendar.id}>
+                          {calendar.summary}{calendar.primary ? ' (Primary)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+                    Start date
+                    <input
+                      type="date"
+                      value={googleDateStart}
+                      onChange={(event) => setGoogleDateStart(event.target.value)}
+                      className="mt-1 w-full rounded-xl border border-emerald-500/30 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                    />
+                  </label>
+                  <label className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+                    End date
+                    <input
+                      type="date"
+                      value={googleDateEnd}
+                      onChange={(event) => setGoogleDateEnd(event.target.value)}
+                      className="mt-1 w-full rounded-xl border border-emerald-500/30 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                    />
+                  </label>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+                    Event ownership
+                    <select
+                      value={ownerPolicy}
+                      onChange={(event) => setOwnerPolicy(event.target.value as OwnerPolicy)}
+                      className="mt-1 w-full rounded-xl border border-emerald-500/30 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                    >
+                      <option value="no_owner">No Owner — Public Calendar Only</option>
+                      <option value="personal_calendar">My Personal Calendar</option>
+                    </select>
+                  </label>
+                  <label className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
+                    Profile defaults
+                    <select
+                      value={selectedProfileId}
+                      onChange={(event) => {
+                        setImportMode('profile');
+                        applySelectedProfile(event.target.value);
+                      }}
+                      className="mt-1 w-full rounded-xl border border-emerald-500/30 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                    >
+                      <option value="">No profile defaults</option>
+                      {profileOptions.map((profile) => (
+                        <option key={profile.id} value={profile.id}>
+                          {profile.display_name} ({profileTypeLabel(profile.profile_type)}{profile.is_shell ? ' shell' : ''})
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={previewGoogleEvents}
+                    disabled={googleLoading || !googleCalendarId || !googleDateStart || !googleDateEnd}
+                    className="rounded-full border border-emerald-300/70 bg-emerald-300/10 px-5 py-2 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-300/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Preview calendar events
+                  </button>
+                  {googlePreviewEvents.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={stageGoogleEvents}
+                      disabled={googleImporting || !googleSelectedEvents.length}
+                      className="rounded-full bg-sun-gold px-5 py-2 text-sm font-black text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {googleImporting ? 'Staging...' : `Stage ${googleSelectedEvents.length} selected event${googleSelectedEvents.length === 1 ? '' : 's'}`}
+                    </button>
+                  )}
+                </div>
+
+                {googlePreviewEvents.length > 0 && (
+                  <div className="rounded-2xl border border-slate-800 bg-slate-950/80">
+                    <div className="flex flex-col gap-3 border-b border-slate-800 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <h3 className="font-semibold text-white">Preview before staging</h3>
+                        <p className="mt-1 text-xs text-slate-400">
+                          Select only the events you want to save. You can edit every row on the next screen.
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedGoogleEventIds(googlePreviewEvents.map((event) => event.google_event_id || event.fingerprint || event.title))}
+                          className="rounded-full border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-slate-500"
+                        >
+                          Select all
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedGoogleEventIds([])}
+                          className="rounded-full border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:border-slate-500"
+                        >
+                          Select none
+                        </button>
+                      </div>
+                    </div>
+                    <div className="max-h-[520px] divide-y divide-slate-800 overflow-y-auto">
+                      {googlePreviewEvents.map((event) => {
+                        const eventId = event.google_event_id || event.fingerprint || event.title;
+                        const checked = selectedGoogleEventIds.includes(eventId);
+                        const warnings = [
+                          ...(event.parse_warnings || []),
+                          ...(event.duplicate_warnings || []).map((warning) => warning.level || 'possible_duplicate'),
+                        ];
+
+                        return (
+                          <label key={eventId} className="flex cursor-pointer gap-3 p-4 transition hover:bg-slate-900/70">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(changeEvent) => {
+                                setSelectedGoogleEventIds((prev) => (
+                                  changeEvent.target.checked
+                                    ? Array.from(new Set([...prev, eventId]))
+                                    : prev.filter((id) => id !== eventId)
+                                ));
+                              }}
+                              className="mt-1 h-4 w-4"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="font-semibold text-slate-100">{event.title}</p>
+                                {warnings.map((warning) => (
+                                  <span key={warning} className="rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-100">
+                                    {warning.replace(/_/g, ' ')}
+                                  </span>
+                                ))}
+                              </div>
+                              <p className="mt-1 text-sm text-slate-400">
+                                {event.date} · {event.start_time?.slice(0, 5)}
+                                {event.venue_name || event.location ? ` · ${event.venue_name || event.location}` : ' · Location missing'}
+                              </p>
+                              {event.description && (
+                                <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">{event.description}</p>
+                              )}
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
           <section className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
             <h2 className="text-xl font-semibold">Start a new import</h2>
             <p className="mt-2 text-sm text-slate-400">
@@ -372,7 +769,7 @@ const AdminImportPage = () => {
 
                 try {
                   const source = isAdmin && importMode === 'moondog' ? 'moondog' : 'profile';
-                  const res = await fetch(`${API_BASE_URL}/api/admin/imports/${source}`, {
+                  const res = await fetch(`${IMPORT_API_BASE}/${source}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
@@ -668,7 +1065,7 @@ const AdminImportPage = () => {
                   setStatusMessage(null);
                   setStatusTone(null);
                   try {
-                    const res = await fetch(`${API_BASE_URL}/api/admin/imports/shell-profiles`, {
+                    const res = await fetch(`${IMPORT_API_BASE}/shell-profiles`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       credentials: 'include',
