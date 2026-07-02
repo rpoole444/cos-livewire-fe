@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
-import { useAuth } from '@/context/AuthContext';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 
@@ -11,20 +9,8 @@ const ForgotPassword: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
- const { user, logout} = useAuth();
- const router = useRouter();
   const formContainerRef = useRef<HTMLDivElement | null>(null);
   const alertRef = useRef<HTMLDivElement | null>(null);
-
- const handleLogout = async () => {
-    try {  
-      // await logoutUser()
-        logout()
-        router.push('/')
-    } catch (err) {
-      console.error(err)
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,58 +58,77 @@ const ForgotPassword: React.FC = () => {
       <Head>
         <title>Forgot Password – Alpine Groove Guide</title>
       </Head>
-    <div className="flex flex-col min-h-screen bg-gray-100">
-      <div
-        className="flex-grow flex items-center justify-center flex-col px-4 text-center"
-        ref={formContainerRef}
-      >
-        <h1 className='text-xl text-black pb-5'>Send a Reset Password Link to your Email Here!</h1>
-        <form onSubmit={handleSubmit} className="bg-white p-8 shadow rounded w-full max-w-md text-left">
-          <label htmlFor="email" className="text-sm font-bold text-gray-600 block">Email</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded mt-1 text-black"
-          />
-          {successMessage && (
-            <div
-              ref={alertRef}
-              role="status"
-              aria-live="polite"
-              className="w-full mt-4 rounded border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
-            >
-              {successMessage}
+      <div className="relative min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-4 py-12">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_60%)]" />
+        <div
+          className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-4"
+          ref={formContainerRef}
+        >
+          <div className="w-full max-w-md space-y-6">
+            <div className="space-y-2 text-center">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-400">
+                Alpine Groove Guide
+              </p>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Reset your password</h1>
+              <p className="text-sm text-slate-400">
+                Enter your account email and we&apos;ll send a secure reset link if the account exists.
+              </p>
             </div>
-          )}
-          {!successMessage && errorMessage && (
-            <div
-              role="alert"
-              aria-live="assertive"
-              className="w-full mt-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+
+            <form
+              onSubmit={handleSubmit}
+              className="rounded-2xl border border-slate-800/80 bg-slate-900/70 p-6 text-left shadow-xl shadow-black/40 backdrop-blur-sm sm:p-8"
             >
-              {errorMessage}
-            </div>
-          )}
-          <button
-            type="submit"
-            className="w-full mt-4 bg-indigo-600 text-white py-2 rounded disabled:cursor-not-allowed disabled:opacity-70"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Sending...' : 'Send Reset Link'}
-          </button>
-        </form>
-        </div>
-         <div className="bg-white p-4 shadow-inner flex justify-between items-center">
-            <Link href="/" className="text-indigo-600 hover:text-indigo-800 transition duration-300 ease-in-out">
-              Go Back to Homepage
-            </Link>
-            <button onClick={handleLogout} className="text-blue-500 hover:text-blue-700 transition duration-300 ease-in-out">
-              Logout
-            </button>
+              <label htmlFor="email" className="text-xs font-medium uppercase tracking-[0.12em] text-slate-300">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-slate-700/80 bg-slate-900/70 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/80 focus:outline-none focus:ring-2 focus:ring-emerald-400/70"
+                placeholder="you@email.com"
+              />
+              {successMessage && (
+                <div
+                  ref={alertRef}
+                  role="status"
+                  aria-live="polite"
+                  className="mt-4 rounded-lg border border-emerald-500/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-100"
+                >
+                  {successMessage}
+                </div>
+              )}
+              {!successMessage && errorMessage && (
+                <div
+                  role="alert"
+                  aria-live="assertive"
+                  className="mt-4 rounded-lg border border-rose-500/60 bg-rose-950/40 px-4 py-3 text-sm text-rose-100"
+                >
+                  {errorMessage}
+                </div>
+              )}
+              <button
+                type="submit"
+                className="mt-5 inline-flex w-full items-center justify-center rounded-lg bg-emerald-500 px-3 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 transition hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Sending...' : 'Send reset link'}
+              </button>
+            </form>
+
+            <p className="text-center text-xs text-slate-400">
+              Remembered it?{' '}
+              <Link href="/LoginPage" className="text-emerald-400 underline-offset-2 hover:text-emerald-300 hover:underline">
+                Back to login
+              </Link>
+            </p>
           </div>
-    </div>
+        </div>
+      </div>
     </>
   );
 };

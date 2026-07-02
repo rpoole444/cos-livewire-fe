@@ -57,7 +57,7 @@ const About = () => {
   const hasArtistProfile = loggedIn && Boolean(artistSlug);
 
   const ctaHref = !loggedIn
-    ? "/login?next=/artist-signup"
+    ? "/LoginPage?redirect=/artist-signup"
     : hasArtistProfile
       ? `/artists/${artistSlug}`
       : "/artist-signup";
@@ -122,7 +122,6 @@ const About = () => {
             height={176}
             className="h-40 w-40 rounded-2xl object-cover shadow-2xl ring-1 ring-slate-700"
           />
-          {/* TODO: Replace portrait image */}
           <div>
             <h2 className="text-2xl font-semibold text-white">Reid Poole</h2>
             <p className="text-slate-400">Musician • Bandleader • Software Engineer</p>

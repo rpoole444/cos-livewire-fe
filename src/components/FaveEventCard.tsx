@@ -1,5 +1,4 @@
 import React from 'react';
-import { useRouter } from 'next/router';
 import { parseMSTDate } from '@/util/dateHelper';
 import Link from 'next/link';
 
@@ -14,29 +13,22 @@ interface EventCardProps {
   formatTime: (timeString: string) => string;
 }
 
-const FaveEventCard: React.FC<EventCardProps> = ({ id, title, genre, venueName, date,slug, startTime, formatTime }) => {
-  const router = useRouter();
-
-  const handleClick = () => {
-    router.push(`/eventRouter/${slug}`);
-  };
-
+const FaveEventCard: React.FC<EventCardProps> = ({ title, genre, venueName, date, slug, startTime, formatTime }) => {
   return (
     <Link
       href={`/eventRouter/${slug}`}
-      className="block p-3 mb-3 bg-gray-100 shadow-sm rounded-md
-                 cursor-pointer hover:bg-gray-200 transition text-sm"
+      className="mb-3 block rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm shadow-sm transition hover:border-emerald-400/60 hover:bg-slate-900"
     >
-      <h3 className="text-base font-semibold text-black truncate mb-1">
+      <h3 className="mb-2 truncate text-base font-semibold text-white">
         {title.length > 30 ? `${title.substring(0, 30)}...` : title}
       </h3>
   
-      <p className="text-gray-700">{genre}</p>
-      <p className="text-gray-600">{venueName}</p>
-      <p className="text-gray-500">
-        📅 {parseMSTDate(date).toLocaleDateString()}
+      {genre && <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">{genre}</p>}
+      <p className="mt-1 text-slate-300">{venueName}</p>
+      <p className="mt-2 text-slate-400">
+        {parseMSTDate(date).toLocaleDateString()}
       </p>
-      <p className="text-gray-500">🕒 {formatTime(startTime)}</p>
+      <p className="text-slate-400">{formatTime(startTime)}</p>
     </Link>
   );  
 };

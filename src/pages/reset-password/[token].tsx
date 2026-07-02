@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const ResetPassword: React.FC = () => {
@@ -63,43 +64,82 @@ const ResetPassword: React.FC = () => {
       <Head>
         <title>Reset Password – Alpine Groove Guide</title>
       </Head>
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <form onSubmit={handleSubmit} className="bg-white p-8 shadow rounded">
-        <label htmlFor="email" className="text-sm font-bold text-gray-600 block">User Email</label>
-        <input
-          type="email"
-          id="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded mt-1 text-black"
-        />
-        <label htmlFor="password" className="text-sm font-bold text-gray-600 block">New Password</label>
-        <input
-          type="password"
-          id="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded mt-1 text-black"
-        />
-        {statusMessage && (
-          <div role="status" className="mt-4 rounded border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
-            {statusMessage}
+      <div className="relative min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 px-4 py-12">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),_transparent_60%)]" />
+        <div className="mx-auto flex min-h-screen max-w-5xl items-center justify-center px-4">
+          <div className="w-full max-w-md space-y-6">
+            <div className="space-y-2 text-center">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-400">
+                Alpine Groove Guide
+              </p>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-50">Choose a new password</h1>
+              <p className="text-sm text-slate-400">
+                Use the same email that received the reset link. Your new password must be at least 8 characters.
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4 rounded-2xl border border-slate-800/80 bg-slate-900/70 p-6 shadow-xl shadow-black/40 backdrop-blur-sm sm:p-8"
+            >
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-xs font-medium uppercase tracking-[0.12em] text-slate-300">
+                  Account email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700/80 bg-slate-900/70 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/80 focus:outline-none focus:ring-2 focus:ring-emerald-400/70"
+                  placeholder="you@email.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-xs font-medium uppercase tracking-[0.12em] text-slate-300">
+                  New password
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  autoComplete="new-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-slate-700/80 bg-slate-900/70 px-3 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-emerald-400/80 focus:outline-none focus:ring-2 focus:ring-emerald-400/70"
+                  placeholder="At least 8 characters"
+                />
+              </div>
+              {statusMessage && (
+                <div role="status" className="rounded-lg border border-emerald-500/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-100">
+                  {statusMessage}
+                </div>
+              )}
+              {errorMessage && (
+                <div role="alert" className="rounded-lg border border-rose-500/60 bg-rose-950/40 px-4 py-3 text-sm text-rose-100">
+                  {errorMessage}
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-500 px-3 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/30 transition hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isSubmitting ? 'Resetting...' : 'Reset password'}
+              </button>
+            </form>
+
+            <p className="text-center text-xs text-slate-400">
+              Need a fresh link?{' '}
+              <Link href="/forgot-password" className="text-emerald-400 underline-offset-2 hover:text-emerald-300 hover:underline">
+                Request another reset email
+              </Link>
+            </p>
           </div>
-        )}
-        {errorMessage && (
-          <div role="alert" className="mt-4 rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            {errorMessage}
-          </div>
-        )}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full mt-4 bg-indigo-600 text-white py-2 rounded disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {isSubmitting ? 'Resetting...' : 'Reset Password'}
-        </button>
-      </form>
-    </div>
+        </div>
+      </div>
     </>
   );
 };
