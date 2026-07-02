@@ -323,6 +323,33 @@ const AdminImportPage = () => {
     }
   };
 
+  const disconnectGoogleCalendar = async () => {
+    setGoogleLoading(true);
+    setStatusMessage(null);
+    setStatusTone(null);
+    try {
+      const res = await fetch(`${IMPORT_API_BASE}/google/disconnect`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || 'Unable to disconnect Google Calendar.');
+      setGoogleConnected(false);
+      setGoogleCalendars([]);
+      setGoogleCalendarId('');
+      setGooglePreviewEvents([]);
+      setSelectedGoogleEventIds([]);
+      setStatusMessage('Google Calendar disconnected. Connect again to choose the correct Google account.');
+      setStatusTone('success');
+    } catch (error) {
+      console.error('Google Calendar disconnect failed:', error);
+      setStatusMessage(error instanceof Error ? error.message : 'Unable to disconnect Google Calendar.');
+      setStatusTone('error');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   const loadGoogleCalendars = async () => {
     setGoogleLoading(true);
     setStatusMessage(null);
@@ -583,10 +610,32 @@ const AdminImportPage = () => {
                 Privacy note: Alpine Groove Guide requests read-only calendar access. Nothing goes live automatically,
                 and only selected preview rows are saved into the import review queue.
               </p>
+              {user?.email && (
+                <p className="mt-2 text-xs text-emerald-100/80">
+                  We will ask Google to show the account chooser for <strong>{user.email}</strong>. If Google opens the
+                  wrong account, use “Switch Google account” below and choose the matching email.
+                </p>
+              )}
             </div>
 
             {googleConnected && (
               <div className="mt-6 space-y-5">
+                <div className="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-950/80 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-white">Google Calendar is connected for this Alpine session.</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Need a different Google account? Disconnect and reconnect; Google will show the account chooser.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={disconnectGoogleCalendar}
+                    disabled={googleLoading}
+                    className="rounded-full border border-slate-600 px-4 py-2 text-xs font-semibold text-slate-100 transition hover:border-emerald-300 hover:text-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Switch Google account
+                  </button>
+                </div>
                 <div className="grid gap-4 md:grid-cols-3">
                   <label className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100">
                     Calendar
