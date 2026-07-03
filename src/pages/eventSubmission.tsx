@@ -502,8 +502,41 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           </p>
         </header>
 
+        <section className="mt-8 grid gap-4 md:grid-cols-3" aria-label="Choose how to add events">
+          <a
+            href="#manual-event-form"
+            className="rounded-3xl border border-emerald-400/45 bg-emerald-500/10 p-5 transition hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-500/15"
+          >
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-emerald-300">Add a single event</p>
+            <h2 className="mt-2 text-xl font-semibold text-white">Manual form</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Best for one show with a poster, description, venue, ticket link, and region.
+            </p>
+          </a>
+          <Link
+            href="/admin/import#bulk-import"
+            className="rounded-3xl border border-slate-700 bg-slate-900/60 p-5 transition hover:-translate-y-0.5 hover:border-sun-gold/70 hover:bg-slate-900"
+          >
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-sun-gold">Paste or upload multiple</p>
+            <h2 className="mt-2 text-xl font-semibold text-white">Bulk import</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Paste weekly schedules, venue calendars, or promoter listings and review every row before it moves forward.
+            </p>
+          </Link>
+          <Link
+            href="/admin/import#google-calendar"
+            className="rounded-3xl border border-slate-700 bg-slate-900/60 p-5 transition hover:-translate-y-0.5 hover:border-cyan-300/70 hover:bg-slate-900"
+          >
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-200">Import from Google Calendar</p>
+            <h2 className="mt-2 text-xl font-semibold text-white">Calendar import</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Connect Google only when you choose this option, preview events, then select what to stage.
+            </p>
+          </Link>
+        </section>
+
         <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
-          <section className="space-y-6">
+          <section id="manual-event-form" className="scroll-mt-24 space-y-6">
             <TrialBanner trial_ends_at={user.trial_ends_at} />
             {communityAccessActive && (
               <div className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-4 text-sm text-emerald-100">

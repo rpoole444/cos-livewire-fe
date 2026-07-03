@@ -581,7 +581,7 @@ const AdminImportPage = () => {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-8 shadow-2xl shadow-emerald-950/20">
+          <section id="google-calendar" className="scroll-mt-24 rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-8 shadow-2xl shadow-emerald-950/20">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.3em] text-emerald-300">Recommended import path</p>
@@ -801,7 +801,7 @@ const AdminImportPage = () => {
             )}
           </section>
 
-          <section className="rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
+          <section id="bulk-import" className="scroll-mt-24 rounded-3xl border border-slate-800/70 bg-slate-950/60 p-8">
             <h2 className="text-xl font-semibold">Start a new import</h2>
             <p className="mt-2 text-sm text-slate-400">
               The parser accepts the simple Moondog-style format, but your selected profile can prefill images, links,

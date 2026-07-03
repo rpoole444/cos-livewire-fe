@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { DEFAULT_REGION, MUSIC_REGIONS, getRegionLabel } from '@/constants/regions';
 import { canManageEvent } from '@/util/eventPermissions';
+import { getEventImageSrc } from '@/util/getEventImageSrc';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const EditEventPage = () => {
@@ -253,7 +254,7 @@ const EditEventPage = () => {
           <div className="mt-4">
             <p className="text-sm text-gray-400 mb-2">Current Poster:</p>
             <Image
-              src={eventData.poster}
+              src={getEventImageSrc(eventData.poster)}
               alt="Poster"
               width={300}
               height={300}

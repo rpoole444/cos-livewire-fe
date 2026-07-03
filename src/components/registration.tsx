@@ -3,6 +3,7 @@
 import "../styles/globals.css";
 import React, { useState } from "react";
 import { registerUser } from "@/pages/api/route";
+import { useRouter } from "next/router";
 
 const genreOptions = [
   "Jazz",
@@ -44,6 +45,8 @@ const RegistrationForm: React.FC<RegistrationProps> = ({ setAuthMode, onSuccess,
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "";
 
   const validatePassword = (pw: string): string => {
     if (pw.length < 8) return "Password must be at least 8 characters.";
@@ -92,6 +95,15 @@ const RegistrationForm: React.FC<RegistrationProps> = ({ setAuthMode, onSuccess,
       setPasswordStrength("");
       setIsSubmitting(false);
     }
+  };
+
+  const startGoogleLogin = () => {
+    const redirect = router.query.redirect ? String(router.query.redirect) : "/UserProfile";
+    const params = new URLSearchParams({ redirect });
+    if (email.trim()) {
+      params.set("login_hint", email.trim().toLowerCase());
+    }
+    window.location.href = `${apiBaseUrl}/api/auth/google/start?${params.toString()}`;
   };
 
   if (registrationSuccess) {
@@ -273,6 +285,22 @@ const RegistrationForm: React.FC<RegistrationProps> = ({ setAuthMode, onSuccess,
       >
         {isSubmitting ? "Creating account…" : "Create account"}
       </button>
+
+      <div className="relative py-1 text-center">
+        <span className="bg-slate-950 px-3 text-[11px] uppercase tracking-[0.18em] text-slate-500">or</span>
+        <div className="absolute left-0 right-0 top-1/2 -z-10 border-t border-slate-800" />
+      </div>
+
+      <button
+        type="button"
+        onClick={startGoogleLogin}
+        className="inline-flex w-full items-center justify-center rounded-lg border border-slate-700/80 bg-slate-900/70 px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-emerald-400/70 hover:bg-slate-900"
+      >
+        Continue with Google
+      </button>
+      <p className="text-center text-[11px] leading-5 text-slate-500">
+        Google signup uses identity only. It does not request Google Calendar access.
+      </p>
 
       <p className="text-center text-xs text-slate-400">
         Already have an account?{" "}

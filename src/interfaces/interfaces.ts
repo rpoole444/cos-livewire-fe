@@ -11,6 +11,11 @@ export interface CustomEvent {
   venue_profile_id?: number | null;
   venue_profile_slug?: string | null;
   venue_profile_user_id?: number | null;
+  venue_profile_website?: string | null;
+  venue_profile_address?: string | null;
+  venue_profile_city?: string | null;
+  venue_profile_state?: string | null;
+  venue_profile_postal_code?: string | null;
   address: string;
   website: string;
   genre: string;
@@ -39,6 +44,7 @@ export interface CustomEvent {
     slug: string;
     profile_type?: string;
     user_id: number;
+    website?: string | null;
   } | null;
   claimed_by_user_email?: string | null;
   can_edit_event?: boolean;
@@ -72,6 +78,11 @@ export interface Event extends CustomEvent {
   venue_profile_id?: number | null;
   venue_profile_slug?: string | null;
   venue_profile_user_id?: number | null;
+  venue_profile_website?: string | null;
+  venue_profile_address?: string | null;
+  venue_profile_city?: string | null;
+  venue_profile_state?: string | null;
+  venue_profile_postal_code?: string | null;
   website: string;
   poster: string | null;
   venue_profile_image?: string | null;
@@ -89,6 +100,7 @@ export interface Event extends CustomEvent {
     slug: string;
     profile_type?: string;
     user_id: number;
+    website?: string | null;
   } | null;
   claimed_by_user_email?: string | null;
   can_edit_event?: boolean;

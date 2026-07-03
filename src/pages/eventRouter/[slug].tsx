@@ -18,6 +18,7 @@ import { deleteEvent, fetchEventDetailsBySlug } from "../api/route";
 import { canDeleteEvent, canManageEvent } from "@/util/eventPermissions";
 import { shouldShowPublicClaimCta } from "@/util/eventTrust";
 import { parseLocalDayjs } from "@/util/dateHelper";
+import { getGoogleMapsUrl } from "@/util/eventLocation";
 
 type EventClaimStatus = {
   id: number;
@@ -115,6 +116,29 @@ const EventDetailPage = ({ event, events }: Props) => {
             })()
           : null,
       ].filter(Boolean).join(" • ") || "Discover this Front Range live music event on Alpine Groove Guide.";
+  const toExternalHref = (value?: string | null) => {
+    const trimmed = String(value || "").trim();
+    if (!trimmed) return null;
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  };
+  const venueDisplayName =
+    currentEvent.venue_profile_display_name ||
+    currentEvent.venue_name ||
+    currentEvent.location ||
+    "Venue TBA";
+  const venueProfileHref = currentEvent.venue_profile_slug ? `/artists/${currentEvent.venue_profile_slug}` : null;
+  const venueWebsiteHref = toExternalHref(currentEvent.venue_profile_website);
+  const artistProfileHref = currentEvent.claimed_artist?.slug ? `/artists/${currentEvent.claimed_artist.slug}` : null;
+  const artistWebsiteHref = toExternalHref(currentEvent.claimed_artist?.website);
+  const eventInfoHref = toExternalHref(currentEvent.website_link || currentEvent.website);
+  const mapsUrl = getGoogleMapsUrl(currentEvent);
+  const missingKeyDetails = [
+    !currentEvent.poster && !currentEvent.display_image_url ? "poster" : null,
+    !currentEvent.website_link ? "ticket link" : null,
+    !currentEvent.description ? "description" : null,
+    !currentEvent.claimed_artist ? "artist profile" : null,
+    !currentEvent.venue_profile_id ? "venue profile" : null,
+  ].filter(Boolean);
 
   useEffect(() => {
     setCurrentEvent(event);
@@ -161,9 +185,8 @@ const EventDetailPage = ({ event, events }: Props) => {
   };
 
   const getDirections = () => {
-    if (!currentEvent?.address) return;
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(currentEvent.address)}`;
-    window.open(url, "_blank");
+    if (!mapsUrl) return;
+    window.open(mapsUrl, "_blank");
   };
 
   const handleClaimEvent = async (claimType: "artist" | "venue") => {
@@ -266,7 +289,99 @@ const EventDetailPage = ({ event, events }: Props) => {
               ← Back to all events
             </Link>
             <EventDetailCard event={currentEvent} user={user} expandDescription />
-            <section className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 via-slate-950/80 to-slate-950 p-6 shadow-xl shadow-black/30 sm:p-8">
+            <section className="rounded-3xl border border-slate-800/80 bg-slate-950/70 p-6 shadow-xl shadow-black/30 sm:p-8">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Profiles + links</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-50">Connect the dots</h2>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {currentEvent.claimed_artist ? (
+                    <span className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-100">
+                      Claimed by artist
+                    </span>
+                  ) : currentEvent.source ? (
+                    <span className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold text-amber-100">
+                      Imported listing
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-100">
+                      Community submitted
+                    </span>
+                  )}
+                  {currentEvent.venue_profile_id && (
+                    <span className="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-3 py-1 text-xs font-semibold text-cyan-100">
+                      Venue linked
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">Venue</p>
+                  <h3 className="mt-2 text-xl font-semibold text-white">{venueDisplayName}</h3>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {venueProfileHref ? (
+                      <Link href={venueProfileHref} className="rounded-full border border-cyan-300/50 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-400/10">
+                        View AGG venue page
+                      </Link>
+                    ) : (
+                      <Link href={venueSignupClaimHref} className="rounded-full border border-cyan-300/50 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:bg-cyan-400/10">
+                        Claim this venue
+                      </Link>
+                    )}
+                    {venueWebsiteHref && (
+                      <a href={venueWebsiteHref} target="_blank" rel="noopener noreferrer" className="rounded-full border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-slate-400">
+                        Venue website
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-200">Artist</p>
+                  <h3 className="mt-2 text-xl font-semibold text-white">
+                    {currentEvent.claimed_artist?.display_name || currentEvent.title}
+                  </h3>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {artistProfileHref ? (
+                      <Link href={artistProfileHref} className="rounded-full border border-emerald-300/50 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-400/10">
+                        View AGG artist page
+                      </Link>
+                    ) : (
+                      <a href="#claim-listing" className="rounded-full border border-emerald-300/50 px-3 py-1.5 text-xs font-semibold text-emerald-100 transition hover:bg-emerald-400/10">
+                        Claim this event
+                      </a>
+                    )}
+                    {artistWebsiteHref && (
+                      <a href={artistWebsiteHref} target="_blank" rel="noopener noreferrer" className="rounded-full border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:border-slate-400">
+                        Artist website
+                      </a>
+                    )}
+                    {eventInfoHref && (
+                      <a href={eventInfoHref} target="_blank" rel="noopener noreferrer" className="rounded-full border border-sun-gold/60 px-3 py-1.5 text-xs font-semibold text-sun-gold transition hover:bg-sun-gold/10">
+                        Event / tickets
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {missingKeyDetails.length > 0 && (
+                <div className="mt-5 rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 text-sm text-amber-50">
+                  <p className="font-semibold">This listing could use more detail.</p>
+                  <p className="mt-1 text-amber-50/80">
+                    Missing: {missingKeyDetails.join(", ")}. Artists and venues can claim or improve this listing so fans get the best version of the show.
+                  </p>
+                  <a href="#claim-listing" className="mt-3 inline-flex rounded-lg bg-amber-300 px-4 py-2 text-xs font-black text-slate-950 transition hover:bg-amber-200">
+                    Improve this listing
+                  </a>
+                </div>
+              )}
+            </section>
+
+            <section id="claim-listing" className="scroll-mt-24 rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 via-slate-950/80 to-slate-950 p-6 shadow-xl shadow-black/30 sm:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-300">Claim / improve listing</p>
               {currentEvent.claimed_artist && currentEvent.venue_profile_id ? (
                 <div className="mt-3 space-y-3">
@@ -511,7 +626,7 @@ const EventDetailPage = ({ event, events }: Props) => {
             <section className="rounded-3xl border border-slate-800/80 bg-slate-950/60 p-6 shadow-xl shadow-black/30 sm:p-8">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Spread the word</p>
               <div className="mt-4 flex flex-wrap gap-3">
-                {currentEvent.address && (
+                {mapsUrl && (
                   <button
                     onClick={getDirections}
                     className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/40 transition hover:-translate-y-[1px] hover:bg-emerald-400 active:translate-y-0 sm:flex-none"

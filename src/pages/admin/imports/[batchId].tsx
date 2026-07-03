@@ -46,9 +46,21 @@ type ImportEvent = {
       slug?: string | null;
       date?: string | null;
       start_time?: string | null;
+      end_time?: string | null;
       venue_name?: string | null;
       location?: string | null;
+      description?: string | null;
+      website?: string | null;
+      website_link?: string | null;
+      poster?: string | null;
+      display_image_url?: string | null;
+      display_image_source?: string | null;
+      is_approved?: boolean | null;
       source_label?: string | null;
+      source?: string | null;
+      artist_profile_id?: number | string | null;
+      venue_profile_id?: number | string | null;
+      venue_profile_display_name?: string | null;
     } | null;
   }>;
   artist_suggestions?: Array<{
@@ -140,6 +152,10 @@ const AdminImportBatchPage = () => {
   const [actionKey, setActionKey] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | string | null>(null);
   const [draft, setDraft] = useState<Partial<ImportEvent>>({});
+  const [compareTarget, setCompareTarget] = useState<{
+    staged: ImportEvent;
+    candidate: NonNullable<ImportEvent['duplicate_candidates']>[number];
+  } | null>(null);
 
   const apiBasePath = useMemo(() => {
     if (!batchId || !source) return null;
@@ -282,6 +298,12 @@ const AdminImportBatchPage = () => {
 
   const attachArtistSuggestion = async (event: ImportEvent, artistId: number | string) => {
     await patchImportEvent(event, { artist_profile_id: artistId }, 'Artist profile attached to staged row.');
+  };
+
+  const openExistingEventEditor = (candidate: NonNullable<ImportEvent['duplicate_candidates']>[number]) => {
+    const existingId = candidate.event?.id;
+    if (!existingId || typeof window === 'undefined') return;
+    window.open(`/events/edit/${existingId}`, '_blank', 'noopener,noreferrer');
   };
 
   const promoteBatch = async () => {
@@ -538,6 +560,13 @@ const AdminImportBatchPage = () => {
                                                   View existing
                                                 </Link>
                                               )}
+                                              <button
+                                                type="button"
+                                                onClick={() => setCompareTarget({ staged: event, candidate })}
+                                                className="font-semibold text-cyan-100 underline-offset-4 hover:underline"
+                                              >
+                                                Compare
+                                              </button>
                                               {status !== 'rejected' && (
                                                 <button
                                                   type="button"
@@ -686,6 +715,114 @@ const AdminImportBatchPage = () => {
               })}
             </div>
           </section>
+
+          {compareTarget && (
+            <section className="rounded-3xl border border-amber-400/40 bg-amber-500/10 p-6 shadow-2xl shadow-black/30">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-200">Compare duplicate</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-white">Staged row vs. existing event</h2>
+                  <p className="mt-2 text-sm text-amber-50/80">
+                    Review the fields before deciding whether this is a new event or a duplicate.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCompareTarget(null)}
+                  className="rounded-full border border-amber-200/40 px-4 py-2 text-xs font-semibold text-amber-50 transition hover:bg-amber-300/10"
+                >
+                  Skip for later
+                </button>
+              </div>
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                {[
+                  {
+                    label: 'Staged import row',
+                    event: compareTarget.staged,
+                    image: compareTarget.staged.display_image_url || compareTarget.staged.poster,
+                    status: compareTarget.staged.status || 'pending',
+                  },
+                  {
+                    label: 'Existing calendar event',
+                    event: compareTarget.candidate.event || {},
+                    image: compareTarget.candidate.event?.display_image_url || compareTarget.candidate.event?.poster,
+                    status: compareTarget.candidate.event?.is_approved ? 'approved/live' : 'not approved',
+                  },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">{item.label}</p>
+                    <div className="mt-4 grid gap-4 sm:grid-cols-[120px_minmax(0,1fr)]">
+                      <EventPoster
+                        posterUrl={item.image}
+                        title={(item.event as any).title || (item.event as any).artist_display || 'Event'}
+                        variant="square"
+                        fit={(item.event as any).display_image_source === 'event_poster' ? 'cover' : 'contain'}
+                        className="w-full"
+                      />
+                      <dl className="space-y-2 text-sm">
+                        {[
+                          ['Event title', (item.event as any).title || (item.event as any).artist_display || '-'],
+                          ['Date', (item.event as any).date || '-'],
+                          ['Start time', ((item.event as any).start_time || (item.event as any).time || '').slice(0, 5) || '-'],
+                          ['Venue', (item.event as any).venue_profile_display_name || (item.event as any).venue_name || (item.event as any).venue || (item.event as any).location || '-'],
+                          ['Artist(s)', (item.event as any).artist_display || (item.event as any).artist || (item.event as any).artist_profile_id || '-'],
+                          ['Source', (item.event as any).source_label || (item.event as any).source || '-'],
+                          ['Ticket URL', (item.event as any).website_link || '-'],
+                          ['Website', (item.event as any).website || '-'],
+                          ['Status', item.status],
+                        ].map(([field, value]) => (
+                          <div key={`${item.label}-${field}`}>
+                            <dt className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{field}</dt>
+                            <dd className="mt-0.5 break-words text-slate-200">{String(value || '-')}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                    <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Description</p>
+                      <p className="mt-1 line-clamp-5 whitespace-pre-line text-sm text-slate-300">
+                        {(item.event as any).description || 'No description.'}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => acceptOrReject(compareTarget.staged, 'accept')}
+                  disabled={actionKey === `accept-${compareTarget.staged.id}` || Boolean(compareTarget.staged.promoted_event_id)}
+                  className="rounded-full bg-emerald-500 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Approve as new event
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openExistingEventEditor(compareTarget.candidate)}
+                  className="rounded-full border border-cyan-300/60 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/10"
+                >
+                  Merge by editing existing event
+                </button>
+                <button
+                  type="button"
+                  onClick={() => acceptOrReject(compareTarget.staged, 'reject')}
+                  disabled={actionKey === `reject-${compareTarget.staged.id}` || Boolean(compareTarget.staged.promoted_event_id)}
+                  className="rounded-full bg-rose-500 px-4 py-2 text-sm font-black text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Reject staged duplicate
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCompareTarget(null)}
+                  className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500"
+                >
+                  Skip for later
+                </button>
+              </div>
+            </section>
+          )}
 
           <Link
             href={canPromote ? '/AdminService' : '/UserProfile'}

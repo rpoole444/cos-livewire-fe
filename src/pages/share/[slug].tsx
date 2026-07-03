@@ -1,5 +1,6 @@
 // pages/share/[slug].tsx
 import { fetchEventDetailsBySlug } from "../api/route";
+import { getEventImageSrc } from "@/util/getEventImageSrc";
 
 export const getServerSideProps = async (context:any) => {
   const slug = context.params?.slug;
@@ -11,10 +12,7 @@ export const getServerSideProps = async (context:any) => {
     return { props: {} };
   }
 
-  const shareImage = event.display_image_url || event.poster;
-  const imageUrl = shareImage?.startsWith("http")
-    ? shareImage
-    : "https://app.alpinegrooveguide.com/alpine_groove_guide_icon.png";
+  const imageUrl = getEventImageSrc(event);
 
   const description =
     event.description?.slice(0, 150) ||

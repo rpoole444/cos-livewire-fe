@@ -3,7 +3,7 @@
 import { useAuth } from "../context/AuthContext";
 import "../styles/globals.css";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 interface LoginFormProps {
@@ -22,6 +22,26 @@ const LoginForm: React.FC<LoginFormProps> = ({
 
   const { user, login } = useAuth();
   const router = useRouter();
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+
+  const startGoogleLogin = () => {
+    const redirect = router.query.redirect
+      ? String(router.query.redirect)
+      : onSuccessRedirect;
+    const params = new URLSearchParams({ redirect });
+    if (email.trim()) {
+      params.set("login_hint", email.trim().toLowerCase());
+    }
+    window.location.href = `${apiBaseUrl}/api/auth/google/start?${params.toString()}`;
+  };
+
+  useEffect(() => {
+    if (!router.isReady || router.query.googleLogin !== "error") return;
+    const message = typeof router.query.message === "string"
+      ? router.query.message
+      : "Google login could not be completed. Please try again or use email and password.";
+    setErrorMessage(message);
+  }, [router.isReady, router.query.googleLogin, router.query.message]);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
   event.preventDefault();
@@ -101,6 +121,20 @@ const LoginForm: React.FC<LoginFormProps> = ({
           Sign in
         </button>
       </form>
+      <div className="relative py-1 text-center">
+        <span className="bg-slate-950 px-3 text-[11px] uppercase tracking-[0.18em] text-slate-500">or</span>
+        <div className="absolute left-0 right-0 top-1/2 -z-10 border-t border-slate-800" />
+      </div>
+      <button
+        type="button"
+        onClick={startGoogleLogin}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-700/80 bg-slate-900/70 px-3 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-emerald-400/70 hover:bg-slate-900"
+      >
+        Continue with Google
+      </button>
+      <p className="text-center text-[11px] leading-5 text-slate-500">
+        Google login only uses your name and email. Calendar access is requested separately if you choose calendar import.
+      </p>
       <div className="text-right">
         <Link href="/forgot-password" className="text-xs text-emerald-400 underline-offset-2 hover:text-emerald-300 hover:underline">
           Forgot your password?

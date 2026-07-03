@@ -8,6 +8,7 @@ import EventPoster from "./EventPoster";
 import { getRegionLabel } from "@/constants/regions";
 import { getEventTrustLabels } from "@/util/eventTrust";
 import EventTrustLabels from "./EventTrustLabels";
+import { getEventLocationDisplay } from "@/util/eventLocation";
 
 interface EventDetailCardProps {
   event: Event;
@@ -53,6 +54,7 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
   const toggleDescription = () => setShowFullDescription(!showFullDescription);
   const descriptionTooLong = event.description && event.description.length > 160;
   const trustLabels = getEventTrustLabels(event);
+  const locationDisplay = getEventLocationDisplay(event);
 
   const formattedPrice = useMemo(() => {
     if (!event.ticket_price) return null;
@@ -107,8 +109,8 @@ const EventDetailCard: React.FC<EventDetailCardProps> = ({
               <span className="text-slate-400">Venue:</span> {event.venue_name}
             </p>
           )}
-          {event.address && (
-            <p className="text-sm text-slate-400">{event.address}</p>
+          {locationDisplay && (
+            <p className="text-sm text-slate-400">{locationDisplay}</p>
           )}
           {formattedPrice && (
             <p className="text-sm text-slate-200">

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import dayjs from 'dayjs';
 import { buildEventDateTime, parseLocalDayjs } from '@/util/dateHelper';
 import { normalizeExternalUrl } from '@/util/profileValueTools';
+import { getEventImageSrc } from '@/util/getEventImageSrc';
 
 interface ScheduleEvent {
   id: number;
@@ -123,7 +124,7 @@ export default function EmbedArtistSchedule({
               const dateLabel = date?.isValid() ? date.format('ddd, MMM D') : 'Date TBA';
               const timeLabel = time?.isValid() ? time.format('h:mm A') : null;
               const venueLine = [event.venue_name, event.location].filter(Boolean).join(' · ');
-              const eventImage = event.display_image_url || event.poster;
+              const eventImage = getEventImageSrc(event);
 
               return (
                 <div
