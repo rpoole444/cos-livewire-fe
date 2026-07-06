@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/context/AuthContext';
 import EventPoster from '@/components/EventPoster';
+import { DEFAULT_REGION, MUSIC_REGIONS, getRegionLabel } from '@/constants/regions';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 const IMPORT_API_BASE = `${API_BASE_URL}/api/imports`;
@@ -36,6 +37,15 @@ type ImportEvent = {
   promoted_event_id?: number | string | null;
   artist_profile_id?: number | string | null;
   venue_profile_id?: number | string | null;
+  region?: string | null;
+  readiness?: {
+    state?: 'ready' | 'has_warning' | 'possible_duplicate' | 'blocked' | string;
+    ready?: boolean;
+    canBulkAcceptWithWarnings?: boolean;
+    blocking?: string[];
+    advisory?: string[];
+    warnings?: string[];
+  };
   duplicate_candidates?: Array<{
     level: 'exact' | 'likely' | 'possible' | string;
     score?: number;
@@ -84,6 +94,8 @@ type BatchPayload = {
 };
 
 type StatusTone = 'success' | 'error';
+type BulkAction = 'accept_selected' | 'reject_selected' | 'delete_selected' | 'clear_broken_posters' | 'replace_poster' | 'apply_edits';
+type ReadinessFilter = 'all' | 'ready' | 'warning' | 'blocked' | 'duplicate' | 'broken_image' | 'missing_venue';
 
 const warningLabel = (warning: string) => {
   const labels: Record<string, string> = {
@@ -114,6 +126,41 @@ const getWarnings = (event: ImportEvent): string[] => {
 };
 
 const getStatus = (event: ImportEvent) => event.status || 'pending';
+
+const readinessLabel = (key: string) => {
+  const labels: Record<string, string> = {
+    missing_title: 'Missing title',
+    missing_date: 'Missing date',
+    missing_start_time: 'Missing start time',
+    missing_venue: 'Missing venue',
+    missing_region: 'Missing region',
+    missing_location_data: 'Missing location details',
+    missing_artist: 'Missing artist',
+    broken_image_url: 'Broken image URL',
+    invalid_website_url: 'Invalid website URL',
+    invalid_ticket_url: 'Invalid ticket URL',
+    possible_duplicate: 'Possible duplicate',
+  };
+  return labels[key] || key.replace(/_/g, ' ');
+};
+
+const getReadiness = (event: ImportEvent) => {
+  const state = event.readiness?.state || 'ready';
+  const warnings = getWarnings(event);
+  const duplicateWarning = warnings.some((warning) => warning.startsWith('duplicate_')) || Boolean(event.duplicate_candidates?.length);
+  const blocking = event.readiness?.blocking || [];
+  const advisory = [...(event.readiness?.advisory || [])];
+  if (duplicateWarning && !advisory.includes('possible_duplicate')) advisory.push('possible_duplicate');
+  return {
+    state: blocking.length ? 'blocked' : duplicateWarning ? 'possible_duplicate' : advisory.length ? 'has_warning' : state,
+    blocking,
+    advisory,
+    ready: blocking.length === 0 && !duplicateWarning && advisory.length === 0,
+    canBulkAcceptWithWarnings: blocking.length === 0,
+  };
+};
+
+const hasBrokenPoster = (event: ImportEvent) => getReadiness(event).blocking.includes('broken_image_url');
 
 const imageSourceLabel = (event: ImportEvent) => {
   if (event.display_image_source === 'event_poster') return 'Event poster';
@@ -152,6 +199,24 @@ const AdminImportBatchPage = () => {
   const [actionKey, setActionKey] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | string | null>(null);
   const [draft, setDraft] = useState<Partial<ImportEvent>>({});
+  const [selectedIds, setSelectedIds] = useState<Array<number | string>>([]);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [readinessFilter, setReadinessFilter] = useState<ReadinessFilter>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortKey, setSortKey] = useState<'date' | 'venue' | 'status' | 'readiness'>('date');
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkDraft, setBulkDraft] = useState<Record<string, string | boolean>>({
+    venue_name: '',
+    region: '',
+    age_policy: '',
+    website: '',
+    website_link: '',
+    poster: '',
+    genre: '',
+    artist_profile_id: '',
+    venue_profile_id: '',
+    clear_poster: false,
+  });
   const [compareTarget, setCompareTarget] = useState<{
     staged: ImportEvent;
     candidate: NonNullable<ImportEvent['duplicate_candidates']>[number];
@@ -332,6 +397,147 @@ const AdminImportBatchPage = () => {
     }
   };
 
+  const filteredEvents = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return [...events]
+      .filter((event) => {
+        const status = getStatus(event);
+        const readiness = getReadiness(event);
+        if (statusFilter !== 'all' && status !== statusFilter) return false;
+        if (readinessFilter === 'ready' && !readiness.ready) return false;
+        if (readinessFilter === 'warning' && !['has_warning', 'possible_duplicate'].includes(readiness.state)) return false;
+        if (readinessFilter === 'blocked' && readiness.state !== 'blocked') return false;
+        if (readinessFilter === 'duplicate' && !readiness.advisory.includes('possible_duplicate')) return false;
+        if (readinessFilter === 'broken_image' && !hasBrokenPoster(event)) return false;
+        if (readinessFilter === 'missing_venue' && !readiness.blocking.includes('missing_venue')) return false;
+        if (!term) return true;
+        return [
+          event.title,
+          event.artist_display,
+          event.artist,
+          event.venue_name,
+          event.venue,
+          event.description,
+          event.region,
+        ].filter(Boolean).join(' ').toLowerCase().includes(term);
+      })
+      .sort((a, b) => {
+        if (sortKey === 'venue') return String(a.venue_name || a.venue || '').localeCompare(String(b.venue_name || b.venue || ''));
+        if (sortKey === 'status') return getStatus(a).localeCompare(getStatus(b));
+        if (sortKey === 'readiness') return getReadiness(a).state.localeCompare(getReadiness(b).state);
+        return String(a.date || a.start_at || '').localeCompare(String(b.date || b.start_at || '')) ||
+          String(a.start_time || a.time || '').localeCompare(String(b.start_time || b.time || ''));
+      });
+  }, [events, readinessFilter, searchTerm, sortKey, statusFilter]);
+
+  const selectedEvents = useMemo(
+    () => events.filter((event) => selectedIds.some((id) => String(id) === String(event.id))),
+    [events, selectedIds],
+  );
+
+  const selectedSummary = useMemo(() => {
+    return selectedEvents.reduce(
+      (summary, event) => {
+        const readiness = getReadiness(event);
+        if (readiness.ready) summary.ready += 1;
+        if (readiness.state === 'blocked') summary.blocked += 1;
+        if (['has_warning', 'possible_duplicate'].includes(readiness.state)) summary.warning += 1;
+        if (readiness.advisory.includes('possible_duplicate')) summary.duplicates += 1;
+        if (hasBrokenPoster(event)) summary.brokenImages += 1;
+        return summary;
+      },
+      { ready: 0, warning: 0, blocked: 0, duplicates: 0, brokenImages: 0 },
+    );
+  }, [selectedEvents]);
+
+  const visibleIds = filteredEvents.map((event) => event.id);
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedIds.some((selectedId) => String(selectedId) === String(id)));
+
+  const toggleSelected = (id: number | string) => {
+    setSelectedIds((prev) =>
+      prev.some((selectedId) => String(selectedId) === String(id))
+        ? prev.filter((selectedId) => String(selectedId) !== String(id))
+        : [...prev, id],
+    );
+  };
+
+  const toggleVisibleSelection = () => {
+    setSelectedIds((prev) => {
+      if (allVisibleSelected) {
+        return prev.filter((id) => !visibleIds.some((visibleId) => String(visibleId) === String(id)));
+      }
+      const next = [...prev];
+      visibleIds.forEach((id) => {
+        if (!next.some((selectedId) => String(selectedId) === String(id))) next.push(id);
+      });
+      return next;
+    });
+  };
+
+  const bulkAction = async (action: BulkAction, options: Record<string, unknown> = {}) => {
+    if (!apiBasePath || selectedIds.length === 0) return;
+    if (action === 'accept_selected') {
+      if (selectedSummary.blocked > 0) {
+        setStatusMessage('Bulk accept is blocked until selected rows have required fields and safe images.');
+        setStatusTone('error');
+        return;
+      }
+      if (selectedSummary.warning > 0 && !window.confirm(`Accept ${selectedIds.length} selected rows with ${selectedSummary.warning} warning(s)?`)) return;
+    }
+    if (action === 'reject_selected' && !window.confirm(`Reject ${selectedIds.length} selected row(s)?`)) return;
+    if (action === 'delete_selected' && !window.confirm(`Delete ${selectedIds.length} staged row(s)? This removes them from the batch.`)) return;
+
+    setActionKey(`bulk-${action}`);
+    setStatusMessage(null);
+    setStatusTone(null);
+    try {
+      const res = await fetch(`${apiBasePath}/events/bulk`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          action,
+          eventIds: selectedIds,
+          allowWarnings: selectedSummary.warning > 0,
+          confirm: action === 'delete_selected',
+          ...options,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || 'Bulk action failed.');
+
+      if (Array.isArray(data.deletedIds) && data.deletedIds.length) {
+        setEvents((prev) => prev.filter((event) => !data.deletedIds.some((id: number | string) => String(id) === String(event.id))));
+        setSelectedIds([]);
+      } else if (Array.isArray(data.events)) {
+        setEvents((prev) => prev.map((event) => {
+          const updated = data.events.find((item: ImportEvent) => String(item.id) === String(event.id));
+          return updated ? { ...event, ...updated } : event;
+        }));
+      }
+
+      setStatusMessage(`Bulk action complete: ${data.updatedCount || 0} updated${data.deletedCount ? `, ${data.deletedCount} deleted` : ''}.`);
+      setStatusTone('success');
+      if (action !== 'delete_selected') setSelectedIds((prev) => prev.filter((id) => !selectedEvents.some((event) => String(event.id) === String(id))));
+      if (action === 'apply_edits') setBulkEditOpen(false);
+    } catch (error) {
+      console.error('Bulk import action failed', error);
+      setStatusMessage(error instanceof Error ? error.message : 'Bulk action failed.');
+      setStatusTone('error');
+    } finally {
+      setActionKey(null);
+    }
+  };
+
+  const applyBulkEdits = () => {
+    const edits = Object.fromEntries(
+      Object.entries(bulkDraft).filter(([, value]) => (
+        typeof value === 'boolean' ? value === true : String(value || '').trim() !== ''
+      )),
+    );
+    bulkAction('apply_edits', { edits });
+  };
+
   const pendingCount = events.filter((event) => getStatus(event) === 'pending').length;
   const acceptedCount = events.filter((event) => getStatus(event) === 'accepted' && !event.promoted_event_id).length;
   const promotedCount = events.filter((event) => event.promoted_event_id).length;
@@ -415,6 +621,194 @@ const AdminImportBatchPage = () => {
               </p>
             )}
 
+            <div className="mt-6 rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_160px_180px_160px]">
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Search
+                  <input
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search title, venue, artist..."
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                  />
+                </label>
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Status
+                  <select
+                    value={statusFilter}
+                    onChange={(event) => setStatusFilter(event.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                  >
+                    <option value="all">All statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                </label>
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Readiness
+                  <select
+                    value={readinessFilter}
+                    onChange={(event) => setReadinessFilter(event.target.value as ReadinessFilter)}
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                  >
+                    <option value="all">All rows</option>
+                    <option value="ready">Ready</option>
+                    <option value="warning">Needs review</option>
+                    <option value="blocked">Blocked</option>
+                    <option value="duplicate">Duplicates</option>
+                    <option value="broken_image">Broken image</option>
+                    <option value="missing_venue">Missing venue</option>
+                  </select>
+                </label>
+                <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Sort
+                  <select
+                    value={sortKey}
+                    onChange={(event) => setSortKey(event.target.value as typeof sortKey)}
+                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100"
+                  >
+                    <option value="date">Date/time</option>
+                    <option value="venue">Venue</option>
+                    <option value="status">Status</option>
+                    <option value="readiness">Readiness</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="mt-4 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <label className="inline-flex items-center gap-2 text-sm font-semibold text-slate-200">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleSelected}
+                    onChange={toggleVisibleSelection}
+                    className="h-4 w-4 rounded border-slate-600 bg-slate-950"
+                  />
+                  Select visible rows ({filteredEvents.length})
+                </label>
+                <div className="flex flex-wrap gap-2 text-xs text-slate-400">
+                  <span>{selectedIds.length} selected</span>
+                  <span>{selectedSummary.ready} ready</span>
+                  <span>{selectedSummary.warning} need review</span>
+                  <span>{selectedSummary.blocked} blocked</span>
+                  <span>{selectedSummary.brokenImages} broken image</span>
+                </div>
+              </div>
+
+              {selectedIds.length > 0 && (
+                <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900/70 p-4">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => bulkAction('accept_selected')}
+                      disabled={Boolean(actionKey) || selectedSummary.blocked > 0}
+                      className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Bulk accept selected
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => bulkAction('reject_selected')}
+                      disabled={Boolean(actionKey)}
+                      className="rounded-full bg-rose-500 px-4 py-2 text-xs font-black text-white transition hover:bg-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Bulk reject selected
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => bulkAction('delete_selected')}
+                      disabled={Boolean(actionKey)}
+                      className="rounded-full border border-rose-400/50 px-4 py-2 text-xs font-black text-rose-100 transition hover:bg-rose-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Delete selected
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => bulkAction('clear_broken_posters')}
+                      disabled={Boolean(actionKey) || selectedSummary.brokenImages === 0}
+                      className="rounded-full border border-amber-300/50 px-4 py-2 text-xs font-black text-amber-100 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Clear broken posters
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBulkEditOpen((value) => !value)}
+                      className="rounded-full border border-cyan-300/50 px-4 py-2 text-xs font-black text-cyan-100 transition hover:bg-cyan-500/10"
+                    >
+                      Bulk edit shared fields
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedIds([])}
+                      className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 transition hover:border-slate-500"
+                    >
+                      Clear selection
+                    </button>
+                  </div>
+                  {selectedSummary.blocked > 0 && (
+                    <p className="mt-3 text-sm text-rose-200">
+                      Bulk accept is disabled because at least one selected row is blocked. Filter by “Blocked” to fix required fields or broken image URLs.
+                    </p>
+                  )}
+
+                  {bulkEditOpen && (
+                    <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
+                      <p className="text-sm font-semibold text-slate-100">Apply only shared fields that should be the same on every selected row.</p>
+                      <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                        <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                          Venue
+                          <input value={String(bulkDraft.venue_name || '')} onChange={(event) => setBulkDraft((prev) => ({ ...prev, venue_name: event.target.value }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100" />
+                        </label>
+                        <label className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                          Region
+                          <select value={String(bulkDraft.region || '')} onChange={(event) => setBulkDraft((prev) => ({ ...prev, region: event.target.value }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100">
+                            <option value="">Leave unchanged</option>
+                            <option value={DEFAULT_REGION}>{getRegionLabel(DEFAULT_REGION)}</option>
+                            {MUSIC_REGIONS.filter((region) => region.slug !== DEFAULT_REGION).map((region) => (
+                              <option key={region.slug} value={region.slug}>{region.label}</option>
+                            ))}
+                          </select>
+                        </label>
+                        {[
+                          ['age_policy', 'Age policy'],
+                          ['website_link', 'Ticket / RSVP link'],
+                          ['website', 'Website'],
+                          ['poster', 'Poster URL'],
+                          ['genre', 'Genre / tags'],
+                          ['artist_profile_id', 'Artist profile ID'],
+                          ['venue_profile_id', 'Venue profile ID'],
+                        ].map(([field, label]) => (
+                          <label key={field} className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                            {label}
+                            <input value={String(bulkDraft[field] || '')} onChange={(event) => setBulkDraft((prev) => ({ ...prev, [field]: event.target.value }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm normal-case tracking-normal text-slate-100" />
+                          </label>
+                        ))}
+                      </div>
+                      <label className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(bulkDraft.clear_poster)}
+                          onChange={(event) => setBulkDraft((prev) => ({ ...prev, clear_poster: event.target.checked }))}
+                          className="h-4 w-4 rounded border-slate-600 bg-slate-950"
+                        />
+                        Clear poster URL on selected rows so venue/source/default fallback can be used.
+                      </label>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button type="button" onClick={applyBulkEdits} disabled={Boolean(actionKey)} className="rounded-full bg-cyan-300 px-4 py-2 text-xs font-black text-slate-950 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-50">
+                          Apply bulk edit to {selectedIds.length} rows
+                        </button>
+                        {String(bulkDraft.poster || '').trim() && (
+                          <button type="button" onClick={() => bulkAction('replace_poster', { edits: { poster: bulkDraft.poster } })} disabled={Boolean(actionKey)} className="rounded-full border border-cyan-300/50 px-4 py-2 text-xs font-black text-cyan-100 transition hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-50">
+                            Replace poster only
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="mt-6 space-y-4">
               {isLoadingEvents && (
                 <p className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-400">
@@ -428,15 +822,27 @@ const AdminImportBatchPage = () => {
                 </p>
               )}
 
-              {events.map((event) => {
+              {filteredEvents.map((event) => {
                 const warnings = getWarnings(event);
                 const status = getStatus(event);
                 const isEditing = String(editingId) === String(event.id);
                 const disabled = actionKey?.endsWith(`-${event.id}`) || Boolean(event.promoted_event_id);
+                const readiness = getReadiness(event);
+                const isSelected = selectedIds.some((id) => String(id) === String(event.id));
 
                 return (
-                  <article key={event.id} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-5">
+                  <article key={event.id} className={`rounded-2xl border bg-slate-950/70 p-5 ${isSelected ? 'border-emerald-400/60' : readiness.state === 'blocked' ? 'border-rose-400/50' : readiness.state === 'possible_duplicate' ? 'border-amber-400/50' : 'border-slate-800'}`}>
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 lg:block">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelected(event.id)}
+                          disabled={Boolean(event.promoted_event_id)}
+                          className="h-4 w-4 rounded border-slate-600 bg-slate-950"
+                        />
+                        <span className="lg:sr-only">Select row</span>
+                      </label>
                       <div className="w-full shrink-0 lg:w-36">
                         <EventPoster
                           posterUrl={event.display_image_url || event.poster}
@@ -456,6 +862,23 @@ const AdminImportBatchPage = () => {
                           <span className="rounded-full border border-slate-700 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300">
                             {status}
                           </span>
+                          <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${
+                            readiness.state === 'blocked'
+                              ? 'border-rose-400/50 bg-rose-500/10 text-rose-200'
+                              : readiness.state === 'possible_duplicate'
+                                ? 'border-amber-400/50 bg-amber-500/10 text-amber-200'
+                                : readiness.state === 'has_warning'
+                                  ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-200'
+                                  : 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200'
+                          }`}>
+                            {readiness.state === 'blocked'
+                              ? 'Blocked'
+                              : readiness.state === 'possible_duplicate'
+                                ? 'Possible duplicate'
+                                : readiness.state === 'has_warning'
+                                  ? 'Needs review'
+                                  : 'Ready'}
+                          </span>
                           {event.promoted_event_id && (
                             <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
                               Moved to review #{event.promoted_event_id}
@@ -464,6 +887,11 @@ const AdminImportBatchPage = () => {
                           {warnings.map((warning) => (
                             <span key={`${event.id}-${warning}`} className="rounded-full border border-amber-400/50 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-200">
                               {warningLabel(warning)}
+                            </span>
+                          ))}
+                          {[...readiness.blocking, ...readiness.advisory].slice(0, 4).map((item) => (
+                            <span key={`${event.id}-ready-${item}`} className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-semibold text-slate-300">
+                              {readinessLabel(item)}
                             </span>
                           ))}
                         </div>
