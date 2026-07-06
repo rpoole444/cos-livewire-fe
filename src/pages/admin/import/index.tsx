@@ -148,8 +148,10 @@ const AdminImportPage = () => {
   const [googlePreviewEvents, setGooglePreviewEvents] = useState<GooglePreviewEvent[]>([]);
   const [selectedGoogleEventIds, setSelectedGoogleEventIds] = useState<string[]>([]);
   const [googleImporting, setGoogleImporting] = useState(false);
+  const [profilesLoaded, setProfilesLoaded] = useState(false);
 
   const isAdmin = Boolean(user?.is_admin);
+  const hasBulkImportAccess = isAdmin || profileOptions.length > 0;
   const selectedProfile = useMemo(
     () => profileOptions.find((profile) => String(profile.id) === selectedProfileId) || null,
     [profileOptions, selectedProfileId]
@@ -166,6 +168,7 @@ const AdminImportPage = () => {
     if (!user) return;
 
     const fetchProfileOptions = async () => {
+      setProfilesLoaded(false);
       try {
         const endpoint = isAdmin ? '/api/artists/admin/options' : '/api/artists/mine';
         const res = await fetch(`${API_BASE_URL}${endpoint}`, { credentials: 'include' });
@@ -184,6 +187,8 @@ const AdminImportPage = () => {
         }
       } catch (error) {
         console.error('Unable to load import profile options', error);
+      } finally {
+        setProfilesLoaded(true);
       }
     };
 
@@ -192,7 +197,7 @@ const AdminImportPage = () => {
   }, [isAdmin, user]);
 
   const fetchRecentBatches = async () => {
-    if (!user) return;
+    if (!user || !hasBulkImportAccess) return;
     setRecentLoading(true);
     try {
       const res = await fetch(`${IMPORT_API_BASE}/recent?limit=12`, { credentials: 'include' });
@@ -207,13 +212,13 @@ const AdminImportPage = () => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !profilesLoaded || !hasBulkImportAccess) return;
     fetchRecentBatches();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, profilesLoaded, hasBulkImportAccess]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !profilesLoaded || !hasBulkImportAccess) return;
 
     const checkGoogleStatus = async () => {
       try {
@@ -226,7 +231,7 @@ const AdminImportPage = () => {
     };
 
     checkGoogleStatus();
-  }, [user]);
+  }, [user, profilesLoaded, hasBulkImportAccess]);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -458,7 +463,7 @@ const AdminImportPage = () => {
     .filter((line) => line && line.includes(','))
     .length;
 
-  if (loading || !user) {
+  if (loading || !user || !profilesLoaded) {
     return (
       <>
         <Head>
@@ -469,6 +474,46 @@ const AdminImportPage = () => {
             <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Import</p>
             <h1 className="mt-2 text-2xl font-semibold">Checking access...</h1>
             <p className="mt-2 text-sm text-slate-400">Log in to bulk-add events with your profile defaults.</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (!hasBulkImportAccess) {
+    return (
+      <>
+        <Head>
+          <title>Bulk Import Access – Alpine Groove Guide</title>
+        </Head>
+        <div className="min-h-screen bg-gray-950 px-6 py-12 text-slate-100">
+          <div className="mx-auto max-w-3xl rounded-3xl border border-slate-800/70 bg-slate-950/70 p-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400">Profile tool</p>
+            <h1 className="mt-3 text-3xl font-semibold">Create a public profile to bulk import events.</h1>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              Bulk imports are for artists, venues, promoters, and admins because imported batches need a public music
+              context and review ownership. Regular listener accounts can still submit a single event.
+            </p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <Link
+                href="/artist-signup"
+                className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 p-4 font-semibold text-emerald-100 transition hover:border-emerald-300"
+              >
+                Create Artist / Promoter Page
+              </Link>
+              <Link
+                href="/venue-signup"
+                className="rounded-2xl border border-sun-gold/40 bg-sun-gold/10 p-4 font-semibold text-sun-gold transition hover:border-sun-gold"
+              >
+                Create Venue Page
+              </Link>
+              <Link
+                href="/eventSubmission"
+                className="rounded-2xl border border-slate-700 bg-slate-900 p-4 font-semibold text-slate-100 transition hover:border-slate-500 sm:col-span-2"
+              >
+                Submit One Event Instead
+              </Link>
+            </div>
           </div>
         </div>
       </>
