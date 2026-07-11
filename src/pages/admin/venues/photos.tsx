@@ -2,156 +2,119 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/router';
-import { AlertTriangle, CheckCircle2, ExternalLink, ImagePlus, Loader2, RefreshCcw, ShieldCheck } from 'lucide-react';
+import {
+  Building2,
+  CheckCircle2,
+  ExternalLink,
+  Loader2,
+  MapPin,
+  RefreshCcw,
+  Search,
+  ShieldCheck,
+} from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { parseLocalDayjs } from '@/util/dateHelper';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
-type PhotoMatch = {
-  file_path: string;
-  filename_hint?: string;
-  suggested_venue?: string;
-  existing_profile_id?: number | null;
+type PossibleMatch = {
+  profile_id: number;
+  display_name: string;
+  slug?: string;
   confidence?: string;
   score?: number;
   reason?: string;
-  current_profile_image?: string | null;
-  proposed_action?: string;
 };
 
-type BrokenEventImage = {
-  event_id: number;
+type SampleEvent = {
+  id: number;
   title?: string;
-  slug?: string;
   date?: string;
   venue_name?: string;
-  venue_profile_id?: number | null;
-  current_poster?: string | null;
-  image_status?: string;
-  reason?: string;
-  recommended_action?: string;
+  address?: string | null;
+  region?: string | null;
 };
 
 type MissingVenue = {
   name: string;
+  normalized_name?: string;
   region?: string | null;
+  regions?: string[];
+  cities?: string[];
+  addresses?: string[];
   event_count?: number;
   confidence?: string;
   recommended_action?: string;
+  reason?: string;
   sample_event_ids?: number[];
-};
-
-type BackfillPreview = {
-  event_id: number;
-  title?: string;
-  slug?: string;
-  venue_name?: string;
-  venue_profile_id?: number | null;
-  display_image_url?: string | null;
-  display_image_source?: string;
-  event_poster_status?: string;
+  sample_events?: SampleEvent[];
+  possible_matches?: PossibleMatch[];
+  latest_date?: string | null;
 };
 
 type DryRunReport = {
   generated_at?: string;
   summary?: {
-    photo_count?: number;
     venue_profile_count?: number;
     scanned_event_count?: number;
-    high_confidence_matches?: number;
-    medium_confidence_matches?: number;
-    needs_review?: number;
-    broken_or_default_event_images?: number;
-    photo_files_checked?: number;
-    venue_photo_matches?: number;
     missing_venue_candidates?: number;
-    broken_event_images?: number;
-    event_image_backfill_candidates?: number;
+    broken_or_default_event_images?: number;
   };
-  photo_matches?: PhotoMatch[];
   missing_venues?: MissingVenue[];
-  broken_event_images?: BrokenEventImage[];
-  event_image_backfill_preview?: BackfillPreview[];
+  event_image_backfill_preview?: Array<{
+    event_id: number;
+    title?: string;
+    venue_name?: string;
+    proposed_display_fallback?: string | null;
+    image_status?: string;
+  }>;
 };
 
 type ApplyResult = {
   execute?: boolean;
-  applied?: {
-    venue_photo_updates?: number;
-    shell_venues_created?: number;
-    event_image_repairs?: number;
-  };
-  preview?: {
-    venue_photo_updates?: number;
-    shell_venues?: number;
-    event_image_repairs?: number;
-  };
-  errors?: string[];
-};
-
-type Approvals = {
-  venue_photo_updates: Array<{
-    profile_id: number;
-    file_path?: string;
-    image_url?: string;
-  }>;
-  shell_venues: Array<{
+  shell_venues_created?: Array<{
     display_name: string;
-    region?: string | null;
+    slug?: string;
+    profile_id?: number;
+    action?: string;
   }>;
-  event_image_repairs: Array<{
-    event_id: number;
-    use_venue_image?: boolean;
-    use_default?: boolean;
+  skipped?: Array<{
+    type?: string;
+    reason?: string;
+    display_name?: string;
+    existing_profile_id?: number;
   }>;
 };
 
-const defaultPhotoInputs = [
-  '/Users/reidpoole/Downloads/pikespeakcenterlogo.avif',
-  '/Users/reidpoole/Downloads/Phil Long Music Hall Logo.svg',
-  '/Users/reidpoole/Downloads/Boulder Theater Logo.webp',
-  '/Users/reidpoole/Downloads/Mission Ballroom Schedule.webp',
-  '/Users/reidpoole/Downloads/RedRocks Logo.png',
-  '/Users/reidpoole/Downloads/Ford Amphitheater hero-logo.png',
-  '/Users/reidpoole/Downloads/Dazzle Logo.webp',
-  '/Users/reidpoole/Downloads/Nocturne Logo.webp',
-  '/Users/reidpoole/Downloads/Mining Exchange Logo.jpg',
-  '/Users/reidpoole/Downloads/Black Sheep Logo.jpg',
-  '/Users/reidpoole/Downloads/Tokki Logo.png',
-].join('\n');
-
-const splitInputs = (value: string) =>
-  value
-    .split(/\n|,/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-const isRemoteUrl = (value: string) => /^https?:\/\//i.test(value);
-
-const formatDate = (value?: string) => {
+const formatDate = (value?: string | null) => {
   if (!value) return 'Date TBA';
   const parsed = parseLocalDayjs(value);
-  if (!parsed.isValid()) return value;
-  return parsed.format('MMM D, YYYY');
+  return parsed.isValid() ? parsed.format('MMM D, YYYY') : value;
 };
 
-const countApplyItems = (approvals: Approvals) =>
-  approvals.venue_photo_updates.length + approvals.shell_venues.length + approvals.event_image_repairs.length;
+const confidenceTone = (confidence?: string) => {
+  if (confidence === 'high') return 'border-emerald-400/40 bg-emerald-500/10 text-emerald-100';
+  if (confidence === 'medium') return 'border-amber-400/40 bg-amber-500/10 text-amber-100';
+  return 'border-slate-700 bg-slate-950/70 text-slate-300';
+};
+
+const candidateKey = (venue: MissingVenue) => venue.normalized_name || venue.name;
 
 const AdminVenuePhotosPage = () => {
   const router = useRouter();
   const { user, loading } = useAuth();
-  const [photoInputs, setPhotoInputs] = useState(defaultPhotoInputs);
-  const [eventLimit, setEventLimit] = useState(250);
+  const [eventLimit, setEventLimit] = useState(2500);
+  const [minEvents, setMinEvents] = useState(1);
+  const [regionFilter, setRegionFilter] = useState('all');
+  const [confidenceFilter, setConfidenceFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortKey, setSortKey] = useState<'count' | 'name' | 'recent'>('count');
   const [report, setReport] = useState<DryRunReport | null>(null);
-  const [dryRunLoading, setDryRunLoading] = useState(false);
+  const [loadingReport, setLoadingReport] = useState(false);
   const [applyLoading, setApplyLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [statusTone, setStatusTone] = useState<'success' | 'error' | 'info'>('info');
   const [applyResult, setApplyResult] = useState<ApplyResult | null>(null);
-  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
-  const [selectedEvents, setSelectedEvents] = useState<Set<number>>(new Set());
   const [selectedShellVenues, setSelectedShellVenues] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -160,142 +123,79 @@ const AdminVenuePhotosPage = () => {
       router.replace(`/LoginPage?redirect=${encodeURIComponent(router.asPath)}`);
       return;
     }
-    if (!user.is_admin) {
-      router.replace('/');
-    }
+    if (!user.is_admin) router.replace('/');
   }, [loading, router, user]);
-
-  const buildApprovals = useMemo<Approvals>(() => {
-    const photoUpdates = (report?.photo_matches || [])
-      .filter((match) => match.existing_profile_id && selectedPhotos.has(`${match.file_path}:${match.existing_profile_id}`))
-      .map((match) => ({
-        profile_id: Number(match.existing_profile_id),
-        ...(isRemoteUrl(match.file_path) ? { image_url: match.file_path } : { file_path: match.file_path }),
-      }));
-
-    const shellVenues = (report?.missing_venues || [])
-      .filter((venue) => selectedShellVenues.has(venue.name))
-      .map((venue) => ({
-        display_name: venue.name,
-        region: venue.region || null,
-      }));
-
-    const eventRepairs = (report?.broken_event_images || [])
-      .filter((event) => selectedEvents.has(event.event_id))
-      .map((event) => ({
-        event_id: event.event_id,
-        use_venue_image: Boolean(event.venue_profile_id),
-        use_default: true,
-      }));
-
-    return {
-      venue_photo_updates: photoUpdates,
-      shell_venues: shellVenues,
-      event_image_repairs: eventRepairs,
-    };
-  }, [report, selectedEvents, selectedPhotos, selectedShellVenues]);
-
-  const selectedCount = countApplyItems(buildApprovals);
-  const totalSelectableCount =
-    (report?.photo_matches || []).filter((match) => match.existing_profile_id).length +
-    (report?.broken_event_images || []).length +
-    (report?.missing_venues || []).length;
-  const skippedCount = Math.max(totalSelectableCount - selectedCount, 0);
-  const manualReviewCount =
-    (report?.photo_matches || []).filter((match) => !match.existing_profile_id).length +
-    (report?.missing_venues || []).filter((venue) => venue.confidence === 'low').length;
 
   const setStatus = (message: string, tone: 'success' | 'error' | 'info' = 'info') => {
     setStatusMessage(message);
     setStatusTone(tone);
   };
 
-  const runDryRun = async () => {
-    const files = splitInputs(photoInputs);
-    setDryRunLoading(true);
+  const runAudit = async () => {
+    setLoadingReport(true);
     setApplyResult(null);
     setStatus('', 'info');
-
     try {
       const params = new URLSearchParams();
-      files.forEach((file) => params.append('file', file));
-      params.set('eventLimit', String(Math.max(1, Math.min(Number(eventLimit) || 250, 1000))));
+      params.set('eventLimit', String(Math.max(1, Math.min(Number(eventLimit) || 2500, 5000))));
+      params.set('missingVenueMinEvents', String(Math.max(1, Math.min(Number(minEvents) || 1, 20))));
 
       const res = await fetch(`${API_BASE_URL}/api/admin/venue-photo-maintenance/dry-run?${params.toString()}`, {
         credentials: 'include',
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.message || 'Unable to generate venue photo report.');
-      }
+      if (!res.ok) throw new Error(data?.message || 'Unable to scan venue shells.');
 
       setReport(data);
-      const confidentPhotoKeys = new Set<string>();
-      (data.photo_matches || []).forEach((match: PhotoMatch) => {
-        if (match.existing_profile_id && ['high', 'medium'].includes(String(match.confidence || '').toLowerCase())) {
-          confidentPhotoKeys.add(`${match.file_path}:${match.existing_profile_id}`);
-        }
-      });
-      const brokenEventIds = new Set<number>();
-      (data.broken_event_images || []).forEach((event: BrokenEventImage) => {
-        brokenEventIds.add(event.event_id);
-      });
-      setSelectedPhotos(confidentPhotoKeys);
-      setSelectedEvents(brokenEventIds);
       setSelectedShellVenues(new Set());
-      setStatus('Dry run complete. Review the selected changes before previewing or applying.', 'success');
+      setStatus('Venue shell audit complete. Review candidates before creating anything.', 'success');
     } catch (error) {
       console.error(error);
       setReport(null);
-      setStatus(error instanceof Error ? error.message : 'Unable to generate venue photo report.', 'error');
+      setStatus(error instanceof Error ? error.message : 'Unable to scan venue shells.', 'error');
     } finally {
-      setDryRunLoading(false);
+      setLoadingReport(false);
     }
   };
 
-  const runApply = async (execute: boolean) => {
-    if (!selectedCount) {
-      setStatus('Select at least one photo update, shell venue, or event image repair first.', 'error');
-      return;
-    }
+  const candidates = useMemo(() => report?.missing_venues || [], [report]);
+  const regions = useMemo(() => {
+    const values = new Set<string>();
+    candidates.forEach((venue) => {
+      if (venue.region) values.add(venue.region);
+      (venue.regions || []).forEach((region) => region && values.add(region));
+    });
+    return Array.from(values).sort();
+  }, [candidates]);
 
-    if (execute && !window.confirm('Apply these selected image maintenance changes to the live database?')) {
-      return;
-    }
-
-    setApplyLoading(true);
-    setApplyResult(null);
-    setStatus(execute ? 'Applying selected changes...' : 'Previewing selected changes...', 'info');
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/venue-photo-maintenance/apply`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ execute, approvals: buildApprovals }),
+  const filteredCandidates = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    return [...candidates]
+      .filter((venue) => {
+        if (regionFilter !== 'all' && venue.region !== regionFilter && !(venue.regions || []).includes(regionFilter)) return false;
+        if (confidenceFilter !== 'all' && venue.confidence !== confidenceFilter) return false;
+        if (!term) return true;
+        return [
+          venue.name,
+          venue.region,
+          ...(venue.cities || []),
+          ...(venue.addresses || []),
+          ...(venue.possible_matches || []).map((match) => match.display_name),
+        ].filter(Boolean).join(' ').toLowerCase().includes(term);
+      })
+      .sort((a, b) => {
+        if (sortKey === 'name') return a.name.localeCompare(b.name);
+        if (sortKey === 'recent') return String(b.latest_date || '').localeCompare(String(a.latest_date || ''));
+        return Number(b.event_count || 0) - Number(a.event_count || 0);
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        throw new Error(data?.message || 'Unable to apply venue photo maintenance plan.');
-      }
+  }, [candidates, confidenceFilter, regionFilter, searchTerm, sortKey]);
 
-      setApplyResult(data);
-      setStatus(execute ? 'Selected changes were applied.' : 'Preview complete. Nothing was changed.', 'success');
-      if (execute) {
-        await runDryRun();
-      }
-    } catch (error) {
-      console.error(error);
-      setStatus(error instanceof Error ? error.message : 'Unable to apply venue photo maintenance plan.', 'error');
-    } finally {
-      setApplyLoading(false);
-    }
-  };
+  const selectedCandidates = candidates.filter((venue) => selectedShellVenues.has(candidateKey(venue)));
+  const selectedCount = selectedCandidates.length;
 
-  const togglePhoto = (match: PhotoMatch) => {
-    if (!match.existing_profile_id) return;
-    const key = `${match.file_path}:${match.existing_profile_id}`;
-    setSelectedPhotos((current) => {
+  const toggleShellVenue = (venue: MissingVenue) => {
+    const key = candidateKey(venue);
+    setSelectedShellVenues((current) => {
       const next = new Set(current);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -303,29 +203,67 @@ const AdminVenuePhotosPage = () => {
     });
   };
 
-  const toggleEvent = (eventId: number) => {
-    setSelectedEvents((current) => {
+  const toggleVisibleCandidates = () => {
+    const visibleKeys = filteredCandidates.map(candidateKey);
+    const allVisibleSelected = visibleKeys.length > 0 && visibleKeys.every((key) => selectedShellVenues.has(key));
+    setSelectedShellVenues((current) => {
       const next = new Set(current);
-      if (next.has(eventId)) next.delete(eventId);
-      else next.add(eventId);
+      visibleKeys.forEach((key) => {
+        if (allVisibleSelected) next.delete(key);
+        else next.add(key);
+      });
       return next;
     });
   };
 
-  const toggleShellVenue = (name: string) => {
-    setSelectedShellVenues((current) => {
-      const next = new Set(current);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      return next;
-    });
+  const createShellVenues = async (execute: boolean) => {
+    if (!selectedCount) {
+      setStatus('Select at least one venue candidate first.', 'error');
+      return;
+    }
+    if (execute && !window.confirm(`Create ${selectedCount} shell venue profile(s)? Existing normalized matches will be skipped.`)) return;
+
+    setApplyLoading(true);
+    setApplyResult(null);
+    setStatus(execute ? 'Creating selected shell venues...' : 'Previewing selected shell venues...', 'info');
+    try {
+      const approvals = {
+        venue_photo_updates: [],
+        event_image_repairs: [],
+        shell_venues: selectedCandidates.map((venue) => ({
+          display_name: venue.name,
+          region: venue.region || null,
+          city: venue.cities?.[0] || null,
+          address: venue.addresses?.[0] || null,
+          bio: `${venue.name} is an unclaimed venue profile on Alpine Groove Guide.`,
+        })),
+      };
+
+      const res = await fetch(`${API_BASE_URL}/api/admin/venue-photo-maintenance/apply`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ execute, approvals }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || 'Unable to create shell venues.');
+
+      setApplyResult(data);
+      setStatus(execute ? 'Selected shell venues were created.' : 'Preview complete. Nothing was changed.', 'success');
+      if (execute) await runAudit();
+    } catch (error) {
+      console.error(error);
+      setStatus(error instanceof Error ? error.message : 'Unable to create shell venues.', 'error');
+    } finally {
+      setApplyLoading(false);
+    }
   };
 
   if (loading || !user || !user.is_admin) {
     return (
       <>
         <Head>
-          <title>Venue Images - Alpine Groove Guide</title>
+          <title>Venue Shell Audit - Alpine Groove Guide</title>
         </Head>
         <div className="min-h-screen bg-slate-950 px-4 py-16 text-slate-100">
           <div className="mx-auto max-w-md rounded-2xl border border-slate-800 bg-slate-900/70 p-6 text-center">
@@ -339,26 +277,23 @@ const AdminVenuePhotosPage = () => {
   return (
     <>
       <Head>
-        <title>Venue Image Maintenance - Alpine Groove Guide</title>
+        <title>Venue Shell Audit - Alpine Groove Guide</title>
       </Head>
       <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl space-y-8">
+        <div className="mx-auto max-w-7xl space-y-8">
           <header className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6 shadow-2xl shadow-black/30 sm:p-8">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-3xl">
                 <p className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-200">
                   <ShieldCheck className="h-4 w-4" />
-                  Admin Maintenance
+                  Admin Venue Audit
                 </p>
                 <h1 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                  Venue image cleanup
+                  Venue shell audit
                 </h1>
                 <p className="mt-3 text-sm leading-6 text-slate-300 sm:text-base">
-                  Match venue logo files to venue profiles, find imported events with missing or broken posters, and
-                  repair them using venue images or the Alpine Groove Guide fallback.
-                </p>
-                <p className="mt-3 text-sm leading-6 text-slate-400">
-                  Checked rows are included in the next preview/apply batch. Unchecked rows are skipped and left unchanged.
+                  Find venue names that appear in events but do not yet have a venue profile or shell. Review likely matches,
+                  then create only the shells that are safe.
                 </p>
               </div>
               <Link
@@ -371,313 +306,256 @@ const AdminVenuePhotosPage = () => {
             </div>
           </header>
 
-          <section className="rounded-3xl border border-amber-400/30 bg-amber-500/10 p-5 text-sm leading-6 text-amber-50">
-            <div className="flex gap-3">
-              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-200" />
+          <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
+              <h2 className="text-xl font-semibold text-white">Scan event venue names</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                This scans event venue names, normalizes punctuation/case/apostrophes, and compares them to existing venue
+                profiles. No Google lookup or data writes happen during this scan.
+              </p>
+              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                <label className="block text-sm font-semibold text-slate-200">
+                  Event scan limit
+                  <input
+                    type="number"
+                    min={1}
+                    max={5000}
+                    value={eventLimit}
+                    onChange={(event) => setEventLimit(Number(event.target.value))}
+                    className="mt-2 w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+                  />
+                </label>
+                <label className="block text-sm font-semibold text-slate-200">
+                  Minimum event count
+                  <input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={minEvents}
+                    onChange={(event) => setMinEvents(Number(event.target.value))}
+                    className="mt-2 w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={runAudit}
+                  disabled={loadingReport}
+                  className="self-end inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loadingReport ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
+                  Scan venues
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
+              <h2 className="text-xl font-semibold text-white">Venue image fallback</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Older events now inherit venue images dynamically when they have no valid event poster and their venue name
+                matches a venue profile. Valid event posters are preserved.
+              </p>
+              <p className="mt-4 rounded-2xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
+                Priority: event poster, then venue image, then source/default Alpine image.
+              </p>
+            </div>
+          </section>
+
+          {statusMessage && (
+            <div
+              className={`rounded-2xl border px-4 py-3 text-sm ${
+                statusTone === 'error'
+                  ? 'border-red-500/40 bg-red-500/10 text-red-100'
+                  : statusTone === 'success'
+                  ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-100'
+                  : 'border-slate-700 bg-slate-900/70 text-slate-200'
+              }`}
+            >
+              {statusMessage}
+            </div>
+          )}
+
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {[
+              ['Events scanned', report?.summary?.scanned_event_count || 0],
+              ['Venue profiles', report?.summary?.venue_profile_count || 0],
+              ['Missing shell candidates', report?.summary?.missing_venue_candidates || 0],
+              ['Selected to create', selectedCount],
+              ['Image fallback candidates', report?.event_image_backfill_preview?.length || 0],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{label}</p>
+                <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+              </div>
+            ))}
+          </section>
+
+          <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="font-semibold">Production note</p>
-                <p className="mt-1 text-amber-100/90">
-                  Local Mac file paths only work when the backend is running on this Mac. On production, use public image
-                  URLs or run the backend apply script locally with production credentials. Every action below supports a
-                  preview mode before it writes anything.
+                <h2 className="text-xl font-semibold text-white">Missing venue candidates</h2>
+                <p className="mt-1 text-sm text-slate-400">
+                  Select only obvious missing venues. Similar names are suggestions, not automatic merges.
                 </p>
               </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={toggleVisibleCandidates}
+                  disabled={!filteredCandidates.length || applyLoading}
+                  className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Toggle visible
+                </button>
+                <button
+                  type="button"
+                  onClick={() => createShellVenues(false)}
+                  disabled={!selectedCount || applyLoading}
+                  className="rounded-full border border-cyan-400/50 px-4 py-2 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Preview create
+                </button>
+                <button
+                  type="button"
+                  onClick={() => createShellVenues(true)}
+                  disabled={!selectedCount || applyLoading}
+                  className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {applyLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Building2 className="h-4 w-4" />}
+                  Create shells
+                </button>
+              </div>
             </div>
-          </section>
 
-          <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-              <h2 className="text-xl font-semibold text-white">Advanced scan inputs</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-400">
-                Optional helper for batch image cleanup. Paste one public image URL per line in production, or one local
-                file path per line only when the backend is running on your Mac. The dry scan reads the filename, suggests
-                venue profile matches, and also scans recent events for missing/broken images.
-              </p>
-              <p className="mt-2 rounded-2xl border border-slate-700/70 bg-slate-950/70 px-4 py-3 text-xs leading-5 text-slate-300">
-                Example: paste <span className="font-mono text-slate-100">/Users/reidpoole/Downloads/Black Sheep Logo.jpg</span>{' '}
-                for local maintenance, or an <span className="font-mono text-slate-100">https://...</span> image URL for
-                production-safe matching. Nothing writes to the database until you run Preview apply or Apply selected.
-              </p>
-              <label className="mt-5 block text-sm font-semibold text-slate-200" htmlFor="photo-inputs">
-                Venue image files or URLs
+            <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_0.45fr_0.45fr_0.45fr]">
+              <label className="relative block">
+                <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-500" />
+                <input
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search venue, city, address, possible match"
+                  className="w-full rounded-2xl border border-slate-700 bg-slate-950/80 py-3 pl-10 pr-4 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+                />
               </label>
-              <textarea
-                id="photo-inputs"
-                value={photoInputs}
-                onChange={(event) => setPhotoInputs(event.target.value)}
-                className="mt-2 min-h-[280px] w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 font-mono text-sm text-slate-100 outline-none transition focus:border-emerald-400"
-                placeholder="/Users/reidpoole/Downloads/Black Sheep Logo.jpg"
-              />
-              <label className="mt-4 block text-sm font-semibold text-slate-200" htmlFor="event-limit">
-                Event image scan limit
-              </label>
-              <input
-                id="event-limit"
-                type="number"
-                min={1}
-                max={1000}
-                value={eventLimit}
-                onChange={(event) => setEventLimit(Number(event.target.value))}
-                className="mt-2 w-full rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
-              />
-              <button
-                type="button"
-                onClick={runDryRun}
-                disabled={dryRunLoading}
-                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-black uppercase tracking-[0.16em] text-slate-950 transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+              <select
+                value={regionFilter}
+                onChange={(event) => setRegionFilter(event.target.value)}
+                className="rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
               >
-                {dryRunLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}
-                Run dry scan
-              </button>
+                <option value="all">All regions</option>
+                {regions.map((region) => (
+                  <option key={region} value={region}>{region}</option>
+                ))}
+              </select>
+              <select
+                value={confidenceFilter}
+                onChange={(event) => setConfidenceFilter(event.target.value)}
+                className="rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+              >
+                <option value="all">All confidence</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+              <select
+                value={sortKey}
+                onChange={(event) => setSortKey(event.target.value as 'count' | 'name' | 'recent')}
+                className="rounded-2xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-emerald-400"
+              >
+                <option value="count">Most events</option>
+                <option value="recent">Newest occurrence</option>
+                <option value="name">Name A-Z</option>
+              </select>
             </div>
 
-            <div className="space-y-6">
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-                <h2 className="text-xl font-semibold text-white">Report summary</h2>
-                {report ? (
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    {[
-                      ['Photo files checked', report.summary?.photo_count ?? report.summary?.photo_files_checked ?? 0],
-                      ['Venue profiles scanned', report.summary?.venue_profile_count || 0],
-                      [
-                        'Venue matches',
-                        (report.summary?.high_confidence_matches || 0) + (report.summary?.medium_confidence_matches || 0),
-                      ],
-                      ['Missing venue candidates', report.summary?.missing_venue_candidates || 0],
-                      [
-                        'Broken event images',
-                        report.summary?.broken_or_default_event_images ?? report.summary?.broken_event_images ?? 0,
-                      ],
-                      ['Fallback candidates', report.summary?.event_image_backfill_candidates || 0],
-                    ].map(([label, value]) => (
-                      <div key={label} className="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
-                        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{label}</p>
-                        <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-3 text-sm text-slate-400">Run a dry scan to see suggested maintenance actions.</p>
-                )}
-              </div>
-
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <h2 className="text-xl font-semibold text-white">Selected actions</h2>
-                    <p className="mt-1 text-sm text-slate-400">
-                      {selectedCount} selected for repair · {skippedCount} skipped · {manualReviewCount} need manual review
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => runApply(false)}
-                      disabled={applyLoading || !selectedCount}
-                      className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-700 bg-slate-950/70 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-cyan-400/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Preview apply
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => runApply(true)}
-                      disabled={applyLoading || !selectedCount}
-                      className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {applyLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-                      Apply selected
-                    </button>
-                  </div>
-                </div>
-                {statusMessage && (
-                  <div
-                    className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${
-                      statusTone === 'error'
-                        ? 'border-red-500/40 bg-red-500/10 text-red-100'
-                        : statusTone === 'success'
-                        ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-100'
-                        : 'border-slate-700 bg-slate-950/70 text-slate-200'
-                    }`}
-                  >
-                    {statusMessage}
-                  </div>
-                )}
-                {applyResult && (
-                  <pre className="mt-4 max-h-72 overflow-auto rounded-2xl border border-slate-800 bg-slate-950/80 p-4 text-xs text-slate-300">
-                    {JSON.stringify(applyResult, null, 2)}
-                  </pre>
-                )}
-                <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-xs leading-5 text-slate-400">
-                  <p className="font-semibold uppercase tracking-[0.18em] text-slate-300">How selection works</p>
-                  <p className="mt-2">
-                    Checked means “include in repair batch.” Unchecked means “skip this item.” Use Preview apply to see
-                    exactly what would change before writing to the live database.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {report && (
-            <section className="space-y-6">
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-                <h2 className="text-xl font-semibold text-white">Venue photo matches</h2>
-                <div className="mt-4 overflow-hidden rounded-2xl border border-slate-800">
-                  {(report.photo_matches || []).length ? (
-                    <div className="divide-y divide-slate-800">
-                      {(report.photo_matches || []).map((match) => {
-                        const key = `${match.file_path}:${match.existing_profile_id}`;
-                        const selected = selectedPhotos.has(key);
-                        return (
-                          <label key={key} className="flex cursor-pointer gap-4 bg-slate-950/50 p-4 transition hover:bg-slate-900">
-                            <div className="mt-1 flex min-w-[8.5rem] items-start gap-2">
-                              <input
-                                type="checkbox"
-                                className="mt-0.5 h-4 w-4 accent-emerald-400"
-                                checked={selected}
-                                disabled={!match.existing_profile_id}
-                                onChange={() => togglePhoto(match)}
-                              />
-                              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-300">
-                                {selected ? 'Include in repair batch' : match.existing_profile_id ? 'Skip this item' : 'Needs manual review'}
-                              </span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <p className="font-semibold text-white">{match.suggested_venue || match.filename_hint || 'Unknown venue'}</p>
-                                <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs uppercase tracking-wider text-slate-300">
-                                  {match.confidence || 'unknown'}
-                                </span>
-                                {match.existing_profile_id ? (
-                                  <span className="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-100">
-                                    profile #{match.existing_profile_id}
-                                  </span>
-                                ) : (
-                                  <span className="rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-xs text-amber-100">
-                                    no profile match
-                                  </span>
-                                )}
-                              </div>
-                              <p className="mt-1 truncate font-mono text-xs text-slate-500">{match.file_path}</p>
-                              <p className="mt-2 text-sm text-slate-400">{match.reason || match.proposed_action || 'Suggested from filename match.'}</p>
-                            </div>
+            <div className="mt-5 space-y-3">
+              {report ? (
+                filteredCandidates.length ? (
+                  filteredCandidates.map((venue) => {
+                    const key = candidateKey(venue);
+                    const selected = selectedShellVenues.has(key);
+                    return (
+                      <article
+                        key={key}
+                        className={`rounded-2xl border p-4 transition ${
+                          selected ? 'border-amber-300/70 bg-amber-400/10' : 'border-slate-800 bg-slate-950/60'
+                        }`}
+                      >
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+                          <label className="flex min-w-[10rem] cursor-pointer items-center gap-3 text-sm font-semibold text-slate-200">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-amber-400"
+                              checked={selected}
+                              onChange={() => toggleShellVenue(venue)}
+                            />
+                            {selected ? 'Create shell' : 'Skip'}
                           </label>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="p-4 text-sm text-slate-400">No venue photo matches found.</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-6 lg:grid-cols-2">
-                <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-                  <h2 className="text-xl font-semibold text-white">Broken or missing event posters</h2>
-                  <div className="mt-4 space-y-3">
-                    {(report.broken_event_images || []).length ? (
-                      (report.broken_event_images || []).map((event) => (
-                        <label
-                          key={event.event_id}
-                          className="flex cursor-pointer gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 transition hover:border-slate-700"
-                        >
-                          <input
-                            type="checkbox"
-                            className="mt-1 h-4 w-4 accent-emerald-400"
-                            checked={selectedEvents.has(event.event_id)}
-                            onChange={() => toggleEvent(event.event_id)}
-                          />
                           <div className="min-w-0 flex-1">
-                            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-                              {selectedEvents.has(event.event_id) ? 'Include in repair batch' : 'Skip this item'}
-                            </p>
                             <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-white">{event.title || `Event #${event.event_id}`}</p>
-                              <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-300">
-                                {event.image_status || 'missing'}
-                              </span>
-                            </div>
-                            <p className="mt-1 text-sm text-slate-400">
-                              {formatDate(event.date)} · {event.venue_name || 'Venue TBA'}
-                            </p>
-                            <p className="mt-2 text-xs text-slate-500">{event.recommended_action || event.reason}</p>
-                          </div>
-                        </label>
-                      ))
-                    ) : (
-                      <p className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-sm text-slate-400">
-                        No broken event posters found in this scan window.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-                  <h2 className="text-xl font-semibold text-white">Shell venue candidates</h2>
-                  <p className="mt-2 text-sm text-slate-400">
-                    Use these carefully. Shell venues are lightweight profiles that make future imported events easier to
-                    enrich and claim.
-                  </p>
-                  <div className="mt-4 space-y-3">
-                    {(report.missing_venues || []).length ? (
-                      (report.missing_venues || []).map((venue) => (
-                        <label
-                          key={venue.name}
-                          className="flex cursor-pointer gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 transition hover:border-slate-700"
-                        >
-                          <input
-                            type="checkbox"
-                            className="mt-1 h-4 w-4 accent-amber-400"
-                            checked={selectedShellVenues.has(venue.name)}
-                            onChange={() => toggleShellVenue(venue.name)}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-                              {selectedShellVenues.has(venue.name) ? 'Create shell venue' : 'Skip this item'}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-semibold text-white">{venue.name}</p>
+                              <h3 className="text-lg font-semibold text-white">{venue.name}</h3>
                               <span className="rounded-full border border-slate-700 px-2 py-0.5 text-xs text-slate-300">
                                 {venue.event_count || 0} event{venue.event_count === 1 ? '' : 's'}
                               </span>
+                              <span className={`rounded-full border px-2 py-0.5 text-xs capitalize ${confidenceTone(venue.confidence)}`}>
+                                {venue.confidence || 'review'}
+                              </span>
                             </div>
-                            <p className="mt-1 text-sm text-slate-400">
-                              Region: {venue.region || 'unknown'} · confidence: {venue.confidence || 'unknown'}
+                            <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-400">
+                              <MapPin className="h-4 w-4" />
+                              {venue.region || 'Region unknown'}
+                              {venue.cities?.length ? ` · ${venue.cities.join(', ')}` : ''}
+                              {venue.addresses?.[0] ? ` · ${venue.addresses[0]}` : ''}
                             </p>
-                            <p className="mt-2 text-xs text-slate-500">{venue.recommended_action}</p>
-                          </div>
-                        </label>
-                      ))
-                    ) : (
-                      <p className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-sm text-slate-400">
-                        No shell venue candidates found.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
 
-              <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-300" />
-                  <h2 className="text-xl font-semibold text-white">Display fallback preview</h2>
-                </div>
-                <p className="mt-2 text-sm text-slate-400">
-                  These rows already have a display image available through event poster, venue image, source image, or
-                  Alpine Groove Guide fallback.
+                            {!!venue.possible_matches?.length && (
+                              <div className="mt-3 rounded-2xl border border-slate-800 bg-slate-900/70 p-3">
+                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Possible existing match</p>
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {venue.possible_matches.map((match) => (
+                                    <span key={`${key}-${match.profile_id}`} className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1 text-xs text-cyan-100">
+                                      {match.display_name} · {match.confidence} · {Math.round(Number(match.score || 0) * 100)}%
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {!!venue.sample_events?.length && (
+                              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                                {venue.sample_events.slice(0, 4).map((event) => (
+                                  <div key={event.id} className="rounded-xl border border-slate-800 bg-slate-900/50 p-3 text-sm">
+                                    <p className="truncate font-semibold text-slate-100">{event.title || `Event #${event.id}`}</p>
+                                    <p className="mt-1 text-xs text-slate-500">{formatDate(event.date)} · #{event.id}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })
+                ) : (
+                  <p className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5 text-sm text-slate-400">
+                    No candidates match the current filters.
+                  </p>
+                )
+              ) : (
+                <p className="rounded-2xl border border-slate-800 bg-slate-950/60 p-5 text-sm text-slate-400">
+                  Run a venue scan to find missing shells.
                 </p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {(report.event_image_backfill_preview || []).slice(0, 12).map((event) => (
-                    <div key={event.event_id} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                      <p className="truncate font-semibold text-white">{event.title || `Event #${event.event_id}`}</p>
-                      <p className="mt-1 text-sm text-slate-400">{event.venue_name || 'Venue TBA'}</p>
-                      <p className="mt-2 rounded-full border border-slate-700 px-2 py-1 text-xs text-slate-300">
-                        source: {event.display_image_source || 'none'}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+              )}
+            </div>
+          </section>
+
+          {applyResult && (
+            <section className="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+                <h2 className="text-xl font-semibold text-white">Last operation</h2>
               </div>
+              <pre className="mt-4 max-h-72 overflow-auto rounded-2xl border border-slate-800 bg-slate-950/80 p-4 text-xs text-slate-300">
+                {JSON.stringify(applyResult, null, 2)}
+              </pre>
             </section>
           )}
         </div>
