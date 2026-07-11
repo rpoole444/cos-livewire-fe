@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:seo": "node scripts/seo-regression.js"
   },
   "dependencies": {
     "@fullcalendar/daygrid": "^6.1.11",

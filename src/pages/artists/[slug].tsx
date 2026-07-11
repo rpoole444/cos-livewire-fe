@@ -23,6 +23,11 @@ import {
   getProfileCompleteness,
   normalizeExternalUrl,
 } from '@/util/profileValueTools';
+import {
+  buildBreadcrumbJsonLd,
+  buildProfileJsonLd,
+  getSeoIndexabilityStatus,
+} from '@/lib/seo';
 dayjs.extend(utc);
 
 interface Event {
@@ -496,6 +501,18 @@ const ArtistProfilePage = ({ artist }: Props) => {
     ? `${artist.display_name} is a Front Range live music venue featured on Alpine Groove Guide.`
     : `${artist.display_name} is featured on Alpine Groove Guide. Discover their upcoming shows.`;
   const ogImage = defaultSocialImage;
+  const profileJsonLd = buildProfileJsonLd(artist);
+  const profileBreadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: 'Alpine Groove Guide', url: siteBaseUrl },
+    { name: 'Directory', url: `${siteBaseUrl}/artists` },
+    { name: artist.display_name, url: artistUrl },
+  ]);
+  const profileIndexability = getSeoIndexabilityStatus({
+    kind: isVenue ? 'venue-profile' : 'artist-profile',
+    isShell: isShellProfile,
+    isApproved: artist.is_approved !== false,
+    hasCanonical: true,
+  });
   const limitedHeadline = isOwner
     ? 'Your public profile is locked until you reactivate Alpine Pro.'
     : 'This profile is locked.';
@@ -581,6 +598,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
         <Head>
           <title>{artist.display_name} – Unclaimed Venue</title>
           <meta name="description" content={shellDescription} />
+          <meta name="robots" content={profileIndexability.robots} />
           <meta property="og:site_name" content="Alpine Groove Guide" />
           <meta property="og:title" content={`${artist.display_name} – Unclaimed Venue`} />
           <meta property="og:description" content={shellDescription} />
@@ -594,6 +612,14 @@ const ArtistProfilePage = ({ artist }: Props) => {
           <meta name="twitter:title" content={`${artist.display_name} – Unclaimed Venue`} />
           <meta name="twitter:description" content={shellDescription} />
           <meta name="twitter:image" content={shellImage} />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(profileBreadcrumbJsonLd) }}
+          />
         </Head>
 
         <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-50">
@@ -780,6 +806,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
       <Head>
         <title>{pageTitle}</title>
         <meta name="description" content={description} />
+        <meta name="robots" content={profileIndexability.robots} />
         <meta property="og:site_name" content="Alpine Groove Guide" />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={description} />
@@ -795,6 +822,14 @@ const ArtistProfilePage = ({ artist }: Props) => {
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={ogImage} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(profileBreadcrumbJsonLd) }}
+        />
       </Head>
 
       <div className="relative min-h-screen overflow-hidden bg-[#050806] px-4 py-8 text-slate-50">

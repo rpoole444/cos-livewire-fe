@@ -1,6 +1,7 @@
 import type { GetServerSideProps } from 'next';
 import { MUSIC_REGIONS } from '@/constants/regions';
-import { API_BASE_URL, SITE_URL } from '@/lib/seo';
+import { API_BASE_URL, SITE_URL, getSeoIndexabilityStatus } from '@/lib/seo';
+import { parseLocalDayjs } from '@/util/dateHelper';
 
 type SitemapUrl = {
   loc: string;
@@ -56,6 +57,13 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     fetchJson('/api/events'),
     fetchJson('/api/artists/public-list?include_gated=true'),
   ]);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const approvedEvents = events.filter((event: any) => event?.is_approved && event?.slug);
+  const approvedUpcomingEvents = approvedEvents.filter((event: any) => {
+    const eventDate = parseLocalDayjs(event.date);
+    return eventDate.isValid() && eventDate.toDate().getTime() >= today.getTime();
+  });
 
   const staticUrls: SitemapUrl[] = [
     { loc: `${SITE_URL}/`, changefreq: 'daily', priority: 1.0, lastmod: now },
@@ -70,14 +78,29 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     { loc: `${SITE_URL}/terms`, changefreq: 'monthly', priority: 0.3, lastmod: now },
   ];
 
-  const regionUrls: SitemapUrl[] = MUSIC_REGIONS.flatMap((region) => [
-    { loc: `${SITE_URL}/events/${region.slug}`, changefreq: 'daily' as const, priority: 0.8, lastmod: now },
-    { loc: `${SITE_URL}/venues/${region.slug}`, changefreq: 'weekly' as const, priority: 0.6, lastmod: now },
-    { loc: `${SITE_URL}/this-week/${region.slug}`, changefreq: 'daily' as const, priority: 0.7, lastmod: now },
-  ]);
+  const regionUrls: SitemapUrl[] = MUSIC_REGIONS.flatMap((region) => {
+    const regionUpcomingCount = approvedUpcomingEvents.filter((event: any) => event.region === region.slug).length;
+    const indexability = getSeoIndexabilityStatus({
+      kind: 'region-events',
+      upcomingEventCount: regionUpcomingCount,
+      hasCanonical: true,
+    });
 
-  const eventUrls: SitemapUrl[] = events
-    .filter((event: any) => event?.is_approved && event?.slug)
+    const urls: SitemapUrl[] = [
+      { loc: `${SITE_URL}/venues/${region.slug}`, changefreq: 'weekly', priority: 0.6, lastmod: now },
+    ];
+
+    if (indexability.shouldIndex) {
+      urls.push(
+        { loc: `${SITE_URL}/events/${region.slug}`, changefreq: 'daily', priority: 0.8, lastmod: now },
+        { loc: `${SITE_URL}/this-week/${region.slug}`, changefreq: 'daily', priority: 0.7, lastmod: now }
+      );
+    }
+
+    return urls;
+  });
+
+  const eventUrls: SitemapUrl[] = approvedEvents
     .slice(0, 5000)
     .map((event: any) => ({
       loc: `${SITE_URL}/eventRouter/${event.slug}`,

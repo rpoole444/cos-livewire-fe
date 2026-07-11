@@ -23,6 +23,43 @@ export const getEventImageUrl = (event: Partial<Event>): string => (
 
 export const getEventCanonicalUrl = (slug: string): string => `${SITE_URL}/eventRouter/${slug}`;
 
+export type SeoIndexabilityStatus = {
+  shouldIndex: boolean;
+  reason: string;
+  robots: 'index,follow' | 'noindex,follow';
+};
+
+export const MIN_REGION_UPCOMING_EVENTS_FOR_INDEX = 3;
+
+export const getSeoIndexabilityStatus = (pageContext: {
+  kind: 'region-events' | 'artist-profile' | 'venue-profile' | 'event' | 'static';
+  upcomingEventCount?: number;
+  isShell?: boolean;
+  isApproved?: boolean;
+  hasCanonical?: boolean;
+}): SeoIndexabilityStatus => {
+  if (pageContext.hasCanonical === false) {
+    return { shouldIndex: false, reason: 'missing_canonical', robots: 'noindex,follow' };
+  }
+
+  if (pageContext.isApproved === false) {
+    return { shouldIndex: false, reason: 'not_approved', robots: 'noindex,follow' };
+  }
+
+  if (pageContext.isShell) {
+    return { shouldIndex: false, reason: 'shell_profile', robots: 'noindex,follow' };
+  }
+
+  if (
+    pageContext.kind === 'region-events' &&
+    Number(pageContext.upcomingEventCount || 0) < MIN_REGION_UPCOMING_EVENTS_FOR_INDEX
+  ) {
+    return { shouldIndex: false, reason: 'low_inventory', robots: 'noindex,follow' };
+  }
+
+  return { shouldIndex: true, reason: 'indexable', robots: 'index,follow' };
+};
+
 const getDateOnly = (value?: string | null): string | undefined => {
   const trimmed = String(value || '').trim();
   if (!trimmed) return undefined;
@@ -136,3 +173,75 @@ export const buildEventJsonLd = (event: Event) => {
       : {}),
   };
 };
+
+export const buildProfileJsonLd = (profile: {
+  display_name: string;
+  slug: string;
+  bio?: string | null;
+  profile_image?: string | null;
+  profile_type?: 'artist' | 'venue' | 'promoter' | string;
+  website?: string | null;
+  genres?: string[];
+  home_region?: string | null;
+  venue_address?: string | null;
+  venue_city?: string | null;
+  venue_state?: string | null;
+  venue_postal_code?: string | null;
+  venue_phone?: string | null;
+}) => {
+  const isVenue = profile.profile_type === 'venue';
+  const profileUrl = `${SITE_URL}/artists/${profile.slug}`;
+  const image = absoluteUrl(profile.profile_image) || DEFAULT_SOCIAL_IMAGE;
+  const description = truncateSeo(
+    profile.bio ||
+      (isVenue
+        ? `${profile.display_name} is a live music venue listed on Alpine Groove Guide.`
+        : `${profile.display_name} is an artist listed on Alpine Groove Guide.`)
+  );
+
+  if (isVenue) {
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'MusicVenue',
+      name: profile.display_name,
+      url: profileUrl,
+      image,
+      description,
+      ...(profile.website ? { sameAs: [absoluteUrl(profile.website)].filter(Boolean) } : {}),
+      ...(profile.venue_phone ? { telephone: profile.venue_phone } : {}),
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: profile.venue_address || undefined,
+        addressLocality: profile.venue_city || undefined,
+        addressRegion: profile.venue_state || undefined,
+        postalCode: profile.venue_postal_code || undefined,
+      },
+    };
+  }
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': profile.profile_type === 'promoter' ? 'Organization' : 'MusicGroup',
+    name: profile.display_name,
+    url: profileUrl,
+    image,
+    description,
+    genre: profile.genres || [],
+    ...(profile.website ? { sameAs: [absoluteUrl(profile.website)].filter(Boolean) } : {}),
+  };
+};
+
+export const buildItemListJsonLd = (
+  name: string,
+  items: Array<{ name: string; url: string }>
+) => ({
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name,
+  itemListElement: items.map((item, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: item.name,
+    url: item.url,
+  })),
+});
