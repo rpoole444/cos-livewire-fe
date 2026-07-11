@@ -24,6 +24,7 @@ import {
   getRegionLabel,
   normalizeRegionFilter,
 } from '@/constants/regions';
+import { SITE_URL, buildOrganizationJsonLd, buildWebsiteJsonLd } from '@/lib/seo';
 
 import dayjs, { Dayjs } from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
@@ -216,7 +217,7 @@ export default function Home({ initialRegion }: HomeProps = {}) {
     }
   };
 
-  const siteUrl = 'https://app.alpinegrooveguide.com';
+  const siteUrl = SITE_URL;
   const homeDescription =
     'Community-powered live music calendar for Colorado’s Front Range and beyond.';
   const selectedDateLabel = currentDate.format('MMMM D');
@@ -242,6 +243,15 @@ export default function Home({ initialRegion }: HomeProps = {}) {
         <meta name="twitter:title" content="Find Live Music in Colorado" />
         <meta name="twitter:description" content={homeDescription} />
         <meta name="twitter:image" content={`${siteUrl}/alpine_groove_guide_icon.png`} />
+        <link rel="canonical" href={siteUrl} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildWebsiteJsonLd()) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildOrganizationJsonLd()) }}
+        />
       </Head>
       <div className="flex min-h-screen flex-col bg-black text-ivory font-sans">
       {showHero && (

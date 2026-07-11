@@ -19,6 +19,7 @@ import { canDeleteEvent, canManageEvent } from "@/util/eventPermissions";
 import { shouldShowPublicClaimCta } from "@/util/eventTrust";
 import { parseLocalDayjs } from "@/util/dateHelper";
 import { getGoogleMapsUrl } from "@/util/eventLocation";
+import { buildBreadcrumbJsonLd, buildEventJsonLd } from "@/lib/seo";
 
 type EventClaimStatus = {
   id: number;
@@ -139,6 +140,12 @@ const EventDetailPage = ({ event, events }: Props) => {
     !currentEvent.claimed_artist ? "artist profile" : null,
     !currentEvent.venue_profile_id ? "venue profile" : null,
   ].filter(Boolean);
+  const eventJsonLd = buildEventJsonLd(currentEvent);
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd([
+    { name: "Alpine Groove Guide", url: siteBaseUrl },
+    { name: "Events", url: siteBaseUrl },
+    { name: currentEvent.title, url: eventUrl },
+  ]);
 
   useEffect(() => {
     setCurrentEvent(event);
@@ -279,6 +286,14 @@ const EventDetailPage = ({ event, events }: Props) => {
         <meta name="twitter:description" content={eventDescription} />
         <meta name="twitter:image" content={eventImage} />
         <link rel="canonical" href={eventUrl} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        />
       </Head>
 
       <div className="relative min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50">
