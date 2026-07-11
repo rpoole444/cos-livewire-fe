@@ -172,6 +172,28 @@ async function updateEventStatus(eventId: number, isApproved: boolean): Promise<
   await response.json().catch(() => null);
 }
 
+async function bulkUpdateEventStatus(eventIds: number[], isApproved: boolean): Promise<{ updatedIds: number[]; skippedIds: number[]; updatedCount: number }> {
+  const response = await fetch(`${API_BASE_URL}/api/events/review/bulk`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ eventIds, isApproved }),
+    credentials: 'include',
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(data?.message || `Failed to bulk update event status (status ${response.status})`);
+  }
+
+  return {
+    updatedIds: Array.isArray(data?.updatedIds) ? data.updatedIds.map(Number).filter(Number.isInteger) : [],
+    skippedIds: Array.isArray(data?.skippedIds) ? data.skippedIds.map(Number).filter(Number.isInteger) : [],
+    updatedCount: Number(data?.updatedCount || 0),
+  };
+}
+
 async function getEventClaimRequests() {
   const res = await fetch(`${API_BASE_URL}/api/events/claims/review`, {
     credentials: 'include',
@@ -288,6 +310,7 @@ export {
   getEventsForReview,
   getAdminSummary,
   updateEventStatus,
+  bulkUpdateEventStatus,
   getEventClaimRequests,
   getMyEventClaims,
   reviewEventClaim,

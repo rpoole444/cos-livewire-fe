@@ -1,5 +1,5 @@
 "use client";
-import { getEventsForReview, updateEventStatus, updateEventDetails, deleteEvent } from "@/pages/api/route";
+import { getEventsForReview, updateEventStatus, bulkUpdateEventStatus, updateEventDetails, deleteEvent } from "@/pages/api/route";
 import { useState, useEffect } from "react";
 import "../styles/globals.css";
 import AdminEventCard from "./AdminEventCard";
@@ -122,6 +122,12 @@ const EventReview: React.FC<EventReviewProps> = ({ onCountChange }) => {
     setSelectedIds((prev) => prev.filter((id) => !ids.includes(id)));
   };
 
+  const runSequentially = async (ids: number[], handler: (id: number) => Promise<void>) => {
+    for (const id of ids) {
+      await handler(id);
+    }
+  };
+
   const bulkApprove = async () => {
     if (!selectedIds.length || blockedSelected.length) return;
     if (!window.confirm(`Approve ${selectedIds.length} selected event(s) for the public calendar?`)) return;
@@ -129,9 +135,10 @@ const EventReview: React.FC<EventReviewProps> = ({ onCountChange }) => {
     setErrorMessage('');
     setSuccessMessage('');
     try {
-      await Promise.all(selectedIds.map((eventId) => updateEventStatus(eventId, true)));
-      removeReviewedEvents(selectedIds);
-      setSuccessMessage(`Approved ${selectedIds.length} event(s).`);
+      const result = await bulkUpdateEventStatus(selectedIds, true);
+      const approvedIds = result.updatedIds.length ? result.updatedIds : selectedIds.filter((id) => !result.skippedIds.includes(id));
+      removeReviewedEvents(approvedIds);
+      setSuccessMessage(`Approved ${result.updatedCount || approvedIds.length} event(s).${result.skippedIds.length ? ` ${result.skippedIds.length} were already handled or no longer pending.` : ''}`);
     } catch (error) {
       console.error('Bulk approve failed', error);
       setErrorMessage('Unable to bulk approve selected events. Refresh and check which events remain pending.');
@@ -151,10 +158,10 @@ const EventReview: React.FC<EventReviewProps> = ({ onCountChange }) => {
     setErrorMessage('');
     setSuccessMessage('');
     try {
-      await Promise.all(selectedIds.map((eventId) => deleteEvent(eventId, {
+      await runSequentially(selectedIds, (eventId) => deleteEvent(eventId, {
         adminNotes: adminNotes || undefined,
         notifySubmitter: true,
-      })));
+      }));
       removeReviewedEvents(selectedIds);
       setSuccessMessage(`Rejected ${selectedIds.length} event(s).`);
     } catch (error) {
