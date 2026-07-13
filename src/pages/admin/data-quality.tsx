@@ -73,6 +73,7 @@ type IssuesResponse = {
 
 type DuplicateEvent = {
   id: number;
+  user_id?: number | null;
   title?: string | null;
   slug?: string | null;
   description?: string | null;
@@ -80,7 +81,11 @@ type DuplicateEvent = {
   start_time?: string | null;
   end_time?: string | null;
   venue_name?: string | null;
+  venue_profile_id?: number | null;
+  venue_profile_user_id?: number | null;
   venue_profile_display_name?: string | null;
+  venue_profile_owner_email?: string | null;
+  artist_profile_id?: number | null;
   artist_profile_display_name?: string | null;
   genre?: string | null;
   region?: string | null;
@@ -91,6 +96,11 @@ type DuplicateEvent = {
   source?: string | null;
   source_label?: string | null;
   is_approved?: boolean | null;
+  submitter_email?: string | null;
+  submitter_first_name?: string | null;
+  submitter_last_name?: string | null;
+  claimed_by_user_email?: string | null;
+  last_edited_by_user_email?: string | null;
 };
 
 type DuplicateComparison = {
@@ -188,6 +198,17 @@ const displayValue = (value: unknown) => {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (value === null || value === undefined || value === '') return 'Missing';
   return String(value);
+};
+
+const displaySubmitter = (event: DuplicateEvent) => {
+  const name = [event.submitter_first_name, event.submitter_last_name]
+    .map((part) => String(part || '').trim())
+    .filter(Boolean)
+    .join(' ');
+  if (event.submitter_email && name) return `${name} <${event.submitter_email}>`;
+  if (event.submitter_email) return event.submitter_email;
+  if (event.user_id) return `User #${event.user_id}`;
+  return 'No owner / public calendar';
 };
 
 const publicHrefForIssue = (issue: DataQualityIssue) => {
@@ -438,6 +459,11 @@ const DataQualityPage: React.FC = () => {
   const totalPages = data ? Math.max(Math.ceil(data.total / data.pageSize), 1) : 1;
   const duplicateFields: Array<[string, keyof DuplicateEvent, (value: unknown) => string]> = [
     ['Title', 'title', displayValue],
+    ['Uploaded by', 'submitter_email', displayValue],
+    ['Uploader user id', 'user_id', displayValue],
+    ['Claimed by', 'claimed_by_user_email', displayValue],
+    ['Venue owner', 'venue_profile_owner_email', displayValue],
+    ['Last edited by', 'last_edited_by_user_email', displayValue],
     ['Date', 'date', (value) => formatDate(typeof value === 'string' ? value : null)],
     ['Start time', 'start_time', displayValue],
     ['End time', 'end_time', displayValue],
@@ -772,6 +798,9 @@ const DataQualityPage: React.FC = () => {
                             className="h-4 w-4"
                           />
                           Keep #{duplicateComparison.leftEvent.id}
+                          <span className="hidden text-xs font-normal text-slate-500 md:inline">
+                            {displaySubmitter(duplicateComparison.leftEvent)}
+                          </span>
                         </label>
                       </th>
                       <th className="border-b border-slate-800 px-3 py-3">
@@ -784,6 +813,9 @@ const DataQualityPage: React.FC = () => {
                             className="h-4 w-4"
                           />
                           Keep #{duplicateComparison.rightEvent.id}
+                          <span className="hidden text-xs font-normal text-slate-500 md:inline">
+                            {displaySubmitter(duplicateComparison.rightEvent)}
+                          </span>
                         </label>
                       </th>
                     </tr>

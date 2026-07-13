@@ -272,7 +272,9 @@ async function fetchAllUsers(): Promise<Users> {
 }
 
 export async function fetchEventDetailsBySlug(slug: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events/slug/${slug}`);
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/events/slug/${slug}`, {
+    credentials: 'include',
+  });
   if (!res.ok) throw new Error("Event not found");
   return res.json();
 }
