@@ -71,6 +71,46 @@ type IssuesResponse = {
   summary: DataQualitySummary;
 };
 
+type DuplicateEvent = {
+  id: number;
+  title?: string | null;
+  slug?: string | null;
+  description?: string | null;
+  date?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  venue_name?: string | null;
+  venue_profile_display_name?: string | null;
+  artist_profile_display_name?: string | null;
+  genre?: string | null;
+  region?: string | null;
+  website?: string | null;
+  website_link?: string | null;
+  ticket_link?: string | null;
+  poster?: string | null;
+  source?: string | null;
+  source_label?: string | null;
+  is_approved?: boolean | null;
+};
+
+type DuplicateComparison = {
+  leftEvent: DuplicateEvent;
+  rightEvent: DuplicateEvent;
+  match?: {
+    level?: string;
+    score?: number;
+    reason?: string;
+  } | null;
+  existingDecision?: {
+    decision?: string;
+    notes?: string;
+  } | null;
+  mergePreview?: {
+    keepLeft?: Record<string, unknown>;
+    keepRight?: Record<string, unknown>;
+  };
+};
+
 const regionOptions = [
   { label: 'All regions', value: '' },
   { label: 'Colorado Springs', value: 'colorado-springs' },
@@ -114,6 +154,8 @@ const getNumericPayloadValue = (fix: SuggestedFix | undefined, key: string) => {
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
+const getCandidateEventId = (fix: SuggestedFix | undefined) => getNumericPayloadValue(fix, 'existing_event_id');
+
 const getStringMetadataValue = (issue: DataQualityIssue, key: string) => {
   const value = issue.metadata?.[key];
   return typeof value === 'string' && value.trim() ? value : null;
@@ -129,6 +171,23 @@ const formatDateTime = (value?: string | null) => {
     hour: 'numeric',
     minute: '2-digit',
   });
+};
+
+const formatDate = (value?: string | null) => {
+  if (!value) return 'Unknown';
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return parsed.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+const displayValue = (value: unknown) => {
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+  if (value === null || value === undefined || value === '') return 'Missing';
+  return String(value);
 };
 
 const publicHrefForIssue = (issue: DataQualityIssue) => {
@@ -164,6 +223,10 @@ const DataQualityPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [actionStatus, setActionStatus] = useState('');
+  const [duplicateComparison, setDuplicateComparison] = useState<DuplicateComparison | null>(null);
+  const [duplicateLoading, setDuplicateLoading] = useState(false);
+  const [duplicateNotes, setDuplicateNotes] = useState('');
+  const [keepEventId, setKeepEventId] = useState<number | null>(null);
 
   const filters = useMemo(() => {
     const query = router.query;
@@ -225,6 +288,32 @@ const DataQualityPage: React.FC = () => {
 
   const callAction = async (issue: DataQualityIssue, fix?: SuggestedFix) => {
     try {
+      if (fix?.action === 'compare_duplicate') {
+        const candidateId = getCandidateEventId(fix);
+        const eventId = Number(issue.entityId);
+        if (!candidateId || !Number.isFinite(eventId)) {
+          setActionStatus('Unable to compare: missing duplicate event id.');
+          return;
+        }
+
+        setDuplicateLoading(true);
+        setActionStatus('Loading duplicate comparison...');
+        const params = new URLSearchParams({
+          left_event_id: String(eventId),
+          right_event_id: String(candidateId),
+        });
+        const response = await fetch(`${API_BASE_URL}/api/admin/data-quality/duplicates/compare?${params.toString()}`, {
+          credentials: 'include',
+        });
+        const result = await response.json().catch(() => null);
+        if (!response.ok) throw new Error(result?.message || 'Unable to load duplicate comparison.');
+        setDuplicateComparison(result);
+        setDuplicateNotes(result?.existingDecision?.notes || '');
+        setKeepEventId(result?.leftEvent?.id || eventId);
+        setActionStatus('');
+        return;
+      }
+
       setActionStatus('Working...');
       let endpoint = '';
       let body: Record<string, unknown> = {};
@@ -257,6 +346,52 @@ const DataQualityPage: React.FC = () => {
     } catch (err) {
       console.error('Data quality action failed', err);
       setActionStatus(err instanceof Error ? err.message : 'Unable to apply fix.');
+    }
+  };
+
+  const saveDuplicateDecision = async (decision: 'merge' | 'reject_duplicate' | 'approve_separate') => {
+    if (!duplicateComparison) return;
+
+    const leftEventId = duplicateComparison.leftEvent?.id;
+    const rightEventId = duplicateComparison.rightEvent?.id;
+    if (!leftEventId || !rightEventId) {
+      setActionStatus('Unable to save duplicate decision: missing event ids.');
+      return;
+    }
+
+    try {
+      setDuplicateLoading(true);
+      setActionStatus('Saving duplicate decision...');
+      const response = await fetch(`${API_BASE_URL}/api/admin/data-quality/duplicates/decision`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          left_event_id: leftEventId,
+          right_event_id: rightEventId,
+          decision,
+          keep_event_id: decision === 'merge' ? keepEventId : undefined,
+          notes: duplicateNotes,
+        }),
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(result?.message || 'Unable to save duplicate decision.');
+      setActionStatus(
+        decision === 'merge'
+          ? 'Duplicate merged and decision stored.'
+          : decision === 'reject_duplicate'
+            ? 'Duplicate rejection stored.'
+            : 'Separate-event decision stored.'
+      );
+      setDuplicateComparison(null);
+      setDuplicateNotes('');
+      setKeepEventId(null);
+      await loadIssues();
+    } catch (err) {
+      console.error('Duplicate decision failed', err);
+      setActionStatus(err instanceof Error ? err.message : 'Unable to save duplicate decision.');
+    } finally {
+      setDuplicateLoading(false);
     }
   };
 
@@ -301,6 +436,31 @@ const DataQualityPage: React.FC = () => {
   const issues = data?.issues || [];
   const summary = data?.summary;
   const totalPages = data ? Math.max(Math.ceil(data.total / data.pageSize), 1) : 1;
+  const duplicateFields: Array<[string, keyof DuplicateEvent, (value: unknown) => string]> = [
+    ['Title', 'title', displayValue],
+    ['Date', 'date', (value) => formatDate(typeof value === 'string' ? value : null)],
+    ['Start time', 'start_time', displayValue],
+    ['End time', 'end_time', displayValue],
+    ['Venue', 'venue_name', displayValue],
+    ['Venue profile', 'venue_profile_display_name', displayValue],
+    ['Artist profile', 'artist_profile_display_name', displayValue],
+    ['Region', 'region', displayValue],
+    ['Genre', 'genre', displayValue],
+    ['Source', 'source_label', displayValue],
+    ['Ticket URL', 'ticket_link', displayValue],
+    ['Website', 'website', displayValue],
+    ['Poster', 'poster', displayValue],
+    ['Approved', 'is_approved', displayValue],
+    ['Description', 'description', displayValue],
+  ];
+  const selectedMergePreview = duplicateComparison && keepEventId
+    ? (keepEventId === duplicateComparison.leftEvent.id
+      ? duplicateComparison.mergePreview?.keepLeft
+      : duplicateComparison.mergePreview?.keepRight)
+    : null;
+  const selectedMergeFields = selectedMergePreview
+    ? Object.keys(selectedMergePreview).filter((key) => selectedMergePreview[key] !== undefined)
+    : [];
   const summaryCards: Array<[string, number, Record<string, string>]> = summary ? [
     ['Total issues', summary.total, {}],
     ['Missing venue links', summary.events_missing_venue_links, { issueType: 'missing_venue_link' }],
@@ -533,7 +693,7 @@ const DataQualityPage: React.FC = () => {
                         )}
                         {issue.issueType === 'possible_duplicate' && (
                           <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-xs leading-5 text-amber-100">
-                            Compare before approving. Duplicate merge/reject still happens in the import or event review flow.
+                            Use Compare duplicate to merge, reject as a duplicate, or approve as a separate show with the decision stored.
                           </div>
                         )}
                       </div>
@@ -559,6 +719,153 @@ const DataQualityPage: React.FC = () => {
             </div>
           </section>
         </div>
+        {duplicateComparison && (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 px-4 py-8 backdrop-blur-sm">
+            <div className="mx-auto max-w-6xl rounded-3xl border border-slate-700 bg-slate-950 p-5 shadow-2xl shadow-black/60 sm:p-6">
+              <div className="flex flex-col gap-4 border-b border-slate-800 pb-5 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-xs font-black uppercase tracking-[0.22em] text-amber-100">
+                    <AlertTriangle className="h-4 w-4" />
+                    Duplicate decision
+                  </div>
+                  <h2 className="mt-3 text-2xl font-semibold text-white">Compare possible duplicate events</h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+                    Review the records side by side, then merge missing details, reject the duplicate, or approve both as separate events.
+                  </p>
+                  {duplicateComparison.match && (
+                    <p className="mt-2 text-sm text-amber-100">
+                      Match: {duplicateComparison.match.level || 'possible'} · {Math.round(Number(duplicateComparison.match.score || 0) * 100)}%
+                      {duplicateComparison.match.reason ? ` · ${duplicateComparison.match.reason}` : ''}
+                    </p>
+                  )}
+                  {duplicateComparison.existingDecision?.decision && (
+                    <p className="mt-2 rounded-xl border border-cyan-400/30 bg-cyan-500/10 px-3 py-2 text-sm text-cyan-100">
+                      Existing decision: {duplicateComparison.existingDecision.decision.replace(/_/g, ' ')}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDuplicateComparison(null);
+                    setDuplicateNotes('');
+                    setKeepEventId(null);
+                  }}
+                  className="rounded-full border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-500"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <div className="mt-5 overflow-x-auto">
+                <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
+                  <thead>
+                    <tr className="text-xs uppercase tracking-widest text-slate-500">
+                      <th className="w-36 border-b border-slate-800 px-3 py-3">Field</th>
+                      <th className="border-b border-slate-800 px-3 py-3">
+                        <label className="flex items-center gap-2 text-slate-200">
+                          <input
+                            type="radio"
+                            name="keep-event"
+                            checked={keepEventId === duplicateComparison.leftEvent.id}
+                            onChange={() => setKeepEventId(duplicateComparison.leftEvent.id)}
+                            className="h-4 w-4"
+                          />
+                          Keep #{duplicateComparison.leftEvent.id}
+                        </label>
+                      </th>
+                      <th className="border-b border-slate-800 px-3 py-3">
+                        <label className="flex items-center gap-2 text-slate-200">
+                          <input
+                            type="radio"
+                            name="keep-event"
+                            checked={keepEventId === duplicateComparison.rightEvent.id}
+                            onChange={() => setKeepEventId(duplicateComparison.rightEvent.id)}
+                            className="h-4 w-4"
+                          />
+                          Keep #{duplicateComparison.rightEvent.id}
+                        </label>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {duplicateFields.map(([label, key, formatter]) => {
+                      const left = formatter(duplicateComparison.leftEvent[key]);
+                      const right = formatter(duplicateComparison.rightEvent[key]);
+                      const differs = left !== right;
+                      return (
+                        <tr key={String(key)} className={differs ? 'bg-amber-500/[0.04]' : ''}>
+                          <th className="border-b border-slate-900 px-3 py-3 align-top text-xs font-semibold uppercase tracking-widest text-slate-500">
+                            {label}
+                          </th>
+                          <td className={`max-w-md border-b border-slate-900 px-3 py-3 align-top text-slate-200 ${left === 'Missing' ? 'text-slate-600' : ''}`}>
+                            {left}
+                          </td>
+                          <td className={`max-w-md border-b border-slate-900 px-3 py-3 align-top text-slate-200 ${right === 'Missing' ? 'text-slate-600' : ''}`}>
+                            {right}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_320px]">
+                <label className="block">
+                  <span className="text-sm font-semibold text-slate-200">Decision notes</span>
+                  <textarea
+                    value={duplicateNotes}
+                    onChange={(event) => setDuplicateNotes(event.target.value)}
+                    rows={4}
+                    placeholder="Optional context for future admins..."
+                    className="mt-2 w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-emerald-400"
+                  />
+                </label>
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-300">
+                  <p className="font-semibold text-white">Merge preview</p>
+                  {selectedMergeFields.length ? (
+                    <p className="mt-2 leading-6">
+                      Keeping #{keepEventId} would fill missing fields from the other event:
+                      {' '}
+                      <span className="text-emerald-100">{selectedMergeFields.join(', ')}</span>.
+                    </p>
+                  ) : (
+                    <p className="mt-2 leading-6">No missing fields would be filled. Merge would only store the duplicate decision and hide the duplicate record.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-col gap-3 border-t border-slate-800 pt-5 sm:flex-row sm:flex-wrap sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => saveDuplicateDecision('approve_separate')}
+                  disabled={duplicateLoading}
+                  className="rounded-full border border-cyan-400/50 px-4 py-2 text-sm font-black text-cyan-100 transition hover:border-cyan-300 disabled:opacity-60"
+                >
+                  Approve as separate
+                </button>
+                <button
+                  type="button"
+                  onClick={() => saveDuplicateDecision('reject_duplicate')}
+                  disabled={duplicateLoading}
+                  className="rounded-full border border-red-400/50 px-4 py-2 text-sm font-black text-red-100 transition hover:border-red-300 disabled:opacity-60"
+                >
+                  Reject duplicate
+                </button>
+                <button
+                  type="button"
+                  onClick={() => saveDuplicateDecision('merge')}
+                  disabled={duplicateLoading || !keepEventId}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-400 px-4 py-2 text-sm font-black text-slate-950 transition hover:bg-emerald-300 disabled:opacity-60"
+                >
+                  {duplicateLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Merge into selected
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </>
   );
