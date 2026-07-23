@@ -26,7 +26,12 @@ const ThisWeekGuide = ({ initialRegion = REGION_ALL }: ThisWeekGuideProps) => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/events`);
+        const params = new URLSearchParams({
+          from: weekStart.format('YYYY-MM-DD'),
+          to: weekEnd.format('YYYY-MM-DD'),
+          limit: '500',
+        });
+        const res = await fetch(`${API_BASE_URL}/api/events?${params.toString()}`);
         const data = await res.json().catch(() => []);
         if (!res.ok) throw new Error(data?.message || 'Unable to load events.');
         setEvents(Array.isArray(data) ? data.filter((event) => event.is_approved) : []);
@@ -37,7 +42,7 @@ const ThisWeekGuide = ({ initialRegion = REGION_ALL }: ThisWeekGuideProps) => {
     };
 
     fetchEvents();
-  }, []);
+  }, [weekEnd, weekStart]);
 
   const weeklyEvents = useMemo(() => {
     const filtered = region === REGION_ALL
@@ -69,7 +74,7 @@ const ThisWeekGuide = ({ initialRegion = REGION_ALL }: ThisWeekGuideProps) => {
         <meta property="og:description" content={`This week’s live music guide for ${titleRegion}.`} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={`https://app.alpinegrooveguide.com${selectedRegionHref(region)}`} />
-        <meta property="og:image" content="https://app.alpinegrooveguide.com/alpine-groove-social-cover.png" />
+        <meta property="og:image" content="https://app.alpinegrooveguide.com/alpine_groove_guide_favicon.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <link rel="canonical" href={`https://app.alpinegrooveguide.com${selectedRegionHref(region)}`} />
         <style>{`

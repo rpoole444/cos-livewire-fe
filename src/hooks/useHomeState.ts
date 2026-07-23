@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useState, useEffect, useRef, Dispatch, SetStateAction } from 'react';
+import { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import dayjs, { Dayjs } from 'dayjs';
 
 export type FilterMode = 'day' | 'week' | 'all';
@@ -19,73 +19,51 @@ const isFilterMode = (v: unknown): v is FilterMode =>
 const isISODate = (v: unknown): v is string =>
   typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
-const isBrowser = typeof window !== 'undefined';
-
 const safeGet = (key: string): string | null =>
-  isBrowser ? localStorage.getItem(key) : null;
+  typeof window !== 'undefined' ? localStorage.getItem(key) : null;
 
 const safeSet = (key: string, val: string) => {
-  if (isBrowser) localStorage.setItem(key, val);
+  if (typeof window !== 'undefined') localStorage.setItem(key, val);
 };
 
 const HOURS_BEFORE_RESET = 3;
 
-export function useHomeState(): HomeState {
+type InitialHomeState = {
+  date: string;
+  filterMode?: FilterMode;
+  searchQuery?: string;
+};
+
+export function useHomeState(initial: InitialHomeState): HomeState {
   const router = useRouter();
 
-  // Determine once whether a reset is needed
-  const resetNeededRef = useRef<boolean>(false);
-  if (resetNeededRef.current === false) {
-    const lastReset = safeGet('agg_last_reset');
-    if (!lastReset) {
-      resetNeededRef.current = true;
-    } else {
-      const then = dayjs(lastReset);
-      resetNeededRef.current = dayjs().diff(then, 'hour') >= HOURS_BEFORE_RESET;
-    }
-  }
-
-  // Initial state: selectedDate
-  const [selectedDate, setSelectedDate] = useState<Dayjs>(() => {
-    if (resetNeededRef.current) return dayjs();
-
-    const qp = router.query.date;
-    const qd = Array.isArray(qp) ? qp[0] : qp;
-    if (isISODate(qd)) return dayjs(qd);
-
-    const ls = safeGet('agg_date');
-    if (isISODate(ls)) return dayjs(ls);
-
-    return dayjs();
-  });
-
-  // Initial state: filterMode
-  const [filterMode, setFilterMode] = useState<FilterMode>(() => {
-    if (resetNeededRef.current) return 'day';
-
-    const qp = router.query.view;
-    const qv = Array.isArray(qp) ? qp[0] : qp;
-    if (isFilterMode(qv)) return qv;
-
-    const ls = safeGet('agg_view');
-    if (isFilterMode(ls)) return ls;
-
-    return 'day';
-  });
-
-  // Initial state: searchQuery
-  const [searchQuery, setSearchQuery] = useState<string>(() => {
-    if (resetNeededRef.current) return '';
-
-    const qp = router.query.q;
-    const qq = Array.isArray(qp) ? qp[0] : qp;
-    if (typeof qq === 'string') return qq;
-
-    return safeGet('agg_search') ?? '';
-  });
+  // Match SSR exactly; browser-only preferences are restored after hydration.
+  const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs(initial.date));
+  const [filterMode, setFilterMode] = useState<FilterMode>(initial.filterMode || 'day');
+  const [searchQuery, setSearchQuery] = useState<string>(initial.searchQuery || '');
 
   useEffect(() => {
-    if (!isBrowser || !router.isReady) return;
+    if (!router.isReady) return;
+
+    const lastReset = safeGet('agg_last_reset');
+    const resetNeeded = !lastReset || dayjs().diff(dayjs(lastReset), 'hour') >= HOURS_BEFORE_RESET;
+    if (resetNeeded) return;
+
+    const dateQuery = Array.isArray(router.query.date) ? router.query.date[0] : router.query.date;
+    const viewQuery = Array.isArray(router.query.view) ? router.query.view[0] : router.query.view;
+    const searchQueryValue = Array.isArray(router.query.q) ? router.query.q[0] : router.query.q;
+    const storedDate = safeGet('agg_date');
+    const storedView = safeGet('agg_view');
+    const nextDate = isISODate(dateQuery) ? dateQuery : storedDate;
+    const nextView = isFilterMode(viewQuery) ? viewQuery : storedView;
+
+    if (isISODate(nextDate)) setSelectedDate(dayjs(nextDate));
+    if (isFilterMode(nextView)) setFilterMode(nextView);
+    setSearchQuery(typeof searchQueryValue === 'string' ? searchQueryValue : safeGet('agg_search') || '');
+  }, [router.isReady, router.query.date, router.query.q, router.query.view]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !router.isReady) return;
   
     // ✅ Only the home / calendar pages may rewrite the URL
     const isCalendarPage =

@@ -8,7 +8,7 @@ import TrialBanner from '@/components/TrialBanner';
 import { isTrialActive } from '@/util/isTrialActive';
 import SupportTipSection from '@/components/SupportTipSection';
 import { COMMUNITY_ARTIST_ACCESS_LABEL, hasArtistProfileAccess, isCommunityArtistAccessActive } from '@/util/communityAccess';
-import { getMyEventClaims } from '@/pages/api/route';
+import { getMyEventClaims } from '@/lib/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -440,7 +440,7 @@ const getClaimStatusCopy = (status: EventClaimStatus["status"]) => {
       const res = await fetch(`${API_BASE_URL}/api/payments/billing-portal`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user?.id }),
+        body: JSON.stringify({}),
         credentials: "include",
       });
       const data = await res.json();

@@ -1,7 +1,7 @@
 import "../styles/globals.css";
 import React, { useState, useEffect, useRef } from "react";
 import Head from "next/head";
-import { submitEvent } from "./api/route";
+import { submitEvent } from "@/lib/api";
 import { useAuth } from "../context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/router";

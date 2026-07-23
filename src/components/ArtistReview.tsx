@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import AdminArtistCard from './AdminArtistCard';
-import { getPendingArtists, approveArtist, deleteArtist, updateArtist } from '@/pages/api/artists';
+import { getPendingArtists, approveArtist, deleteArtist, updateArtist } from '@/lib/artistsApi';
 import { Artist, Artists } from '@/interfaces/interfaces';
 
 interface ArtistReviewProps {

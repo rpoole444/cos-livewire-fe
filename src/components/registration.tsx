@@ -2,7 +2,7 @@
 
 import "../styles/globals.css";
 import React, { useState } from "react";
-import { registerUser } from "@/pages/api/route";
+import { registerUser } from "@/lib/api";
 import { useRouter } from "next/router";
 
 const genreOptions = [

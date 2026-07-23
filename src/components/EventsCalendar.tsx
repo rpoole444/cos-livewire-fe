@@ -54,9 +54,9 @@ export default function Calendar({
     <div className="text-ivory">
       {/* Header & Navigation */}
       <div className="flex justify-between items-center mb-3">
-        <h1 className="agg-display text-xl font-semibold text-sun-gold">
+        <h2 className="agg-display text-xl font-semibold text-sun-gold">
           {months[viewDate.month()]} {viewDate.year()}
-        </h1>
+        </h2>
         <div className="flex items-center gap-3 text-ivory/70">
           <button
             type="button"

@@ -1,5 +1,5 @@
 // pages/share/[slug].tsx
-import { fetchEventDetailsBySlug } from "../api/route";
+import { fetchEventDetailsBySlug } from "@/lib/api";
 import { getEventImageSrc } from "@/util/getEventImageSrc";
 
 export const getServerSideProps = async (context:any) => {

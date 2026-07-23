@@ -1,5 +1,5 @@
 "use client";
-import { getEventsForReview, updateEventStatus, bulkUpdateEventStatus, updateEventDetails, deleteEvent } from "@/pages/api/route";
+import { getEventsForReview, updateEventStatus, bulkUpdateEventStatus, updateEventDetails, deleteEvent } from "@/lib/api";
 import { useState, useEffect } from "react";
 import "../styles/globals.css";
 import AdminEventCard from "./AdminEventCard";

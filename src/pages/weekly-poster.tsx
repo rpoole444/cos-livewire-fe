@@ -44,7 +44,7 @@ const WeeklyPosterPage = () => {
         <meta property="og:description" content="Front Range shows for the next seven days." />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://app.alpinegrooveguide.com/weekly-poster" />
-        <meta property="og:image" content="https://app.alpinegrooveguide.com/alpine-groove-social-cover.png" />
+        <meta property="og:image" content="https://app.alpinegrooveguide.com/alpine_groove_guide_favicon.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <style>{`
           .weekly-poster-public svg {

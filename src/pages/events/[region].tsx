@@ -77,11 +77,11 @@ export default function EventsRegionPage({
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:image" content={`${SITE_URL}/alpine-groove-social-cover.png`} />
+        <meta property="og:image" content={`${SITE_URL}/alpine_groove_guide_favicon.png`} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content={`${SITE_URL}/alpine-groove-social-cover.png`} />
+        <meta name="twitter:image" content={`${SITE_URL}/alpine_groove_guide_favicon.png`} />
         <link rel="canonical" href={canonicalUrl} />
         <script
           type="application/ld+json"
@@ -220,10 +220,23 @@ export const getServerSideProps: GetServerSideProps<EventsRegionPageProps> = asy
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/api/events?region=${region}`);
+    const denverDateParts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Denver',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date());
+    const datePart = Object.fromEntries(denverDateParts.map((part) => [part.type, part.value]));
+    const todayString = `${datePart.year}-${datePart.month}-${datePart.day}`;
+    const today = parseLocalDayjs(todayString).toDate();
+    const params = new URLSearchParams({
+      region,
+      from: todayString,
+      to: parseLocalDayjs(todayString).add(18, 'month').format('YYYY-MM-DD'),
+      limit: '100',
+    });
+    const response = await fetch(`${API_BASE_URL}/api/events?${params.toString()}`);
     const data = await response.json().catch(() => []);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
     const events = Array.isArray(data)
       ? data
           .filter((event) => event?.is_approved)

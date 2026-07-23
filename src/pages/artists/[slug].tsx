@@ -473,7 +473,7 @@ const ArtistProfilePage = ({ artist }: Props) => {
   }
 
   const siteBaseUrl = 'https://app.alpinegrooveguide.com';
-  const defaultSocialImage = `${siteBaseUrl}/alpine-groove-social-cover.png`;
+  const defaultSocialImage = `${siteBaseUrl}/alpine_groove_guide_favicon.png`;
   const shareUrl = `${siteBaseUrl}/share/artist/${artist.slug}`;
   const artistUrl = `${siteBaseUrl}/artists/${artist.slug}`;
   const embedParams = new URLSearchParams({

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
+import type { GetServerSideProps } from 'next';
 import Image from 'next/image';
 import { ArrowRight, CalendarDays, CalendarSearch, Music2, Search, Sparkles, Users } from 'lucide-react';
 import Link from 'next/link';
@@ -11,7 +12,7 @@ import WelcomeUser from '@/components/WelcomeUser';
 import EventsCalendar from '@/components/EventsCalendar';
 import { useAuth } from '@/context/AuthContext';
 import { useHomeState } from '@/hooks/useHomeState';
-import { deleteEvent, getEvents } from './api/route';
+import { deleteEvent, getEvents } from '@/lib/api';
 import { Event } from '@/interfaces/interfaces';
 import { buildEventDateTime, parseLocalDayjs, parseMSTDate } from '@/util/dateHelper';
 import { canManageEvent } from '@/util/eventPermissions';
@@ -38,33 +39,32 @@ function classNames(...classes: string[]) {
 type AuthMode = 'login' | 'register';
 
 type HomeProps = {
-  initialRegion?: RegionFilterValue;
+  initialDate: string;
+  initialRegion: RegionFilterValue;
+  initialView: 'day' | 'week' | 'all';
+  initialSearch: string;
 };
 
 const UPCOMING_PAGE_SIZE = 12;
 
-export default function Home({ initialRegion }: HomeProps = {}) {
+export default function Home({ initialDate, initialRegion, initialView, initialSearch }: HomeProps) {
   const {
     selectedDate: currentDate,
     setSelectedDate: setCurrentDate,
     searchQuery,
     setSearchQuery,
-  } = useHomeState();
+  } = useHomeState({
+    date: initialDate,
+    filterMode: initialView,
+    searchQuery: initialSearch,
+  });
 
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [events, setEvents] = useState<Event[]>([]);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [selectedRegion, setSelectedRegion] = useState<RegionFilterValue>(() => {
-    if (initialRegion) return initialRegion;
-    if (typeof window === 'undefined') return REGION_ALL;
-    return normalizeRegionFilter(localStorage.getItem(PREFERRED_REGION_STORAGE_KEY));
-  });
-  const [searchAllUpcoming, setSearchAllUpcoming] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('searchAllUpcoming') === 'true';
-    }
-    return false;
-  });
+  const [selectedRegion, setSelectedRegion] = useState<RegionFilterValue>(initialRegion);
+  const [searchAllUpcoming, setSearchAllUpcoming] = useState(false);
+  const [preferencesHydrated, setPreferencesHydrated] = useState(false);
   const [visibleUpcomingCount, setVisibleUpcomingCount] = useState(UPCOMING_PAGE_SIZE);
   const [showHero, setShowHero] = useState(true);
   const router = useRouter();
@@ -81,20 +81,20 @@ export default function Home({ initialRegion }: HomeProps = {}) {
     }
   }, []);
 
-  const resultsRef = useRef<HTMLDivElement | null>(null);
-  const { user } = useAuth();
-
   useEffect(() => {
     if (!router.isReady) return;
     const queryRegion = Array.isArray(router.query.region)
       ? router.query.region[0]
       : router.query.region;
-    if (queryRegion) {
-      setSelectedRegion(normalizeRegionFilter(queryRegion));
-    } else if (initialRegion) {
-      setSelectedRegion(initialRegion);
-    }
+    setSelectedRegion(normalizeRegionFilter(
+      queryRegion || localStorage.getItem(PREFERRED_REGION_STORAGE_KEY) || initialRegion
+    ));
+    setSearchAllUpcoming(localStorage.getItem('searchAllUpcoming') === 'true');
+    setPreferencesHydrated(true);
   }, [router.isReady, router.query.region, initialRegion]);
+
+  const resultsRef = useRef<HTMLDivElement | null>(null);
+  const { user } = useAuth();
 
   const switchAuthMode = () =>
     setAuthMode((m) => (m === 'login' ? 'register' : 'login'));
@@ -102,7 +102,17 @@ export default function Home({ initialRegion }: HomeProps = {}) {
   useEffect(() => {
     (async () => {
       try {
-        const data = await getEvents();
+        const today = dayjs().startOf('day');
+        const requestedDate = dayjs(initialDate).startOf('day');
+        const from = (requestedDate.isBefore(today) ? requestedDate : today)
+          .subtract(45, 'day')
+          .format('YYYY-MM-DD');
+        const normalHorizon = today.add(24, 'month');
+        const to = (requestedDate.isAfter(normalHorizon)
+          ? requestedDate.add(45, 'day')
+          : normalHorizon
+        ).format('YYYY-MM-DD');
+        const data = await getEvents({ from, to, limit: 1000 });
         const approved = data
           .filter((e: any) => e.is_approved)
           .sort((a: any, b: any) =>
@@ -113,9 +123,10 @@ export default function Home({ initialRegion }: HomeProps = {}) {
         console.error('Failed to load events', err);
       }
     })();
-  }, []);
+  }, [initialDate]);
 
   useEffect(() => {
+    if (!preferencesHydrated) return;
     localStorage.setItem('searchAllUpcoming', String(searchAllUpcoming));
     localStorage.setItem(PREFERRED_REGION_STORAGE_KEY, selectedRegion);
 
@@ -158,7 +169,7 @@ export default function Home({ initialRegion }: HomeProps = {}) {
     if (searchAllUpcoming && searchQuery && resultsRef.current) {
       resultsRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [events, currentDate, searchQuery, searchAllUpcoming, selectedRegion]);
+  }, [events, currentDate, searchQuery, searchAllUpcoming, selectedRegion, preferencesHydrated]);
 
   useEffect(() => {
     setVisibleUpcomingCount(UPCOMING_PAGE_SIZE);
@@ -238,11 +249,11 @@ export default function Home({ initialRegion }: HomeProps = {}) {
         <meta property="og:description" content={homeDescription} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={siteUrl} />
-        <meta property="og:image" content={`${siteUrl}/alpine_groove_guide_icon.png`} />
+        <meta property="og:image" content={`${siteUrl}/alpine_groove_guide_favicon.png`} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Find Live Music in Colorado" />
         <meta name="twitter:description" content={homeDescription} />
-        <meta name="twitter:image" content={`${siteUrl}/alpine_groove_guide_icon.png`} />
+        <meta name="twitter:image" content={`${siteUrl}/alpine_groove_guide_favicon.png`} />
         <link rel="canonical" href={siteUrl} />
         <script
           type="application/ld+json"
@@ -369,7 +380,7 @@ export default function Home({ initialRegion }: HomeProps = {}) {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 gap-3">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.3em] text-alpine">Live Music Calendar</p>
-                  <h1 className="agg-display mt-1 text-3xl font-semibold text-sun-gold">Find your next show</h1>
+                  <h2 className="agg-display mt-1 text-3xl font-semibold text-sun-gold">Find your next show</h2>
                   <p className="mt-1 text-sm text-ivory/55">
                     {selectedDaySummary}
                     {selectedRegion !== REGION_ALL ? ` · ${getRegionLabel(selectedRegion)}` : ''}
@@ -555,3 +566,35 @@ export default function Home({ initialRegion }: HomeProps = {}) {
     </>
   );
 }
+
+const queryValue = (value: string | string[] | undefined) =>
+  Array.isArray(value) ? value[0] : value;
+
+const denverDate = () => {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Denver',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+};
+
+export const getServerSideProps: GetServerSideProps<HomeProps> = async ({ query }) => {
+  const requestedDate = queryValue(query.date);
+  const requestedView = queryValue(query.view);
+  const requestedSearch = queryValue(query.q);
+  const requestedRegion = queryValue(query.region);
+
+  return {
+    props: {
+      initialDate: requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate)
+        ? requestedDate
+        : denverDate(),
+      initialRegion: normalizeRegionFilter(requestedRegion),
+      initialView: requestedView === 'week' || requestedView === 'all' ? requestedView : 'day',
+      initialSearch: typeof requestedSearch === 'string' ? requestedSearch : '',
+    },
+  };
+};

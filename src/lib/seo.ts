@@ -2,7 +2,7 @@ import { Event } from '@/interfaces/interfaces';
 
 export const SITE_URL = 'https://app.alpinegrooveguide.com';
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.alpinegrooveguide.com';
-export const DEFAULT_SOCIAL_IMAGE = `${SITE_URL}/alpine-groove-social-cover.png`;
+export const DEFAULT_SOCIAL_IMAGE = `${SITE_URL}/alpine_groove_guide_favicon.png`;
 
 export const absoluteUrl = (pathOrUrl?: string | null): string | null => {
   const value = String(pathOrUrl || '').trim();

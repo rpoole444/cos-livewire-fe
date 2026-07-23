@@ -1,5 +1,5 @@
 // pages/share/artist/[slug].tsx
-import { getArtistBySlug } from "../../api/artists";
+import { getArtistBySlug } from "@/lib/artistsApi";
 
 export const getServerSideProps = async (context: any) => {
   const slug = context.params?.slug;
@@ -18,7 +18,7 @@ export const getServerSideProps = async (context: any) => {
 
   const imageUrl = artist.profile_image?.startsWith("http")
     ? artist.profile_image
-    : "https://app.alpinegrooveguide.com/alpine_groove_guide_icon.png";
+    : "https://app.alpinegrooveguide.com/alpine_groove_guide_favicon.png";
 
   const description =
     artist.bio?.slice(0, 150) ||

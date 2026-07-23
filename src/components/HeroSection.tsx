@@ -19,10 +19,10 @@ const HeroSection = ({ user }: { user: any; setAuthMode: (mode: string) => void 
         <div className="relative z-10 space-y-7 text-left">
           <p className="text-xs font-black uppercase tracking-[0.42em] text-alpine">Colorado Music Calendar</p>
           <div className="space-y-3">
-            <h1 className="agg-display agg-text-shadow text-5xl font-semibold leading-[0.98] text-sun-gold sm:text-6xl lg:text-7xl">
+            <h2 className="agg-display agg-text-shadow text-5xl font-semibold leading-[0.98] text-sun-gold sm:text-6xl lg:text-7xl">
               Find Live Music
               <span className="block text-ivory">in Colorado</span>
-            </h1>
+            </h2>
             <div className="h-px w-40 bg-copper" />
           </div>
           <p className="max-w-xl text-base leading-7 text-ivory/75 sm:text-lg">

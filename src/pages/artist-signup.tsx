@@ -375,7 +375,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: user.id,
           plan, // 'monthly' | 'annual'
           artistId: artist.id,
           intent: "publish_artist",

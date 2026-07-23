@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getEventClaimRequests, reviewEventClaim } from "@/pages/api/route";
+import { getEventClaimRequests, reviewEventClaim } from "@/lib/api";
 import { parseLocalDayjs } from "@/util/dateHelper";
 
 interface EventClaimRequest {

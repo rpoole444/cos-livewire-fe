@@ -6,8 +6,21 @@ interface EventStatusUpdatePayload {
 }
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-async function getEvents() {
-const res = await fetch(`${API_BASE_URL}/api/events`, {
+type EventFeedOptions = {
+  region?: string;
+  from?: string;
+  to?: string;
+  limit?: number;
+};
+
+async function getEvents(options: EventFeedOptions = {}) {
+  const params = new URLSearchParams();
+  if (options.region) params.set('region', options.region);
+  if (options.from) params.set('from', options.from);
+  if (options.to) params.set('to', options.to);
+  if (options.limit) params.set('limit', String(options.limit));
+  const query = params.toString();
+  const res = await fetch(`${API_BASE_URL}/api/events${query ? `?${query}` : ''}`, {
     credentials: 'include', // Include credentials
   });
   // The return value is *not* serialized

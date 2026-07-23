@@ -2,7 +2,7 @@ import { GetServerSideProps } from "next";
 import Head from "next/head";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { getEvents } from "../api/route";
+import { getEvents } from "@/lib/api";
 import EventDetailCard from "@/components/EventDetailCard";
 import WelcomeUser from "@/components/WelcomeUser";
 import UpcomingShows from "@/components/UpcomingShows";
@@ -14,12 +14,13 @@ import { useAuth } from "@/context/AuthContext";
 import { FaFacebookF, FaTwitter, FaLink, FaLocationArrow, FaShareAlt } from "react-icons/fa";
 import { Pencil, Trash2 } from "lucide-react";
 import { useRouter } from "next/router";
-import { deleteEvent, fetchEventDetailsBySlug } from "../api/route";
+import { deleteEvent, fetchEventDetailsBySlug } from "@/lib/api";
 import { canDeleteEvent, canManageEvent } from "@/util/eventPermissions";
 import { shouldShowPublicClaimCta } from "@/util/eventTrust";
 import { parseLocalDayjs } from "@/util/dateHelper";
 import { getGoogleMapsUrl } from "@/util/eventLocation";
 import { buildBreadcrumbJsonLd, buildEventJsonLd } from "@/lib/seo";
+import dayjs from "dayjs";
 
 type EventClaimStatus = {
   id: number;
@@ -98,7 +99,7 @@ const EventDetailPage = ({ event, events }: Props) => {
   const loginClaimHref = `/LoginPage?redirect=${encodeURIComponent(authRedirect)}`;
   const artistSignupClaimHref = `/artist-signup?type=artist&redirect=${encodeURIComponent(authRedirect)}`;
   const venueSignupClaimHref = `/artist-signup?type=venue&displayName=${encodeURIComponent(currentEvent.venue_name || "")}&source=event-claim&redirect=${encodeURIComponent(authRedirect)}`;
-  const defaultSocialImage = `${siteBaseUrl}/alpine-groove-social-cover.png`;
+  const defaultSocialImage = `${siteBaseUrl}/alpine_groove_guide_favicon.png`;
   const rawEventImage = currentEvent.display_image_url || currentEvent.poster;
   const eventImage =
     rawEventImage && rawEventImage.trim() && !["tbd", "tba", "none", "null"].includes(rawEventImage.trim().toLowerCase())
@@ -764,7 +765,11 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
 
   try {
     const event = await fetchEventDetailsBySlug(slug);
-    const allEvents = await getEvents();
+    const allEvents = await getEvents({
+      from: dayjs().format("YYYY-MM-DD"),
+      to: dayjs().add(18, "month").format("YYYY-MM-DD"),
+      limit: 250,
+    });
 
     if (!event || typeof event.id !== "number") {
       console.warn("Invalid event response");

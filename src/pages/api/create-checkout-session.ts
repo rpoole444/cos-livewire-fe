@@ -11,12 +11,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).end('Method Not Allowed');
   }
 
-  const { userId, plan } = req.body;
+  const { plan } = req.body;
 
   const priceId = PLAN_TO_PRICE_ID[plan as keyof typeof PLAN_TO_PRICE_ID];
 
-  if (!userId || !priceId) {
-    return res.status(400).json({ message: 'Missing required data: userId or priceId' });
+  if (!priceId) {
+    return res.status(400).json({ message: 'Select a valid subscription plan.' });
   }
 
   try {
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         'Content-Type': 'application/json',
         cookie: req.headers.cookie || '',
       },
-      body: JSON.stringify({ userId, plan }),
+      body: JSON.stringify({ plan }),
     });
 
     const data = await response.json();

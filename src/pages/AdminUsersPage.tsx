@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ArrowLeft, ChevronLeft, ChevronRight, LogOut, Search, ShieldCheck, Trash2, UserCog, UsersRound } from 'lucide-react';
-import { fetchAllUsers } from './api/route';
+import { fetchAllUsers } from '@/lib/api';
 import { User, Users } from '../interfaces/interfaces';
 import { useAuth } from '../context/AuthContext';
 
